@@ -16,7 +16,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/typex"
 )
 
@@ -171,7 +170,7 @@ func Decrypt(ciphertext []byte, key *[32]byte) (plaintext []byte, err error) {
 	}
 
 	if len(ciphertext) < gcm.NonceSize() {
-		return nil, errors.New("malformed ciphertext")
+		return nil, errorx.New("malformed ciphertext")
 	}
 
 	return gcm.Open(nil,
