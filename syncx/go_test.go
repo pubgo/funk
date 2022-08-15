@@ -20,3 +20,14 @@ func TestName(t *testing.T) {
 
 	is.Equal(cc.Get(), "ok")
 }
+
+func TestPromise(t *testing.T) {
+	var is = assert.New(t)
+
+	var cc = <-Promise(func(resolve func(string), reject func(error)) {
+		resolve("ok")
+	})
+
+	funk.If(cc.IsErr(), func() {})
+	is.Equal(cc.Get(), "ok")
+}

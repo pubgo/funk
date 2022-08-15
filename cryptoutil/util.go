@@ -16,6 +16,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/errorx"
 	"github.com/pubgo/funk/typex"
 )
 
@@ -45,6 +46,8 @@ func removePadding(token string) string {
 }
 
 func AesCBCEncrypt(orig string, key string) typex.Result[string] {
+	var val typex.Result[string]
+
 	// 转成字节数组
 	origData := []byte(orig)
 	k := []byte(key)
@@ -52,7 +55,7 @@ func AesCBCEncrypt(orig string, key string) typex.Result[string] {
 	// 分组秘钥
 	block, err := aes.NewCipher(k)
 	if err != nil {
-		return typex.OK("", err)
+		return val.WithErr(err)
 	}
 
 	// 获取秘钥块的长度
@@ -65,21 +68,23 @@ func AesCBCEncrypt(orig string, key string) typex.Result[string] {
 	cryted := make([]byte, len(origData))
 	// 加密
 	blockMode.CryptBlocks(cryted, origData)
-	return typex.OK(base64.StdEncoding.EncodeToString(cryted), nil)
+	return val.WithVal(base64.StdEncoding.EncodeToString(cryted))
 }
 
 func AesCBCDecrypt(cryted string, key string) typex.Result[string] {
+	var val typex.Result[string]
+
 	// 转成字节数组
 	crytedByte, err := base64.StdEncoding.DecodeString(cryted)
 	if err != nil {
-		return typex.OK("", err)
+		return typex.Err[string](err)
 	}
 
 	k := []byte(key)
 	// 分组秘钥
 	block, err := aes.NewCipher(k)
 	if err != nil {
-		return typex.OK("", err)
+		return val.WithErr(err)
 	}
 
 	// 获取秘钥块的长度
@@ -92,7 +97,7 @@ func AesCBCDecrypt(cryted string, key string) typex.Result[string] {
 	blockMode.CryptBlocks(orig, crytedByte)
 	// 去补全码
 	orig = PKCS7UnPadding(orig)
-	return typex.OK(string(orig), nil)
+	return val.WithVal(string(orig))
 }
 
 //PKCS7Padding 补码
@@ -124,7 +129,7 @@ func HmacSha256(key, data string) string {
 
 func HashPassword(password string) typex.Result[string] {
 	passwd, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return typex.OK(string(passwd), err)
+	return typex.Wrap(string(passwd), err)
 }
 
 // CheckPassword checks to see if the password matches the hashed password.
