@@ -1,55 +1,53 @@
-package xerror
+package funk
 
 import (
-	"github.com/pubgo/xerror/internal/utils"
+	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/internal/utils"
+	"github.com/pubgo/funk/logx"
+	"github.com/pubgo/funk/recovery"
+	"github.com/pubgo/funk/xerr"
 )
 
-func checkFn(fn interface{}) {
-	if fn == nil {
-		panic("[fn] should not be nil")
+func Try(fn func() error, catch func(err xerr.XErr)) {
+	assert.If(fn == nil, "[fn] is nil")
+	assert.If(catch == nil, "[catch] is nil")
+
+	defer recovery.Recovery(func(err xerr.XErr) {
+		catch(err.WrapF("fn=%s", utils.CallerWithFunc(fn)))
+	})
+
+	catch(xerr.WrapXErr(fn()))
+}
+
+func Try1[T any](fn func() (T, error), cache func(err xerr.XErr)) T {
+	assert.If(fn == nil, "[fn] is nil")
+
+	defer recovery.Recovery(func(err xerr.XErr) {
+		cache(err.WrapF("fn=%s", utils.CallerWithFunc(fn)))
+	})
+
+	val, err := fn()
+	if err == nil {
+		return val
 	}
+
+	cache(xerr.WrapXErr(err))
+	return val
 }
 
-func Try(fn func()) (gErr error) {
-	checkFn(fn)
+func TryAndLog(fn func() error, catch ...func(err xerr.XErr) xerr.XErr) {
+	assert.If(fn == nil, "[fn] is nil")
 
-	defer Recovery(func(err XErr) {
-		gErr = err.WrapF("fn=>%s", utils.CallerWithFunc(fn))
+	defer recovery.Recovery(func(err xerr.XErr) {
+		if len(catch) > 0 {
+			err = catch[0](err)
+		}
+
+		err = err.WrapF("fn=%s", utils.CallerWithFunc(fn))
+		logx.Error(err, "panic func and log")
 	})
 
-	fn()
-	return
-}
-
-func TryErr(gErr *error, fn func()) {
-	checkFn(fn)
-
-	defer Recovery(func(err XErr) {
-		*gErr = err.WrapF("fn=>%s", utils.CallerWithFunc(fn))
-	})
-
-	fn()
-
-	return
-}
-
-func TryCatch(fn func(), catch func(err error)) {
-	checkFn(fn)
-	checkFn(catch)
-
-	defer Recovery(func(err XErr) {
-		catch(err.WrapF("fn=>%s", utils.CallerWithFunc(fn)))
-	})
-
-	fn()
-}
-
-func TryThrow(fn func()) {
-	checkFn(fn)
-
-	defer RecoverAndRaise(func(err XErr) XErr {
-		return err.WrapF("fn=>", utils.CallerWithFunc(fn))
-	})
-
-	fn()
+	if err := fn(); err != nil {
+		panic(err)
+	}
 }

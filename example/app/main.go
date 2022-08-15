@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/pubgo/xerror"
+	"github.com/pubgo/funk/recovery"
 )
 
 // 应用的集成开发, 在最后扑捉panic
@@ -25,7 +25,7 @@ func C() string {
 }
 
 func main() {
-	defer xerror.RecoverAndExit()
+	defer recovery.Exit()
 
 	fmt.Println(C())
 }

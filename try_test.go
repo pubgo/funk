@@ -1,27 +1,42 @@
-package xerror
+package funk
 
 import (
 	"fmt"
 	"testing"
+
+	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/recovery"
+	"github.com/pubgo/funk/xerr"
 )
 
-func TestTryCatch(t *testing.T) {
-	TryCatch(
-		func() { panic("ok") },
-		func(err error) {
-			fmt.Println(err.Error(), err)
-		})
+func testFunc() (err error) {
+	defer recovery.Err(&err, func(err xerr.XErr) xerr.XErr {
+		return err.WrapF("test func")
+	})
+	assert.Must(xerr.Err{Msg: "test error"})
+	return
 }
 
-func TestTryThrow(t *testing.T) {
-	defer RecoverTest(t)
-
-	TryThrow(func() {
-		panic("abc")
+func TestTryLog(t *testing.T) {
+	TryAndLog(func() {
+		assert.Must(testFunc())
 	})
 }
 
-func TestTryVal(t *testing.T) {
-	defer RecoverTest(t)
+func TestTryCatch(t *testing.T) {
+	Try(
+		func() error { panic("ok"); return nil },
+		func(err xerr.XErr) {
+			fmt.Println(err.Error(), err)
+		},
+	)
+}
 
+func TestTryVal(t *testing.T) {
+	var v = Try1(func() (*xerr.Err, error) {
+		return &xerr.Err{Msg: "ok"}, nil
+	}, func(err xerr.XErr) {
+		fmt.Println(err)
+	})
+	fmt.Println(v)
 }
