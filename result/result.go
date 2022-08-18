@@ -51,6 +51,13 @@ func (r Result[T]) Must() T {
 	return r.v
 }
 
+func (r Result[T]) Unwrap() T {
+	if r.IsErr() {
+		panic(r.e)
+	}
+	return r.v
+}
+
 func (r Result[T]) String() string {
 	if r.e == nil {
 		return fmt.Sprintf("v: %#v", r.v)

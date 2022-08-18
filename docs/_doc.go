@@ -8,3 +8,5 @@ package docs
 // https://github.com/go4org/go4
 // https://github.com/kubernetes/kubernetes/tree/master/pkg/util
 // https://github.com/gookit/goutil
+// https://github.com/zyedidia/generic
+// https://github.com/mattn/go-generics-example
