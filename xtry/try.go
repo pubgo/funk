@@ -26,9 +26,11 @@ func TryWith(gErr *error, fn func() error) {
 		*gErr = xerr.Wrap(err, fmt.Sprintf("fn=%s", utils.CallerWithFunc(fn)))
 	}()
 
-	*gErr = xerr.WrapXErr(fn(), func(err *xerr.XError) {
-		err.Detail = fmt.Sprintf("fn=%s", utils.CallerWithFunc(fn))
-	})
+	if err := fn(); err != nil {
+		*gErr = xerr.WrapXErr(err, func(err *xerr.XError) {
+			err.Detail = fmt.Sprintf("fn=%s", utils.CallerWithFunc(fn))
+		})
+	}
 }
 
 func Try(fn func() error) (gErr error) {
@@ -49,9 +51,12 @@ func Try(fn func() error) (gErr error) {
 		gErr = xerr.Wrap(err, fmt.Sprintf("fn=%s", utils.CallerWithFunc(fn)))
 	}()
 
-	return xerr.WrapXErr(fn(), func(err *xerr.XError) {
-		err.Detail = fmt.Sprintf("fn=%s", utils.CallerWithFunc(fn))
-	})
+	if err := fn(); err != nil {
+		return xerr.WrapXErr(err, func(err *xerr.XError) {
+			err.Detail = fmt.Sprintf("fn=%s", utils.CallerWithFunc(fn))
+		})
+	}
+	return
 }
 
 func TryCatch(fn func() error, catch func(err xerr.XErr)) {
