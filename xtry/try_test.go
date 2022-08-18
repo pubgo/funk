@@ -1,4 +1,4 @@
-package funk
+package xtry
 
 import (
 	"fmt"
