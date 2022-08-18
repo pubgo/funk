@@ -17,26 +17,23 @@ func testFunc() (err error) {
 	return
 }
 
-func TestTryLog(t *testing.T) {
-	TryAndLog(func() {
-		assert.Must(testFunc())
-	})
-}
-
 func TestTryCatch(t *testing.T) {
-	Try(
-		func() error { panic("ok"); return nil },
+	TryCatch(
+		func() error {
+			panic("ok")
+			return nil
+		},
 		func(err xerr.XErr) {
-			fmt.Println(err.Error(), err)
+			err.DebugPrint()
 		},
 	)
 }
 
 func TestTryVal(t *testing.T) {
-	var v = Try1(func() (*xerr.Err, error) {
+	var v = TryCatch1(func() (*xerr.Err, error) {
 		return &xerr.Err{Msg: "ok"}, nil
 	}, func(err xerr.XErr) {
-		fmt.Println(err)
+		err.DebugPrint()
 	})
 	fmt.Println(v)
 }
