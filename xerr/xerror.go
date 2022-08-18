@@ -106,8 +106,7 @@ func (t *XError) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		if s.Flag('#') {
-			type errors XError
-			_, _ = fmt.Fprintf(s, "%#v", (*errors)(t))
+			_, _ = fmt.Fprint(s, t.debugString())
 			return
 		}
 
@@ -117,8 +116,13 @@ func (t *XError) Format(s fmt.State, verb rune) {
 		}
 
 		_, _ = fmt.Fprint(s, t.Stack())
-	case 's', 'q':
-		_, _ = fmt.Fprint(s, t.Msg+": \n\t"+t.Error()+"\n\t"+t.Caller[0]+"\n\t"+t.Caller[1])
+	case 's':
+		_, _ = fmt.Fprintf(s, "err=%s, msg=%s ", t.Error(), t.Msg)
+	case 'q':
+		_, _ = fmt.Fprint(s, t.Msg+": \n\t"+t.Error())
+		for i := range t.Caller {
+			_, _ = fmt.Fprint(s, "\n\t"+t.Caller[i])
+		}
 	default:
 		_, _ = fmt.Fprint(s, t.Msg)
 	}
