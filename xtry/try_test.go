@@ -6,6 +6,7 @@ import (
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/recovery"
+	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/xerr"
 )
 
@@ -30,8 +31,8 @@ func TestTryCatch(t *testing.T) {
 }
 
 func TestTryVal(t *testing.T) {
-	var v = TryCatch1(func() (*xerr.Err, error) {
-		return &xerr.Err{Msg: "ok"}, nil
+	var v = TryCatch1(func() result.Result[*xerr.Err] {
+		return result.OK(&xerr.Err{Msg: "ok"})
 	}, func(err xerr.XErr) {
 		err.DebugPrint()
 	})

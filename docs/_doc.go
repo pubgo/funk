@@ -10,3 +10,8 @@ package docs
 // https://github.com/gookit/goutil
 // https://github.com/zyedidia/generic
 // https://github.com/mattn/go-generics-example
+// https://github.com/makiuchi-d/linq
+// https://github.com/mikhailswift/go-collections
+// https://github.com/deckarep/golang-set
+// https://github.com/genkami/dogs
+// https://github.com/life4/genesis

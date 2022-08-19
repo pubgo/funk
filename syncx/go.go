@@ -2,56 +2,64 @@ package syncx
 
 import (
 	"context"
+	"github.com/pubgo/funk/result"
 	"time"
 
-	"github.com/pubgo/funk"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/internal/utils"
-	"github.com/pubgo/funk/logx"
 	"github.com/pubgo/funk/recovery"
-	"github.com/pubgo/funk/typex"
 	"github.com/pubgo/funk/xerr"
+	"github.com/pubgo/funk/xtry"
 )
 
-func Async[T any](fn func() typex.Result[T]) chan typex.Result[T] { return GoChan[T](fn) }
+// Async 通过chan的方式同步执行异步任务
+func Async[T any](fn func() result.Result[T]) *Future[T] {
+	assert.If(fn == nil, "[Async] [fn] is nil")
 
-// GoChan 通过chan的方式同步执行异步任务
-func GoChan[T any](fn func() typex.Result[T]) chan typex.Result[T] {
-	assert.If(fn == nil, "[fn] is nil")
-
-	var ch = make(chan typex.Result[T])
-
+	var ch = newFuture[T]()
 	go func() {
-		defer close(ch)
-		defer recovery.Recovery(func(err xerr.XErr) {
-			ch <- typex.Err[T](err.WrapF("fn=%s", utils.CallerWithFunc(fn)))
-		})
-		ch <- fn()
+		ch.success(xtry.TryCatch1(fn, func(err xerr.XErr) { ch.failed(err) }))
 	}()
 
 	return ch
 }
 
 // GoSafe 安全并发处理
-func GoSafe(fn func() error, catch ...func(err xerr.XErr) xerr.XErr) {
-	assert.If(fn == nil, "[fn] is nil")
-	go funk.TryAndLog(fn, catch...)
+func GoSafe(fn func(), cb ...func(err error)) {
+	assert.If(fn == nil, "[GoSafe] [fn] is nil")
+
+	go func() {
+		defer recovery.Recovery(func(err xerr.XErr) {
+			if len(cb) > 0 && cb[0] != nil {
+				xtry.TryCatch(func() error { cb[0](err); return nil }, func(err xerr.XErr) {
+					logErr(cb[0], err)
+				})
+				return
+			}
+
+			logErr(fn, err)
+		})
+
+		fn()
+	}()
 }
 
 // GoCtx 可取消并发处理
-func GoCtx(fn func(ctx context.Context), cb ...func(err xerr.XErr)) context.CancelFunc {
-	assert.If(fn == nil, "[fn] is nil")
+func GoCtx(fn func(ctx context.Context), cb ...func(err error)) context.CancelFunc {
+	assert.If(fn == nil, "[GoCtx] [fn] is nil")
 
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
 		defer recovery.Recovery(func(err xerr.XErr) {
-			if len(cb) != 0 {
-				cb[0](err)
+			if len(cb) > 0 && cb[0] != nil {
+				xtry.TryCatch(func() error { cb[0](err); return nil }, func(err xerr.XErr) {
+					logErr(cb[0], err)
+				})
 				return
 			}
 
-			logx.Error(err, err.Error(), "fn", utils.CallerWithFunc(fn))
+			logErr(fn, err)
 		})
 
 		fn(ctx)
@@ -61,35 +69,44 @@ func GoCtx(fn func(ctx context.Context), cb ...func(err xerr.XErr)) context.Canc
 }
 
 // GoDelay 异步延迟处理
-func GoDelay(fn func() error, durations ...time.Duration) {
-	assert.Assert(fn == nil, "[fn] is nil")
+func GoDelay(fn func(), durations ...time.Duration) {
+	assert.If(fn == nil, "[GoDelay] [fn] is nil")
 
 	dur := time.Millisecond * 10
 	if len(durations) > 0 {
 		dur = durations[0]
 	}
 
-	assert.Assert(dur == 0, "[dur] should not be 0")
+	assert.If(dur == 0, "[dur] should not be 0")
 
-	go funk.TryAndLog(fn)
+	go func() {
+		xtry.TryCatch(func() error { fn(); return nil }, func(err xerr.XErr) {
+			logErr(fn, err)
+		})
+	}()
 
 	time.Sleep(dur)
+
+	return
 }
 
 // Timeout 超时处理
-func Timeout(dur time.Duration, fn func() error) (gErr error) {
-	assert.Assert(dur <= 0, "[Timeout] [dur] should not be less than zero")
-	assert.Assert(fn == nil, "[Timeout] [fn] is nil")
+func Timeout(dur time.Duration, fn func()) (gErr error) {
+	defer recovery.Err(&gErr)
 
-	defer recovery.Err(&gErr, func(err xerr.XErr) xerr.XErr {
-		return err.WrapF("fn=%s", utils.CallerWithFunc(fn))
-	})
+	if dur <= 0 {
+		panic("[Timeout] [dur] should not be less than zero")
+	}
+
+	assert.If(fn == nil, "[Timeout] [fn] is nil")
 
 	var done = make(chan struct{})
 
 	go func() {
 		defer close(done)
-		funk.TryCatch(fn, func(err xerr.XErr) { gErr = err })
+		defer recovery.Err(&gErr)
+
+		fn()
 	}()
 
 	select {
@@ -98,4 +115,8 @@ func Timeout(dur time.Duration, fn func() error) (gErr error) {
 	case <-done:
 		return
 	}
+}
+
+func logErr(fn interface{}, err xerr.XErr) {
+	logs.Error(err, err.Error(), "func", utils.CallerWithFunc(fn))
 }

@@ -6,7 +6,6 @@ import (
 	_ "unsafe"
 
 	"github.com/pubgo/funk/fastrand"
-	"github.com/pubgo/funk/logx"
 )
 
 const DefaultConcurrent = 16
@@ -32,7 +31,7 @@ func (t *WaitGroup) check() {
 	// 阻塞, 等待任务处理完毕
 	// 采样率(10), 打印log
 	if t.Count() >= t.Concurrent && fastrand.Sampling(10) {
-		logx.Info("WaitGroup current concurrent number exceeds the maximum concurrent number of the system",
+		logs.Info("WaitGroup current concurrent number exceeds the maximum concurrent number of the system",
 			"current", t.Count(), "maximum", t.Concurrent)
 	}
 }

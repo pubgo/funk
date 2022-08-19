@@ -4,12 +4,12 @@ import (
 	"os"
 	"sync/atomic"
 
-	logkit "github.com/go-kit/log"
+	kit "github.com/go-kit/log"
 	"github.com/go-logr/logr"
 	"github.com/iand/logfmtr"
 )
 
-var defaultLog logkit.Logger
+var defaultLog kit.Logger
 var logT = logr.Discard()
 var TimestampFormat = "2006-01-02T15:04:05.000000000Z07:00"
 var NameDelim = "."
@@ -30,7 +30,7 @@ func init() {
 	logT = logr.New(&sink{log: &log})
 }
 
-func SetLog(log logkit.Logger) {
+func SetLog(log kit.Logger) {
 	defaultLog = log
 }
 

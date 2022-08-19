@@ -5,6 +5,7 @@ import (
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/internal/utils"
+	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/xerr"
 )
 
@@ -91,7 +92,7 @@ func TryCatch(fn func() error, catch func(err xerr.XErr)) {
 	gErr = fn()
 }
 
-func TryCatch1[T any](fn func() (T, error), catch func(err xerr.XErr)) (v T) {
+func TryCatch1[T any](fn func() result.Result[T], catch func(err xerr.XErr)) (v T) {
 	assert.If(fn == nil, "[fn] is nil")
 	assert.If(catch == nil, "[catch] is nil")
 
@@ -120,6 +121,7 @@ func TryCatch1[T any](fn func() (T, error), catch func(err xerr.XErr)) (v T) {
 		}))
 	}()
 
-	v, gErr = fn()
-	return v
+	return fn().Value(func(err error) {
+		gErr = err
+	})
 }

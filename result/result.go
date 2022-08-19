@@ -44,6 +44,15 @@ func (r Result[T]) IsErr() bool {
 	return r.e != nil
 }
 
+func (r Result[T]) Map(f func(T) T) Result[T] {
+	if r.IsErr() {
+		return r
+	}
+
+	r.v = f(r.v)
+	return r
+}
+
 func (r Result[T]) Must() T {
 	if r.IsErr() {
 		panic(r.e)

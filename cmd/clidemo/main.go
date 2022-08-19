@@ -64,8 +64,8 @@ type statusCmd struct {
 }
 
 func (s *statusCmd) Run(ctx *kong.Context) error {
-	//ctx.Printf("OK")
-	fmt.Println("OK")
+	//ctx.Printf("success")
+	fmt.Println("success")
 	return nil
 }
 

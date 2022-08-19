@@ -2,6 +2,7 @@ package logx
 
 import (
 	"fmt"
+	"github.com/pubgo/funk/assert"
 	"runtime/debug"
 	"sync/atomic"
 	"time"
@@ -15,14 +16,14 @@ var _ logr.CallDepthLogSink = (*sink)(nil)
 
 type sink struct {
 	level     int
-	callDepth int
+	callDepth int32
 	prefix    string
 	values    []interface{}
 	log       *logr.Logger
 }
 
 // Enabled reports whether this Logger is enabled with respect to the current global log level.
-func (s *sink) Enabled(level int) bool {
+func (s sink) Enabled(level int) bool {
 	if level > int(atomic.LoadInt32(&gv)) {
 		return false
 	}
@@ -35,64 +36,60 @@ func (s *sink) Enabled(level int) bool {
 }
 
 func (s sink) WithCallDepth(depth int) logr.LogSink {
-	s.callDepth += depth
-	return &s
+	s.callDepth += int32(depth)
+	return s
 }
 
-func (s *sink) Init(info logr.RuntimeInfo) {
-	s.callDepth += info.CallDepth
+func (s sink) Init(info logr.RuntimeInfo) {
+	atomic.AddInt32(&s.callDepth, int32(info.CallDepth))
 }
 
-func (s *sink) Info(level int, msg string, keysAndValues ...interface{}) {
+func (s sink) Info(level int, msg string, keysAndValues ...interface{}) {
 	if !s.Enabled(level) {
 		return
 	}
 
 	if defaultLog == nil {
-		s.log.WithCallDepth(s.callDepth).WithName(s.prefix).WithValues(s.values...).GetSink().Info(level, msg, keysAndValues...)
+		s.log.WithCallDepth(int(s.callDepth)).WithName(s.prefix).WithValues(s.values...).GetSink().Info(level, msg, keysAndValues...)
 		return
 	}
 
 	keysAndValues = append(keysAndValues, s.values...)
-	keysAndValues = append(keysAndValues, "caller", logkit.Caller(s.callDepth+DefaultCallerSkip)())
+	keysAndValues = append(keysAndValues, "caller", logkit.Caller(int(s.callDepth)+DefaultCallerSkip)())
 	keysAndValues = append(keysAndValues, "logger", s.prefix)
 	keysAndValues = append(keysAndValues, "level", "info")
 	keysAndValues = append(keysAndValues, "msg", msg)
 	keysAndValues = append(keysAndValues, "ts", time.Now().UTC().Format(TimestampFormat))
-	if err := defaultLog.Log(keysAndValues...); err != nil {
-		panic(err)
-	}
+	assert.Must(defaultLog.Log(keysAndValues...))
 }
 
-func (s *sink) Error(err error, msg string, keysAndValues ...interface{}) {
+func (s sink) Error(err error, msg string, keysAndValues ...interface{}) {
 	if err == nil {
 		return
 	}
 
 	if defaultLog == nil {
-		keysAndValues = append(keysAndValues, "error_msg", fmt.Sprintf("%#v", err))
-		keysAndValues = append(keysAndValues, "stacktrace", stringify(debug.Stack()))
-		s.log.WithCallDepth(s.callDepth).WithName(s.prefix).WithValues(s.values...).GetSink().Error(err, msg, keysAndValues...)
+		keysAndValues = append(keysAndValues, "error_detail", fmt.Sprintf("%#v", err))
+		keysAndValues = append(keysAndValues, "stacktrace", string(debug.Stack()))
+		s.log.WithCallDepth(int(s.callDepth)).WithName(s.prefix).WithValues(s.values...).GetSink().Error(err, msg, keysAndValues...)
 		return
 	}
 
 	keysAndValues = append(keysAndValues, s.values...)
-	keysAndValues = append(keysAndValues, "caller", logkit.Caller(s.callDepth+DefaultCallerSkip)())
+	keysAndValues = append(keysAndValues, "caller", logkit.Caller(int(s.callDepth)+DefaultCallerSkip)())
 	keysAndValues = append(keysAndValues, "logger", s.prefix)
 	keysAndValues = append(keysAndValues, "level", "error")
 	keysAndValues = append(keysAndValues, "msg", msg)
 	keysAndValues = append(keysAndValues, "error", err.Error())
-	keysAndValues = append(keysAndValues, "error_msg", fmt.Sprintf("%#v", err))
-	keysAndValues = append(keysAndValues, "stacktrace", stringify(debug.Stack()))
+	keysAndValues = append(keysAndValues, "error_detail", fmt.Sprintf("%#v", err))
+	keysAndValues = append(keysAndValues, "stacktrace", string(debug.Stack()))
 	keysAndValues = append(keysAndValues, "ts", time.Now().UTC().Format(TimestampFormat))
-	if err := defaultLog.Log(keysAndValues...); err != nil {
-		panic(err)
-	}
+	assert.Must(defaultLog.Log(keysAndValues...))
 }
 
 func (s sink) WithValues(keysAndValues ...interface{}) logr.LogSink {
 	s.values = append(s.values, keysAndValues...)
-	return &s
+	return s
 }
 
 func (s sink) WithName(name string) logr.LogSink {
@@ -100,5 +97,5 @@ func (s sink) WithName(name string) logr.LogSink {
 		s.prefix = s.prefix + "."
 	}
 	s.prefix += name
-	return &s
+	return s
 }
