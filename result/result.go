@@ -96,6 +96,10 @@ func (r Result[T]) MarshalJSON() ([]byte, error) {
 
 type Chan[T any] chan Result[T]
 
+func (cc Chan[T]) Unwrap() []T {
+	return cc.ToResult().Unwrap()
+}
+
 func (cc Chan[T]) ToList() List[T] {
 	var rr []Result[T]
 	for r := range cc {
@@ -122,6 +126,10 @@ func (cc Chan[T]) Range(fn func(r Result[T])) {
 }
 
 type List[T any] []Result[T]
+
+func (rr List[T]) Unwrap() []T {
+	return rr.ToResult().Unwrap()
+}
 
 func (rr List[T]) Map(h func(r Result[T]) Result[T]) List[T] {
 	var ll = make(List[T], 0, len(rr))
