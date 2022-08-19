@@ -1,13 +1,14 @@
 package syncx
 
 import (
+	"sync"
+	
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/internal/utils"
 	"github.com/pubgo/funk/recovery"
 	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/xerr"
 	"github.com/pubgo/funk/xtry"
-	"sync"
 )
 
 func Promise[T any](fn func(resolve func(T), reject func(error))) *Future[T] {

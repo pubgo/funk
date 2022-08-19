@@ -2,12 +2,12 @@ package syncx
 
 import (
 	"context"
-	"github.com/pubgo/funk/result"
 	"time"
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/internal/utils"
 	"github.com/pubgo/funk/recovery"
+	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/xerr"
 	"github.com/pubgo/funk/xtry"
 )
