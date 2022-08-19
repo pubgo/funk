@@ -22,7 +22,6 @@ func TestTryCatch(t *testing.T) {
 	TryCatch(
 		func() error {
 			panic("ok")
-			return nil
 		},
 		func(err xerr.XErr) {
 			err.DebugPrint()

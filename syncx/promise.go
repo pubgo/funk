@@ -56,7 +56,7 @@ func AsyncGroup[T any](do func(async func(func() result.Result[T])) error) resul
 }
 
 func Wait[T any](val ...*Future[T]) result.List[T] {
-	var valList = make([]result.Result[T], 0, len(val))
+	var valList = make([]result.Result[T], len(val))
 	for i := range val {
 		valList[i] = val[i].Await()
 	}

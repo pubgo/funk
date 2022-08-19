@@ -69,7 +69,7 @@ func (r Result[T]) Unwrap() T {
 
 func (r Result[T]) String() string {
 	if r.e == nil {
-		return fmt.Sprintf("v: %#v", r.v)
+		return fmt.Sprintf("%#v", r.v)
 	}
 	return fmt.Sprintf("err_msg=%s err_detail=%#v", r.e.Error(), r.e)
 }
@@ -122,6 +122,24 @@ func (cc Chan[T]) Range(fn func(r Result[T])) {
 }
 
 type List[T any] []Result[T]
+
+func (rr List[T]) Map(h func(r Result[T]) Result[T]) List[T] {
+	var ll = make(List[T], 0, len(rr))
+	for i := range rr {
+		ll = append(ll, h(rr[i]))
+	}
+	return ll
+}
+
+func (rr List[T]) Filter(filter func(r *Result[T]) bool) List[T] {
+	var ll = make(List[T], 0, len(rr))
+	for i := range rr {
+		if filter(&rr[i]) {
+			ll = append(ll, rr[i])
+		}
+	}
+	return ll
+}
 
 func (rr List[T]) ToResult() Result[[]T] {
 	var rl = make([]T, 0, len(rr))

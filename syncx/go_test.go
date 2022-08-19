@@ -22,7 +22,6 @@ func TestYield(t *testing.T) {
 			yield(time.Now().String())
 			yield(time.Now().String())
 			panic("d")
-			return nil
 		}).ToResult())
 
 		t.Log(Yield(func(yield func(string)) error {
@@ -73,5 +72,5 @@ func TestGoChan(t *testing.T) {
 		return result.OK("hello")
 	})
 
-	fmt.Println(Wait(val1, val2).ToResult().Value())
+	fmt.Println(Wait(val1, val2).ToResult())
 }
