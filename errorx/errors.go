@@ -47,7 +47,7 @@ func WrapF(err error, msg string, args ...interface{}) error {
 	return xerr.WrapXErr(err, func(err *xerr.XError) { err.Detail = fmt.Sprintf(msg, args...) })
 }
 
-func ParseXErr(err error, fns ...func(err *xerr.XError)) *xerr.XError {
+func ParseXErr(err error, fns ...func(err *xerr.XError)) xerr.XErr {
 	return xerr.WrapXErr(err, fns...)
 }
 

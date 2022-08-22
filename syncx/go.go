@@ -18,29 +18,31 @@ func Async[T any](fn func() result.Result[T]) *Future[T] {
 
 	var ch = newFuture[T]()
 	go func() {
-		ch.success(xtry.TryCatch1(fn, func(err xerr.XErr) { ch.failed(err) }))
+		ch.failed(xtry.TryErr(func() result.Error {
+			return fn().Err(func(v T) {
+				ch.success(v)
+			})
+		}))
 	}()
 
 	return ch
 }
 
 // GoSafe 安全并发处理
-func GoSafe(fn func(), cb ...func(err error)) {
+func GoSafe(fn func() result.Error, cb ...func(err error)) {
 	assert.If(fn == nil, "[GoSafe] [fn] is nil")
 
 	go func() {
 		defer recovery.Recovery(func(err xerr.XErr) {
 			if len(cb) > 0 && cb[0] != nil {
-				xtry.TryCatch(func() error { cb[0](err); return nil }, func(err xerr.XErr) {
-					logErr(cb[0], err)
-				})
+				logErr(cb[0], xtry.Try(func() { cb[0](err) }))
 				return
 			}
 
-			logErr(fn, err)
+			logErr(fn, result.WithErr(err))
 		})
 
-		fn()
+		fn().Must()
 	}()
 }
 
@@ -53,13 +55,11 @@ func GoCtx(fn func(ctx context.Context), cb ...func(err error)) context.CancelFu
 	go func() {
 		defer recovery.Recovery(func(err xerr.XErr) {
 			if len(cb) > 0 && cb[0] != nil {
-				xtry.TryCatch(func() error { cb[0](err); return nil }, func(err xerr.XErr) {
-					logErr(cb[0], err)
-				})
+				logErr(cb[0], xtry.Try(func() { cb[0](err) }))
 				return
 			}
 
-			logErr(fn, err)
+			logErr(fn, result.WithErr(err))
 		})
 
 		fn(ctx)
@@ -80,9 +80,7 @@ func GoDelay(fn func(), durations ...time.Duration) {
 	assert.If(dur == 0, "[dur] should not be 0")
 
 	go func() {
-		xtry.TryCatch(func() error { fn(); return nil }, func(err xerr.XErr) {
-			logErr(fn, err)
-		})
+		logErr(fn, xtry.Try(fn))
 	}()
 
 	time.Sleep(dur)
@@ -117,6 +115,10 @@ func Timeout(dur time.Duration, fn func()) (gErr error) {
 	}
 }
 
-func logErr(fn interface{}, err xerr.XErr) {
-	logs.Error(err, err.Error(), "func", utils.CallerWithFunc(fn))
+func logErr(fn interface{}, err result.Error) {
+	if err.IsNil() {
+		return
+	}
+
+	logs.Error(err.Unwrap(), err.Unwrap().Error(), "func", utils.CallerWithFunc(fn))
 }

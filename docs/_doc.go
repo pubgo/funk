@@ -15,3 +15,4 @@ package docs
 // https://github.com/deckarep/golang-set
 // https://github.com/genkami/dogs
 // https://github.com/life4/genesis
+// https://github.com/yoyofx/glinq

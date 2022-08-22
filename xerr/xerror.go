@@ -28,6 +28,11 @@ type XError struct {
 	Caller []string `json:"caller,omitempty"`
 }
 
+func (t *XError) WrapKV(k string, v interface{}) XErr {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (t *XError) xErr()          {}
 func (t *XError) String() string { return t.Stack() }
 func (t *XError) DebugPrint() {

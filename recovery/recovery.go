@@ -100,7 +100,7 @@ func Exit() {
 	os.Exit(1)
 }
 
-func Log() {
+func DebugPrint() {
 	val := recover()
 	if val == nil {
 		return

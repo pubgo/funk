@@ -28,23 +28,21 @@ func ParseErr(err *error, val interface{}) {
 	*err = WrapXErr(*err)
 }
 
-func WrapXErr(err error, fns ...func(err *XError)) *XError {
+func WrapXErr(err error, fns ...func(err *XError)) XErr {
 	if err == nil {
 		return nil
 	}
 
 	err1 := &XError{Err: err}
-	if _, ok := err.(XErr); !ok {
+	if e, ok := err.(*XError); ok {
+		err1 = e
+	} else {
 		for i := 0; ; i++ {
 			var cc = utils.CallerWithDepth(CallStackDepth + i)
 			if cc == "" {
 				break
 			}
 			err1.Caller = append(err1.Caller, cc)
-		}
-	} else {
-		err1.Caller = []string{
-			utils.CallerWithDepth(CallStackDepth + 2),
 		}
 	}
 

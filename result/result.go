@@ -3,45 +3,76 @@ package result
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 )
 
-func Unwrap[T any](r Result[T]) (T, error) {
-	return r.v, r.e
+func Nil[T any]() (t T) {
+	return
+}
+
+func DePtr[T any](v *T) (r T) {
+	if v == nil || reflect.ValueOf(*v).IsNil() {
+		return
+	}
+	return *v
+}
+
+func Ptr[T any](v T) (r *T) {
+	return &v
 }
 
 func OK[T any](v T) Result[T] {
-	return Result[T]{v: v}
+	return Result[T]{v: &v}
 }
 
-func Err[T any](err error) Result[T] {
+func Err[T any](err Error) Result[T] {
 	return Result[T]{e: err}
 }
 
 func New[T any](v T, err error) Result[T] {
-	return Result[T]{v: v, e: err}
+	return Result[T]{v: &v, e: WithErr(err)}
 }
 
 type Result[T any] struct {
-	v T
-	e error
+	v *T
+	e Error
 }
 
-func (r Result[T]) WithErr(err error) Result[T] {
+func (r Result[T]) WithErr(err Error) Result[T] {
 	r.e = err
 	return r
 }
 
 func (r Result[T]) WithVal(t T) Result[T] {
-	r.v = t
+	r.v = &t
 	return r
 }
 
-func (r Result[T]) Err() error {
+func (r Result[T]) Err(check ...func(t T)) Error {
+	if len(check) > 0 && check[0] != nil && !r.IsErr() {
+		check[0](DePtr(r.v))
+		return Error{}
+	}
 	return r.e
 }
 
+func (r Result[T]) Value(check ...func(err Error) T) T {
+	if len(check) > 0 && check[0] != nil && !r.e.IsNil() {
+		return check[0](r.e)
+	}
+	return DePtr(r.v)
+}
+
 func (r Result[T]) IsErr() bool {
-	return r.e != nil
+	return !r.e.IsNil()
+}
+
+func (r Result[T]) IsNil() bool {
+	return r.v == nil || reflect.ValueOf(*r.v).IsNil()
+}
+
+func (r Result[T]) IsNone() bool {
+	return !r.IsErr() && r.IsNil()
 }
 
 func (r Result[T]) Map(f func(T) T) Result[T] {
@@ -49,46 +80,57 @@ func (r Result[T]) Map(f func(T) T) Result[T] {
 		return r
 	}
 
-	r.v = f(r.v)
+	r.v = Ptr(f(DePtr(r.v)))
 	return r
 }
 
-func (r Result[T]) Must() T {
+func (r Result[T]) Expect(msg string, args ...interface{}) T {
 	if r.IsErr() {
-		panic(r.e)
+		panic(r.e.WrapF(msg, args...))
 	}
-	return r.v
+	return DePtr(r.v)
 }
 
-func (r Result[T]) Unwrap() T {
+func (r Result[T]) UnwrapOr(v T) T {
 	if r.IsErr() {
-		panic(r.e)
+		return v
 	}
-	return r.v
+	return DePtr(r.v)
+}
+
+func (r Result[T]) UnwrapOrElse(check ...func(err Error) T) T {
+	if len(check) > 0 && check[0] != nil && r.IsErr() {
+		return check[0](r.e)
+	}
+	return DePtr(r.v)
+}
+
+func (r Result[T]) Unwrap(check ...func(err Error) T) T {
+	if r.IsErr() {
+		if len(check) > 0 && check[0] != nil {
+			return check[0](r.e)
+		} else {
+			panic(r.e)
+		}
+	}
+	return DePtr(r.v)
 }
 
 func (r Result[T]) String() string {
-	if r.e == nil {
+	if !r.IsErr() {
 		return fmt.Sprintf("%#v", r.v)
 	}
-	return fmt.Sprintf("err_msg=%s err_detail=%#v", r.e.Error(), r.e)
-}
-
-func (r Result[T]) Value(check ...func(err error)) T {
-	if len(check) > 0 && check[0] != nil && r.e != nil {
-		check[0](r.e)
-	}
-	return r.v
+	return fmt.Sprintf("err_msg=%q err_detail=%#v", r.e.Unwrap(), r.e.Unwrap())
 }
 
 func (r Result[T]) MarshalJSON() ([]byte, error) {
 	var err = EmptyErr()
-	if r.e != nil {
-		err = r.e
+	if r.IsErr() {
+		err = r.e.Unwrap()
 	}
 
 	return json.Marshal(data[T]{
-		Body:      r.v,
+		Body:      DePtr(r.v),
 		ErrMsg:    err.Error(),
 		ErrDetail: fmt.Sprintf("%#v", err),
 	})
@@ -96,13 +138,17 @@ func (r Result[T]) MarshalJSON() ([]byte, error) {
 
 type Chan[T any] chan Result[T]
 
-func (cc Chan[T]) Unwrap() []T {
-	return cc.ToResult().Unwrap()
+func (cc Chan[T]) Unwrap(check ...func(err Error) []T) []T {
+	return cc.ToResult().Unwrap(check...)
 }
 
 func (cc Chan[T]) ToList() List[T] {
 	var rr []Result[T]
 	for r := range cc {
+		if r.IsNone() {
+			continue
+		}
+
 		rr = append(rr, r)
 	}
 	return rr
@@ -114,6 +160,11 @@ func (cc Chan[T]) ToResult() Result[[]T] {
 		if c.IsErr() {
 			return Err[[]T](c.Err())
 		}
+
+		if c.IsNil() {
+			continue
+		}
+
 		rl = append(rl, c.Value())
 	}
 	return OK(rl)
@@ -121,19 +172,26 @@ func (cc Chan[T]) ToResult() Result[[]T] {
 
 func (cc Chan[T]) Range(fn func(r Result[T])) {
 	for c := range cc {
+		if c.IsNone() {
+			continue
+		}
+
 		fn(c)
 	}
 }
 
 type List[T any] []Result[T]
 
-func (rr List[T]) Unwrap() []T {
-	return rr.ToResult().Unwrap()
+func (rr List[T]) Unwrap(check ...func(err Error) []T) []T {
+	return rr.ToResult().Unwrap(check...)
 }
 
 func (rr List[T]) Map(h func(r Result[T]) Result[T]) List[T] {
 	var ll = make(List[T], 0, len(rr))
 	for i := range rr {
+		if rr[i].IsNone() {
+			continue
+		}
 		ll = append(ll, h(rr[i]))
 	}
 	return ll
@@ -142,6 +200,10 @@ func (rr List[T]) Map(h func(r Result[T]) Result[T]) List[T] {
 func (rr List[T]) Filter(filter func(r *Result[T]) bool) List[T] {
 	var ll = make(List[T], 0, len(rr))
 	for i := range rr {
+		if rr[i].IsNone() {
+			continue
+		}
+
 		if filter(&rr[i]) {
 			ll = append(ll, rr[i])
 		}
@@ -155,6 +217,9 @@ func (rr List[T]) ToResult() Result[[]T] {
 		if rr[i].IsErr() {
 			return Err[[]T](rr[i].Err())
 		}
+		if rr[i].IsNone() {
+			continue
+		}
 		rl = append(rl, rr[i].Value())
 	}
 	return OK(rl)
@@ -162,6 +227,9 @@ func (rr List[T]) ToResult() Result[[]T] {
 
 func (rr List[T]) Range(fn func(r Result[T])) {
 	for i := range rr {
+		if rr[i].IsNone() {
+			continue
+		}
 		fn(rr[i])
 	}
 }

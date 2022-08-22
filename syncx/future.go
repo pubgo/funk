@@ -10,7 +10,7 @@ func newFuture[T any]() *Future[T] {
 
 type Future[T any] struct {
 	v    T
-	e    error
+	e    result.Error
 	done chan struct{}
 }
 
@@ -19,9 +19,9 @@ func (f *Future[T]) success(v T) {
 	f.v = v
 }
 
-func (f *Future[T]) failed(err error) {
+func (f *Future[T]) failed(err result.Error) {
 	defer close(f.done)
-	if err == nil {
+	if err.IsNil() {
 		return
 	}
 	f.e = err
@@ -34,15 +34,15 @@ func (f *Future[T]) Await() result.Result[T] {
 
 func (f *Future[T]) Unwrap() T {
 	<-f.done
-	if f.e == nil {
+	if f.e.IsNil() {
 		return f.v
 	}
 	panic(f.e)
 }
 
-func (f *Future[T]) Value(check ...func(err error)) T {
+func (f *Future[T]) Value(check ...func(err result.Error)) T {
 	<-f.done
-	if f.e != nil && len(check) > 0 && check[0] != nil {
+	if !f.e.IsNil() && len(check) > 0 && check[0] != nil {
 		check[0](f.e)
 	}
 	return f.v

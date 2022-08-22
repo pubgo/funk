@@ -7,5 +7,6 @@ type XErr interface {
 	DebugPrint()
 	Unwrap() error
 	Wrap(args ...interface{}) XErr
+	WrapKV(k string, v interface{}) XErr
 	WrapF(msg string, args ...interface{}) XErr
 }

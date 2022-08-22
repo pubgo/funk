@@ -20,11 +20,11 @@ func testFunc() (err error) {
 
 func TestTryCatch(t *testing.T) {
 	TryCatch(
-		func() error {
+		func() result.Error {
 			panic("ok")
 		},
-		func(err xerr.XErr) {
-			err.DebugPrint()
+		func(err result.Error) {
+			xerr.WrapXErr(err.Err()).DebugPrint()
 		},
 	)
 }
@@ -32,8 +32,6 @@ func TestTryCatch(t *testing.T) {
 func TestTryVal(t *testing.T) {
 	var v = TryCatch1(func() result.Result[*xerr.Err] {
 		return result.OK(&xerr.Err{Msg: "ok"})
-	}, func(err xerr.XErr) {
-		err.DebugPrint()
 	})
 	fmt.Println(v)
 }
