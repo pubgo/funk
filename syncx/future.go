@@ -29,7 +29,7 @@ func (f *Future[T]) failed(err result.Error) {
 
 func (f *Future[T]) Await() result.Result[T] {
 	<-f.done
-	return result.New(f.v, f.e)
+	return result.Wrap(f.v, f.e)
 }
 
 func (f *Future[T]) Unwrap() T {

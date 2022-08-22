@@ -3,12 +3,10 @@ module github.com/pubgo/funk
 go 1.18
 
 require (
-	github.com/alecthomas/kong v0.6.1
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.13.0
 	github.com/go-kit/log v0.2.1
 	github.com/go-logr/logr v1.2.2
-	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/gopherjs/gopherjs v1.17.2
 	github.com/iancoleman/strcase v0.2.0
 	github.com/iand/logfmtr v0.2.1
@@ -17,7 +15,6 @@ require (
 	github.com/modood/table v0.0.0-20220527013332-8d47e76dad33
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58
 	github.com/rodaine/table v1.0.1
-	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.2
 	github.com/valyala/fastrand v1.1.0
 	go.uber.org/atomic v1.9.0

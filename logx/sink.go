@@ -2,13 +2,13 @@ package logx
 
 import (
 	"fmt"
-	"github.com/pubgo/funk/assert"
 	"runtime/debug"
 	"sync/atomic"
 	"time"
 
 	logkit "github.com/go-kit/log"
 	"github.com/go-logr/logr"
+	"github.com/pubgo/funk/assert"
 )
 
 var _ logr.LogSink = (*sink)(nil)

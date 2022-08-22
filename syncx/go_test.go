@@ -11,7 +11,7 @@ import (
 
 func TestAsync(t *testing.T) {
 	t.Log(Async(func() result.Result[*http.Response] {
-		return result.New(http.Get("https://www.baidu.com"))
+		return result.Wrap(http.Get("https://www.baidu.com"))
 	}).Await())
 }
 
@@ -44,7 +44,7 @@ func httpGetList() result.Chan[*http.Response] {
 	return AsyncGroup(func(async func(func() result.Result[*http.Response])) result.Error {
 		for i := 2; i > 0; i-- {
 			async(func() result.Result[*http.Response] {
-				return result.New(http.Get("https://www.baidu.com"))
+				return result.Wrap(http.Get("https://www.baidu.com"))
 			})
 		}
 		return result.Error{}
