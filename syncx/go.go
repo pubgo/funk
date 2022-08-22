@@ -18,13 +18,8 @@ func Async[T any](fn func() result.Result[T]) *Future[T] {
 
 	var ch = newFuture[T]()
 	go func() {
-		ch.failed(xtry.TryErr(func() result.Error {
-			return fn().Err(func(v T) {
-				ch.success(v)
-			})
-		}))
+		ch.success(xtry.TryVal(fn))
 	}()
-
 	return ch
 }
 

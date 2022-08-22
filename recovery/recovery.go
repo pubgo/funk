@@ -8,26 +8,6 @@ import (
 	"github.com/pubgo/funk/xerr"
 )
 
-func CatchErr(gErr *error, fns ...func(err xerr.XErr) xerr.XErr) {
-	val := recover()
-	if val == nil {
-		return
-	}
-
-	var err error
-	xerr.ParseErr(&err, val)
-	if err == nil {
-		return
-	}
-
-	err1 := xerr.WrapXErr(err)
-	if len(fns) > 0 {
-		*gErr = fns[0](err1)
-		return
-	}
-	*gErr = err1
-}
-
 func Err(gErr *error, fns ...func(err xerr.XErr) xerr.XErr) {
 	val := recover()
 	if val == nil {
@@ -41,7 +21,7 @@ func Err(gErr *error, fns ...func(err xerr.XErr) xerr.XErr) {
 	}
 
 	err1 := xerr.WrapXErr(err)
-	if len(fns) > 0 {
+	if len(fns) > 0 && fns[0] != nil {
 		*gErr = fns[0](err1)
 		return
 	}
@@ -61,7 +41,7 @@ func Raise(fns ...func(err xerr.XErr) xerr.XErr) {
 	}
 
 	err1 := xerr.WrapXErr(err)
-	if len(fns) > 0 {
+	if len(fns) > 0 && fns[0] != nil {
 		panic(fns[0](err1))
 	}
 	panic(err1)

@@ -4,36 +4,36 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"reflect"
 
 	"github.com/pubgo/funk/internal/utils"
 )
 
-func isErrNil(err error) bool { return err == nil }
+func isErrNil(err error) bool { return err == nil || reflect.ValueOf(err).IsNil() }
 func p(a ...interface{})      { _, _ = fmt.Fprintln(os.Stderr, a...) }
 
 func ParseErr(err *error, val interface{}) {
-	if val == nil {
-		return
-	}
-
 	switch _val := val.(type) {
+	case nil:
+		return
 	case error:
 		*err = _val
 	case string:
 		*err = errors.New(_val)
+	case []byte:
+		*err = errors.New(string(_val))
 	default:
 		*err = fmt.Errorf("%#v", _val)
 	}
-
 	*err = WrapXErr(*err)
 }
 
 func WrapXErr(err error, fns ...func(err *XError)) XErr {
-	if err == nil {
+	if isErrNil(err) {
 		return nil
 	}
 
-	err1 := &XError{Err: err}
+	err1 := &XError{Err: err, Meta: make(map[string]interface{})}
 	if e, ok := err.(*XError); ok {
 		err1 = e
 	} else {
@@ -54,7 +54,7 @@ func WrapXErr(err error, fns ...func(err *XError)) XErr {
 }
 
 func trans(err error) *XError {
-	if err == nil {
+	if isErrNil(err) {
 		return nil
 	}
 

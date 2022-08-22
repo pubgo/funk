@@ -5,8 +5,10 @@ type XErr interface {
 	Error() string
 	String() string
 	DebugPrint()
+	Stack() string
 	Unwrap() error
+	Cause() error
 	Wrap(args ...interface{}) XErr
-	WrapKV(k string, v interface{}) XErr
+	WrapMeta(k string, v interface{}) XErr
 	WrapF(msg string, args ...interface{}) XErr
 }

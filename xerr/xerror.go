@@ -15,22 +15,23 @@ import (
 const CallStackDepth = 2
 
 func New(format string, a ...interface{}) XErr {
-	x := &XError{}
+	x := &XError{Meta: make(map[string]interface{})}
 	x.Msg = fmt.Sprintf(format, a...)
 	x.Caller = []string{utils.CallerWithDepth(CallStackDepth + 1)}
 	return x
 }
 
 type XError struct {
-	Err    error    `json:"cause,omitempty"`
-	Msg    string   `json:"msg,omitempty"`
-	Detail string   `json:"detail,omitempty"`
-	Caller []string `json:"caller,omitempty"`
+	Err    error                  `json:"cause,omitempty"`
+	Msg    string                 `json:"msg,omitempty"`
+	Detail string                 `json:"detail,omitempty"`
+	Caller []string               `json:"caller,omitempty"`
+	Meta   map[string]interface{} `json:"meta,omitempty"`
 }
 
-func (t *XError) WrapKV(k string, v interface{}) XErr {
-	//TODO implement me
-	panic("implement me")
+func (t *XError) WrapMeta(k string, v interface{}) XErr {
+	t.Meta[k] = v
+	return t
 }
 
 func (t *XError) xErr()          {}
@@ -62,6 +63,10 @@ func (t *XError) _p(buf *strings.Builder, xrr *XError) {
 	buf.WriteString("========================================================================================================================\n")
 	if xrr.Msg != "" {
 		buf.WriteString(fmt.Sprintf("   %s]: %s\n", color.Green.P("Msg"), xrr.Msg))
+	}
+
+	if len(xrr.Meta) > 0 {
+		buf.WriteString(fmt.Sprintf("  %s]: %q\n", color.Green.P("Meta"), xrr.Meta))
 	}
 
 	if xrr.Detail != "" {
@@ -140,7 +145,7 @@ func (t *XError) Stack() string {
 
 	dt, err := json.Marshal(t)
 	if err != nil {
-		panic(err)
+		return err.Error()
 	}
 
 	return string(dt)

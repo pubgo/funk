@@ -17,9 +17,10 @@ func Promise[T any](fn func(resolve func(T), reject func(result.Error))) *Future
 	var f = newFuture[T]()
 	go func() {
 		defer recovery.Recovery(func(err xerr.XErr) {
-			f.failed(result.WithErr(err.WrapF("fn=%s", utils.CallerWithFunc(fn))))
+			f.failed(result.WithErr(err).WrapF("fn=%s", utils.CallerWithFunc(fn)))
 		})
-		fn(f.success, f.failed)
+
+		fn(func(t T) { f.success(result.OK(t)) }, f.failed)
 	}()
 	return f
 }
@@ -35,7 +36,7 @@ func AsyncGroup[T any](do func(async func(func() result.Result[T])) result.Error
 				wg.Add(1)
 				go func() {
 					defer wg.Done()
-					rr <- xtry.TryCatch1(f)
+					rr <- xtry.TryVal(f)
 				}()
 			})
 		}))
