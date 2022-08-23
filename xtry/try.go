@@ -25,8 +25,8 @@ func TryWith(gErr *result.Error, fn func() result.Error) {
 		*gErr = result.WithErr(err).WrapF("fn=%s", utils.CallerWithFunc(fn))
 	}()
 
-	*gErr = fn().OrElse(func(e result.Error) result.Error {
-		return e.WrapF("fn=%s", utils.CallerWithFunc(fn))
+	fn().Do(func(err result.Error) {
+		*gErr = err.WrapF("fn=%s", utils.CallerWithFunc(fn))
 	})
 }
 

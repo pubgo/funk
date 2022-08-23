@@ -39,6 +39,14 @@ func (e Error) Wrap(args ...interface{}) Error {
 	return Error{e: xerr.Wrap(e.e, args...)}
 }
 
+func (e Error) Do(fn func(err Error)) {
+	if e.IsNil() {
+		return
+	}
+
+	fn(e)
+}
+
 func (e Error) WrapF(msg string, args ...interface{}) Error {
 	if e.IsNil() {
 		return e
