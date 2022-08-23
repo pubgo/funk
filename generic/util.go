@@ -6,12 +6,16 @@ import (
 	_ "golang.org/x/exp/constraints"
 )
 
+func Zero[T any]() (ret T) {
+	return
+}
+
 // Equals wraps the '==' operator for comparable types.
 func Equals[T comparable](a, b T) bool {
 	return a == b
 }
 
-func Nil[T any]() (t T) {
+func Nil[T any]() (t *T) {
 	return
 }
 
@@ -22,7 +26,7 @@ func DePtr[T any](v *T) (r T) {
 	return *v
 }
 
-func Ptr[T any](v T) (r *T) {
+func Ptr[T any](v T) *T {
 	return &v
 }
 

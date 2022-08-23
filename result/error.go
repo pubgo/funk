@@ -7,7 +7,14 @@ import (
 )
 
 func WithErr(err error) Error {
-	return Error{e: err}
+	switch err.(type) {
+	case nil:
+		return Error{}
+	case Error:
+		return err.(Error)
+	default:
+		return Error{e: err}
+	}
 }
 
 type Error struct {

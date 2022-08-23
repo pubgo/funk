@@ -13,6 +13,7 @@ func OK[T any](v T) Result[T] {
 }
 
 func Err[T any](err Error) Result[T] {
+	err.Must()
 	return Result[T]{e: err}
 }
 
@@ -25,16 +26,6 @@ type Result[T any] struct {
 	e Error
 }
 
-func (r Result[T]) WithErr(err Error) Result[T] {
-	r.e = err
-	return r
-}
-
-func (r Result[T]) WithVal(t T) Result[T] {
-	r.v = &t
-	return r
-}
-
 func (r Result[T]) Err(check ...func(t T)) Error {
 	if len(check) > 0 && check[0] != nil && !r.IsErr() {
 		check[0](generic.DePtr(r.v))
@@ -43,23 +34,12 @@ func (r Result[T]) Err(check ...func(t T)) Error {
 	return r.e
 }
 
-func (r Result[T]) Value(check ...func(err Error) T) T {
-	if len(check) > 0 && check[0] != nil && !r.e.IsNil() {
-		return check[0](r.e)
-	}
-	return generic.DePtr(r.v)
-}
-
 func (r Result[T]) IsErr() bool {
 	return !r.e.IsNil()
 }
 
 func (r Result[T]) IsNil() bool {
 	return r.v == nil || reflect.ValueOf(*r.v).IsNil()
-}
-
-func (r Result[T]) IsNone() bool {
-	return !r.IsErr() && r.IsNil()
 }
 
 func (r Result[T]) Map(f func(T) T) Result[T] {
@@ -78,34 +58,28 @@ func (r Result[T]) Expect(msg string, args ...interface{}) T {
 	return generic.DePtr(r.v)
 }
 
-func (r Result[T]) UnwrapOr(v T) T {
+func (r Result[T]) OrElse(v T) T {
 	if r.IsErr() {
 		return v
 	}
 	return generic.DePtr(r.v)
 }
 
-func (r Result[T]) UnwrapOrElse(check ...func(err Error) T) T {
-	if len(check) > 0 && check[0] != nil && r.IsErr() {
-		return check[0](r.e)
-	}
-	return generic.DePtr(r.v)
-}
-
 func (r Result[T]) Unwrap(check ...func(err Error) T) T {
-	if r.IsErr() {
-		if len(check) > 0 && check[0] != nil {
-			return check[0](r.e)
-		} else {
-			panic(r.e)
-		}
+	if !r.IsErr() {
+		return generic.DePtr(r.v)
 	}
-	return generic.DePtr(r.v)
+
+	if len(check) > 0 && check[0] != nil {
+		return check[0](r.e)
+	} else {
+		panic(r.e)
+	}
 }
 
 func (r Result[T]) String() string {
 	if !r.IsErr() {
-		return fmt.Sprintf("%#v", r.v)
+		return fmt.Sprintf("%v", r.v)
 	}
 	return fmt.Sprintf("err_msg=%q err_detail=%#v", r.e.Unwrap(), r.e.Unwrap())
 }
@@ -128,10 +102,6 @@ func (cc Chan[T]) Unwrap(check ...func(err Error) []T) []T {
 func (cc Chan[T]) ToList() List[T] {
 	var rr []Result[T]
 	for r := range cc {
-		if r.IsNone() {
-			continue
-		}
-
 		rr = append(rr, r)
 	}
 	return rr
@@ -148,17 +118,13 @@ func (cc Chan[T]) ToResult() Result[[]T] {
 			continue
 		}
 
-		rl = append(rl, c.Value())
+		rl = append(rl, c.Unwrap())
 	}
 	return OK(rl)
 }
 
 func (cc Chan[T]) Range(fn func(r Result[T])) {
 	for c := range cc {
-		if c.IsNone() {
-			continue
-		}
-
 		fn(c)
 	}
 }
@@ -172,9 +138,6 @@ func (rr List[T]) Unwrap(check ...func(err Error) []T) []T {
 func (rr List[T]) Map(h func(r Result[T]) Result[T]) List[T] {
 	var ll = make(List[T], 0, len(rr))
 	for i := range rr {
-		if rr[i].IsNone() {
-			continue
-		}
 		ll = append(ll, h(rr[i]))
 	}
 	return ll
@@ -183,10 +146,6 @@ func (rr List[T]) Map(h func(r Result[T]) Result[T]) List[T] {
 func (rr List[T]) Filter(filter func(r *Result[T]) bool) List[T] {
 	var ll = make(List[T], 0, len(rr))
 	for i := range rr {
-		if rr[i].IsNone() {
-			continue
-		}
-
 		if filter(&rr[i]) {
 			ll = append(ll, rr[i])
 		}
@@ -200,19 +159,13 @@ func (rr List[T]) ToResult() Result[[]T] {
 		if rr[i].IsErr() {
 			return Err[[]T](rr[i].Err())
 		}
-		if rr[i].IsNone() {
-			continue
-		}
-		rl = append(rl, rr[i].Value())
+		rl = append(rl, rr[i].Unwrap())
 	}
 	return OK(rl)
 }
 
 func (rr List[T]) Range(fn func(r Result[T])) {
 	for i := range rr {
-		if rr[i].IsNone() {
-			continue
-		}
 		fn(rr[i])
 	}
 }

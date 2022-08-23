@@ -2,6 +2,7 @@ package strutil
 
 import (
 	"encoding"
+	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -49,18 +50,25 @@ func Stringify(v any) string {
 	case error:
 		s = vv.Error()
 	case nil:
-		return "null"
+		s = "null"
 	case []byte:
-		return string(vv)
+		s = string(vv)
+	case json.Marshaler:
+		vb, err := vv.MarshalJSON()
+		if err != nil {
+			s = err.Error()
+		} else {
+			s = string(vb)
+		}
 	case encoding.TextMarshaler:
 		vb, err := vv.MarshalText()
 		if err != nil {
-			return err.Error()
+			s = err.Error()
+		} else {
+			s = string(vb)
 		}
-		return string(vb)
 	default:
 		s = fmt.Sprint(v)
 	}
-
 	return Quote(s)
 }

@@ -31,7 +31,7 @@ func (f *Future[T]) Await() result.Result[T] {
 	return f.v
 }
 
-func (f *Future[T]) Unwrap() T {
+func (f *Future[T]) Unwrap(check ...func(err result.Error) T) T {
 	<-f.done
-	return f.v.Unwrap()
+	return f.v.Unwrap(check...)
 }

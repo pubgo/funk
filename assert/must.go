@@ -3,12 +3,13 @@ package assert
 import (
 	"fmt"
 	"os"
+	"reflect"
 
 	"github.com/pubgo/funk/xerr"
 )
 
 func Must(err error, args ...interface{}) {
-	if err == nil {
+	if isErrNil(err) {
 		return
 	}
 
@@ -16,7 +17,7 @@ func Must(err error, args ...interface{}) {
 }
 
 func MustF(err error, msg string, args ...interface{}) {
-	if err == nil {
+	if isErrNil(err) {
 		return
 	}
 
@@ -24,7 +25,7 @@ func MustF(err error, msg string, args ...interface{}) {
 }
 
 func Must1[T any](ret T, err error) T {
-	if err == nil {
+	if isErrNil(err) {
 		return ret
 	}
 
@@ -32,7 +33,7 @@ func Must1[T any](ret T, err error) T {
 }
 
 func Exit(err error, args ...interface{}) {
-	if err == nil {
+	if isErrNil(err) {
 		return
 	}
 
@@ -41,7 +42,7 @@ func Exit(err error, args ...interface{}) {
 }
 
 func ExitF(err error, msg string, args ...interface{}) {
-	if err == nil {
+	if isErrNil(err) {
 		return
 	}
 
@@ -50,11 +51,15 @@ func ExitF(err error, msg string, args ...interface{}) {
 }
 
 func Exit1[T any](ret T, err error) T {
-	if err == nil {
+	if isErrNil(err) {
 		return ret
 	}
 
 	xerr.WrapXErr(err).DebugPrint()
 	os.Exit(1)
 	return ret
+}
+
+func isErrNil(err error) bool {
+	return err == nil || reflect.ValueOf(err).IsNil()
 }

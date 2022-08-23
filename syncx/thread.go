@@ -3,15 +3,16 @@ package syncx
 import (
 	"context"
 
+	"github.com/pubgo/funk/result"
 	"go.uber.org/atomic"
 )
 
-func NewThread(h func(ctx context.Context)) *Thread {
+func NewThread(h func(ctx context.Context) result.Error) *Thread {
 	return &Thread{h: h}
 }
 
 type Thread struct {
-	h      func(ctx context.Context)
+	h      func(ctx context.Context) result.Error
 	start  atomic.Bool
 	cancel context.CancelFunc
 }
