@@ -1,6 +1,10 @@
 package generic
 
-import "reflect"
+import (
+	"reflect"
+
+	_ "golang.org/x/exp/constraints"
+)
 
 // Equals wraps the '==' operator for comparable types.
 func Equals[T comparable](a, b T) bool {
