@@ -35,7 +35,7 @@ func (r Result[T]) Err(check ...func(t T)) Error {
 }
 
 func (r Result[T]) IsErr() bool {
-	return !r.e.IsNil()
+	return r.e.IsErr()
 }
 
 func (r Result[T]) IsNil() bool {
@@ -87,10 +87,21 @@ func (r Result[T]) String() string {
 func (r Result[T]) MarshalJSON() ([]byte, error) {
 	var d = data[T]{Body: generic.DePtr(r.v)}
 	if r.IsErr() {
-		d.ErrMsg = r.e.Error()
+		d.ErrMsg = r.e.Err().Error()
 		d.ErrDetail = fmt.Sprintf("%#v", r.e.Unwrap())
 	}
 	return json.Marshal(d)
+}
+
+func ChanOf[T any](args chan T) Chan[T] {
+	var ret = make(Chan[T])
+	go func() {
+		defer close(ret)
+		for arg := range args {
+			ret <- OK(arg)
+		}
+	}()
+	return ret
 }
 
 type Chan[T any] chan Result[T]
@@ -127,6 +138,14 @@ func (cc Chan[T]) Range(fn func(r Result[T])) {
 	for c := range cc {
 		fn(c)
 	}
+}
+
+func ListOf[T any](args ...T) List[T] {
+	var ret = make([]Result[T], 0, len(args))
+	for i := range args {
+		ret = append(ret, OK(args[i]))
+	}
+	return ret
 }
 
 type List[T any] []Result[T]

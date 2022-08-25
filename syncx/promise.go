@@ -55,11 +55,11 @@ func Wait[T any](val ...*Future[T]) result.List[T] {
 	return valList
 }
 
-func Yield[T any](do func(yield func(T)) error) result.Chan[T] {
+func Yield[T any](do func(yield func(T)) result.Error) result.Chan[T] {
 	var dd = make(chan result.Result[T])
 	go func() {
 		defer close(dd)
-		err := xtry.TryErr(func() result.Error { return result.WithErr(do(func(t T) { dd <- result.OK(t) })) })
+		err := xtry.TryErr(func() result.Error { return do(func(t T) { dd <- result.OK(t) }) })
 		dd <- result.Err[T](err)
 	}()
 	return dd

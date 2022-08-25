@@ -10,11 +10,13 @@ func WithErr(err error) Error {
 	switch err.(type) {
 	case nil:
 		return Error{}
-	case Error:
-		return err.(Error)
 	default:
 		return Error{e: err}
 	}
+}
+
+func NilErr() Error {
+	return Error{}
 }
 
 type Error struct {
@@ -23,6 +25,10 @@ type Error struct {
 
 func (e Error) IsNil() bool {
 	return e.e == nil || reflect.ValueOf(e.e).IsNil()
+}
+
+func (e Error) IsErr() bool {
+	return !e.IsNil()
 }
 
 func (e Error) Must() {
@@ -64,12 +70,6 @@ func (e Error) OrElse(wrap func(e Error) Error) Error {
 func (e Error) WithErr(err error) Error { e.e = err; return e }
 func (e Error) Err() error              { return e.e }
 func (e Error) Unwrap() error           { return e.e }
-func (e Error) Error() string {
-	if e.IsNil() {
-		return ""
-	}
-	return e.e.Error()
-}
 func (e Error) Expect(msg string, args ...interface{}) {
 	if e.IsNil() {
 		return

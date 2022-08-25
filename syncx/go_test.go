@@ -17,25 +17,25 @@ func TestAsync(t *testing.T) {
 
 func TestYield(t *testing.T) {
 	t.Run("sync", func(t *testing.T) {
-		t.Log(Yield(func(yield func(string)) error {
+		t.Log(Yield(func(yield func(string)) result.Error {
 			yield(time.Now().String())
 			yield(time.Now().String())
 			yield(time.Now().String())
 			panic("d")
 		}).ToResult())
 
-		t.Log(Yield(func(yield func(string)) error {
+		t.Log(Yield(func(yield func(string)) result.Error {
 			yield(time.Now().String())
 			yield(time.Now().String())
 			yield(time.Now().String())
-			return fmt.Errorf("err test")
+			return result.WithErr(fmt.Errorf("err test"))
 		}).ToResult())
 
-		t.Log(Yield(func(yield func(string)) error {
+		t.Log(Yield(func(yield func(string)) result.Error {
 			yield(time.Now().String())
 			yield(time.Now().String())
 			yield(time.Now().String())
-			return nil
+			return result.NilErr()
 		}).ToResult())
 	})
 }
