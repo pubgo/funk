@@ -29,7 +29,7 @@ type XError struct {
 	Meta   map[string]interface{} `json:"meta,omitempty"`
 }
 
-func (t *XError) WrapMeta(k string, v interface{}) XErr {
+func (t *XError) WithMeta(k string, v interface{}) XErr {
 	t.Meta[k] = v
 	return t
 }

@@ -9,6 +9,6 @@ type XErr interface {
 	Unwrap() error
 	Cause() error
 	Wrap(args ...interface{}) XErr
-	WrapMeta(k string, v interface{}) XErr
+	WithMeta(k string, v interface{}) XErr
 	WrapF(msg string, args ...interface{}) XErr
 }
