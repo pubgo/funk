@@ -52,9 +52,10 @@ func TernaryFn[T any](ok bool, a func() T, b func() T) T {
 	return b()
 }
 
-func Map[T any](data []T, handle func(arg T) T) []T {
+func Map[T any, V any](data []T, handle func(i int) V) []V {
+	var vv = make([]V, 0, len(data))
 	for i := range data {
-		data[i] = handle(data[i])
+		vv = append(vv, handle(i))
 	}
-	return data
+	return vv
 }
