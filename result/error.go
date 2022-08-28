@@ -2,7 +2,6 @@ package result
 
 import (
 	"fmt"
-	"reflect"
 
 	"github.com/pubgo/funk/xerr"
 )
@@ -32,13 +31,9 @@ func (e Error) String() string {
 	return fmt.Sprintf("err=%q detail=%#v", e.e.Error(), e.e)
 }
 
-func (e Error) IsNil() bool {
-	return e.e == nil || reflect.ValueOf(e.e).IsNil()
-}
+func (e Error) IsNil() bool { return xerr.IsNil(e.e) }
 
-func (e Error) IsErr() bool {
-	return !e.IsNil()
-}
+func (e Error) IsErr() bool { return !e.IsNil() }
 
 func (e Error) Must() {
 	if e.IsNil() {

@@ -70,3 +70,16 @@ func trans(err error) *XError {
 		return &XError{Msg: err.Error(), Detail: fmt.Sprintf("%#v", err)}
 	}
 }
+
+func IsNil(err error) bool {
+	if err == nil {
+		return true
+	}
+
+	var v = reflect.ValueOf(err)
+	if !v.IsValid() {
+		return true
+	}
+
+	return v.IsZero()
+}
