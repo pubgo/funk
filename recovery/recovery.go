@@ -5,8 +5,44 @@ import (
 	"runtime/debug"
 
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/xerr"
 )
+
+func Result[T any](ret *result.Result[T]) {
+	val := recover()
+	if val == nil {
+		return
+	}
+
+	var err error
+	xerr.ParseErr(&err, val)
+	if err == nil {
+		return
+	}
+
+	*ret = result.Err[T](result.WithErr(err))
+}
+
+func ResultErr(gErr *result.Error, fns ...func(err xerr.XErr) xerr.XErr) {
+	val := recover()
+	if val == nil {
+		return
+	}
+
+	var err error
+	xerr.ParseErr(&err, val)
+	if err == nil {
+		return
+	}
+
+	err1 := xerr.WrapXErr(err)
+	if len(fns) > 0 && fns[0] != nil {
+		*gErr = result.WithErr(fns[0](err1))
+		return
+	}
+	*gErr = result.WithErr(err1)
+}
 
 func Err(gErr *error, fns ...func(err xerr.XErr) xerr.XErr) {
 	val := recover()

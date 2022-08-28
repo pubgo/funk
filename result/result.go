@@ -13,7 +13,6 @@ func OK[T any](v T) Result[T] {
 }
 
 func Err[T any](err Error) Result[T] {
-	err.Must()
 	return Result[T]{e: err}
 }
 
@@ -24,6 +23,16 @@ func Wrap[T any](v T, err error) Result[T] {
 type Result[T any] struct {
 	v *T
 	e Error
+}
+
+func (r Result[T]) WithErr(err Error) Result[T] {
+	r.e = err
+	return r
+}
+
+func (r Result[T]) WithVal(v T) Result[T] {
+	r.v = &v
+	return r
 }
 
 func (r Result[T]) Err(check ...func(t T)) Error {
@@ -81,7 +90,7 @@ func (r Result[T]) String() string {
 	if !r.IsErr() {
 		return fmt.Sprintf("%v", r.v)
 	}
-	return fmt.Sprintf("err_msg=%q err_detail=%#v", r.e.Unwrap(), r.e.Unwrap())
+	return r.e.String()
 }
 
 func (r Result[T]) MarshalJSON() ([]byte, error) {
