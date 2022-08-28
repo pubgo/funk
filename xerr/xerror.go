@@ -167,7 +167,7 @@ func (t *XError) As(target interface{}) bool {
 
 // Error
 func (t *XError) Error() string {
-	if t == nil || isErrNil(t.Err) {
+	if t == nil || IsNil(t.Err) {
 		return ""
 	}
 

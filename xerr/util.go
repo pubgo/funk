@@ -9,8 +9,7 @@ import (
 	"github.com/pubgo/funk/internal/utils"
 )
 
-func isErrNil(err error) bool { return err == nil || reflect.ValueOf(err).IsNil() }
-func p(a ...interface{})      { _, _ = fmt.Fprintln(os.Stderr, a...) }
+func p(a ...interface{}) { _, _ = fmt.Fprintln(os.Stderr, a...) }
 
 func ParseErr(err *error, val interface{}) {
 	switch _val := val.(type) {
@@ -29,7 +28,7 @@ func ParseErr(err *error, val interface{}) {
 }
 
 func WrapXErr(err error, fns ...func(err *XError)) XErr {
-	if isErrNil(err) {
+	if IsNil(err) {
 		return nil
 	}
 
@@ -54,7 +53,7 @@ func WrapXErr(err error, fns ...func(err *XError)) XErr {
 }
 
 func trans(err error) *XError {
-	if isErrNil(err) {
+	if IsNil(err) {
 		return nil
 	}
 
