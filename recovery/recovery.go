@@ -100,7 +100,7 @@ func Recovery(fn func(err xerr.XErr)) {
 	fn(xerr.WrapXErr(err))
 }
 
-func Exit() {
+func Exit(handlers ...func()) {
 	val := recover()
 	if val == nil {
 		return
@@ -112,6 +112,9 @@ func Exit() {
 		return
 	}
 
+	if len(handlers) > 0 {
+		handlers[0]()
+	}
 	xerr.WrapXErr(err).DebugPrint()
 	os.Exit(1)
 }
