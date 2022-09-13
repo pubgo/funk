@@ -1,10 +1,35 @@
 package result
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/pubgo/funk/xerr"
 )
+
+func ParseErr(err *error, val interface{}) {
+	switch _val := val.(type) {
+	case nil:
+		return
+	case Error:
+		*err = _val.Err()
+	case interface{ Unwrap() error }:
+		if _val.Unwrap() != nil {
+			*err = xerr.WrapXErr(_val.Unwrap()).WrapF("%#v", _val)
+		} else {
+			*err = fmt.Errorf("%#v", _val)
+		}
+	case error:
+		*err = _val
+	case string:
+		*err = errors.New(_val)
+	case []byte:
+		*err = errors.New(string(_val))
+	default:
+		*err = fmt.Errorf("%#v", _val)
+	}
+	*err = xerr.WrapXErr(*err)
+}
 
 func WithErr(err error) Error {
 	switch err.(type) {

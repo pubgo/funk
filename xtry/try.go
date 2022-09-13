@@ -4,7 +4,6 @@ import (
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/internal/utils"
 	"github.com/pubgo/funk/result"
-	"github.com/pubgo/funk/xerr"
 )
 
 func TryWith(gErr *result.Error, fn func() result.Error) {
@@ -17,7 +16,7 @@ func TryWith(gErr *result.Error, fn func() result.Error) {
 		}
 
 		var err error
-		xerr.ParseErr(&err, val)
+		result.ParseErr(&err, val)
 		if err == nil {
 			return
 		}
@@ -40,7 +39,7 @@ func Try(fn func()) (gErr result.Error) {
 		}
 
 		var err error
-		xerr.ParseErr(&err, val)
+		result.ParseErr(&err, val)
 		if err == nil {
 			return
 		}
@@ -62,7 +61,7 @@ func TryErr(fn func() result.Error) (gErr result.Error) {
 		}
 
 		var err error
-		xerr.ParseErr(&err, val)
+		result.ParseErr(&err, val)
 		if err == nil {
 			return
 		}
@@ -85,7 +84,7 @@ func TryVal[T any](fn func() result.Result[T]) (g result.Result[T]) {
 		}
 
 		var err error
-		xerr.ParseErr(&err, val)
+		result.ParseErr(&err, val)
 		if err == nil {
 			return
 		}

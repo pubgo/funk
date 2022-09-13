@@ -32,6 +32,7 @@ func (r Result[T]) WithErr(err Error) Result[T] {
 
 func (r Result[T]) WithVal(v T) Result[T] {
 	r.v = &v
+	r.e = WithErr(nil)
 	return r
 }
 

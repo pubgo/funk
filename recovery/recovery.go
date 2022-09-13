@@ -16,7 +16,7 @@ func Result[T any](ret *result.Result[T]) {
 	}
 
 	var err error
-	xerr.ParseErr(&err, val)
+	result.ParseErr(&err, val)
 	if err == nil {
 		return
 	}
@@ -31,7 +31,7 @@ func ResultErr(gErr *result.Error, fns ...func(err xerr.XErr) xerr.XErr) {
 	}
 
 	var err error
-	xerr.ParseErr(&err, val)
+	result.ParseErr(&err, val)
 	if err == nil {
 		return
 	}
@@ -51,7 +51,7 @@ func Err(gErr *error, fns ...func(err xerr.XErr) xerr.XErr) {
 	}
 
 	var err error
-	xerr.ParseErr(&err, val)
+	result.ParseErr(&err, val)
 	if err == nil {
 		return
 	}
@@ -71,7 +71,7 @@ func Raise(fns ...func(err xerr.XErr) xerr.XErr) {
 	}
 
 	var err error
-	xerr.ParseErr(&err, val)
+	result.ParseErr(&err, val)
 	if err == nil {
 		return
 	}
@@ -92,7 +92,7 @@ func Recovery(fn func(err xerr.XErr)) {
 	}
 
 	var err error
-	xerr.ParseErr(&err, val)
+	result.ParseErr(&err, val)
 	if err == nil {
 		return
 	}
@@ -107,7 +107,7 @@ func Exit(handlers ...func()) {
 	}
 
 	var err error
-	xerr.ParseErr(&err, val)
+	result.ParseErr(&err, val)
 	if err == nil {
 		return
 	}
@@ -126,7 +126,7 @@ func DebugPrint() {
 	}
 
 	var err error
-	xerr.ParseErr(&err, val)
+	result.ParseErr(&err, val)
 	if err == nil {
 		return
 	}

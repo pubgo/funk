@@ -1,7 +1,6 @@
 package xerr
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -10,22 +9,6 @@ import (
 )
 
 func p(a ...interface{}) { _, _ = fmt.Fprintln(os.Stderr, a...) }
-
-func ParseErr(err *error, val interface{}) {
-	switch _val := val.(type) {
-	case nil:
-		return
-	case error:
-		*err = _val
-	case string:
-		*err = errors.New(_val)
-	case []byte:
-		*err = errors.New(string(_val))
-	default:
-		*err = fmt.Errorf("%#v", _val)
-	}
-	*err = WrapXErr(*err)
-}
 
 func WrapXErr(err error, fns ...func(err *XError)) XErr {
 	if IsNil(err) {
