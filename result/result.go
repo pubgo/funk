@@ -75,13 +75,13 @@ func (r Result[T]) OrElse(v T) T {
 	return generic.DePtr(r.v)
 }
 
-func (r Result[T]) Unwrap(check ...func(err Error) T) T {
+func (r Result[T]) Unwrap(check ...func(err Error) Error) T {
 	if !r.IsErr() {
 		return generic.DePtr(r.v)
 	}
 
 	if len(check) > 0 && check[0] != nil {
-		return check[0](r.e)
+		panic(check[0](r.e))
 	} else {
 		panic(r.e)
 	}
@@ -116,7 +116,7 @@ func ChanOf[T any](args chan T) Chan[T] {
 
 type Chan[T any] chan Result[T]
 
-func (cc Chan[T]) Unwrap(check ...func(err Error) []T) []T {
+func (cc Chan[T]) Unwrap(check ...func(err Error) Error) []T {
 	return cc.ToResult().Unwrap(check...)
 }
 
@@ -160,7 +160,7 @@ func ListOf[T any](args ...T) List[T] {
 
 type List[T any] []Result[T]
 
-func (rr List[T]) Unwrap(check ...func(err Error) []T) []T {
+func (rr List[T]) Unwrap(check ...func(err Error) Error) []T {
 	return rr.ToResult().Unwrap(check...)
 }
 
