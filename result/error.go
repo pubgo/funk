@@ -60,12 +60,16 @@ func (e Error) IsNil() bool { return xerr.IsNil(e.e) }
 
 func (e Error) IsErr() bool { return !e.IsNil() }
 
-func (e Error) Must() {
+func (e Error) Must(check ...func(err Error) Error) {
 	if e.IsNil() {
 		return
 	}
 
-	panic(xerr.Wrap(e.e))
+	if len(check) > 0 && check[0] != nil {
+		panic(xerr.Wrap(check[0](e).e))
+	} else {
+		panic(xerr.Wrap(e.e))
+	}
 }
 
 func (e Error) Wrap(args ...interface{}) Error {
