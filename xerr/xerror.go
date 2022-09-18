@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"runtime/debug"
 	"strings"
 
 	"github.com/pubgo/funk/internal/color"
@@ -42,7 +41,6 @@ func (t *XError) DebugPrint() {
 	}
 
 	p(t.debugString())
-	debug.PrintStack()
 }
 
 func (t *XError) Unwrap() error { return t.Err }

@@ -21,6 +21,7 @@ func Result[T any](ret *result.Result[T]) {
 		return
 	}
 
+	debug.PrintStack()
 	*ret = result.Err[T](result.WithErr(err))
 }
 
@@ -36,6 +37,7 @@ func ResultErr(gErr *result.Error, fns ...func(err xerr.XErr) xerr.XErr) {
 		return
 	}
 
+	debug.PrintStack()
 	err1 := xerr.WrapXErr(err)
 	if len(fns) > 0 && fns[0] != nil {
 		*gErr = result.WithErr(fns[0](err1))
@@ -56,6 +58,7 @@ func Err(gErr *error, fns ...func(err xerr.XErr) xerr.XErr) {
 		return
 	}
 
+	debug.PrintStack()
 	err1 := xerr.WrapXErr(err)
 	if len(fns) > 0 && fns[0] != nil {
 		*gErr = fns[0](err1)
@@ -76,6 +79,7 @@ func Raise(fns ...func(err xerr.XErr) xerr.XErr) {
 		return
 	}
 
+	debug.PrintStack()
 	err1 := xerr.WrapXErr(err)
 	if len(fns) > 0 && fns[0] != nil {
 		panic(fns[0](err1))
@@ -97,6 +101,7 @@ func Recovery(fn func(err xerr.XErr)) {
 		return
 	}
 
+	debug.PrintStack()
 	fn(xerr.WrapXErr(err))
 }
 
@@ -115,6 +120,7 @@ func Exit(handlers ...func()) {
 	if len(handlers) > 0 {
 		handlers[0]()
 	}
+	debug.PrintStack()
 	xerr.WrapXErr(err).DebugPrint()
 	os.Exit(1)
 }
@@ -131,6 +137,6 @@ func DebugPrint() {
 		return
 	}
 
-	xerr.WrapXErr(err).DebugPrint()
 	debug.PrintStack()
+	xerr.WrapXErr(err).DebugPrint()
 }
