@@ -25,8 +25,8 @@ type Result[T any] struct {
 	e Error
 }
 
-func (r Result[T]) WithErr(err Error) Result[T] {
-	r.e = err
+func (r Result[T]) WithErr(err error) Result[T] {
+	r.e = WithErr(err)
 	return r
 }
 
