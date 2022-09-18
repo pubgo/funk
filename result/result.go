@@ -12,8 +12,8 @@ func OK[T any](v T) Result[T] {
 	return Result[T]{v: &v}
 }
 
-func Err[T any](err Error) Result[T] {
-	return Result[T]{e: err}
+func Err[T any](err error) Result[T] {
+	return Result[T]{e: WithErr(err)}
 }
 
 func Wrap[T any](v T, err error) Result[T] {
@@ -36,12 +36,16 @@ func (r Result[T]) WithVal(v T) Result[T] {
 	return r
 }
 
-func (r Result[T]) Err(check ...func(t T)) Error {
-	if len(check) > 0 && check[0] != nil && !r.IsErr() {
-		check[0](generic.DePtr(r.v))
-		return Error{}
+func (r Result[T]) Err(check ...func(err Error) Error) error {
+	if r.IsNil() {
+		return nil
 	}
-	return r.e
+
+	if len(check) > 0 && check[0] != nil {
+		return check[0](r.e).Err()
+	} else {
+		return r.e.Err()
+	}
 }
 
 func (r Result[T]) IsErr() bool {

@@ -4,6 +4,7 @@ import (
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/internal/utils"
 	"github.com/pubgo/funk/result"
+	"github.com/pubgo/funk/xerr"
 )
 
 func TryWith(gErr *result.Error, fn func() result.Error) {
@@ -89,7 +90,7 @@ func TryVal[T any](fn func() result.Result[T]) (g result.Result[T]) {
 			return
 		}
 
-		g = result.Err[T](result.WithErr(err).WrapF("fn=%s", utils.CallerWithFunc(fn)))
+		g = result.Err[T](xerr.WrapF(err, "fn=%s", utils.CallerWithFunc(fn)))
 	}()
 
 	return fn()

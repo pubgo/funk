@@ -23,7 +23,7 @@ func (f *Future[T]) failed(err result.Error) {
 	if err.IsNil() {
 		return
 	}
-	f.v = result.Err[T](err)
+	f.v = result.Err[T](err.Err())
 }
 
 func (f *Future[T]) Await() result.Result[T] {

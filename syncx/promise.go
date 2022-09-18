@@ -39,7 +39,7 @@ func AsyncGroup[T any](do func(async func(func() result.Result[T])) result.Error
 					rr <- xtry.TryVal(f)
 				}()
 			})
-		}))
+		}).Err())
 		wg.Wait()
 		close(rr)
 	}()
@@ -60,7 +60,7 @@ func Yield[T any](do func(yield func(T)) result.Error) result.Chan[T] {
 	go func() {
 		defer close(dd)
 		err := xtry.TryErr(func() result.Error { return do(func(t T) { dd <- result.OK(t) }) })
-		dd <- result.Err[T](err)
+		dd <- result.Err[T](err.Err())
 	}()
 	return dd
 }

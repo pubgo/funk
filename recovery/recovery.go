@@ -22,7 +22,7 @@ func Result[T any](ret *result.Result[T]) {
 	}
 
 	debug.PrintStack()
-	*ret = result.Err[T](result.WithErr(err))
+	*ret = result.Err[T](err)
 }
 
 func ResultErr(gErr *result.Error, fns ...func(err xerr.XErr) xerr.XErr) {
