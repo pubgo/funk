@@ -79,6 +79,14 @@ func (r Result[T]) OrElse(v T) T {
 	return generic.DePtr(r.v)
 }
 
+func (r Result[T]) OnErr(check func(err Error) Error) Result[T] {
+	if r.IsErr() {
+		r.e = check(r.e)
+	}
+
+	return r
+}
+
 func (r Result[T]) Unwrap(check ...func(err Error) Error) T {
 	if !r.IsErr() {
 		return generic.DePtr(r.v)
