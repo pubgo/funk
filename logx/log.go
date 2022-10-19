@@ -1,6 +1,8 @@
 package logx
 
 import (
+	"fmt"
+
 	"github.com/go-logr/logr"
 )
 
@@ -33,6 +35,10 @@ func Enabled() bool {
 
 func Info(msg string, keysAndValues ...interface{}) {
 	logT.WithCallDepth(1).Info(msg, keysAndValues...)
+}
+
+func Infof(format string, args ...interface{}) {
+	logT.WithCallDepth(1).Info(fmt.Sprintf(format, args...))
 }
 
 func Error(err error, msg string, keysAndValues ...interface{}) {
