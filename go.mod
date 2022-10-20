@@ -10,10 +10,12 @@ require (
 	github.com/gopherjs/gopherjs v1.17.2
 	github.com/iancoleman/strcase v0.2.0
 	github.com/iand/logfmtr v0.2.1
+	github.com/kr/pretty v0.3.0
 	github.com/mattn/go-isatty v0.0.14
 	github.com/mattn/go-sqlite3 v1.14.14
 	github.com/modood/table v0.0.0-20220527013332-8d47e76dad33
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58
+	github.com/pubgo/x v0.3.37
 	github.com/rodaine/table v1.0.1
 	github.com/stretchr/testify v1.7.2
 	github.com/valyala/fastrand v1.1.0
@@ -26,18 +28,21 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
+	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
-	github.com/kr/pretty v0.1.0 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.9 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/pubgo/xerror v0.4.20 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
+	github.com/rogpeppe/go-internal v1.6.1 // indirect
 	github.com/smartystreets/goconvey v1.7.2 // indirect
+	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
 	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654 // indirect
 	golang.org/x/tools v0.1.10 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
-	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/uint128 v1.1.1 // indirect
 	modernc.org/cc/v3 v3.36.0 // indirect
