@@ -61,12 +61,12 @@ func (l Logger) Info(msg string, tags ...logger.Tagger) {
 	writer.Info(l.level, msg, tags...)
 }
 
-func (l Logger) Infof(msg string, args ...interface{}) {
+func (l Logger) Infof(format string, args ...interface{}) {
 	if !l.Enabled() {
 		return
 	}
 
-	writer.Info(l.level, fmt.Sprintf(msg, args...))
+	writer.Info(l.level, fmt.Sprintf(format, args...))
 }
 
 func (l Logger) Error(err error, msg string, tags ...logger.Tagger) {

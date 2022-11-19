@@ -12,7 +12,6 @@ var writer logger.Logger
 var hooks []logger.Hook
 var ll uint
 var log Logger
-var NameDelim = "."
 
 func AddHook(h logger.Hook) {
 	if h == nil {
