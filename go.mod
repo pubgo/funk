@@ -3,6 +3,8 @@ module github.com/pubgo/funk
 go 1.18
 
 require (
+	github.com/DataDog/gostackparse v0.6.0
+	github.com/cockroachdb/logtags v0.0.0-20211118104740-dabe8e521a4f
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.13.0
 	github.com/go-kit/log v0.2.1
@@ -17,11 +19,14 @@ require (
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58
 	github.com/pubgo/x v0.3.37
 	github.com/rodaine/table v1.0.1
+	github.com/rs/xid v1.4.0
 	github.com/stretchr/testify v1.7.2
 	github.com/valyala/fastrand v1.1.0
 	go.uber.org/atomic v1.9.0
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
+	google.golang.org/protobuf v1.25.0
+	k8s.io/klog/v2 v2.80.1
 	modernc.org/sqlite v1.18.0
 )
 

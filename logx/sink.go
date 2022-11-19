@@ -1,11 +1,14 @@
 package logx
 
 import (
+	"bytes"
 	"fmt"
 	"runtime/debug"
 	"sync/atomic"
 	"time"
 
+	"github.com/DataDog/gostackparse"
+	_ "github.com/DataDog/gostackparse"
 	logkit "github.com/go-kit/log"
 	"github.com/go-logr/logr"
 	"github.com/pubgo/funk/assert"
@@ -68,9 +71,11 @@ func (s sink) Error(err error, msg string, keysAndValues ...interface{}) {
 		return
 	}
 
+	goroutines, _ := gostackparse.Parse(bytes.NewReader(debug.Stack()))
+
 	if defaultLog == nil {
 		keysAndValues = append(keysAndValues, "error_detail", fmt.Sprintf("%#v", err))
-		keysAndValues = append(keysAndValues, "stacktrace", string(debug.Stack()))
+		keysAndValues = append(keysAndValues, "stacktrace", goroutines)
 		s.log.WithCallDepth(int(s.callDepth)).WithName(s.prefix).WithValues(s.values...).GetSink().Error(err, msg, keysAndValues...)
 		return
 	}
@@ -82,7 +87,7 @@ func (s sink) Error(err error, msg string, keysAndValues ...interface{}) {
 	keysAndValues = append(keysAndValues, "msg", msg)
 	keysAndValues = append(keysAndValues, "error", err.Error())
 	keysAndValues = append(keysAndValues, "error_detail", fmt.Sprintf("%#v", err))
-	keysAndValues = append(keysAndValues, "stacktrace", string(debug.Stack()))
+	keysAndValues = append(keysAndValues, "stacktrace", goroutines)
 	keysAndValues = append(keysAndValues, "ts", time.Now().UTC().Format(TimestampFormat))
 	assert.Must(defaultLog.Log(keysAndValues...))
 }
