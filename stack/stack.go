@@ -34,23 +34,31 @@ func (f *Func) TrimRuntime() *Func {
 	return &f1
 }
 
-type frame uintptr
-
-func (f frame) pc() uintptr { return uintptr(f) }
-
-func CallerWithDepth(cd int) string {
-	var pcs = make([]uintptr, 1)
-	if runtime.Callers(cd+2, pcs[:]) == 0 {
+func CallerWithDepth(skip int) string {
+	// As of Go 1.9 we need room for up to three PC entries.
+	//
+	// 0. An entry for the stack frame prior to the target to check for
+	//    special handling needed if that prior entry is runtime.sigpanic.
+	// 1. A possible second entry to hold metadata about skipped inlined
+	//    functions. If inline functions were not skipped the target frame
+	//    PC will be here.
+	// 2. A third entry for the target frame PC when the second entry
+	//    is used for skipped inline functions.
+	var pcs [3]uintptr
+	n := runtime.Callers(skip+1, pcs[:])
+	if n == 0 {
 		return ""
 	}
 
-	f := frame(pcs[0])
-	fn := runtime.FuncForPC(f.pc())
+	pcs1 := pcs[:n]
+	pc := pcs1[len(pcs1)-1]
+
+	fn := runtime.FuncForPC(pc)
 	if fn == nil {
 		return "unknown type"
 	}
 
-	file, line := fn.FileLine(f.pc())
+	file, line := fn.FileLine(pc)
 	return fmt.Sprintf("%s:%d", file, line)
 }
 

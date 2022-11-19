@@ -49,6 +49,21 @@ func (l Logger) WithCtx(ctx context.Context) context.Context {
 	return context.WithValue(ctx, logCtx{}, l)
 }
 
+func (l Logger) FromCtx(ctx context.Context) Logger {
+	if ctx == nil {
+		return l
+	}
+
+	ll, ok := ctx.Value(logCtx{}).(Logger)
+	if !ok {
+		return l
+	}
+
+	l.tags = append(l.tags)
+
+	return context.WithValue(ctx, logCtx{}, l)
+}
+
 func (l Logger) Info(msg string, tags ...logger.Tagger) {
 	if !l.Enabled() {
 		return
