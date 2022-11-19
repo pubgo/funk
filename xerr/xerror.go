@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/pubgo/funk/internal/color"
-	"github.com/pubgo/funk/internal/utils"
 	"github.com/pubgo/funk/settings"
+	"github.com/pubgo/funk/stack"
 )
 
 const CallStackDepth = 2
@@ -16,7 +16,7 @@ const CallStackDepth = 2
 func New(format string, a ...interface{}) XErr {
 	x := &XError{Meta: make(map[string]interface{})}
 	x.Msg = fmt.Sprintf(format, a...)
-	x.Caller = []string{utils.CallerWithDepth(CallStackDepth + 1)}
+	x.Caller = []string{stack.CallerWithDepth(CallStackDepth + 1)}
 	return x
 }
 

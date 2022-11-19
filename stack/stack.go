@@ -1,25 +1,19 @@
-package utils
+package stack
 
 import (
 	"fmt"
 	"reflect"
 	"runtime"
 	"strings"
-
-	"github.com/pubgo/funk/settings"
 )
 
 type frame uintptr
 
-func (f frame) pc() uintptr { return uintptr(f) - 1 }
+func (f frame) pc() uintptr { return uintptr(f) }
 
 func CallerWithDepth(cd int) string {
-	if !settings.EnableCaller {
-		return ""
-	}
-
 	var pcs = make([]uintptr, 1)
-	if runtime.Callers(cd, pcs[:]) == 0 {
+	if runtime.Callers(cd+2, pcs[:]) == 0 {
 		return ""
 	}
 
@@ -35,10 +29,6 @@ func CallerWithDepth(cd int) string {
 
 func CallerWithFunc(fn interface{}) string {
 	if fn == nil {
-		return ""
-	}
-
-	if !settings.EnableCaller {
 		return ""
 	}
 

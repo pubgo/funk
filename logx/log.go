@@ -7,19 +7,19 @@ import (
 )
 
 func WithCallDepth(depth int) logr.Logger {
-	return logT.WithCallDepth(depth)
+	return gl.WithCallDepth(depth)
 }
 
 func WithName(name string) logr.Logger {
-	return logT.WithName(name)
+	return gl.WithName(name)
 }
 
 func V(level int) logr.Logger {
-	return logT.V(level)
+	return gl.V(level)
 }
 
 func WithValues(keysAndValues ...interface{}) logr.Logger {
-	return logT.WithValues(keysAndValues...)
+	return gl.WithValues(keysAndValues...)
 }
 
 func IfEnabled(level int, fn func(log logr.Logger)) {
@@ -30,15 +30,15 @@ func IfEnabled(level int, fn func(log logr.Logger)) {
 }
 
 func Enabled() bool {
-	return logT.Enabled()
+	return gl.Enabled()
 }
 
 func Info(msg string, keysAndValues ...interface{}) {
-	logT.WithCallDepth(1).Info(msg, keysAndValues...)
+	gl.WithCallDepth(1).Info(msg, keysAndValues...)
 }
 
 func Infof(format string, args ...interface{}) {
-	logT.WithCallDepth(1).Info(fmt.Sprintf(format, args...))
+	gl.WithCallDepth(1).Info(fmt.Sprintf(format, args...))
 }
 
 func Error(err error, msg string, keysAndValues ...interface{}) {
@@ -46,5 +46,5 @@ func Error(err error, msg string, keysAndValues ...interface{}) {
 		return
 	}
 
-	logT.WithCallDepth(1).Error(err, msg, keysAndValues...)
+	gl.WithCallDepth(1).Error(err, msg, keysAndValues...)
 }

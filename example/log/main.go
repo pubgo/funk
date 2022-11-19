@@ -19,7 +19,7 @@ func main() {
 	demo(logx.WithName("demo"))
 
 	var ll = logkit.NewJSONLogger(os.Stdout)
-	logx.SetLog(ll)
+	logx.SetLogWriter(ll)
 	demo(logx.WithName("logkit"))
 	demo(dd)
 }

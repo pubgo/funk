@@ -19,12 +19,11 @@ require (
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58
 	github.com/pubgo/x v0.3.37
 	github.com/rodaine/table v1.0.1
-	github.com/rs/xid v1.4.0
 	github.com/stretchr/testify v1.7.2
 	github.com/valyala/fastrand v1.1.0
 	go.uber.org/atomic v1.9.0
-	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
-	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
+	golang.org/x/crypto v0.1.0
+	golang.org/x/exp v0.0.0-20221114191408-850992195362
 	google.golang.org/protobuf v1.25.0
 	k8s.io/klog/v2 v2.80.1
 	modernc.org/sqlite v1.18.0
@@ -44,10 +43,9 @@ require (
 	github.com/rogpeppe/go-internal v1.6.1 // indirect
 	github.com/smartystreets/goconvey v1.7.2 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
-	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654 // indirect
-	golang.org/x/tools v0.1.10 // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	golang.org/x/mod v0.6.0 // indirect
+	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/tools v0.2.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/uint128 v1.1.1 // indirect
 	modernc.org/cc/v3 v3.36.0 // indirect

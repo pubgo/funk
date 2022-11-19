@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/internal/utils"
 	"github.com/pubgo/funk/recovery"
 	"github.com/pubgo/funk/result"
+	"github.com/pubgo/funk/stack"
 	"github.com/pubgo/funk/xerr"
 	"github.com/pubgo/funk/xtry"
 )
@@ -100,5 +100,5 @@ func logErr(fn interface{}, err result.Error) {
 		return
 	}
 
-	logs.Error(err.Unwrap(), err.Unwrap().Error(), "func", utils.CallerWithFunc(fn))
+	logs.Error(err.Unwrap(), err.Unwrap().Error(), "func", stack.CallerWithFunc(fn))
 }

@@ -3,6 +3,7 @@ package logx
 import (
 	"bytes"
 	"fmt"
+	"reflect"
 	"runtime/debug"
 	"sync/atomic"
 	"time"
@@ -22,7 +23,6 @@ type sink struct {
 	callDepth int32
 	prefix    string
 	values    []interface{}
-	log       *logr.Logger
 }
 
 // Enabled reports whether this Logger is enabled with respect to the current global log level.
@@ -52,34 +52,21 @@ func (s sink) Info(level int, msg string, keysAndValues ...interface{}) {
 		return
 	}
 
-	if defaultLog == nil {
-		s.log.WithCallDepth(int(s.callDepth)).WithName(s.prefix).WithValues(s.values...).GetSink().Info(level, msg, keysAndValues...)
-		return
-	}
-
 	keysAndValues = append(keysAndValues, s.values...)
 	keysAndValues = append(keysAndValues, "caller", logkit.Caller(int(s.callDepth)+DefaultCallerSkip)())
 	keysAndValues = append(keysAndValues, "logger", s.prefix)
 	keysAndValues = append(keysAndValues, "level", "info")
 	keysAndValues = append(keysAndValues, "msg", msg)
 	keysAndValues = append(keysAndValues, "ts", time.Now().UTC().Format(TimestampFormat))
-	assert.Must(defaultLog.Log(keysAndValues...))
+	assert.Must(logWriter.Info(keysAndValues...))
 }
 
 func (s sink) Error(err error, msg string, keysAndValues ...interface{}) {
-	if err == nil {
+	if err == nil || reflect.ValueOf(err).IsZero() {
 		return
 	}
 
 	goroutines, _ := gostackparse.Parse(bytes.NewReader(debug.Stack()))
-
-	if defaultLog == nil {
-		keysAndValues = append(keysAndValues, "error_detail", fmt.Sprintf("%#v", err))
-		keysAndValues = append(keysAndValues, "stacktrace", goroutines)
-		s.log.WithCallDepth(int(s.callDepth)).WithName(s.prefix).WithValues(s.values...).GetSink().Error(err, msg, keysAndValues...)
-		return
-	}
-
 	keysAndValues = append(keysAndValues, s.values...)
 	keysAndValues = append(keysAndValues, "caller", logkit.Caller(int(s.callDepth)+DefaultCallerSkip)())
 	keysAndValues = append(keysAndValues, "logger", s.prefix)
@@ -89,7 +76,7 @@ func (s sink) Error(err error, msg string, keysAndValues ...interface{}) {
 	keysAndValues = append(keysAndValues, "error_detail", fmt.Sprintf("%#v", err))
 	keysAndValues = append(keysAndValues, "stacktrace", goroutines)
 	keysAndValues = append(keysAndValues, "ts", time.Now().UTC().Format(TimestampFormat))
-	assert.Must(defaultLog.Log(keysAndValues...))
+	assert.Must(logWriter.Error(err, msg, keysAndValues...))
 }
 
 func (s sink) WithValues(keysAndValues ...interface{}) logr.LogSink {

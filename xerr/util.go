@@ -5,7 +5,7 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/pubgo/funk/internal/utils"
+	"github.com/pubgo/funk/stack"
 )
 
 func p(a ...interface{}) { _, _ = fmt.Fprintln(os.Stderr, a...) }
@@ -20,7 +20,7 @@ func WrapXErr(err error, fns ...func(err *XError)) XErr {
 		err1 = e
 	} else {
 		for i := 0; ; i++ {
-			var cc = utils.CallerWithDepth(CallStackDepth + i)
+			var cc = stack.CallerWithDepth(CallStackDepth + i)
 			if cc == "" {
 				break
 			}

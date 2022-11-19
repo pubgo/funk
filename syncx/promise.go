@@ -4,9 +4,9 @@ import (
 	"sync"
 
 	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/internal/utils"
 	"github.com/pubgo/funk/recovery"
 	"github.com/pubgo/funk/result"
+	"github.com/pubgo/funk/stack"
 	"github.com/pubgo/funk/xerr"
 	"github.com/pubgo/funk/xtry"
 )
@@ -17,7 +17,7 @@ func Promise[T any](fn func(resolve func(T), reject func(result.Error))) *Future
 	var f = newFuture[T]()
 	go func() {
 		defer recovery.Recovery(func(err xerr.XErr) {
-			f.failed(result.WithErr(err).WrapF("fn=%s", utils.CallerWithFunc(fn)))
+			f.failed(result.WithErr(err).WrapF("fn=%s", stack.CallerWithFunc(fn)))
 		})
 
 		fn(func(t T) { f.success(result.OK(t)) }, f.failed)
