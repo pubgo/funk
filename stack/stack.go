@@ -5,7 +5,34 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+
+	"github.com/cornelk/hashmap"
 )
+
+var cache = hashmap.New[uintptr, *Func]()
+var goRoot string
+
+func init() {
+	tt := Trace()[0]
+	goRoot = tt.File[:pkgIndex(tt.File, tt.Pkg)]
+}
+
+type Func struct {
+	Name string `json:"name"`
+	Pkg  string `json:"pkg"`
+	File string `json:"file"`
+	Line int    `json:"line"`
+}
+
+func (f *Func) String() string {
+	return fmt.Sprintf("%s:%d %s", f.File, f.Line, f.Name)
+}
+
+func (f *Func) TrimRuntime() *Func {
+	var f1 = *f
+	f1.File = strings.TrimPrefix(f1.File, goRoot)
+	return &f1
+}
 
 type frame uintptr
 
@@ -42,4 +69,41 @@ func CallerWithFunc(fn interface{}) string {
 
 	ma := strings.Split(_e.Name(), ".")
 	return fmt.Sprintf("%s:%d %s", file, line, ma[len(ma)-1])
+}
+
+func stack(p uintptr) *Func {
+	var v, ok = cache.Get(p)
+	if ok {
+		return v
+	}
+
+	var ff = runtime.FuncForPC(p)
+	if ff == nil {
+		return nil
+	}
+
+	var file, line = ff.FileLine(p)
+	ma := strings.Split(ff.Name(), ".")
+	v = &Func{
+		File: file,
+		Line: line,
+		Name: ma[len(ma)-1],
+		Pkg:  strings.Join(ma[:len(ma)-1], "."),
+	}
+	cache.Set(p, v)
+	return v
+}
+
+func pkgIndex(file, funcName string) int {
+	const sep = "/"
+	i := len(file)
+	for n := strings.Count(funcName, sep) + 2; n > 0; n-- {
+		i = strings.LastIndex(file[:i], sep)
+		if i == -1 {
+			i = -len(sep)
+			break
+		}
+	}
+
+	return i + len(sep)
 }
