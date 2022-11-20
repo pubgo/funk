@@ -1,8 +1,4 @@
-package log
-
-import (
-	"github.com/pubgo/funk/logger"
-)
+package logger
 
 type tag struct {
 	key   string
@@ -12,11 +8,11 @@ type tag struct {
 func (t *tag) Key() string        { return t.key }
 func (t *tag) Value() interface{} { return t.value }
 
-func Tag(key string, val interface{}) logger.Tagger {
+func Tag(key string, val interface{}) Tagger {
 	return &tag{key: key, value: val}
 }
 
-func Tags(key string, val ...interface{}) logger.Tagger {
+func Tags(key string, val ...interface{}) Tagger {
 	if len(val) == 0 {
 		return nil
 	}

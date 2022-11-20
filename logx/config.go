@@ -1,9 +1,12 @@
 package logx
 
 import (
+	logkit "github.com/go-kit/log"
 	"os"
 	"sync/atomic"
 	"time"
+
+	_ "github.com/go-logfmt/logfmt"
 
 	"github.com/go-logr/logr"
 	"github.com/iand/logfmtr"
@@ -27,6 +30,8 @@ func init() {
 	opts.CallerSkip = DefaultCallerSkip
 	opts.AddCaller = true
 
+	logkit.Caller()
+
 	var log = logfmtr.NewWithOptions(opts)
 	gl = logr.New(&sink{})
 }
@@ -36,6 +41,7 @@ func SetLogWriter(w logger.Logger) {
 }
 
 // SetVerbosity sets the global log level.
+//
 //	Only loggers with a V level less than or equal to this value will be enabled.
 func SetVerbosity(v int) int {
 	old := atomic.SwapInt32(&gv, int32(v))
