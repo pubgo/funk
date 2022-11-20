@@ -46,19 +46,16 @@ func CallerWithDepth(skip int) string {
 	//    is used for skipped inline functions.
 	var pcs [3]uintptr
 	n := runtime.Callers(skip+1, pcs[:])
-	if n == 0 {
+	frames := runtime.CallersFrames(pcs[:n])
+	frame, _ := frames.Next()
+	frame, _ = frames.Next()
+
+	fn := runtime.FuncForPC(frame.PC)
+	if fn == nil {
 		return ""
 	}
 
-	pcs1 := pcs[:n]
-	pc := pcs1[len(pcs1)-1]
-
-	fn := runtime.FuncForPC(pc)
-	if fn == nil {
-		return "unknown type"
-	}
-
-	file, line := fn.FileLine(pc)
+	file, line := fn.FileLine(frame.PC)
 	return fmt.Sprintf("%s:%d", file, line)
 }
 
