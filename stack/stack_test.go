@@ -3,6 +3,9 @@ package stack
 import (
 	"fmt"
 	"testing"
+
+	"github.com/k0kubun/pp/v3"
+	"github.com/kr/pretty"
 )
 
 func init1() {
@@ -14,7 +17,8 @@ func init2() {
 }
 
 func init3() {
-	fmt.Println(Callers(4))
+	pretty.Log(Callers(4))
+	pp.Println(Callers(4))
 	fmt.Println(CallerWithDepth(0))
 	fmt.Println(CallerWithDepth(1))
 	fmt.Println(CallerWithDepth(2))
