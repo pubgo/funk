@@ -4,11 +4,11 @@ go 1.19
 
 require (
 	github.com/DataDog/gostackparse v0.6.0
-	github.com/cockroachdb/logtags v0.0.0-20211118104740-dabe8e521a4f
 	github.com/cornelk/hashmap v1.0.8
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.13.0
 	github.com/go-kit/log v0.2.1
+	github.com/go-logfmt/logfmt v0.5.1
 	github.com/go-logr/logr v1.2.2
 	github.com/gopherjs/gopherjs v1.17.2
 	github.com/iancoleman/strcase v0.2.0
@@ -27,13 +27,11 @@ require (
 	golang.org/x/crypto v0.1.0
 	golang.org/x/exp v0.0.0-20221114191408-850992195362
 	google.golang.org/protobuf v1.25.0
-	k8s.io/klog/v2 v2.80.1
 	modernc.org/sqlite v1.18.0
 )
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
@@ -46,6 +44,7 @@ require (
 	github.com/smartystreets/goconvey v1.7.2 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	golang.org/x/mod v0.6.0 // indirect
+	golang.org/x/net v0.1.0 // indirect
 	golang.org/x/sys v0.1.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 	golang.org/x/tools v0.2.0 // indirect
