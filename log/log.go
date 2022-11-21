@@ -4,14 +4,16 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/pubgo/funk/logger"
 )
 
 type Logger struct {
-	level uint
-	name  string
-	tags  []logger.Tagger
+	callDepth int
+	level     uint
+	name      string
+	tags      []logger.Tagger
 }
 
 func (l Logger) Enabled() bool {
@@ -32,7 +34,12 @@ func (l Logger) WithName(name string) Logger {
 		return l
 	}
 
-	l.name = l.name + NameDelim + name
+	if l.name == "" {
+		l.name = name
+	} else {
+		l.name = l.name + NameDelim + name
+	}
+
 	return l
 }
 
@@ -41,7 +48,7 @@ func (l Logger) WithTags(tags ...logger.Tagger) Logger {
 		return l
 	}
 
-	l.tags = append(l.tags[0:len(l.tags)-1:len(l.tags)-1], tags...)
+	l.tags = append(l.tags, tags...)
 	return l
 }
 
@@ -53,6 +60,11 @@ func (l Logger) Info(msg string, tags ...logger.Tagger) {
 	if !l.Enabled() {
 		return
 	}
+
+	tags = append(tags, logger.Tag("logger", l.name))
+	tags = append(tags, logger.Tag("level", "info"))
+	tags = append(tags, logger.Tag("msg", msg))
+	tags = append(tags, logger.Tag("ts", time.Now().UTC().String()))
 
 	for i := range hooks {
 		tags = hooks[i].Hook(tags)

@@ -1,6 +1,10 @@
 package log
 
-import "time"
+import (
+	"time"
+
+	"github.com/pubgo/funk/stack"
+)
 
 var NameDelim = "."
 var FieldCallerKey = "caller"
@@ -14,16 +18,11 @@ var FieldTimestampKey = "ts"
 var (
 	// DefaultTimestamp is a Valuer that returns the current wallclock time,
 	// respecting time zones, when bound.
-	DefaultTimestamp = TimestampFormat(time.Now, time.RFC3339Nano)
-
-	// DefaultTimestampUTC is a Valuer that returns the current time in UTC
-	// when bound.
-	DefaultTimestampUTC = TimestampFormat(
-		func() time.Time { return time.Now().UTC() },
-		time.RFC3339Nano,
-	)
+	DefaultTimestamp = time.RFC3339Nano
 
 	// DefaultCaller is a Valuer that returns the file and line where the Log
 	// method was invoked. It can only be used with log.With.
-	DefaultCaller = Caller(3)
+	DefaultCaller = stack.Caller(0)
 )
+
+var DefaultFormatter string

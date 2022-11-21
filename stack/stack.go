@@ -54,9 +54,14 @@ func Caller(skip int) *Func {
 	return stack(pcs[0] - 1)
 }
 
-func Callers(depth int) []*Func {
+func Callers(depth int, skips ...int) []*Func {
+	var skip = 0
+	if len(skips) > 0 {
+		skip = skips[0]
+	}
+
 	var pcs = make([]uintptr, depth)
-	n := runtime.Callers(2, pcs[:])
+	n := runtime.Callers(skip+2, pcs[:])
 	if n == 0 {
 		return nil
 	}

@@ -2,6 +2,7 @@ package log
 
 import (
 	"context"
+	"github.com/pubgo/funk/logger/logs"
 
 	"github.com/pubgo/funk/logger"
 )
@@ -12,6 +13,14 @@ var writer logger.Logger
 var hooks []logger.Hook
 var ll uint
 var log Logger
+
+func init() {
+	SetWriter(logs.NewTextLog())
+}
+
+func New(name string) Logger {
+	return Named(name)
+}
 
 func AddHook(h logger.Hook) {
 	if h == nil {

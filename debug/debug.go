@@ -3,7 +3,6 @@ package debug
 import (
 	"runtime/debug"
 
-	"github.com/kr/pretty"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/recovery"
 )
@@ -13,9 +12,7 @@ var buildTime string
 var mainPath string
 
 func init() {
-	defer recovery.Exit(func() {
-		pretty.Log(commitID, buildTime)
-	})
+	defer recovery.Exit()
 
 	bi, ok := debug.ReadBuildInfo()
 	assert.If(!ok, "failed to read build info")
@@ -32,7 +29,4 @@ func init() {
 			buildTime = setting.Value
 		}
 	}
-
-	assert.If(commitID == "", "commitID is null")
-	assert.If(buildTime == "", "buildTime is null")
 }
