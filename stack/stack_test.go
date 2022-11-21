@@ -14,9 +14,11 @@ func init2() {
 }
 
 func init3() {
+	fmt.Println(Callers(4))
 	fmt.Println(CallerWithDepth(0))
 	fmt.Println(CallerWithDepth(1))
 	fmt.Println(CallerWithDepth(2))
+	fmt.Println(CallerWithDepth(3))
 	fmt.Println(CallerWithDepth(20))
 }
 

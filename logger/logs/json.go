@@ -8,6 +8,7 @@ import (
 	"reflect"
 
 	"github.com/pubgo/funk/logger"
+	_ "github.com/rs/xid"
 )
 
 type jsonLogger struct {

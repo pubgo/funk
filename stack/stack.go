@@ -35,28 +35,37 @@ func (f *Func) TrimRuntime() *Func {
 }
 
 func CallerWithDepth(skip int) string {
-	// As of Go 1.9 we need room for up to three PC entries.
-	//
-	// 0. An entry for the stack frame prior to the target to check for
-	//    special handling needed if that prior entry is runtime.sigpanic.
-	// 1. A possible second entry to hold metadata about skipped inlined
-	//    functions. If inline functions were not skipped the target frame
-	//    PC will be here.
-	// 2. A third entry for the target frame PC when the second entry
-	//    is used for skipped inline functions.
-	var pcs [3]uintptr
-	n := runtime.Callers(skip+1, pcs[:])
-	frames := runtime.CallersFrames(pcs[:n])
-	frame, _ := frames.Next()
-	frame, _ = frames.Next()
-
-	fn := runtime.FuncForPC(frame.PC)
-	if fn == nil {
+	var pcs [1]uintptr
+	n := runtime.Callers(skip+2, pcs[:])
+	if n == 0 {
 		return ""
 	}
 
-	file, line := fn.FileLine(frame.PC)
-	return fmt.Sprintf("%s:%d", file, line)
+	return stack(pcs[0] - 1).String()
+}
+
+func Caller(skip int) *Func {
+	var pcs [1]uintptr
+	n := runtime.Callers(skip+2, pcs[:])
+	if n == 0 {
+		return nil
+	}
+
+	return stack(pcs[0] - 1)
+}
+
+func Callers(depth int) []*Func {
+	var pcs = make([]uintptr, depth)
+	n := runtime.Callers(2, pcs[:])
+	if n == 0 {
+		return nil
+	}
+
+	var stacks = make([]*Func, 0, depth)
+	for _, p := range pcs[:n] {
+		stacks = append(stacks, stack(p-1))
+	}
+	return stacks
 }
 
 func CallerWithFunc(fn interface{}) string {

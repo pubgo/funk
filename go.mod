@@ -21,8 +21,10 @@ require (
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58
 	github.com/pubgo/x v0.3.37
 	github.com/rodaine/table v1.0.1
+	github.com/rs/xid v1.4.0
 	github.com/stretchr/testify v1.7.2
 	github.com/valyala/fastrand v1.1.0
+	github.com/valyala/fasttemplate v1.2.2
 	go.uber.org/atomic v1.9.0
 	golang.org/x/crypto v0.1.0
 	golang.org/x/exp v0.0.0-20221114191408-850992195362
