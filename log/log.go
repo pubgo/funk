@@ -11,22 +11,12 @@ import (
 
 type Logger struct {
 	callDepth int
-	level     uint
 	name      string
 	tags      []logger.Tagger
 }
 
-func (l Logger) Enabled() bool {
-	return l.level <= ll
-}
-
-func (l Logger) V(level uint) Logger {
-	if level == 0 {
-		return l
-	}
-
-	l.level = level
-	return l
+func (l Logger) Enabled(level logger.Level) bool {
+	return level <= gv
 }
 
 func (l Logger) WithName(name string) Logger {
@@ -57,7 +47,7 @@ func (l Logger) WithCtx(ctx context.Context) context.Context {
 }
 
 func (l Logger) Info(msg string, tags ...logger.Tagger) {
-	if !l.Enabled() {
+	if !l.Enabled(logger.INFO) {
 		return
 	}
 
@@ -70,15 +60,15 @@ func (l Logger) Info(msg string, tags ...logger.Tagger) {
 		tags = hooks[i].Hook(tags)
 	}
 
-	writer.Info(l.level, msg, tags...)
+	writer.Log(tags...)
 }
 
 func (l Logger) Infof(format string, args ...interface{}) {
-	if !l.Enabled() {
+	if !l.Enabled(logger.INFO) {
 		return
 	}
 
-	writer.Info(l.level, fmt.Sprintf(format, args...))
+	writer.Log(fmt.Sprintf(format, args...))
 }
 
 func (l Logger) Error(err error, msg string, tags ...logger.Tagger) {

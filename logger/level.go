@@ -2,7 +2,6 @@ package logger
 
 import (
 	"strings"
-	"sync/atomic"
 )
 
 const (
@@ -83,15 +82,4 @@ func (level Level) Short() string {
 	default:
 		return "     "
 	}
-}
-
-// get atomically gets the value of the given level.
-func (level *Level) get() Level {
-	return Level(atomic.LoadUint32((*uint32)(level)))
-}
-
-// set atomically sets the value of the receiver
-// to the given level.
-func (level *Level) set(newLevel Level) {
-	atomic.StoreUint32((*uint32)(level), uint32(newLevel))
 }

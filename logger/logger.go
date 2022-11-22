@@ -1,6 +1,23 @@
 package logger
 
-import "context"
+import (
+	"context"
+)
+
+type StdLogger interface {
+	Printf(format string, v ...interface{})
+	Print(v ...interface{})
+	Println(v ...interface{})
+}
+
+type ExternalLogger interface {
+	Print(...interface{})
+	Println(...interface{})
+	Error(...interface{})
+	Warn(...interface{})
+	Info(...interface{})
+	Debug(...interface{})
+}
 
 type Tagger interface {
 	Key() string
@@ -8,8 +25,7 @@ type Tagger interface {
 }
 
 type Logger interface {
-	Info(level uint, msg string, tags ...Tagger)
-	Error(err error, msg string, tags ...Tagger)
+	Log(tags ...Tagger)
 }
 
 type Hook interface {
@@ -18,17 +34,21 @@ type Hook interface {
 
 type CtxParser func(ctx context.Context) (bool, []Tagger)
 type ValueParser func(v interface{}) (bool, string)
+type Fields map[string]interface{}
+type A any
+type S []any
+type Map []Field
+type Field struct {
+	Name  string
+	Value interface{}
+}
 
-type Marshaler interface {
-	// MarshalLog can be used to:
-	//   - ensure that structs are not logged as strings when the original
-	//     value has a String method: return a different type without a
-	//     String method
-	//   - select which fields of a complex type should get logged:
-	//     return a simpler struct with fewer fields
-	//   - log unexported fields: return a different struct
-	//     with exported fields
-	//
-	// It may return any value of any type.
-	MarshalLog() interface{}
+// F is a convenience constructor for Field.
+func F(name string, value interface{}) Field {
+	return Field{Name: name, Value: value}
+}
+
+// M is a convenience constructor for Map
+func M(fs ...Field) Map {
+	return fs
 }

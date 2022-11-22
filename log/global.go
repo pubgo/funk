@@ -11,7 +11,7 @@ type logCtx struct{}
 
 var writer logger.Logger
 var hooks []logger.Hook
-var ll uint
+var gv = logger.DEBUG
 var log Logger
 
 func init() {
@@ -39,11 +39,11 @@ func SetWriter(w logger.Logger) {
 }
 
 func SetLevel(level uint) {
-	ll = level
+	gv = level
 }
 
 func GetLevel() uint {
-	return ll
+	return gv
 }
 
 func Ctx(ctx context.Context) Logger {
