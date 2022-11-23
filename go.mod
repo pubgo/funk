@@ -12,6 +12,7 @@ require (
 	github.com/go-logr/logr v1.2.2
 	github.com/google/go-github/v48 v48.1.0
 	github.com/gopherjs/gopherjs v1.17.2
+	github.com/hashicorp/go-version v1.6.0
 	github.com/iancoleman/strcase v0.2.0
 	github.com/iand/logfmtr v0.2.1
 	github.com/k0kubun/pp/v3 v3.2.0

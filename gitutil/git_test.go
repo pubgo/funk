@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/go-github/v48/github"
 	"github.com/k0kubun/pp/v3"
+	"github.com/rs/xid"
 	"github.com/shurcooL/githubv4"
 	"golang.org/x/oauth2"
 	"os"
@@ -16,6 +17,8 @@ func TestName(t *testing.T) {
 			Login githubv4.String
 		}
 	}
+
+	xid.New()
 
 	NewClient(os.Getenv("access_token")).api.Query(context.Background(), &viewerQuery, nil)
 	pp.Println(viewerQuery)

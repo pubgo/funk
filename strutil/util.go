@@ -3,6 +3,8 @@ package strutil
 import (
 	"reflect"
 	"unsafe"
+
+	_ "github.com/iancoleman/strcase"
 )
 
 // ToBytes converts an existing string into an []byte without allocating.

@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/pubgo/funk/internal/color"
-	"github.com/pubgo/funk/settings"
 	"github.com/pubgo/funk/stack"
 )
 
@@ -36,10 +35,6 @@ func (t *XError) WithMeta(k string, v interface{}) XErr {
 func (t *XError) xErr()          {}
 func (t *XError) String() string { return t.Stack() }
 func (t *XError) DebugPrint() {
-	if !settings.Debug {
-		return
-	}
-
 	p(t.debugString())
 }
 
