@@ -1,4 +1,4 @@
-package debug
+package version
 
 func CommitID() string {
 	return commitID

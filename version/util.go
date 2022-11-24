@@ -1,4 +1,4 @@
-package verutil
+package version
 
 import (
 	"runtime"
