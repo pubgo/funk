@@ -17,7 +17,7 @@ import (
 // The logger defers configuring its options until it is instantiated with the first call to Info, Error
 // or Enabled or the first call to those function on any child loggers created via V, WithName or
 // WithValues.
-func NewTextLog() logger.Logger {
+func NewTextLog() logger.Writer {
 	return &sink{core: &core{
 		w:        os.Stderr,
 		colorize: true,

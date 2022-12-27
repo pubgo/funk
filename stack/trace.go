@@ -1,11 +1,13 @@
 package stack
 
-import "runtime"
+import (
+	"runtime"
+)
 
-func Trace() []*Func {
+func Trace() []*Frame {
 	var pcs [512]uintptr
-	n := runtime.Callers(1, pcs[:])
-	cs := make([]*Func, 0, n)
+	n := runtime.Callers(0, pcs[:])
+	cs := make([]*Frame, 0, n)
 
 	for _, p := range pcs[:n] {
 		cs = append(cs, stack(p))

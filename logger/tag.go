@@ -1,8 +1,16 @@
 package logger
 
+import (
+	"reflect"
+)
+
 type tag struct {
 	key   string
 	value interface{}
+}
+
+func (t *tag) Kind() reflect.Kind {
+
 }
 
 func (t *tag) Key() string        { return t.key }
@@ -14,7 +22,7 @@ func Tag(key string, val interface{}) Tagger {
 
 func Tags(key string, val ...interface{}) Tagger {
 	if len(val) == 0 {
-		return nil
+		return &tag{key: key, value: "[]"}
 	}
 
 	return &tag{key: key, value: val}

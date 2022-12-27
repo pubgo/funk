@@ -9,6 +9,29 @@ import (
 	"github.com/pubgo/funk/logger"
 )
 
+// A Logger represents an active logging object that generates lines of JSON output to an io.Writer.
+type Logger1 struct {
+	// Level defines log levels.
+	Level logger.Level
+
+	// Caller determines if adds the file:line of the "caller" key.
+	// If Caller is negative, adds the full /path/to/file:line of the "caller" key.
+	Caller int
+
+	// TimeField defines the time filed name in output.  It uses "time" in if empty.
+	TimeField string
+
+	// TimeFormat specifies the time format in output. It uses time.RFC3339 with milliseconds if empty.
+	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
+	TimeFormat string
+
+	// Context specifies an optional context of logger.
+	Context Context
+
+	// Writer specifies the writer of output. It uses a wrapped os.Stderr Writer in if empty.
+	Writer Writer
+}
+
 type Logger struct {
 	callDepth int
 	name      string

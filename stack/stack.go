@@ -5,11 +5,11 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
-
-	"github.com/cornelk/hashmap"
+	"sync"
 )
 
-var cache = hashmap.New[uintptr, *Func]()
+var cache = make(map[uintptr]*Frame)
+var mu sync.Mutex
 var goRoot string
 
 func init() {
@@ -17,34 +17,31 @@ func init() {
 	goRoot = tt.File[:pkgIndex(tt.File, tt.Pkg)]
 }
 
-type Func struct {
+type Frame struct {
 	Name string `json:"name"`
 	Pkg  string `json:"pkg"`
 	File string `json:"file"`
 	Line int    `json:"line"`
 }
 
-func (f *Func) String() string {
+func (f *Frame) Short() string {
+	var ff = f.File
+	ff1 := ff[:strings.LastIndex(ff, "/")]
+	ff1 = ff1[:strings.LastIndex(ff1, "/")]
+	return fmt.Sprintf("%s:%d %s", strings.TrimPrefix(strings.TrimPrefix(ff, ff1), "/"), f.Line, f.Name)
+}
+
+func (f *Frame) String() string {
 	return fmt.Sprintf("%s:%d %s", f.File, f.Line, f.Name)
 }
 
-func (f *Func) TrimRuntime() *Func {
-	var f1 = *f
-	f1.File = strings.TrimPrefix(f1.File, goRoot)
-	return &f1
+func (f *Frame) IsRuntime() bool {
+	return strings.Contains(f.File, goRoot)
 }
 
-func CallerWithDepth(skip int) string {
-	var pcs [1]uintptr
-	n := runtime.Callers(skip+2, pcs[:])
-	if n == 0 {
-		return ""
-	}
+func GetGORoot() string { return goRoot }
 
-	return stack(pcs[0] - 1).String()
-}
-
-func Caller(skip int) *Func {
+func Caller(skip int) *Frame {
 	var pcs [1]uintptr
 	n := runtime.Callers(skip+2, pcs[:])
 	if n == 0 {
@@ -54,7 +51,7 @@ func Caller(skip int) *Func {
 	return stack(pcs[0] - 1)
 }
 
-func Callers(depth int, skips ...int) []*Func {
+func Callers(depth int, skips ...int) []*Frame {
 	var skip = 0
 	if len(skips) > 0 {
 		skip = skips[0]
@@ -66,35 +63,43 @@ func Callers(depth int, skips ...int) []*Func {
 		return nil
 	}
 
-	var stacks = make([]*Func, 0, depth)
+	var stacks = make([]*Frame, 0, depth)
 	for _, p := range pcs[:n] {
 		stacks = append(stacks, stack(p-1))
 	}
 	return stacks
 }
 
-func CallerWithFunc(fn interface{}) string {
+func CallerWithFunc(fn interface{}) *Frame {
 	if fn == nil {
-		return ""
+		return nil
 	}
 
-	var _fn = reflect.ValueOf(fn)
-	if !_fn.IsValid() || _fn.Kind() != reflect.Func || _fn.IsNil() {
+	var fn1 = reflect.ValueOf(fn)
+	if !fn1.IsValid() || fn1.Kind() != reflect.Func || fn1.IsNil() {
 		panic("[fn] is not func type or type is nil")
 	}
 
-	var _e = runtime.FuncForPC(_fn.Pointer())
-	var file, line = _e.FileLine(_fn.Pointer())
-
-	ma := strings.Split(_e.Name(), ".")
-	return fmt.Sprintf("%s:%d %s", file, line, ma[len(ma)-1])
+	return stack(fn1.Pointer())
 }
 
-func stack(p uintptr) *Func {
-	var v, ok = cache.Get(p)
+func stack(p uintptr) *Frame {
+	var v, ok = cache[p]
 	if ok {
 		return v
 	}
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	v, ok = cache[p]
+	if ok {
+		return v
+	}
+
+	defer func() {
+		cache[p] = v
+	}()
 
 	var ff = runtime.FuncForPC(p)
 	if ff == nil {
@@ -103,13 +108,7 @@ func stack(p uintptr) *Func {
 
 	var file, line = ff.FileLine(p)
 	ma := strings.Split(ff.Name(), ".")
-	v = &Func{
-		File: file,
-		Line: line,
-		Name: ma[len(ma)-1],
-		Pkg:  strings.Join(ma[:len(ma)-1], "."),
-	}
-	cache.Set(p, v)
+	v = &Frame{File: file, Line: line, Name: ma[len(ma)-1], Pkg: strings.Join(ma[:len(ma)-1], ".")}
 	return v
 }
 

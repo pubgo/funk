@@ -13,7 +13,7 @@ import (
 	"github.com/pubgo/funk/logger"
 )
 
-var logWriter logger.Logger
+var logWriter logger.Writer
 var gl = logr.Discard()
 var TimestampFormat = time.RFC3339
 var NameDelim = "."
@@ -36,7 +36,7 @@ func init() {
 	gl = logr.New(&sink{})
 }
 
-func SetLogWriter(w logger.Logger) {
+func SetLogWriter(w logger.Writer) {
 	logWriter = w
 }
 

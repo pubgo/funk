@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/internal/color"
 	"github.com/pubgo/funk/stack"
 )
@@ -15,7 +16,7 @@ const CallStackDepth = 2
 func New(format string, a ...interface{}) XErr {
 	x := &XError{Meta: make(map[string]interface{})}
 	x.Msg = fmt.Sprintf(format, a...)
-	x.Caller = []string{stack.CallerWithDepth(CallStackDepth + 1)}
+	x.Caller = generic.ListOf(stack.Caller(CallStackDepth + 1))
 	return x
 }
 
@@ -23,7 +24,7 @@ type XError struct {
 	Err    error                  `json:"cause,omitempty"`
 	Msg    string                 `json:"msg,omitempty"`
 	Detail string                 `json:"detail,omitempty"`
-	Caller []string               `json:"caller,omitempty"`
+	Caller []*stack.Frame         `json:"caller,omitempty"`
 	Meta   map[string]interface{} `json:"meta,omitempty"`
 }
 
@@ -67,7 +68,7 @@ func (t *XError) _p(buf *strings.Builder, xrr *XError) {
 	}
 
 	for i := range xrr.Caller {
-		if strings.Contains(xrr.Caller[i], "/src/runtime/") {
+		if strings.Contains(xrr.Caller[i].String(), "/src/runtime/") {
 			continue
 		}
 		buf.WriteString(fmt.Sprintf("%s]: %s\n", color.Yellow.P("Caller"), xrr.Caller[i]))
@@ -124,7 +125,7 @@ func (t *XError) Format(s fmt.State, verb rune) {
 	case 'q':
 		_, _ = fmt.Fprint(s, t.Msg+": \n\t"+t.Error())
 		for i := range t.Caller {
-			_, _ = fmt.Fprint(s, "\n\t"+t.Caller[i])
+			_, _ = fmt.Fprint(s, "\n\t"+t.Caller[i].String())
 		}
 	default:
 		_, _ = fmt.Fprint(s, t.Msg)

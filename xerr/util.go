@@ -20,8 +20,8 @@ func WrapXErr(err error, fns ...func(err *XError)) XErr {
 		err1 = e
 	} else {
 		for i := 0; ; i++ {
-			var cc = stack.CallerWithDepth(CallStackDepth + i)
-			if cc == "" {
+			var cc = stack.Caller(CallStackDepth + i)
+			if cc == nil {
 				break
 			}
 			err1.Caller = append(err1.Caller, cc)

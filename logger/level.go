@@ -15,7 +15,7 @@ const (
 )
 
 // Level holds a severity level.
-type Level uint32
+type Level uint8
 
 // ParseLevel converts a string representation of a logging level to a
 // Level. It returns the level and whether it was valid or not.
@@ -39,6 +39,10 @@ func ParseLevel(level string) (Level, bool) {
 	default:
 		return UNSPECIFIED, false
 	}
+}
+
+func (level Level) Enabled(ll Level) bool {
+	return ll <= level
 }
 
 // String implements Stringer.

@@ -25,11 +25,11 @@ func (l *jsonLogger) Error(err error, msg string, tags ...logger.Tagger) {
 	panic("implement me")
 }
 
-// NewJSONLogger returns a Logger that encodes keyvals to the Writer as a
+// NewJSONLogger returns a Writer that encodes keyvals to the Writer as a
 // single JSON object. Each log event produces no more than one call to
 // w.Write. The passed Writer must be safe for concurrent use by multiple
-// goroutines if the returned Logger will be used concurrently.
-func NewJSONLogger(w io.Writer) logger.Logger {
+// goroutines if the returned Writer will be used concurrently.
+func NewJSONLogger(w io.Writer) logger.Writer {
 	return &jsonLogger{w}
 }
 

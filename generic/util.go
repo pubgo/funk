@@ -6,6 +6,10 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
+func ListOf[T any](args ...T) []T {
+	return args
+}
+
 func Zero[T any]() (ret T) {
 	return
 }
