@@ -1,7 +1,6 @@
 package logx
 
 import (
-	logkit "github.com/go-kit/log"
 	"os"
 	"sync/atomic"
 	"time"
@@ -29,8 +28,6 @@ func init() {
 	opts.Colorize = true
 	opts.CallerSkip = DefaultCallerSkip
 	opts.AddCaller = true
-
-	logkit.Caller()
 
 	var log = logfmtr.NewWithOptions(opts)
 	gl = logr.New(&sink{})

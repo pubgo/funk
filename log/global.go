@@ -2,9 +2,12 @@ package log
 
 import (
 	"context"
-	"github.com/pubgo/funk/logger/logs"
+	"github.com/mattn/go-colorable"
+	"golang.org/x/term"
+	"os"
 
 	"github.com/pubgo/funk/logger"
+	"github.com/pubgo/funk/logger/logs"
 )
 
 type logCtx struct{}
@@ -12,19 +15,16 @@ type logCtx struct{}
 var writer logger.Writer
 var hooks []logger.Hook
 var gv = logger.DEBUG
-var log Logger
+var stdLog *loggerImpl
+var logNo uint64
 
 func init() {
 	SetWriter(logs.NewTextLog())
 }
 
-func New(name string) Logger {
-	return Named(name)
-}
-
 func AddHook(h logger.Hook) {
 	if h == nil {
-		panic("log: log hook is nil")
+		panic("slog: log hook is nil")
 	}
 
 	hooks = append(hooks, h)
@@ -32,7 +32,7 @@ func AddHook(h logger.Hook) {
 
 func SetWriter(w logger.Writer) {
 	if w == nil {
-		panic("log: log writer is nil")
+		panic("slog: log writer is nil")
 	}
 
 	writer = w
@@ -46,21 +46,21 @@ func GetLevel() logger.Level {
 	return gv
 }
 
-func Ctx(ctx context.Context) Logger {
+func Ctx(ctx context.Context) logger.Logger {
 	if ctx != nil {
-		if l, ok := ctx.Value(logCtx{}).(Logger); ok {
+		if l, ok := ctx.Value(logCtx{}).(logger.Logger); ok {
 			return l
 		}
 	}
-	return log
+	return stdLog
 }
 
-func Named(name string) Logger {
-	return log.WithName(name)
+func GetLogger(name string) logger.Logger {
+	return stdLog.WithName(name)
 }
 
 // Trace starts a new message with trace level.
-func Trace() (e *Entry) {
+func Trace() (e logger.Entry) {
 	if DefaultLogger.silent(TraceLevel) {
 		return nil
 	}
@@ -76,7 +76,7 @@ func Trace() (e *Entry) {
 }
 
 // Debug starts a new message with debug level.
-func Debug() (e *Entry) {
+func Debug() (e logger.Entry) {
 	if DefaultLogger.silent(DebugLevel) {
 		return nil
 	}
@@ -92,7 +92,7 @@ func Debug() (e *Entry) {
 }
 
 // Info starts a new message with info level.
-func Info() (e *Entry) {
+func Info() (e logger.Entry) {
 	if DefaultLogger.silent(InfoLevel) {
 		return nil
 	}
@@ -108,7 +108,7 @@ func Info() (e *Entry) {
 }
 
 // Warn starts a new message with warning level.
-func Warn() (e *Entry) {
+func Warn() (e logger.Entry) {
 	if DefaultLogger.silent(WarnLevel) {
 		return nil
 	}
@@ -124,7 +124,7 @@ func Warn() (e *Entry) {
 }
 
 // Error starts a new message with error level.
-func Error() (e *Entry) {
+func Error() (e logger.Entry) {
 	if DefaultLogger.silent(ErrorLevel) {
 		return nil
 	}
@@ -140,7 +140,7 @@ func Error() (e *Entry) {
 }
 
 // Fatal starts a new message with fatal level.
-func Fatal() (e *Entry) {
+func Fatal() (e logger.Entry) {
 	if DefaultLogger.silent(FatalLevel) {
 		return nil
 	}
@@ -156,10 +156,12 @@ func Fatal() (e *Entry) {
 }
 
 // Panic starts a new message with panic level.
-func Panic() (e *Entry) {
-	if DefaultLogger.silent(PanicLevel) {
-		return nil
+func Panic() (e logger.Entry) {
+	if !stdLog.Enabled(logger.CRITICAL) {
+		return
 	}
+
+	stdLog.Panic()
 	e = DefaultLogger.header(PanicLevel)
 	if caller, full := DefaultLogger.Caller, false; caller != 0 {
 		if caller < 0 {
@@ -173,13 +175,19 @@ func Panic() (e *Entry) {
 
 // Printf sends a log entry without extra field. Arguments are handled in the manner of fmt.Printf.
 func Printf(format string, v ...interface{}) {
-	e := DefaultLogger.header(noLevel)
-	if caller, full := DefaultLogger.Caller, false; caller != 0 {
-		if caller < 0 {
-			caller, full = -caller, true
-		}
-		var rpc [1]uintptr
-		e.caller(callers(caller, rpc[:]), rpc[:], full)
+	if !stdLog.Enabled(logger.INFO) {
+		return
 	}
-	e.Msgf(format, v...)
+
+	stdLog.Info().Caller(2).Printf(format, v...)
+}
+
+func init() {
+	if term.IsTerminal(int(os.Stdout.Fd())) {
+		StdoutHandler = StreamHandler(colorable.NewColorableStdout(), TerminalFormat())
+	}
+
+	if term.IsTerminal(int(os.Stderr.Fd())) {
+		StderrHandler = StreamHandler(colorable.NewColorableStderr(), TerminalFormat())
+	}
 }

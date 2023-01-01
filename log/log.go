@@ -2,47 +2,42 @@ package log
 
 import (
 	"context"
-	"fmt"
-	"reflect"
-	"time"
-
+	_ "github.com/phuslu/log"
 	"github.com/pubgo/funk/logger"
 )
 
-// A Logger represents an active logging object that generates lines of JSON output to an io.Writer.
-type Logger1 struct {
-	// Level defines log levels.
-	Level logger.Level
-
-	// Caller determines if adds the file:line of the "caller" key.
-	// If Caller is negative, adds the full /path/to/file:line of the "caller" key.
-	Caller int
-
-	// TimeField defines the time filed name in output.  It uses "time" in if empty.
-	TimeField string
-
-	// TimeFormat specifies the time format in output. It uses time.RFC3339 with milliseconds if empty.
-	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
-	TimeFormat string
-
-	// Context specifies an optional context of logger.
-	Context Context
-
-	// Writer specifies the writer of output. It uses a wrapped os.Stderr Writer in if empty.
-	Writer Writer
+func New() logger.Logger {
+	return &loggerImpl{}
 }
 
-type Logger struct {
-	callDepth int
-	name      string
-	tags      []logger.Tagger
+var _ logger.Logger = (*loggerImpl)(nil)
+
+type loggerImpl struct {
+	name          string
+	callerDepth   int
+	callerEnabled bool
+	fields        []logger.Field
+	hooks         []logger.Hook
 }
 
-func (l Logger) Enabled(level logger.Level) bool {
-	return level <= gv
+func (l *loggerImpl) Print(msg string) {
+	//TODO implement me
+	panic("implement me")
 }
 
-func (l Logger) WithName(name string) Logger {
+func (l *loggerImpl) Printf(format string, args ...any) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (l *loggerImpl) GetLevel() logger.Level { return gv }
+
+func (l *loggerImpl) WithCaller(depth int) logger.Logger {
+	l.callerDepth += depth
+	return l
+}
+
+func (l *loggerImpl) WithName(name string) logger.Logger {
 	if name == "" {
 		return l
 	}
@@ -50,58 +45,69 @@ func (l Logger) WithName(name string) Logger {
 	if l.name == "" {
 		l.name = name
 	} else {
-		l.name = l.name + NameDelim + name
+		l.name = l.name + "." + name
 	}
 
 	return l
 }
 
-func (l Logger) WithTags(tags ...logger.Tagger) Logger {
-	if len(tags) == 0 {
-		return l
-	}
-
-	l.tags = append(l.tags, tags...)
+func (l *loggerImpl) WithFields(fields ...logger.Field) logger.Logger {
+	l.fields = append(l.fields, fields...)
 	return l
 }
 
-func (l Logger) WithCtx(ctx context.Context) context.Context {
+func (l *loggerImpl) WithHooks(hooks ...logger.Hook) logger.Logger {
+	l.hooks = append(l.hooks, hooks...)
+	return l
+}
+
+func (l *loggerImpl) Enabled(level logger.Level) bool {
+	return gv.Enabled(level)
+}
+
+func (l *loggerImpl) WithCtx(ctx context.Context) context.Context {
 	return context.WithValue(ctx, logCtx{}, l)
 }
 
-func (l Logger) Info(msg string, tags ...logger.Tagger) {
-	if !l.Enabled(logger.INFO) {
-		return
+func (l *loggerImpl) Warn() logger.Entry {
+	if !l.Enabled(logger.WARNING) {
+		return nil
 	}
 
-	tags = append(tags, logger.Tag("logger", l.name))
-	tags = append(tags, logger.Tag("level", "info"))
-	tags = append(tags, logger.Tag("msg", msg))
-	tags = append(tags, logger.Tag("ts", time.Now().UTC().String()))
-
-	for i := range hooks {
-		tags = hooks[i].Hook(tags)
-	}
-
-	writer.Log(tags...)
 }
 
-func (l Logger) Infof(format string, args ...interface{}) {
-	if !l.Enabled(logger.INFO) {
-		return
+func (l *loggerImpl) Err(err error) logger.Entry {
+	if !l.Enabled(logger.ERROR) {
+		return nil
 	}
 
-	writer.Log(fmt.Sprintf(format, args...))
 }
 
-func (l Logger) Error(err error, msg string, tags ...logger.Tagger) {
-	if err == nil || reflect.ValueOf(err).IsZero() {
-		return
+func (l *loggerImpl) Panic() logger.Entry {
+	if !l.Enabled(logger.CRITICAL) {
+		return nil
 	}
 
-	for i := range hooks {
-		tags = hooks[i].Hook(tags)
+}
+
+func (l *loggerImpl) Fatal() logger.Entry {
+	if !l.Enabled(logger.CRITICAL) {
+		return nil
 	}
 
-	writer.Error(err, msg, tags...)
+}
+
+func (l *loggerImpl) Info() logger.Entry {
+	if !l.Enabled(logger.INFO) {
+		return nil
+	}
+
+	return newEntry(l, logger.INFO)
+}
+
+func (l *loggerImpl) Error() logger.Entry {
+	if !l.Enabled(logger.ERROR) {
+		return nil
+	}
+
 }

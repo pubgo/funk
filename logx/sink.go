@@ -25,7 +25,7 @@ type sink struct {
 	values    []interface{}
 }
 
-// Enabled reports whether this Logger is enabled with respect to the current global log level.
+// Enabled reports whether this loggerImpl is enabled with respect to the current global log level.
 func (s sink) Enabled(level int) bool {
 	if level > int(atomic.LoadInt32(&gv)) {
 		return false

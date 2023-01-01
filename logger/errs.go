@@ -1,5 +1,9 @@
 package logger
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
-var ErrSkip = errors.New("logger: skip")
+var ErrUnknownLevel = errors.New("slog: unknown level name")
+var ErrTypeNotMatch = fmt.Errorf("slog: data type not match")
