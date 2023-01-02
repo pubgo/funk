@@ -15,7 +15,7 @@ func parseXErr(err error, fns ...func(err *errImpl)) XErr {
 		return nil
 	}
 
-	err1 := &errImpl{err: err, tags: make(map[string]interface{})}
+	err1 := &errImpl{err: err, tags: map[string]interface{}{"err_msg": err.Error()}}
 	if e, ok := err.(*errImpl); ok {
 		err1 = e
 	}
@@ -60,7 +60,10 @@ func trans(err error) *errImpl {
 		}
 		return &errImpl{err: err.Unwrap(), msg: err.Unwrap().Error()}
 	default:
-		return &errImpl{msg: err.Error(), tags: map[string]interface{}{"err_detail": fmt.Sprintf("%#v", err)}}
+		return &errImpl{msg: err.Error(), tags: map[string]interface{}{
+			"err_detail": fmt.Sprintf("%#v", err),
+			"err_msg":    err.Error(),
+		}}
 	}
 }
 

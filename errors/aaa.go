@@ -19,6 +19,7 @@ type XErr interface {
 	AddTag(key string, value any) XErr
 	AddCode(code codes.Code) XErr
 	AddBizCode(biz string) XErr
+	AddMsg(msg string) XErr
 	WithTag(key string, value any) XErr
 	WithCode(code codes.Code) XErr
 	WithBizCode(biz string) XErr

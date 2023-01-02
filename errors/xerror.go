@@ -3,10 +3,10 @@ package errors
 import (
 	"encoding/json"
 	"fmt"
-	jjson "github.com/goccy/go-json"
 	"reflect"
 	"strings"
 
+	jjson "github.com/goccy/go-json"
 	"github.com/pubgo/funk/internal/color"
 	"github.com/pubgo/funk/stack"
 	"google.golang.org/grpc/codes"
@@ -15,7 +15,7 @@ import (
 func New(format string, a ...interface{}) XErr {
 	return &errImpl{
 		err:    fmt.Errorf(format, a...),
-		tags:   make(map[string]interface{}),
+		tags:   make(map[string]any),
 		msg:    fmt.Sprintf(format, a...),
 		status: codes.Unknown,
 		caller: stack.Caller(1),
@@ -30,6 +30,11 @@ type errImpl struct {
 	caller     *stack.Frame
 	stackTrace []*stack.Frame
 	tags       map[string]interface{}
+}
+
+func (t *errImpl) AddMsg(msg string) XErr {
+	t.msg = msg
+	return t
 }
 
 func (t *errImpl) BizCode() string {
@@ -99,7 +104,7 @@ func (t *errImpl) MarshalJSON() ([]byte, error) {
 	}
 
 	if t.err != nil {
-		data["err"] = t.err.Error()
+		data["err_msg"] = t.err.Error()
 		data["err_detail"] = fmt.Sprintf("%#v", t.err)
 	}
 	return jjson.Marshal(data)
@@ -148,7 +153,7 @@ func (t *errImpl) _p(buf *strings.Builder, xrr *errImpl) {
 	}
 
 	if len(xrr.tags) > 0 {
-		var dd, err = json.MarshalIndent(xrr.tags, " ", " ")
+		var dd, err = json.MarshalIndent(xrr.tags, "  ", "  ")
 		if err != nil {
 			panic(err)
 		}
