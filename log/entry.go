@@ -1,75 +1,95 @@
 package log
 
 import (
-	"github.com/pubgo/funk/log/log_fields"
+	"context"
 	"net"
 	"time"
 
-	_ "github.com/phuslu/log"
-
+	"github.com/phuslu/goid"
+	"github.com/pubgo/funk/log/log_config"
+	"github.com/pubgo/funk/log/log_fields"
 	"github.com/pubgo/funk/logger"
 	"github.com/pubgo/funk/stack"
 )
 
 func newEntry(log *loggerImpl, level logger.Level) logger.Entry {
 	return &entryImpl{
-		log:         log,
-		level:       level,
-		callerDepth: log.callerDepth,
+		log:           log,
+		level:         level,
+		callerDepth:   log.callerDepth,
+		callerEnabled: log.callerEnabled,
 	}
 }
 
 var _ logger.Entry = (*entryImpl)(nil)
 
 type entryImpl struct {
-	log         *loggerImpl
-	callerDepth int
-	fields      logger.Fields
-	level       logger.Level
-	msg         string
-	time        time.Time
+	log           *loggerImpl
+	fields        logger.Fields
+	level         logger.Level
+	callerDepth   int
+	callerEnabled bool
+	ctx           context.Context
+}
+
+func (e *entryImpl) BytesLValue(key string, val logger.Valuer) logger.Entry {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (e *entryImpl) RawLValue(key string, val logger.Valuer) logger.Entry {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (e *entryImpl) BytesValue(key string, val logger.Valuer) logger.Entry {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (e *entryImpl) RawValue(key string, val logger.Valuer) logger.Entry {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (e *entryImpl) WithCaller() logger.Entry {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (e *entryImpl) WithStack() logger.Entry {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (e *entryImpl) WithXID() logger.Entry {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (e *entryImpl) WithGoID() logger.Entry {
+	e.fields = append(e.fields, log_fields.Int64("goid", goid.Goid()))
+	return e
+}
+
+func (e *entryImpl) WithCtx(ctx context.Context) logger.Entry {
+	e.ctx = ctx
+	return e
+}
+
+func (e *entryImpl) GetFields() map[string]logger.Field {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (e *entryImpl) GetCtx() context.Context {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (e *entryImpl) Base64(dst, val []byte) logger.Entry {
 	//TODO implement me
 	panic("implement me")
-}
-
-func (e *entryImpl) Caller(depth ...int) logger.Entry {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (e *entryImpl) AddXID() logger.Entry {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (e *entryImpl) AddGoID() logger.Entry {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (e *entryImpl) GetCaller() int {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (e *entryImpl) GetTime() time.Time {
-	return e.time
-}
-
-func (e *entryImpl) GetMsg() string {
-	return e.msg
-}
-
-func (e *entryImpl) WithCallerDepth(depth int) logger.Entry {
-	e.callerDepth += depth
-	return e
-}
-
-func (e *entryImpl) GetCallerDepth() int {
-	return e.callerDepth
 }
 
 func (e *entryImpl) GetName() string {
@@ -78,10 +98,6 @@ func (e *entryImpl) GetName() string {
 
 func (e *entryImpl) GetLevel() logger.Level {
 	return e.level
-}
-
-func (e *entryImpl) GetFields() []logger.Field {
-	return e.fields
 }
 
 func (e *entryImpl) Log(msg string) {
@@ -226,11 +242,6 @@ func (e *entryImpl) Float64L(key string, val ...float64) logger.Entry {
 	panic("implement me")
 }
 
-func (e *entryImpl) Any(key string, val interface{}) logger.Entry {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (e *entryImpl) Json(key string, val interface{}) logger.Entry {
 	//TODO implement me
 	panic("implement me")
@@ -306,17 +317,20 @@ func (e *entryImpl) MACAddrL(key string, ha ...net.HardwareAddr) logger.Entry {
 	panic("implement me")
 }
 
-func (e *entryImpl) Discard() logger.Entry {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (e *entryImpl) Print(msg string) {
-	e.time = time.Now().UTC()
-	e.msg = msg
-	e.fields = append(e.fields, log_fields.Str("caller", stack.Caller(e.callerDepth).String()))
+	e.fields = append(e.fields, log_fields.Time(log_config.FieldTime, time.Now().UTC()))
+	e.fields = append(e.fields, log_fields.String(log_config.FieldMsgKey, msg))
 
-	var err = writer.WriteEntry(e)
+	if e.callerEnabled {
+		e.fields = append(e.fields, log_fields.String(log_config.FieldCallerKey, stack.Caller(e.callerDepth).String()))
+	}
+
+	var ent logger.Entry = e
+	for _, h := range append(hooks, e.log.hooks...) {
+		ent = h.Do(ent)
+	}
+
+	writer.WriteEntry(ent)
 }
 
 func (e *entryImpl) Printf(format string, args ...any) {
@@ -336,36 +350,11 @@ func (e *entryImpl) TraceLogf(format string, args ...any) {
 }
 
 func (e *entryImpl) Str(key string, value string) logger.Entry {
-	e.fields = append(e.fields, &field{name: key, value: value, kind: log_types.String})
+	e.fields = append(e.fields, log_fields.String(key, value))
 	return e
 }
 
 func (e *entryImpl) StrL(key string, value ...string) logger.Entry {
-	e.fields = append(e.fields, &field{name: key, value: value, kind: log_types.StringL})
+	e.fields = append(e.fields, log_fields.StringL(key, value...))
 	return e
-}
-
-func (e *entryImpl) Field(field ...logger.Field) logger.Entry {
-	e.fields = append(e.fields, field...)
-	return e
-}
-
-// Trace returns a new entry with a Stop method to fire off
-// a corresponding completion log, useful with defer.
-func (e *entryImpl) Trace(msg string) *Entry {
-	e.Info(msg)
-	v := e.WithFields(e.Fields)
-	v.Message = msg
-	v.start = time.Now()
-	return v
-}
-
-// Stop should be used with Trace, to fire off the completion message. When
-// an `err` is passed the "error" field is set, and the log level is error.
-func (e *entryImpl) Stop(err *error) {
-	if err == nil || *err == nil {
-		e.WithDuration(time.Since(e.start)).Info(e.Message)
-	} else {
-		e.WithDuration(time.Since(e.start)).WithError(*err).Error(e.Message)
-	}
 }

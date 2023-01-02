@@ -2,12 +2,12 @@ package log
 
 import (
 	"context"
-	"github.com/mattn/go-colorable"
-	"golang.org/x/term"
 	"os"
 
+	"github.com/mattn/go-colorable"
+	"github.com/pubgo/funk/log/log_writes"
 	"github.com/pubgo/funk/logger"
-	"github.com/pubgo/funk/logger/logs"
+	"golang.org/x/term"
 )
 
 type logCtx struct{}
@@ -16,10 +16,17 @@ var writer logger.Writer
 var hooks []logger.Hook
 var gv = logger.DEBUG
 var stdLog *loggerImpl
-var logNo uint64
 
 func init() {
-	SetWriter(logs.NewTextLog())
+	SetWriter(log_writes.NewTextLog())
+
+	if term.IsTerminal(int(os.Stdout.Fd())) {
+		StdoutHandler = StreamHandler(colorable.NewColorableStdout(), TerminalFormat())
+	}
+
+	if term.IsTerminal(int(os.Stderr.Fd())) {
+		StderrHandler = StreamHandler(colorable.NewColorableStderr(), TerminalFormat())
+	}
 }
 
 func AddHook(h logger.Hook) {
@@ -42,10 +49,6 @@ func SetLevel(level logger.Level) {
 	gv = level
 }
 
-func GetLevel() logger.Level {
-	return gv
-}
-
 func Ctx(ctx context.Context) logger.Logger {
 	if ctx != nil {
 		if l, ok := ctx.Value(logCtx{}).(logger.Logger); ok {
@@ -55,8 +58,12 @@ func Ctx(ctx context.Context) logger.Logger {
 	return stdLog
 }
 
-func GetLogger(name string) logger.Logger {
-	return stdLog.WithName(name)
+func GetLogger(name string, fields ...logger.Field) logger.Logger {
+	var log = stdLog.WithName(name)
+	if len(fields) > 0 {
+		log = log.WithFields(fields...)
+	}
+	return log
 }
 
 // Trace starts a new message with trace level.
@@ -161,16 +168,7 @@ func Panic() (e logger.Entry) {
 		return
 	}
 
-	stdLog.Panic()
-	e = DefaultLogger.header(PanicLevel)
-	if caller, full := DefaultLogger.Caller, false; caller != 0 {
-		if caller < 0 {
-			caller, full = -caller, true
-		}
-		var rpc [1]uintptr
-		e.caller(callers(caller, rpc[:]), rpc[:], full)
-	}
-	return
+	return stdLog.Panic()
 }
 
 // Printf sends a log entry without extra field. Arguments are handled in the manner of fmt.Printf.
@@ -179,15 +177,5 @@ func Printf(format string, v ...interface{}) {
 		return
 	}
 
-	stdLog.Info().Caller(2).Printf(format, v...)
-}
-
-func init() {
-	if term.IsTerminal(int(os.Stdout.Fd())) {
-		StdoutHandler = StreamHandler(colorable.NewColorableStdout(), TerminalFormat())
-	}
-
-	if term.IsTerminal(int(os.Stderr.Fd())) {
-		StderrHandler = StreamHandler(colorable.NewColorableStderr(), TerminalFormat())
-	}
+	stdLog.Printf(format, v...)
 }

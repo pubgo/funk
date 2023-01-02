@@ -25,6 +25,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.14
 	github.com/modood/table v0.0.0-20220527013332-8d47e76dad33
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58
+	github.com/phuslu/goid v1.0.0
 	github.com/phuslu/log v1.0.83
 	github.com/pubgo/x v0.3.37
 	github.com/rodaine/table v1.0.1
@@ -35,7 +36,6 @@ require (
 	github.com/valyala/fastrand v1.1.0
 	github.com/valyala/fasttemplate v1.2.2
 	go.uber.org/atomic v1.9.0
-	go.uber.org/zap v1.17.0
 	golang.org/x/crypto v0.1.0
 	golang.org/x/exp v0.0.0-20221114191408-850992195362
 	golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be
@@ -64,7 +64,6 @@ require (
 	github.com/smartystreets/goconvey v1.7.2 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect
-	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/mod v0.6.0 // indirect
 	golang.org/x/net v0.1.0 // indirect
 	golang.org/x/sys v0.1.0 // indirect

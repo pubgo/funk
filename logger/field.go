@@ -1,7 +1,6 @@
 package logger
 
-type Map map[string]any
-
+type BytesL [][]byte
 type Valuer func() (BytesL, error)
 type Fields []Field
 type Field interface {
@@ -15,5 +14,7 @@ type FieldType int
 const (
 	_ FieldType = iota
 	BytesType
+	BytesArrayType
 	RawType
+	RawArrayType
 )

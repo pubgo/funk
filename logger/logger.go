@@ -5,15 +5,10 @@ import (
 	"net"
 	"time"
 
-	_ "github.com/rs/zerolog"
-	_ "golang.org/x/exp/slog"
-
 	_ "github.com/phuslu/log"
-
+	_ "github.com/rs/zerolog"
 	_ "go.uber.org/zap"
 )
-
-type BytesL [][]byte
 
 type Logger interface {
 	Enabled(level Level) bool
@@ -35,7 +30,7 @@ type Logger interface {
 type Writer interface {
 	Close() error
 	Sync() error
-	WriteEntry(ctx context.Context, entry Entry) error
+	WriteEntry(ent Entry)
 }
 
 type Hook interface {
@@ -91,18 +86,22 @@ type Entry interface {
 	MACAddr(key string, ha net.HardwareAddr) Entry
 	MACAddrL(key string, ha ...net.HardwareAddr) Entry
 
-	Caller(depth ...int) Entry
-	Discard() Entry
-	AddXID() Entry
-	AddGoID() Entry
+	BytesValue(key string, val Valuer) Entry
+	BytesLValue(key string, val Valuer) Entry
+	RawValue(key string, val Valuer) Entry
+	RawLValue(key string, val Valuer) Entry
 	Fields(fields ...Field) Entry
 
-	GetCaller() int
+	WithCaller() Entry
+	WithStack() Entry
+	WithXID() Entry
+	WithGoID() Entry
+	WithCtx(ctx context.Context) Entry
+
 	GetName() string
 	GetLevel() Level
-	GetFields() []Field
-	GetMsg() string
-	GetTime() time.Time
+	GetFields() map[string]Field
+	GetCtx() context.Context
 
 	Log(msg string)
 	Logf(format string, args ...interface{})

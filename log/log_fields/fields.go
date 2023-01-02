@@ -2,14 +2,14 @@ package log_fields
 
 import (
 	"encoding/base64"
-	"github.com/pubgo/funk/log/log_config"
 	"strconv"
 	"time"
 
 	jjson "github.com/goccy/go-json"
 	"github.com/pubgo/funk/convert"
+	"github.com/pubgo/funk/log/log_config"
+	"github.com/pubgo/funk/log/logutil"
 	"github.com/pubgo/funk/logger"
-	"github.com/pubgo/funk/logger/logutil"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
@@ -59,7 +59,7 @@ func Bool(key string, val bool) logger.Field {
 }
 
 func BoolL(key string, val ...bool) logger.Field {
-	return field{key: key, fieldType: logger.RawType, value: func() (logger.BytesL, error) {
+	return field{key: key, fieldType: logger.RawArrayType, value: func() (logger.BytesL, error) {
 		var data = make(logger.BytesL, len(val))
 		for i := range val {
 			data[i] = strconv.AppendBool(nil, val[i])
@@ -123,7 +123,7 @@ func Uint(key string, val uint) logger.Field {
 }
 
 func UintL(key string, val ...uint) logger.Field {
-	return field{key: key, fieldType: logger.RawType, value: func() (logger.BytesL, error) {
+	return field{key: key, fieldType: logger.RawArrayType, value: func() (logger.BytesL, error) {
 		var data = make(logger.BytesL, len(val))
 		for i := range val {
 			data[i] = logutil.AppendUint(nil, val[i])
@@ -139,7 +139,7 @@ func Uint64(key string, val uint64) logger.Field {
 }
 
 func Uint64L(key string, val ...uint64) logger.Field {
-	return field{key: key, fieldType: logger.RawType, value: func() (logger.BytesL, error) {
+	return field{key: key, fieldType: logger.RawArrayType, value: func() (logger.BytesL, error) {
 		var data = make(logger.BytesL, len(val))
 		for i := range val {
 			data[i] = logutil.AppendUint64(nil, val[i])
@@ -155,7 +155,7 @@ func String(key string, val string) logger.Field {
 }
 
 func StringL(key string, val ...string) logger.Field {
-	return field{key: key, fieldType: logger.BytesType, value: func() (logger.BytesL, error) {
+	return field{key: key, fieldType: logger.BytesArrayType, value: func() (logger.BytesL, error) {
 		var data = make(logger.BytesL, len(val))
 		for i := range val {
 			data[i] = convert.S2B(val[i])

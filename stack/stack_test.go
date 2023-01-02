@@ -6,7 +6,6 @@ import (
 
 	"github.com/k0kubun/pp/v3"
 	"github.com/kr/pretty"
-	"github.com/rs/zerolog/log"
 )
 
 func init1() {
@@ -34,9 +33,4 @@ func TestCallerWithDepth(t *testing.T) {
 	init2()
 	fmt.Print("\n\n\n")
 	init3()
-}
-
-func TestName(t *testing.T) {
-	t.Log(pp.Sprint(CallerWithFunc(log.Info)))
-	t.Log(CallerWithFunc(log.Info).Short())
 }

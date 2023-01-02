@@ -2,7 +2,8 @@ package log
 
 import (
 	"context"
-	_ "github.com/phuslu/log"
+	"fmt"
+
 	"github.com/pubgo/funk/logger"
 )
 
@@ -20,21 +21,12 @@ type loggerImpl struct {
 	hooks         []logger.Hook
 }
 
-func (l *loggerImpl) Print(msg string) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (l *loggerImpl) Printf(format string, args ...any) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (l *loggerImpl) GetLevel() logger.Level { return gv }
 
 func (l *loggerImpl) WithCaller(depth int) logger.Logger {
-	l.callerDepth += depth
-	return l
+	var log = *l
+	log.callerDepth += depth
+	return &log
 }
 
 func (l *loggerImpl) WithName(name string) logger.Logger {
@@ -42,23 +34,26 @@ func (l *loggerImpl) WithName(name string) logger.Logger {
 		return l
 	}
 
-	if l.name == "" {
-		l.name = name
+	var log = *l
+	if log.name == "" {
+		log.name = name
 	} else {
-		l.name = l.name + "." + name
+		log.name = fmt.Sprintf("%s.%s", l.name, name)
 	}
 
-	return l
+	return &log
 }
 
 func (l *loggerImpl) WithFields(fields ...logger.Field) logger.Logger {
-	l.fields = append(l.fields, fields...)
-	return l
+	var log = *l
+	log.fields = append(log.fields, fields...)
+	return &log
 }
 
 func (l *loggerImpl) WithHooks(hooks ...logger.Hook) logger.Logger {
-	l.hooks = append(l.hooks, hooks...)
-	return l
+	var log = *l
+	log.hooks = append(log.hooks, hooks...)
+	return &log
 }
 
 func (l *loggerImpl) Enabled(level logger.Level) bool {
@@ -74,6 +69,7 @@ func (l *loggerImpl) Warn() logger.Entry {
 		return nil
 	}
 
+	return newEntry(l, logger.WARNING)
 }
 
 func (l *loggerImpl) Err(err error) logger.Entry {
@@ -81,6 +77,7 @@ func (l *loggerImpl) Err(err error) logger.Entry {
 		return nil
 	}
 
+	return newEntry(l, logger.ERROR)
 }
 
 func (l *loggerImpl) Panic() logger.Entry {
@@ -88,6 +85,7 @@ func (l *loggerImpl) Panic() logger.Entry {
 		return nil
 	}
 
+	return newEntry(l, logger.CRITICAL)
 }
 
 func (l *loggerImpl) Fatal() logger.Entry {
@@ -95,6 +93,7 @@ func (l *loggerImpl) Fatal() logger.Entry {
 		return nil
 	}
 
+	return newEntry(l, logger.CRITICAL)
 }
 
 func (l *loggerImpl) Info() logger.Entry {
@@ -110,4 +109,17 @@ func (l *loggerImpl) Error() logger.Entry {
 		return nil
 	}
 
+	return newEntry(l, logger.ERROR)
+}
+
+func (l *loggerImpl) Print(msg string) {
+	if !l.Enabled(logger.DEBUG) {
+		return
+	}
+}
+
+func (l *loggerImpl) Printf(format string, args ...any) {
+	if !l.Enabled(logger.DEBUG) {
+		return
+	}
 }
