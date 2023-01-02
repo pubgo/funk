@@ -14,6 +14,7 @@ import (
 
 func New(format string, a ...interface{}) XErr {
 	return &errImpl{
+		err:    fmt.Errorf(format, a...),
 		tags:   make(map[string]interface{}),
 		msg:    fmt.Sprintf(format, a...),
 		status: codes.Unknown,
@@ -92,7 +93,11 @@ func (t *errImpl) MarshalJSON() ([]byte, error) {
 	}
 
 	data["stack_trace"] = t.stackTrace
-	data["tags"] = t.tags
+
+	if t.tags != nil && len(t.tags) > 0 {
+		data["tags"] = t.tags
+	}
+
 	if t.err != nil {
 		data["err"] = t.err.Error()
 		data["err_detail"] = fmt.Sprintf("%#v", t.err)
@@ -114,12 +119,24 @@ func (t *errImpl) _p(buf *strings.Builder, xrr *errImpl) {
 	}
 
 	buf.WriteString("========================================================================================================================\n")
-	if xrr.msg != "" {
-		buf.WriteString(fmt.Sprintf("   %s]: %s\n", color.Green.P("msg"), xrr.msg))
+	if xrr.err != nil {
+		buf.WriteString(fmt.Sprintf(" %s]: %q\n", color.Red.P("error"), xrr.err.Error()))
 	}
 
-	if len(xrr.tags) > 0 {
-		buf.WriteString(fmt.Sprintf("  %s]: %q\n", color.Green.P("tags"), xrr.tags))
+	if xrr.msg != "" {
+		buf.WriteString(fmt.Sprintf("   %s]: %q\n", color.Green.P("msg"), xrr.msg))
+	}
+
+	if xrr.status != 0 {
+		buf.WriteString(fmt.Sprintf("  %s]: %q\n", color.Green.P("code"), xrr.status.String()))
+	}
+
+	if xrr.bizCode != "" {
+		buf.WriteString(fmt.Sprintf("   %s]: %q\n", color.Green.P("biz"), xrr.bizCode))
+	}
+
+	if xrr.caller != nil {
+		buf.WriteString(fmt.Sprintf("%s]: %s\n", color.Green.P("caller"), xrr.caller.String()))
 	}
 
 	for i := range xrr.stackTrace {
@@ -127,7 +144,15 @@ func (t *errImpl) _p(buf *strings.Builder, xrr *errImpl) {
 			continue
 		}
 
-		buf.WriteString(fmt.Sprintf("%s]: %s\n", color.Yellow.P("stack"), xrr.stackTrace[i].String()))
+		buf.WriteString(fmt.Sprintf(" %s]: %s\n", color.Yellow.P("stack"), xrr.stackTrace[i].String()))
+	}
+
+	if len(xrr.tags) > 0 {
+		var dd, err = json.MarshalIndent(xrr.tags, " ", " ")
+		if err != nil {
+			panic(err)
+		}
+		buf.WriteString(fmt.Sprintf("  %s]: %s\n", color.Green.P("tags"), string(dd)))
 	}
 
 	t._p(buf, trans(xrr.err))

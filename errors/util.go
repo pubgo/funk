@@ -18,8 +18,13 @@ func parseXErr(err error, fns ...func(err *errImpl)) XErr {
 	err1 := &errImpl{err: err, tags: make(map[string]interface{})}
 	if e, ok := err.(*errImpl); ok {
 		err1 = e
+	}
+
+	if err1.caller == nil {
 		err1.caller = stack.Caller(2)
-	} else {
+	}
+
+	if len(err1.stackTrace) == 0 {
 		for i := 0; ; i++ {
 			var cc = stack.Caller(2 + i)
 			if cc == nil {
