@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/recovery"
 	"github.com/pubgo/funk/result"
-	"github.com/pubgo/funk/xerr"
 )
 
 func TestTryErr(t *testing.T) {
@@ -19,16 +19,16 @@ func TestTryErr(t *testing.T) {
 }
 
 func testFunc() (err error) {
-	defer recovery.Err(&err, func(err xerr.XErr) xerr.XErr {
+	defer recovery.Err(&err, func(err errors.XErr) errors.XErr {
 		return err.WrapF("test func")
 	})
-	assert.Must(xerr.Err{Msg: "test error"})
+	assert.Must(errors.Err{Msg: "test error"})
 	return
 }
 
 func TestTryVal(t *testing.T) {
-	var v = TryVal(func() result.Result[*xerr.Err] {
-		return result.OK(&xerr.Err{Msg: "ok"})
+	var v = TryVal(func() result.Result[*errors.Err] {
+		return result.OK(&errors.Err{Msg: "ok"})
 	})
 	fmt.Println(v)
 }

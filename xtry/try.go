@@ -2,9 +2,9 @@ package xtry
 
 import (
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/stack"
-	"github.com/pubgo/funk/xerr"
 )
 
 func TryWith(gErr *result.Error, fn func() result.Error) {
@@ -90,7 +90,7 @@ func TryVal[T any](fn func() result.Result[T]) (g result.Result[T]) {
 			return
 		}
 
-		g = result.Err[T](xerr.WrapF(err, "fn=%s", stack.CallerWithFunc(fn)))
+		g = result.Err[T](errors.WrapF(err, "fn=%s", stack.CallerWithFunc(fn)))
 	}()
 
 	return fn()

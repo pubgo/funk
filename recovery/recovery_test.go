@@ -3,9 +3,9 @@ package recovery
 import (
 	"testing"
 
-	"github.com/pubgo/funk/logx"
+	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/result"
-	"github.com/pubgo/funk/xerr"
 )
 
 func TestErr(t *testing.T) {
@@ -37,11 +37,11 @@ func TestResult(t *testing.T) {
 }
 
 func TestName(t *testing.T) {
-	defer Recovery(func(err xerr.XErr) {
+	defer Recovery(func(err errors.XErr) {
 		err.DebugPrint()
 	})
 
-	logx.Info("test panic")
+	log.Print("test panic")
 	hello()
 }
 

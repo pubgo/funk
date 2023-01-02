@@ -5,7 +5,7 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/pubgo/funk/xerr"
+	"github.com/pubgo/funk/errors"
 )
 
 func Must(err error, args ...interface{}) {
@@ -13,7 +13,7 @@ func Must(err error, args ...interface{}) {
 		return
 	}
 
-	panic(xerr.WrapXErr(err, func(err *xerr.XError) { err.Detail = fmt.Sprint(args...) }))
+	panic(errors.WrapXErr(err, func(err *errors.xerrImpl) { err.Detail = fmt.Sprint(args...) }))
 }
 
 func MustF(err error, msg string, args ...interface{}) {
@@ -21,7 +21,7 @@ func MustF(err error, msg string, args ...interface{}) {
 		return
 	}
 
-	panic(xerr.WrapXErr(err, func(err *xerr.XError) { err.Detail = fmt.Sprintf(msg, args...) }))
+	panic(errors.WrapXErr(err, func(err *errors.xerrImpl) { err.Detail = fmt.Sprintf(msg, args...) }))
 }
 
 func Must1[T any](ret T, err error) T {
@@ -29,7 +29,7 @@ func Must1[T any](ret T, err error) T {
 		return ret
 	}
 
-	panic(xerr.WrapXErr(err))
+	panic(errors.WrapXErr(err))
 }
 
 func Exit(err error, args ...interface{}) {
@@ -37,7 +37,7 @@ func Exit(err error, args ...interface{}) {
 		return
 	}
 
-	xerr.WrapXErr(err, func(err *xerr.XError) { err.Detail = fmt.Sprint(args...) }).DebugPrint()
+	errors.WrapXErr(err, func(err *errors.xerrImpl) { err.Detail = fmt.Sprint(args...) }).DebugPrint()
 	os.Exit(1)
 }
 
@@ -46,7 +46,7 @@ func ExitF(err error, msg string, args ...interface{}) {
 		return
 	}
 
-	xerr.WrapXErr(err, func(err *xerr.XError) { err.Detail = fmt.Sprintf(msg, args...) }).DebugPrint()
+	errors.WrapXErr(err, func(err *errors.xerrImpl) { err.Detail = fmt.Sprintf(msg, args...) }).DebugPrint()
 	os.Exit(1)
 }
 
@@ -55,7 +55,7 @@ func Exit1[T any](ret T, err error) T {
 		return ret
 	}
 
-	xerr.WrapXErr(err).DebugPrint()
+	errors.WrapXErr(err).DebugPrint()
 	os.Exit(1)
 	return ret
 }

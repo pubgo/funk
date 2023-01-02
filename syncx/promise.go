@@ -4,10 +4,10 @@ import (
 	"sync"
 
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/recovery"
 	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/stack"
-	"github.com/pubgo/funk/xerr"
 	"github.com/pubgo/funk/xtry"
 )
 
@@ -16,7 +16,7 @@ func Promise[T any](fn func(resolve func(T), reject func(result.Error))) *Future
 
 	var f = newFuture[T]()
 	go func() {
-		defer recovery.Recovery(func(err xerr.XErr) {
+		defer recovery.Recovery(func(err errors.XErr) {
 			f.failed(result.WithErr(err).WrapF("fn=%s", stack.CallerWithFunc(fn)))
 		})
 

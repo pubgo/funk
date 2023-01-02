@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/recovery"
 	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/stack"
-	"github.com/pubgo/funk/xerr"
 	"github.com/pubgo/funk/xtry"
 )
 
@@ -74,7 +74,7 @@ func GoDelay(fn func() result.Error, durations ...time.Duration) {
 
 // Timeout 超时处理
 func Timeout(dur time.Duration, fn func() result.Error) (gErr result.Error) {
-	defer recovery.Recovery(func(err xerr.XErr) {
+	defer recovery.Recovery(func(err errors.XErr) {
 		gErr = result.WithErr(err)
 	})
 

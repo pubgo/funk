@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pubgo/funk/xerr"
+	"github.com/pubgo/funk/errors"
 	"github.com/stretchr/testify/assert"
 )
 
-func panicErr() (*xerr.Err, error) {
+func panicErr() (*errors.Err, error) {
 	return nil, fmt.Errorf("error")
 }
 
-func panicNoErr() (*xerr.Err, error) {
-	return &xerr.Err{Msg: "ok"}, nil
+func panicNoErr() (*errors.Err, error) {
+	return &errors.Err{Msg: "ok"}, nil
 }
 
 func TestPanicErr(t *testing.T) {
@@ -38,7 +38,7 @@ func TestRespNext(t *testing.T) {
 }
 
 func testPanic1(t *testing.T) {
-	//XError.Must(XError.New("ok"))
+	//xerrImpl.Must(xerrImpl.New("ok"))
 	Must(init1Next())
 }
 

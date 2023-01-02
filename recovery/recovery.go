@@ -5,8 +5,8 @@ import (
 	"runtime/debug"
 
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/result"
-	"github.com/pubgo/funk/xerr"
 )
 
 func Result[T any](ret *result.Result[T]) {
@@ -25,7 +25,7 @@ func Result[T any](ret *result.Result[T]) {
 	*ret = result.Err[T](err)
 }
 
-func ResultErr(gErr *result.Error, fns ...func(err xerr.XErr) xerr.XErr) {
+func ResultErr(gErr *result.Error, fns ...func(err errors.XErr) errors.XErr) {
 	val := recover()
 	if val == nil {
 		return
@@ -38,7 +38,7 @@ func ResultErr(gErr *result.Error, fns ...func(err xerr.XErr) xerr.XErr) {
 	}
 
 	debug.PrintStack()
-	err1 := xerr.WrapXErr(err)
+	err1 := errors.WrapXErr(err)
 	if len(fns) > 0 && fns[0] != nil {
 		*gErr = result.WithErr(fns[0](err1))
 		return
@@ -46,7 +46,7 @@ func ResultErr(gErr *result.Error, fns ...func(err xerr.XErr) xerr.XErr) {
 	*gErr = result.WithErr(err1)
 }
 
-func Err(gErr *error, fns ...func(err xerr.XErr) xerr.XErr) {
+func Err(gErr *error, fns ...func(err errors.XErr) errors.XErr) {
 	val := recover()
 	if val == nil {
 		return
@@ -59,7 +59,7 @@ func Err(gErr *error, fns ...func(err xerr.XErr) xerr.XErr) {
 	}
 
 	debug.PrintStack()
-	err1 := xerr.WrapXErr(err)
+	err1 := errors.WrapXErr(err)
 	if len(fns) > 0 && fns[0] != nil {
 		*gErr = fns[0](err1)
 		return
@@ -67,7 +67,7 @@ func Err(gErr *error, fns ...func(err xerr.XErr) xerr.XErr) {
 	*gErr = err1
 }
 
-func Raise(fns ...func(err xerr.XErr) xerr.XErr) {
+func Raise(fns ...func(err errors.XErr) errors.XErr) {
 	val := recover()
 	if val == nil {
 		return
@@ -80,14 +80,14 @@ func Raise(fns ...func(err xerr.XErr) xerr.XErr) {
 	}
 
 	debug.PrintStack()
-	err1 := xerr.WrapXErr(err)
+	err1 := errors.WrapXErr(err)
 	if len(fns) > 0 && fns[0] != nil {
 		panic(fns[0](err1))
 	}
 	panic(err1)
 }
 
-func Recovery(fn func(err xerr.XErr)) {
+func Recovery(fn func(err errors.XErr)) {
 	assert.If(fn == nil, "[fn] should not be nil")
 
 	val := recover()
@@ -102,7 +102,7 @@ func Recovery(fn func(err xerr.XErr)) {
 	}
 
 	debug.PrintStack()
-	fn(xerr.WrapXErr(err))
+	fn(errors.WrapXErr(err))
 }
 
 func Exit(handlers ...func()) {
@@ -121,7 +121,7 @@ func Exit(handlers ...func()) {
 		handlers[0]()
 	}
 	debug.PrintStack()
-	xerr.WrapXErr(err).DebugPrint()
+	errors.WrapXErr(err).DebugPrint()
 	os.Exit(1)
 }
 
@@ -138,5 +138,5 @@ func DebugPrint() {
 	}
 
 	debug.PrintStack()
-	xerr.WrapXErr(err).DebugPrint()
+	errors.WrapXErr(err).DebugPrint()
 }

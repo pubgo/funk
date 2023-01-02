@@ -1,10 +1,9 @@
 package result
 
 import (
-	"errors"
 	"fmt"
 
-	"github.com/pubgo/funk/xerr"
+	"github.com/pubgo/funk/errors"
 )
 
 func ParseErr(err *error, val interface{}) {
@@ -15,7 +14,7 @@ func ParseErr(err *error, val interface{}) {
 		*err = _val.Err()
 	case interface{ Unwrap() error }:
 		if _val.Unwrap() != nil {
-			*err = xerr.WrapXErr(_val.Unwrap()).WrapF("%#v", _val)
+			*err = errors.WrapXErr(_val.Unwrap()).WrapF("%#v", _val)
 		} else {
 			*err = fmt.Errorf("%#v", _val)
 		}
@@ -28,7 +27,7 @@ func ParseErr(err *error, val interface{}) {
 	default:
 		*err = fmt.Errorf("%#v", _val)
 	}
-	*err = xerr.WrapXErr(*err)
+	*err = errors.WrapXErr(*err)
 }
 
 func WithErr(err error) Error {
@@ -36,7 +35,7 @@ func WithErr(err error) Error {
 	case nil:
 		return Error{}
 	default:
-		return Error{e: xerr.WrapXErr(err)}
+		return Error{e: errors.WrapXErr(err)}
 	}
 }
 
@@ -56,7 +55,7 @@ func (e Error) String() string {
 	return fmt.Sprintf("err=%q detail=%#v", e.e.Error(), e.e)
 }
 
-func (e Error) IsNil() bool { return xerr.IsNil(e.e) }
+func (e Error) IsNil() bool { return errors.isNil(e.e) }
 
 func (e Error) IsErr() bool { return !e.IsNil() }
 
@@ -66,9 +65,9 @@ func (e Error) Must(check ...func(err Error) Error) {
 	}
 
 	if len(check) > 0 && check[0] != nil {
-		panic(xerr.Wrap(check[0](e).e))
+		panic(errors.Wrap(check[0](e).e))
 	} else {
-		panic(xerr.Wrap(e.e))
+		panic(errors.Wrap(e.e))
 	}
 }
 
@@ -77,7 +76,7 @@ func (e Error) Wrap(args ...interface{}) Error {
 		return e
 	}
 
-	return Error{e: xerr.Wrap(e.e, args...)}
+	return Error{e: errors.Wrap(e.e, args...)}
 }
 
 func (e Error) Do(fn func(err Error)) {
@@ -93,7 +92,7 @@ func (e Error) WrapF(msg string, args ...interface{}) Error {
 		return e
 	}
 
-	return Error{e: xerr.WrapF(e.e, msg, args...)}
+	return Error{e: errors.WrapF(e.e, msg, args...)}
 }
 
 func (e Error) OrElse(wrap func(e Error) Error) Error {
@@ -110,7 +109,7 @@ func (e Error) WithMeta(k string, v interface{}) Error {
 		return e
 	}
 
-	e.e = xerr.WrapXErr(e.e).WithMeta(k, v)
+	e.e = errors.WrapXErr(e.e).WithMeta(k, v)
 	return e
 }
 func (e Error) Err() error    { return e.e }
@@ -120,5 +119,5 @@ func (e Error) Expect(msg string, args ...interface{}) {
 		return
 	}
 
-	panic(xerr.WrapF(e.e, msg, args...))
+	panic(errors.WrapF(e.e, msg, args...))
 }
