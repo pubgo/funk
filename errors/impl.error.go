@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/pubgo/funk/pretty"
 
 	jjson "github.com/goccy/go-json"
 	"github.com/pubgo/funk/internal/color"
-	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/stack"
 )
 
@@ -59,8 +59,8 @@ func (t errImpl) getData() map[string]any {
 	if _err, ok := t.err.(json.Marshaler); ok {
 		data["cause"] = _err
 	} else {
-		data["err_msg"] = t.err.Error()
-		data["err_detail"] = fmt.Sprintf("%#v", t.err)
+		data["msg"] = t.err.Error()
+		data["detail"] = pretty.Sprint(t.err)
 	}
 
 	return data

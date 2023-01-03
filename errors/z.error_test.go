@@ -2,6 +2,7 @@ package errors
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"google.golang.org/grpc/codes"
@@ -15,6 +16,6 @@ func TestFormat(t *testing.T) {
 	err = WrapBizCode(err, "user.not_found")
 	err = WrapStack(err)
 	Debug(err)
-	var ddd, _ = json.MarshalIndent(ParseResp(err), "  ", "  ")
-	t.Log(string(ddd))
+	var ddd, _ = json.MarshalIndent(ParseResp(err), " ", "  ")
+	fmt.Println(string(ddd))
 }
