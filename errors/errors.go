@@ -104,6 +104,14 @@ func WrapStack(err error) error {
 	return base
 }
 
+func Err(err error) error {
+	if err == nil || isNil(err) {
+		return nil
+	}
+
+	return newErr(err)
+}
+
 func Wrap(err error, msg string) error {
 	if err == nil || isNil(err) {
 		return nil

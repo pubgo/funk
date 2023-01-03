@@ -9,7 +9,7 @@ import (
 )
 
 func TestFormat(t *testing.T) {
-	var err = New("hello error")
+	var err = Err(New("hello error"))
 	err = Wrap(err, "next error")
 	err = WrapTags(err, Map{"test": "hello"})
 	err = WrapCode(err, codes.Canceled)
