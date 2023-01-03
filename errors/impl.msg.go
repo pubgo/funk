@@ -7,13 +7,13 @@ import (
 	jjson "github.com/goccy/go-json"
 )
 
-type Err struct {
+type errMsgImpl struct {
 	Err    error  `json:"err"`
 	Msg    string `json:"msg"`
 	Detail string `json:"detail"`
 }
 
-func (e Err) MarshalJSON() ([]byte, error) {
+func (e errMsgImpl) MarshalJSON() ([]byte, error) {
 	var data = make(map[string]string, 4)
 	data["msg"] = e.Msg
 	data["detail"] = e.Detail
@@ -24,7 +24,7 @@ func (e Err) MarshalJSON() ([]byte, error) {
 	return jjson.Marshal(data)
 }
 
-func (e Err) Unwrap() error {
+func (e errMsgImpl) Unwrap() error {
 	if e.Err != nil {
 		return e.Err
 	}
@@ -32,11 +32,11 @@ func (e Err) Unwrap() error {
 	return errors.New(e.String())
 }
 
-func (e Err) String() string {
+func (e errMsgImpl) String() string {
 	return fmt.Sprintf("msg=%q detail=%q error=%q", e.Msg, e.Detail, e.Err)
 }
 
-func (e Err) Error() string {
+func (e errMsgImpl) Error() string {
 	if e.Err != nil {
 		return e.Err.Error()
 	}

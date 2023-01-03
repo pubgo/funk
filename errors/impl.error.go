@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-func New(format string, a ...interface{}) XErr {
+func New(format string, a ...interface{}) Error {
 	return &errImpl{
 		err:    fmt.Errorf(format, a...),
 		tags:   make(map[string]any),
@@ -23,62 +23,9 @@ func New(format string, a ...interface{}) XErr {
 }
 
 type errImpl struct {
-	err        error
-	msg        string
-	status     codes.Code
-	bizCode    string
-	caller     *stack.Frame
-	stackTrace []*stack.Frame
-	tags       map[string]interface{}
-}
-
-func (t *errImpl) AddMsg(msg string) XErr {
-	t.msg = msg
-	return t
-}
-
-func (t *errImpl) BizCode() string {
-	return t.bizCode
-}
-
-func (t *errImpl) AddTag(key string, value any) XErr {
-	t.tags[key] = value
-	return t
-}
-
-func (t *errImpl) AddCode(code codes.Code) XErr {
-	t.status = code
-	return t
-}
-
-func (t *errImpl) AddBizCode(biz string) XErr {
-	t.bizCode = biz
-	return t
-}
-
-func (t *errImpl) AddCaller() XErr {
-	t.caller = stack.Caller(1)
-	return t
-}
-
-func (t *errImpl) WithBizCode(biz string) XErr {
-	var err = *t
-	err.bizCode = biz
-	return &err
-}
-
-func (t *errImpl) WithCode(code codes.Code) XErr {
-	var err = *t
-	err.status = code
-	return &err
-}
-
-func (t *errImpl) _err() {}
-
-func (t *errImpl) WithTag(key string, value any) XErr {
-	var err = *t
-	err.tags[key] = value
-	return &err
+	err    error
+	msg    string
+	caller *stack.Frame
 }
 
 func (t *errImpl) MarshalJSON() ([]byte, error) {
