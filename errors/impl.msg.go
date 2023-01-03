@@ -1,45 +1,45 @@
 package errors
 
 import (
-	"errors"
+	"bytes"
 	"fmt"
 
 	jjson "github.com/goccy/go-json"
+	"github.com/pubgo/funk/internal/color"
+	"github.com/pubgo/funk/stack"
 )
 
+func New(format string, a ...interface{}) error {
+	return &errImpl{
+		err:    fmt.Errorf(format, a...),
+		caller: stack.Caller(1),
+	}
+}
+
+var _ IMsgWrap = (*errMsgImpl)(nil)
+
 type errMsgImpl struct {
-	Err    error  `json:"err"`
-	Msg    string `json:"msg"`
-	Detail string `json:"detail"`
+	*errImpl
+	msg string
+}
+
+func (e errMsgImpl) Msg() string {
+	return e.msg
 }
 
 func (e errMsgImpl) MarshalJSON() ([]byte, error) {
-	var data = make(map[string]string, 4)
-	data["msg"] = e.Msg
-	data["detail"] = e.Detail
-	if e.Err != nil {
-		data["err"] = e.Err.Error()
-		data["err_detail"] = fmt.Sprintf("%#v", e.Err)
-	}
+	var data = e.getData()
+	data["msg"] = e.msg
 	return jjson.Marshal(data)
 }
 
-func (e errMsgImpl) Unwrap() error {
-	if e.Err != nil {
-		return e.Err
-	}
-
-	return errors.New(e.String())
-}
-
 func (e errMsgImpl) String() string {
-	return fmt.Sprintf("msg=%q detail=%q error=%q", e.Msg, e.Detail, e.Err)
-}
-
-func (e errMsgImpl) Error() string {
-	if e.Err != nil {
-		return e.Err.Error()
+	if e.err == nil || isNil(e.err) {
+		return ""
 	}
 
-	return e.String()
+	var buf = bytes.NewBuffer(nil)
+	buf.WriteString(fmt.Sprintf("   %s]: %q\n", color.Green.P("msg"), e.msg))
+	buf.WriteString(e.errImpl.String())
+	return buf.String()
 }

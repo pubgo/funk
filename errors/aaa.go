@@ -1,39 +1,45 @@
 package errors
 
 import (
-	"fmt"
 	"github.com/pubgo/funk/stack"
 	"google.golang.org/grpc/codes"
 )
 
 type Map map[string]any
 
-type TagWrapper interface {
+type ErrUnwrap interface {
+	Unwrap() error
+}
+
+type ErrIs interface {
+	Is(error) bool
+}
+
+type ErrAs interface {
+	As(any) bool
+}
+
+type ITagWrap interface {
 	Error
 	Tags() map[string]any
 }
 
-type MsgWrapper interface {
+type IMsgWrap interface {
 	Error
 	Msg() string
 }
 
-type CodeWrapper interface {
+type ICodeWrap interface {
 	Error
 	Code() codes.Code
 }
 
-type CallerWrapper interface {
-	Error
-	Caller() *stack.Frame
-}
-
-type StackWrapper interface {
+type IStackWrap interface {
 	Error
 	Stack() []*stack.Frame
 }
 
-type BizCodeWrapper interface {
+type IBizCodeWrap interface {
 	Error
 	BizCode() string
 }
@@ -41,8 +47,14 @@ type BizCodeWrapper interface {
 type Error interface {
 	Error() string
 	String() string
-	Format(s fmt.State, verb rune)
 	Unwrap() error
-	As(target interface{}) bool
 	MarshalJSON() ([]byte, error)
+}
+
+type RespErr struct {
+	Cause   error          `json:"cause"`
+	Msg     string         `json:"msg"`
+	Code    codes.Code     `json:"code"`
+	BizCode string         `json:"biz_code"`
+	Tags    map[string]any `json:"tags"`
 }
