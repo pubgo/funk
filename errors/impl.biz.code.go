@@ -11,7 +11,7 @@ import (
 var _ IBizCodeWrap = (*errBizCodeImpl)(nil)
 
 type errBizCodeImpl struct {
-	*errImpl
+	*baseErr
 	bizCode string
 }
 
@@ -32,6 +32,6 @@ func (e errBizCodeImpl) String() string {
 
 	var buf = bytes.NewBuffer(nil)
 	buf.WriteString(fmt.Sprintf("   %s]: %s\n", color.Green.P("biz"), e.bizCode))
-	buf.WriteString(e.errImpl.String())
+	buf.WriteString(e.baseErr.String())
 	return buf.String()
 }

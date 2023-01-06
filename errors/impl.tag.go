@@ -11,7 +11,7 @@ import (
 var _ ITagWrap = (*errTagImpl)(nil)
 
 type errTagImpl struct {
-	*errImpl
+	*baseErr
 	tags map[string]any
 }
 
@@ -32,6 +32,6 @@ func (e errTagImpl) String() string {
 
 	var buf = bytes.NewBuffer(nil)
 	buf.WriteString(fmt.Sprintf("  %s]: %q\n", color.Green.P("tags"), e.tags))
-	buf.WriteString(e.errImpl.String())
+	buf.WriteString(e.baseErr.String())
 	return buf.String()
 }

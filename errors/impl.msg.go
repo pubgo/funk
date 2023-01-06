@@ -10,7 +10,7 @@ import (
 )
 
 func New(format string, a ...interface{}) error {
-	return &errImpl{
+	return &baseErr{
 		err:    fmt.Errorf(format, a...),
 		caller: stack.Caller(1),
 	}
@@ -19,7 +19,7 @@ func New(format string, a ...interface{}) error {
 var _ IMsgWrap = (*errMsgImpl)(nil)
 
 type errMsgImpl struct {
-	*errImpl
+	*baseErr
 	msg string
 }
 
@@ -40,6 +40,6 @@ func (e errMsgImpl) String() string {
 
 	var buf = bytes.NewBuffer(nil)
 	buf.WriteString(fmt.Sprintf("   %s]: %q\n", color.Green.P("msg"), e.msg))
-	buf.WriteString(e.errImpl.String())
+	buf.WriteString(e.baseErr.String())
 	return buf.String()
 }

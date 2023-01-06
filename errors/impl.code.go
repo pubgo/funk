@@ -12,7 +12,7 @@ import (
 var _ ICodeWrap = (*errCodeImpl)(nil)
 
 type errCodeImpl struct {
-	*errImpl
+	*baseErr
 	code codes.Code
 }
 
@@ -33,6 +33,6 @@ func (e errCodeImpl) String() string {
 
 	var buf = bytes.NewBuffer(nil)
 	buf.WriteString(fmt.Sprintf("  %s]: %s\n", color.Green.P("code"), e.code.String()))
-	buf.WriteString(e.errImpl.String())
+	buf.WriteString(e.baseErr.String())
 	return buf.String()
 }

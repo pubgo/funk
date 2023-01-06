@@ -36,9 +36,13 @@ func ParseResp(err error) *RespErr {
 	for err != nil {
 		switch _err := err.(type) {
 		case ICodeWrap:
-			rsp.Code = _err.Code()
+			if rsp.Code == 0 {
+				rsp.Code = _err.Code()
+			}
 		case IBizCodeWrap:
-			rsp.BizCode = _err.BizCode()
+			if rsp.BizCode == "" {
+				rsp.BizCode = _err.BizCode()
+			}
 		case ITagWrap:
 			for k, v := range _err.Tags() {
 				rsp.Tags[k] = v
@@ -64,6 +68,8 @@ func As(err error, target any) bool {
 	return errors.As(err, target) //nolint
 }
 
+//func Opaque(err error) error
+
 func Unwrap(err error) error {
 	u, ok := err.(ErrUnwrap)
 	if !ok {
@@ -88,7 +94,7 @@ func WrapStack(err error) error {
 		return nil
 	}
 
-	var base = &errStackImpl{errImpl: newErr(err)}
+	var base = &errStackImpl{baseErr: newErr(err)}
 	for i := 0; ; i++ {
 		var cc = stack.Caller(1 + i)
 		if cc == nil {
@@ -117,7 +123,7 @@ func Wrap(err error, msg string) error {
 		return nil
 	}
 
-	return &errMsgImpl{errImpl: newErr(err), msg: msg}
+	return &errMsgImpl{baseErr: newErr(err), msg: msg}
 }
 
 func Wrapf(err error, format string, args ...interface{}) error {
@@ -125,7 +131,7 @@ func Wrapf(err error, format string, args ...interface{}) error {
 		return nil
 	}
 
-	return &errMsgImpl{errImpl: newErr(err), msg: fmt.Sprintf(format, args...)}
+	return &errMsgImpl{baseErr: newErr(err), msg: fmt.Sprintf(format, args...)}
 }
 
 func WrapTags(err error, m Map) error {
@@ -133,7 +139,7 @@ func WrapTags(err error, m Map) error {
 		return nil
 	}
 
-	return &errTagImpl{errImpl: newErr(err), tags: m}
+	return &errTagImpl{baseErr: newErr(err), tags: m}
 }
 
 func WrapCode(err error, code codes.Code) error {
@@ -141,7 +147,7 @@ func WrapCode(err error, code codes.Code) error {
 		return nil
 	}
 
-	return &errCodeImpl{errImpl: newErr(err), code: code}
+	return &errCodeImpl{baseErr: newErr(err), code: code}
 }
 
 func WrapBizCode(err error, bizCode string) error {
@@ -149,7 +155,7 @@ func WrapBizCode(err error, bizCode string) error {
 		return nil
 	}
 
-	return &errBizCodeImpl{errImpl: newErr(err), bizCode: bizCode}
+	return &errBizCodeImpl{baseErr: newErr(err), bizCode: bizCode}
 }
 
 func isNil(err error) bool {
@@ -163,4 +169,11 @@ func isNil(err error) bool {
 	}
 
 	return v.IsZero()
+}
+
+func newErr(err error) *baseErr {
+	return &baseErr{
+		err:    err,
+		caller: stack.Caller(2),
+	}
 }

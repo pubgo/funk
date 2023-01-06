@@ -11,6 +11,7 @@ import (
 func TestFormat(t *testing.T) {
 	var err = Err(New("hello error"))
 	err = Wrap(err, "next error")
+	err = Wrapf(err, "next error name=%s", "wrapf")
 	err = WrapTags(err, Map{"test": "hello"})
 	err = WrapCode(err, codes.Canceled)
 	err = WrapBizCode(err, "user.not_found")

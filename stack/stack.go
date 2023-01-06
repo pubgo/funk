@@ -83,7 +83,25 @@ func CallerWithFunc(fn interface{}) *Frame {
 	return stack(fn1.Pointer())
 }
 
+func GetStack(skip int) uintptr {
+	var pcs [1]uintptr
+	n := runtime.Callers(skip+2, pcs[:])
+	if n == 0 {
+		return 0
+	}
+
+	return pcs[0] - 1
+}
+
+func Stack(p uintptr) *Frame {
+	return stack(p)
+}
+
 func stack(p uintptr) *Frame {
+	if p == 0 {
+		return nil
+	}
+
 	var v, ok = cache[p]
 	if ok {
 		return v

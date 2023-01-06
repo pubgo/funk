@@ -12,7 +12,7 @@ import (
 var _ IStackWrap = (*errStackImpl)(nil)
 
 type errStackImpl struct {
-	*errImpl
+	*baseErr
 	stacks []*stack.Frame
 }
 
@@ -32,7 +32,7 @@ func (e errStackImpl) String() string {
 	}
 
 	var buf = bytes.NewBuffer(nil)
-	buf.WriteString(e.errImpl.String())
+	buf.WriteString(e.baseErr.String())
 	for i := range e.stacks {
 		buf.WriteString(fmt.Sprintf(" %s]: %s\n", color.Yellow.P("stack"), e.stacks[i].String()))
 	}

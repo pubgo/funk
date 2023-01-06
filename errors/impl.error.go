@@ -11,21 +11,14 @@ import (
 	"github.com/pubgo/funk/stack"
 )
 
-func newErr(err error) *errImpl {
-	return &errImpl{
-		err:    err,
-		caller: stack.Caller(2),
-	}
-}
+var _ Error = (*baseErr)(nil)
 
-var _ Error = (*errImpl)(nil)
-
-type errImpl struct {
+type baseErr struct {
 	err    error
 	caller *stack.Frame
 }
 
-func (t errImpl) String() string {
+func (t baseErr) String() string {
 	if t.err == nil || isNil(t.err) {
 		return ""
 	}
@@ -46,11 +39,11 @@ func (t errImpl) String() string {
 	return buf.String()
 }
 
-func (t errImpl) MarshalJSON() ([]byte, error) {
+func (t baseErr) MarshalJSON() ([]byte, error) {
 	return jjson.Marshal(t.getData())
 }
 
-func (t errImpl) getData() map[string]any {
+func (t baseErr) getData() map[string]any {
 	var data = make(map[string]any)
 	if t.caller != nil {
 		data["caller"] = t.caller
@@ -66,10 +59,10 @@ func (t errImpl) getData() map[string]any {
 	return data
 }
 
-func (t errImpl) Unwrap() error { return t.err }
+func (t baseErr) Unwrap() error { return t.err }
 
 // Error
-func (t errImpl) Error() string {
+func (t baseErr) Error() string {
 	if t.err == nil || isNil(t.err) {
 		return ""
 	}
