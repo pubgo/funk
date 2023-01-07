@@ -7,30 +7,26 @@ import (
 	"github.com/pubgo/funk/stack"
 )
 
-func TryWith(gErr *result.Error, fn func() result.Error) {
+func WithErr(gErr *error, fn func() error) {
 	assert.If(fn == nil, "[fn] is nil")
 
+	var err errors.XError
+
 	defer func() {
-		val := recover()
-		if val == nil {
-			return
+		if val := recover(); val != nil {
+			err = errors.Parse(val)
 		}
 
-		var err error
-		result.ParseErr(&err, val)
-		if err == nil {
-			return
+		if err != nil {
+			err.AddTag("fn_caller", stack.CallerWithFunc(fn))
+			*gErr = err
 		}
-
-		*gErr = result.WithErr(err).WrapF("fn=%s", stack.CallerWithFunc(fn))
 	}()
 
-	fn().Do(func(err result.Error) {
-		*gErr = err.WrapF("fn=%s", stack.CallerWithFunc(fn))
-	})
+	err = errors.Parse(fn())
 }
 
-func Try(fn func()) (gErr result.Error) {
+func Try(fn func()) (gErr error) {
 	assert.If(fn == nil, "[fn] is nil")
 
 	defer func() {
@@ -39,58 +35,34 @@ func Try(fn func()) (gErr result.Error) {
 			return
 		}
 
-		var err error
-		result.ParseErr(&err, val)
+		var err = errors.Parse(val)
 		if err == nil {
 			return
 		}
 
-		gErr = result.WithErr(err).WrapF("fn=%s", stack.CallerWithFunc(fn))
+		err.AddTag("fn_caller", stack.CallerWithFunc(fn))
+		gErr = err
 	}()
 
 	fn()
 	return
 }
 
-func TryErr(fn func() result.Error) (gErr result.Error) {
+func Result[T any](fn func() result.Result[T]) (g result.Result[T]) {
 	assert.If(fn == nil, "[fn] is nil")
 
 	defer func() {
-		val := recover()
-		if val == nil {
-			return
+		var err errors.XError
+		if val := recover(); val != nil {
+			err = errors.Parse(val)
 		}
 
-		var err error
-		result.ParseErr(&err, val)
 		if err == nil {
 			return
 		}
 
-		gErr = result.WithErr(err).WrapF("fn=%s", stack.CallerWithFunc(fn))
-	}()
-
-	return fn().OrElse(func(e result.Error) result.Error {
-		return e.WrapF("fn=%s", stack.CallerWithFunc(fn))
-	})
-}
-
-func TryVal[T any](fn func() result.Result[T]) (g result.Result[T]) {
-	assert.If(fn == nil, "[fn] is nil")
-
-	defer func() {
-		val := recover()
-		if val == nil {
-			return
-		}
-
-		var err error
-		result.ParseErr(&err, val)
-		if err == nil {
-			return
-		}
-
-		g = result.Err[T](errors.WrapF(err, "fn=%s", stack.CallerWithFunc(fn)))
+		err.AddTag("fn", stack.CallerWithFunc(fn))
+		g = result.Err[T](err)
 	}()
 
 	return fn()

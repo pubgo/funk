@@ -6,6 +6,15 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
+func init1() error {
+	return WrapCaller(New("test skip"), 1)
+}
+
+func TestSkip(t *testing.T) {
+	var err = init1()
+	Debug(err)
+}
+
 func TestFormat(t *testing.T) {
 	var err = WrapCaller(New("hello error"))
 	err = Wrap(err, "next error")

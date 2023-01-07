@@ -9,15 +9,16 @@ import (
 )
 
 func TestErr(t *testing.T) {
-	var handler = func() (gErr result.Error) {
+	var handler = func() (gErr error) {
 		defer ResultErr(&gErr)
 
 		panic("ok")
 	}
 
-	handler().Do(func(err result.Error) {
+	var err = handler()
+	if errors.IsNil(err) {
 		t.Log(err)
-	})
+	}
 }
 
 func TestResult(t *testing.T) {
@@ -25,6 +26,7 @@ func TestResult(t *testing.T) {
 		A string
 		B string
 	}
+
 	var handler = func() (r result.Result[A]) {
 		defer Result(&r)
 
@@ -37,9 +39,7 @@ func TestResult(t *testing.T) {
 }
 
 func TestName(t *testing.T) {
-	defer Recovery(func(err errors.XErr) {
-		err.DebugPrint()
-	})
+	defer DebugPrint()
 
 	log.Print("test panic")
 	hello()

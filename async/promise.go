@@ -36,7 +36,7 @@ func AsyncGroup[T any](do func(async func(func() result.Result[T])) result.Error
 				wg.Add(1)
 				go func() {
 					defer wg.Done()
-					rr <- try.TryVal(f)
+					rr <- try.Result(f)
 				}()
 			})
 		}).Err())

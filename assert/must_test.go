@@ -4,16 +4,19 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pubgo/funk/errors"
 	"github.com/stretchr/testify/assert"
 )
 
-func panicErr() (*errors.WrapCaller, error) {
+type errBase struct {
+	msg string
+}
+
+func panicErr() (*errBase, error) {
 	return nil, fmt.Errorf("error")
 }
 
-func panicNoErr() (*errors.WrapCaller, error) {
-	return &errors.WrapCaller{Msg: "ok"}, nil
+func panicNoErr() (*errBase, error) {
+	return &errBase{msg: "ok"}, nil
 }
 
 func TestPanicErr(t *testing.T) {
@@ -25,7 +28,7 @@ func TestPanicErr(t *testing.T) {
 
 	is.NotPanics(func() {
 		var ret = Must1(panicNoErr())
-		fmt.Println(ret.Msg)
+		fmt.Println(ret.msg)
 	})
 }
 

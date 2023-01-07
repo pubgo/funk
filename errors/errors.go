@@ -8,6 +8,14 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
+func Expect(err error, msg string, args ...interface{}) {
+	if IsNil(err) {
+		return
+	}
+
+	panic(Wrapf(err, msg, args...))
+}
+
 func New(format string, a ...interface{}) error {
 	return &baseErr{
 		err:    fmt.Errorf(format, a...),
@@ -20,7 +28,7 @@ func Parse(val interface{}) XError {
 }
 
 func ParseResp(err error) *RespErr {
-	if err == nil || isNil(err) {
+	if err == nil || IsNil(err) {
 		return nil
 	}
 
@@ -77,7 +85,7 @@ func Unwrap(err error) error {
 func Cause(err error) error {
 	for {
 		err1 := Unwrap(err)
-		if err1 == nil || isNil(err1) {
+		if err1 == nil || IsNil(err1) {
 			return err
 		}
 
@@ -86,7 +94,7 @@ func Cause(err error) error {
 }
 
 func WrapStack(err error) error {
-	if err == nil || isNil(err) {
+	if err == nil || IsNil(err) {
 		return nil
 	}
 
@@ -96,7 +104,7 @@ func WrapStack(err error) error {
 }
 
 func WrapFn(err error, fn func(xrr XError)) error {
-	if err == nil || isNil(err) {
+	if err == nil || IsNil(err) {
 		return nil
 	}
 
@@ -109,16 +117,16 @@ func WrapFn(err error, fn func(xrr XError)) error {
 	return base
 }
 
-func WrapCaller(err error) error {
-	if err == nil || isNil(err) {
+func WrapCaller(err error, skip ...int) error {
+	if err == nil || IsNil(err) {
 		return nil
 	}
 
-	return newErr(err)
+	return newErr(err, skip...)
 }
 
 func Wrap(err error, msg string) error {
-	if err == nil || isNil(err) {
+	if err == nil || IsNil(err) {
 		return nil
 	}
 
@@ -128,7 +136,7 @@ func Wrap(err error, msg string) error {
 }
 
 func Wrapf(err error, format string, args ...interface{}) error {
-	if err == nil || isNil(err) {
+	if err == nil || IsNil(err) {
 		return nil
 	}
 
@@ -138,7 +146,7 @@ func Wrapf(err error, format string, args ...interface{}) error {
 }
 
 func WrapTags(err error, m Tags) error {
-	if err == nil || isNil(err) {
+	if err == nil || IsNil(err) {
 		return nil
 	}
 
@@ -148,7 +156,7 @@ func WrapTags(err error, m Tags) error {
 }
 
 func WrapCode(err error, code codes.Code) error {
-	if err == nil || isNil(err) {
+	if err == nil || IsNil(err) {
 		return nil
 	}
 
@@ -158,7 +166,7 @@ func WrapCode(err error, code codes.Code) error {
 }
 
 func WrapBizCode(err error, bizCode string) error {
-	if err == nil || isNil(err) {
+	if err == nil || IsNil(err) {
 		return nil
 	}
 

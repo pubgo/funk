@@ -25,7 +25,7 @@ type baseErr struct {
 }
 
 func (t *baseErr) String() string {
-	if t.err == nil || isNil(t.err) {
+	if t.err == nil || IsNil(t.err) {
 		return ""
 	}
 
@@ -101,7 +101,7 @@ func (t *baseErr) Unwrap() error { return t.err }
 
 // Error
 func (t *baseErr) Error() string {
-	if t.err == nil || isNil(t.err) {
+	if t.err == nil || IsNil(t.err) {
 		return ""
 	}
 

@@ -31,8 +31,10 @@ func (t *WaitGroup) check() {
 	// 阻塞, 等待任务处理完毕
 	// 采样率(10), 打印log
 	if t.Count() >= t.Concurrent && fastrand.Sampling(10) {
-		logs.Info("WaitGroup current concurrent number exceeds the maximum concurrent number of the system",
-			"current", t.Count(), "maximum", t.Concurrent)
+		logs.Info().
+			Uint32("current", t.Count()).
+			Uint32("maximum", t.Concurrent).
+			Msg("WaitGroup current concurrent number exceeds the maximum concurrent number of the system")
 	}
 }
 

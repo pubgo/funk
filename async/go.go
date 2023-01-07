@@ -18,7 +18,7 @@ func Async[T any](fn func() result.Result[T]) *Future[T] {
 
 	var ch = newFuture[T]()
 	go func() {
-		ch.success(try.TryVal(fn))
+		ch.success(try.Result(fn))
 	}()
 	return ch
 }
@@ -28,7 +28,7 @@ func GoSafe(fn func() result.Error, cb ...func(err result.Error)) {
 	assert.If(fn == nil, "[GoSafe] [fn] is nil")
 
 	go func() {
-		var err = try.TryErr(fn)
+		var err = try.WithErr(fn)
 		if err.IsNil() {
 			return
 		}

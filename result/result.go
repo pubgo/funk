@@ -3,8 +3,8 @@ package result
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
 
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
 )
 
@@ -13,47 +13,42 @@ func OK[T any](v T) Result[T] {
 }
 
 func Err[T any](err error) Result[T] {
-	return Result[T]{e: WithErr(err)}
+	return Result[T]{e: err}
 }
 
 func Wrap[T any](v T, err error) Result[T] {
-	return Result[T]{v: &v, e: WithErr(err)}
+	return Result[T]{v: &v, e: err}
 }
 
 type Result[T any] struct {
 	v *T
-	e Error
+	e error
 }
 
 func (r Result[T]) WithErr(err error) Result[T] {
-	r.e = WithErr(err)
+	r.e = err
 	return r
 }
 
 func (r Result[T]) WithVal(v T) Result[T] {
 	r.v = &v
-	r.e = WithErr(nil)
 	return r
 }
 
-func (r Result[T]) Err(check ...func(err Error) Error) error {
-	if r.IsNil() {
+func (r Result[T]) Err(check ...func(err error) error) error {
+	if !r.IsErr() {
 		return nil
 	}
 
 	if len(check) > 0 && check[0] != nil {
-		return check[0](r.e).Err()
+		return check[0](r.e)
 	} else {
-		return r.e.Err()
+		return r.e
 	}
 }
 
 func (r Result[T]) IsErr() bool {
-	return r.e.IsErr()
-}
-
-func (r Result[T]) IsNil() bool {
-	return r.v == nil || reflect.ValueOf(*r.v).IsNil()
+	return !errors.IsNil(r.e)
 }
 
 func (r Result[T]) Map(f func(T) T) Result[T] {
@@ -67,7 +62,7 @@ func (r Result[T]) Map(f func(T) T) Result[T] {
 
 func (r Result[T]) Expect(msg string, args ...interface{}) T {
 	if r.IsErr() {
-		panic(r.e.WrapF(msg, args...))
+		panic(errors.Wrapf(r.e, msg, args...))
 	}
 	return generic.DePtr(r.v)
 }
@@ -79,7 +74,7 @@ func (r Result[T]) OrElse(v T) T {
 	return generic.DePtr(r.v)
 }
 
-func (r Result[T]) OnErr(check func(err Error) Error) Result[T] {
+func (r Result[T]) OnErr(check func(err error) error) Result[T] {
 	if r.IsErr() {
 		r.e = check(r.e)
 	}
@@ -87,7 +82,7 @@ func (r Result[T]) OnErr(check func(err Error) Error) Result[T] {
 	return r
 }
 
-func (r Result[T]) Unwrap(check ...func(err Error) Error) T {
+func (r Result[T]) Unwrap(check ...func(err error) error) T {
 	if !r.IsErr() {
 		return generic.DePtr(r.v)
 	}
@@ -103,16 +98,16 @@ func (r Result[T]) String() string {
 	if !r.IsErr() {
 		return fmt.Sprintf("%v", r.v)
 	}
-	return r.e.String()
+
+	return r.e.Error()
 }
 
 func (r Result[T]) MarshalJSON() ([]byte, error) {
-	var d = data[T]{Body: generic.DePtr(r.v)}
 	if r.IsErr() {
-		d.ErrMsg = r.e.Err().Error()
-		d.ErrDetail = fmt.Sprintf("%#v", r.e.Unwrap())
+		return nil, r.e
 	}
-	return json.Marshal(d)
+
+	return json.Marshal(generic.DePtr(r.v))
 }
 
 func ChanOf[T any](args chan T) Chan[T] {
@@ -128,7 +123,7 @@ func ChanOf[T any](args chan T) Chan[T] {
 
 type Chan[T any] chan Result[T]
 
-func (cc Chan[T]) Unwrap(check ...func(err Error) Error) []T {
+func (cc Chan[T]) Unwrap(check ...func(err error) error) []T {
 	return cc.ToResult().Unwrap(check...)
 }
 
@@ -147,7 +142,7 @@ func (cc Chan[T]) ToResult() Result[[]T] {
 			return Err[[]T](c.Err())
 		}
 
-		if c.IsNil() {
+		if !c.IsErr() {
 			continue
 		}
 
@@ -172,7 +167,7 @@ func ListOf[T any](args ...T) List[T] {
 
 type List[T any] []Result[T]
 
-func (rr List[T]) Unwrap(check ...func(err Error) Error) []T {
+func (rr List[T]) Unwrap(check ...func(err error) error) []T {
 	return rr.ToResult().Unwrap(check...)
 }
 

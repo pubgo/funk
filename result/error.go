@@ -7,12 +7,7 @@ import (
 )
 
 func WithErr(err error) Error {
-	switch err.(type) {
-	case nil:
-		return Error{}
-	default:
-		return Error{e: errors.WrapXErr(err)}
-	}
+	return Error{e: err}
 }
 
 func NilErr() Error {
@@ -31,28 +26,14 @@ func (e Error) String() string {
 	return fmt.Sprintf("err=%q detail=%#v", e.e.Error(), e.e)
 }
 
-func (e Error) IsNil() bool { return errors.isNil(e.e) }
-
-func (e Error) IsErr() bool { return !e.IsNil() }
-
-func (e Error) Must(check ...func(err Error) Error) {
-	if e.IsNil() {
-		return
-	}
-
-	if len(check) > 0 && check[0] != nil {
-		panic(errors.Wrap(check[0](e).e))
-	} else {
-		panic(errors.Wrap(e.e))
-	}
-}
+func (e Error) IsNil() bool { return errors.IsNil(e.e) }
 
 func (e Error) Wrap(args ...interface{}) Error {
 	if e.IsNil() {
 		return e
 	}
 
-	return Error{e: errors.Wrap(e.e, args...)}
+	return Error{e: errors.Wrap(e.e, fmt.Sprint(args...))}
 }
 
 func (e Error) Do(fn func(err Error)) {
@@ -63,12 +44,12 @@ func (e Error) Do(fn func(err Error)) {
 	fn(e)
 }
 
-func (e Error) WrapF(msg string, args ...interface{}) Error {
+func (e Error) Wrapf(msg string, args ...interface{}) Error {
 	if e.IsNil() {
 		return e
 	}
 
-	return Error{e: errors.WrapF(e.e, msg, args...)}
+	return Error{e: errors.Wrapf(e.e, msg, args...)}
 }
 
 func (e Error) OrElse(wrap func(e Error) Error) Error {
@@ -80,12 +61,14 @@ func (e Error) OrElse(wrap func(e Error) Error) Error {
 }
 
 func (e Error) WithErr(err error) Error { e.e = err; return e }
-func (e Error) WithMeta(k string, v interface{}) Error {
+func (e Error) WithTag(k string, v interface{}) Error {
 	if e.IsNil() {
 		return e
 	}
 
-	e.e = errors.WrapXErr(e.e).WithMeta(k, v)
+	e.e = errors.WrapFn(e.e, func(xrr errors.XError) {
+		xrr.AddTag(k, v)
+	})
 	return e
 }
 func (e Error) Err() error    { return e.e }
@@ -95,5 +78,5 @@ func (e Error) Expect(msg string, args ...interface{}) {
 		return
 	}
 
-	panic(errors.WrapF(e.e, msg, args...))
+	panic(errors.Wrapf(e.e, msg, args...))
 }

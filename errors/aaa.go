@@ -25,6 +25,7 @@ type errAs interface {
 	As(any) bool
 }
 
+type XErr = XError
 type XError interface {
 	Error() string
 	String() string
