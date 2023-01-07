@@ -71,7 +71,7 @@ func As(err error, target any) bool {
 //func Opaque(err error) error
 
 func Unwrap(err error) error {
-	u, ok := err.(ErrUnwrap)
+	u, ok := err.(errUnwrap)
 	if !ok {
 		return nil
 	}

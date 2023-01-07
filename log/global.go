@@ -13,21 +13,28 @@ func init() {
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 }
 
-var stdZero = generic.Ptr(zerolog.New(os.Stderr).Level(zerolog.DebugLevel).Output(
-	zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
-		w.Out = os.Stderr
-		w.TimeFormat = time.RFC3339
-	})).With().Timestamp().Caller().Logger())
+var (
+	// stdZeroLog default zerolog just fro debug
+	stdZeroLog = generic.Ptr(zerolog.New(os.Stderr).Level(zerolog.DebugLevel).Output(
+		zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
+			w.Out = os.Stderr
+			w.TimeFormat = time.RFC3339
+		})).With().Timestamp().Caller().Logger())
 
-// stdLog is the global logger.
-var stdLog = New(nil)
+	// stdLog is the global logger.
+	stdLog = New(nil).WithHooks(new(hookImpl))
+)
 
 func GetLogger(name string) Logger {
 	return stdLog.WithName(name)
 }
 
 func SetLogger(log *zerolog.Logger) {
-	stdZero = log
+	if log == nil {
+		panic("[log] should not be nil")
+	}
+
+	stdZeroLog = log
 }
 
 // Err starts a new message with error level with err as a field if not nil or

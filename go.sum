@@ -95,8 +95,8 @@ github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e h1:fD57ERR4JtEqsWb
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 h1:onHthvaw9LFnH4t2DcNVpwGmV9E1BkGknEliJkfwQj0=
 github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58/go.mod h1:DXv8WO4yhMYhSNPKjeNKa5WY9YCIEBRbNzFFPJbWO6Y=
-github.com/phuslu/log v1.0.83 h1:zfqz5tfFPLF8w0jEscpDxE2aFg1Y1kcbORDPliKdIbU=
-github.com/phuslu/log v1.0.83/go.mod h1:yAZh4pv6KxAsJDmJIcVSMxkMiUF7mJbpFN3vROkf0dc=
+github.com/phuslu/goid v1.0.0 h1:Cgcvd/R54UO1fCtyt+iKXAi+yZQ/KWlAm6MmZNizCLM=
+github.com/phuslu/goid v1.0.0/go.mod h1:txc2fUIdrdnn+v9Vq+QpiPQ3dnrXEchjoVDgic+r+L0=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=

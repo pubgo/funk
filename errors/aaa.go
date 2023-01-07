@@ -9,18 +9,18 @@ type Map map[string]any
 
 type Errors []error
 
-type ErrUnwrap interface {
+type errUnwrap interface {
 	Unwrap() error
 }
 
 type opaqueWrapper struct {
 }
 
-type ErrIs interface {
+type errIs interface {
 	Is(error) bool
 }
 
-type ErrAs interface {
+type errAs interface {
 	As(any) bool
 }
 

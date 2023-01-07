@@ -18,7 +18,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.14
 	github.com/modood/table v0.0.0-20220527013332-8d47e76dad33
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58
-	github.com/phuslu/log v1.0.83
+	github.com/phuslu/goid v1.0.0
 	github.com/rodaine/table v1.0.1
 	github.com/rs/xid v1.4.0
 	github.com/rs/zerolog v1.28.0

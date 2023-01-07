@@ -58,8 +58,7 @@ func (l *loggerImpl) getLog() *zerolog.Logger {
 	if l.log != nil {
 		return l.log
 	}
-
-	return stdZero
+	return stdZeroLog
 }
 
 func (l *loggerImpl) newEvent(log zerolog.Logger, level zerolog.Level) *zerolog.Event {
