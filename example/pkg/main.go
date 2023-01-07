@@ -8,7 +8,7 @@ import (
 
 // 单个pkg的error处理
 
-var err1 = &errors.Err{Msg: "业务错误处理", Detail: "详细信息"}
+var err1 = &errors.WrapCaller{Msg: "业务错误处理", Detail: "详细信息"}
 
 func Hello() {
 	defer recovery.Raise(func(err errors.XErr) errors.XErr {

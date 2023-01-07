@@ -3,28 +3,20 @@ package errors
 import (
 	"errors"
 	"fmt"
-	"reflect"
 
-	"github.com/kr/pretty"
 	"github.com/pubgo/funk/stack"
 	"google.golang.org/grpc/codes"
 )
 
-func Parse(err *Error, val interface{}) {
-	switch _val := val.(type) {
-	case nil:
-		return
-	case Error:
-		*err = _val
-	case error:
-		*err = newErr(_val)
-	case string:
-		*err = newErr(errors.New(_val))
-	case []byte:
-		*err = newErr(errors.New(string(_val)))
-	default:
-		*err = newErr(errors.New(pretty.Sprint(_val)))
+func New(format string, a ...interface{}) error {
+	return &baseErr{
+		err:    fmt.Errorf(format, a...),
+		caller: stack.Caller(1),
 	}
+}
+
+func Parse(val interface{}) XError {
+	return parseXError(val)
 }
 
 func ParseResp(err error) *RespErr {
@@ -35,20 +27,20 @@ func ParseResp(err error) *RespErr {
 	var rsp = &RespErr{Tags: make(map[string]any), Cause: err, Msg: err.Error()}
 	for err != nil {
 		switch _err := err.(type) {
-		case ICodeWrap:
+		case XError:
 			if rsp.Code == 0 {
 				rsp.Code = _err.Code()
 			}
-		case IBizCodeWrap:
+
 			if rsp.BizCode == "" {
 				rsp.BizCode = _err.BizCode()
 			}
-		case ITagWrap:
-			for k, v := range _err.Tags() {
-				rsp.Tags[k] = v
+
+			if tags := _err.Tags(); tags != nil && len(tags) > 0 {
+				for k, v := range tags {
+					rsp.Tags[k] = v
+				}
 			}
-		case IMsgWrap:
-			rsp.Msg = _err.Msg()
 		}
 
 		err = Unwrap(err)
@@ -78,6 +70,10 @@ func Unwrap(err error) error {
 	return u.Unwrap()
 }
 
+//func Opaque(err error) error {
+//	return &opaqueWrapper{err: err}
+//}
+
 func Cause(err error) error {
 	for {
 		err1 := Unwrap(err)
@@ -94,23 +90,26 @@ func WrapStack(err error) error {
 		return nil
 	}
 
-	var base = &errStackImpl{baseErr: newErr(err)}
-	for i := 0; ; i++ {
-		var cc = stack.Caller(1 + i)
-		if cc == nil {
-			break
-		}
-
-		if cc.IsRuntime() {
-			continue
-		}
-
-		base.stacks = append(base.stacks, cc)
-	}
+	base := newErr(Parse(err))
+	base.AddStack()
 	return base
 }
 
-func Err(err error) error {
+func WrapFn(err error, fn func(xrr XError)) error {
+	if err == nil || isNil(err) {
+		return nil
+	}
+
+	if fn == nil {
+		panic("[fn] should not be nil")
+	}
+
+	base := newErr(Parse(err))
+	fn(base)
+	return base
+}
+
+func WrapCaller(err error) error {
 	if err == nil || isNil(err) {
 		return nil
 	}
@@ -123,7 +122,9 @@ func Wrap(err error, msg string) error {
 		return nil
 	}
 
-	return &errMsgImpl{baseErr: newErr(err), msg: msg}
+	base := newErr(Parse(err))
+	base.AddMsg(msg)
+	return base
 }
 
 func Wrapf(err error, format string, args ...interface{}) error {
@@ -131,15 +132,19 @@ func Wrapf(err error, format string, args ...interface{}) error {
 		return nil
 	}
 
-	return &errMsgImpl{baseErr: newErr(err), msg: fmt.Sprintf(format, args...)}
+	base := newErr(Parse(err))
+	base.AddMsg(fmt.Sprintf(format, args...))
+	return base
 }
 
-func WrapTags(err error, m Map) error {
+func WrapTags(err error, m Tags) error {
 	if err == nil || isNil(err) {
 		return nil
 	}
 
-	return &errTagImpl{baseErr: newErr(err), tags: m}
+	base := newErr(Parse(err))
+	base.AddTags(m)
+	return base
 }
 
 func WrapCode(err error, code codes.Code) error {
@@ -147,7 +152,9 @@ func WrapCode(err error, code codes.Code) error {
 		return nil
 	}
 
-	return &errCodeImpl{baseErr: newErr(err), code: code}
+	base := newErr(Parse(err))
+	base.AddCode(code)
+	return base
 }
 
 func WrapBizCode(err error, bizCode string) error {
@@ -155,25 +162,7 @@ func WrapBizCode(err error, bizCode string) error {
 		return nil
 	}
 
-	return &errBizCodeImpl{baseErr: newErr(err), bizCode: bizCode}
-}
-
-func isNil(err error) bool {
-	if err == nil {
-		return true
-	}
-
-	var v = reflect.ValueOf(err)
-	if !v.IsValid() {
-		return true
-	}
-
-	return v.IsZero()
-}
-
-func newErr(err error) *baseErr {
-	return &baseErr{
-		err:    err,
-		caller: stack.Caller(2),
-	}
+	base := newErr(Parse(err))
+	base.AddBizCode(bizCode)
+	return base
 }

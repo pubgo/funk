@@ -1,4 +1,4 @@
-package xtry
+package try
 
 import (
 	"fmt"
@@ -22,13 +22,13 @@ func testFunc() (err error) {
 	defer recovery.Err(&err, func(err errors.XErr) errors.XErr {
 		return err.WrapF("test func")
 	})
-	assert.Must(errors.Err{Msg: "test error"})
+	assert.Must(errors.WrapCaller{Msg: "test error"})
 	return
 }
 
 func TestTryVal(t *testing.T) {
-	var v = TryVal(func() result.Result[*errors.Err] {
-		return result.OK(&errors.Err{Msg: "ok"})
+	var v = TryVal(func() result.Result[*errors.WrapCaller] {
+		return result.OK(&errors.WrapCaller{Msg: "ok"})
 	})
 	fmt.Println(v)
 }

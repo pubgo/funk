@@ -26,7 +26,7 @@ func MustGet(names ...string) string {
 	var val string
 	GetWith(&val, names...)
 	assert.Fn(val == "", func() error {
-		return &errors.Err{
+		return &errors.WrapCaller{
 			Msg:    "env not found",
 			Detail: fmt.Sprintf("names=%v", names),
 		}

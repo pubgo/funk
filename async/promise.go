@@ -8,7 +8,7 @@ import (
 	"github.com/pubgo/funk/recovery"
 	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/stack"
-	"github.com/pubgo/funk/xtry"
+	"github.com/pubgo/funk/try"
 )
 
 func Promise[T any](fn func(resolve func(T), reject func(result.Error))) *Future[T] {
@@ -31,12 +31,12 @@ func AsyncGroup[T any](do func(async func(func() result.Result[T])) result.Error
 	var rr = make(chan result.Result[T])
 	go func() {
 		var wg sync.WaitGroup
-		rr <- result.Err[T](xtry.TryErr(func() result.Error {
+		rr <- result.Err[T](try.TryErr(func() result.Error {
 			return do(func(f func() result.Result[T]) {
 				wg.Add(1)
 				go func() {
 					defer wg.Done()
-					rr <- xtry.TryVal(f)
+					rr <- try.TryVal(f)
 				}()
 			})
 		}).Err())
@@ -59,7 +59,7 @@ func Yield[T any](do func(yield func(T)) result.Error) result.Chan[T] {
 	var dd = make(chan result.Result[T])
 	go func() {
 		defer close(dd)
-		err := xtry.TryErr(func() result.Error { return do(func(t T) { dd <- result.OK(t) }) })
+		err := try.TryErr(func() result.Error { return do(func(t T) { dd <- result.OK(t) }) })
 		dd <- result.Err[T](err.Err())
 	}()
 	return dd

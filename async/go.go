@@ -9,7 +9,7 @@ import (
 	"github.com/pubgo/funk/recovery"
 	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/stack"
-	"github.com/pubgo/funk/xtry"
+	"github.com/pubgo/funk/try"
 )
 
 // Async 通过chan的方式同步执行异步任务
@@ -18,7 +18,7 @@ func Async[T any](fn func() result.Result[T]) *Future[T] {
 
 	var ch = newFuture[T]()
 	go func() {
-		ch.success(xtry.TryVal(fn))
+		ch.success(try.TryVal(fn))
 	}()
 	return ch
 }
@@ -28,13 +28,13 @@ func GoSafe(fn func() result.Error, cb ...func(err result.Error)) {
 	assert.If(fn == nil, "[GoSafe] [fn] is nil")
 
 	go func() {
-		var err = xtry.TryErr(fn)
+		var err = try.TryErr(fn)
 		if err.IsNil() {
 			return
 		}
 
 		if len(cb) > 0 && cb[0] != nil {
-			logErr(cb[0], xtry.Try(func() { cb[0](err) }))
+			logErr(cb[0], try.Try(func() { cb[0](err) }))
 			return
 		}
 
@@ -48,7 +48,7 @@ func GoCtx(fn func(ctx context.Context) result.Error) context.CancelFunc {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
-		logErr(fn, xtry.TryErr(func() result.Error { return fn(ctx) }))
+		logErr(fn, try.TryErr(func() result.Error { return fn(ctx) }))
 	}()
 	return cancel
 }
@@ -64,7 +64,7 @@ func GoDelay(fn func() result.Error, durations ...time.Duration) {
 
 	assert.If(dur == 0, "[dur] should not be 0")
 	go func() {
-		logErr(fn, xtry.TryErr(fn))
+		logErr(fn, try.TryErr(fn))
 	}()
 
 	time.Sleep(dur)
@@ -84,7 +84,7 @@ func Timeout(dur time.Duration, fn func() result.Error) (gErr result.Error) {
 	var done = make(chan struct{})
 	go func() {
 		defer close(done)
-		gErr = xtry.TryErr(fn)
+		gErr = try.TryErr(fn)
 	}()
 
 	select {

@@ -1,4 +1,4 @@
-package xtry
+package try
 
 import (
 	"github.com/pubgo/funk/assert"

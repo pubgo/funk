@@ -8,12 +8,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func panicErr() (*errors.Err, error) {
+func panicErr() (*errors.WrapCaller, error) {
 	return nil, fmt.Errorf("error")
 }
 
-func panicNoErr() (*errors.Err, error) {
-	return &errors.Err{Msg: "ok"}, nil
+func panicNoErr() (*errors.WrapCaller, error) {
+	return &errors.WrapCaller{Msg: "ok"}, nil
 }
 
 func TestPanicErr(t *testing.T) {
