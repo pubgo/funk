@@ -4,9 +4,18 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/stack"
 	"google.golang.org/grpc/codes"
 )
+
+func Do(err error, fn func(err error)) {
+	if IsNil(err) {
+		return
+	}
+
+	fn(err)
+}
 
 func Expect(err error, msg string, args ...interface{}) {
 	if IsNil(err) {
@@ -57,7 +66,16 @@ func ParseResp(err error) *RespErr {
 }
 
 func Debug(err error) {
-	fmt.Println(err.(fmt.Stringer).String())
+	if IsNil(err) {
+		return
+	}
+
+	if _err, ok := err.(fmt.Stringer); ok {
+		fmt.Println(_err.String())
+		return
+	}
+
+	pretty.Println(err)
 }
 
 func Is(err, target error) bool {
