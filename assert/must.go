@@ -3,63 +3,61 @@ package assert
 import (
 	"fmt"
 	"os"
-	"reflect"
+	"runtime/debug"
 
-	"github.com/pubgo/funk/xerr"
+	"github.com/pubgo/funk/errors"
 )
 
 func Must(err error, args ...interface{}) {
-	if isErrNil(err) {
+	if errors.IsNil(err) {
 		return
 	}
 
-	panic(xerr.WrapXErr(err, func(err *xerr.XError) { err.Detail = fmt.Sprint(args...) }))
+	panic(errors.WrapCaller(errors.Wrap(err, fmt.Sprint(args...))))
 }
 
 func MustF(err error, msg string, args ...interface{}) {
-	if isErrNil(err) {
+	if errors.IsNil(err) {
 		return
 	}
 
-	panic(xerr.WrapXErr(err, func(err *xerr.XError) { err.Detail = fmt.Sprintf(msg, args...) }))
+	panic(errors.WrapCaller(errors.Wrap(err, fmt.Sprintf(msg, args...))))
 }
 
 func Must1[T any](ret T, err error) T {
-	if isErrNil(err) {
-		return ret
+	if !errors.IsNil(err) {
+		panic(errors.WrapCaller(err))
 	}
 
-	panic(xerr.WrapXErr(err))
+	return ret
 }
 
 func Exit(err error, args ...interface{}) {
-	if isErrNil(err) {
+	if errors.IsNil(err) {
 		return
 	}
 
-	xerr.WrapXErr(err, func(err *xerr.XError) { err.Detail = fmt.Sprint(args...) }).DebugPrint()
+	errors.Debug(errors.WrapCaller(errors.Wrap(err, fmt.Sprint(args...))))
+	debug.PrintStack()
 	os.Exit(1)
 }
 
 func ExitF(err error, msg string, args ...interface{}) {
-	if isErrNil(err) {
+	if errors.IsNil(err) {
 		return
 	}
 
-	xerr.WrapXErr(err, func(err *xerr.XError) { err.Detail = fmt.Sprintf(msg, args...) }).DebugPrint()
+	errors.Debug(errors.WrapCaller(errors.Wrapf(err, msg, args...)))
+	debug.PrintStack()
 	os.Exit(1)
 }
 
 func Exit1[T any](ret T, err error) T {
-	if isErrNil(err) {
-		return ret
+	if !errors.IsNil(err) {
+		errors.Debug(errors.WrapCaller(err))
+		debug.PrintStack()
+		os.Exit(1)
 	}
 
-	xerr.WrapXErr(err).DebugPrint()
-	os.Exit(1)
 	return ret
-}
-
-func isErrNil(err error) bool {
-	return err == nil || reflect.ValueOf(err).IsNil()
 }

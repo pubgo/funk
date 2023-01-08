@@ -1,13 +1,12 @@
 package env
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/xerr"
+	"github.com/pubgo/funk/errors"
 )
 
 var trim = strings.TrimSpace
@@ -26,10 +25,9 @@ func MustGet(names ...string) string {
 	var val string
 	GetWith(&val, names...)
 	assert.Fn(val == "", func() error {
-		return &xerr.Err{
-			Msg:    "env not found",
-			Detail: fmt.Sprintf("names=%v", names),
-		}
+		var err = errors.Parse(errors.New("env not found"))
+		err.AddTag("names", names)
+		return err
 	})
 	return trim(val)
 }
@@ -100,6 +98,7 @@ func UnSetenv(key string) error {
 //
 // It accepts value formats "${env}" ,"${env||defaultValue}" , "defaultValue".
 // Examples:
+//
 //	_ = Expand("${GOPATH}")
 //	_ = Expand("${GOPATH||/usr/local/go}")
 //	_ = Expand("hello")

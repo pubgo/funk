@@ -3,21 +3,22 @@ package recovery
 import (
 	"testing"
 
-	"github.com/pubgo/funk/logx"
+	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/result"
-	"github.com/pubgo/funk/xerr"
 )
 
 func TestErr(t *testing.T) {
-	var handler = func() (gErr result.Error) {
+	var handler = func() (gErr error) {
 		defer ResultErr(&gErr)
 
 		panic("ok")
 	}
 
-	handler().Do(func(err result.Error) {
+	var err = handler()
+	if errors.IsNil(err) {
 		t.Log(err)
-	})
+	}
 }
 
 func TestResult(t *testing.T) {
@@ -25,6 +26,7 @@ func TestResult(t *testing.T) {
 		A string
 		B string
 	}
+
 	var handler = func() (r result.Result[A]) {
 		defer Result(&r)
 
@@ -37,11 +39,9 @@ func TestResult(t *testing.T) {
 }
 
 func TestName(t *testing.T) {
-	defer Recovery(func(err xerr.XErr) {
-		err.DebugPrint()
-	})
+	defer DebugPrint()
 
-	logx.Info("test panic")
+	log.Print("test panic")
 	hello()
 }
 

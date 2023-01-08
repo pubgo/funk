@@ -13,11 +13,10 @@ import (
 	"io"
 	"strings"
 
-	"golang.org/x/crypto/bcrypt"
-
 	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/errorx"
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/typex"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // SecureKey generates a random 256-bit key for Encrypt() and
@@ -100,21 +99,21 @@ func AesCBCDecrypt(cryted string, key string) typex.Result[string] {
 	return val.WithVal(string(orig))
 }
 
-//PKCS7Padding 补码
+// PKCS7Padding 补码
 func PKCS7Padding(ciphertext []byte, size int) []byte {
 	padding := size - len(ciphertext)%size
 	text := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(ciphertext, text...)
 }
 
-//PKCS7UnPadding 去码
+// PKCS7UnPadding 去码
 func PKCS7UnPadding(origData []byte) []byte {
 	length := len(origData)
 	unpadding := int(origData[length-1])
 	return origData[:(length - unpadding)]
 }
 
-//Hmac key随意设置 data 要加密数据
+// Hmac key随意设置 data 要加密数据
 func Hmac(key, data string) string {
 	hash := hmac.New(md5.New, []byte(key)) // 创建对应的md5哈希加密算法
 	hash.Write([]byte(data))
@@ -175,7 +174,7 @@ func Decrypt(ciphertext []byte, key *[32]byte) (plaintext []byte, err error) {
 	}
 
 	if len(ciphertext) < gcm.NonceSize() {
-		return nil, errorx.New("malformed ciphertext")
+		return nil, errors.New("malformed ciphertext")
 	}
 
 	return gcm.Open(nil,

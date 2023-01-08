@@ -2,23 +2,67 @@ syntax = "proto3";
 
 import "google/protobuf/descriptor.proto";
 
-package errors;
+package lava.errors;
 
 option cc_enable_arenas = true;
 option java_multiple_files = true;
 option java_package = "com.lava.errors";
-option go_package = "github.com/pubgo/lava/errors;errors";
+option go_package = "github.com/pubgo/lava/pkg/proto/errorpb";
 
 message Error {
-  int32 status = 1;
-  string type = 2;
-  string title = 3;
-  string reason = 4;
-  string detail = 5;
-  string instance = 6;
-  map<string, string>  tags = 7;
+  uint32 code = 1 [
+    json_name = "code"
+  ];
+
+  string biz_code = 2 [
+    json_name = "biz_code"
+  ];
+
+  string reason = 3 [
+    json_name = "reason"
+  ];
+
+  string operation = 4 [
+    json_name = "operation"
+  ];
+
+  string service = 5 [
+    json_name = "service"
+  ];
+
+  string version = 6 [
+    json_name = "version"
+  ];
+
+  string err_msg = 7 [
+    json_name = "err_msg"
+  ];
+
+  string err_detail = 8 [
+    json_name = "err_detail"
+  ];
+
+  map<string, string>  tags = 9 [
+    json_name = "tags"
+  ];
 }
 
-extend google.protobuf.EnumValueOptions {
-  int32 code = 100000;
+enum Code {
+  OK = 0;
+  Canceled = 1;
+  Unknown = 2;
+  InvalidArgument = 3;
+  DeadlineExceeded = 4;
+  NotFound = 5;
+  AlreadyExists = 6;
+  PermissionDenied = 7;
+  ResourceExhausted = 8;
+  FailedPrecondition = 9;
+  Aborted = 10;
+  OutOfRange = 11;
+  Unimplemented = 12;
+  Internal = 13;
+  Unavailable = 14;
+  DataLoss = 15;
+  Unauthenticated = 16;
 }

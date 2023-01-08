@@ -1,43 +1,13 @@
 package result
 
 import (
-	"errors"
 	"fmt"
 
-	"github.com/pubgo/funk/xerr"
+	"github.com/pubgo/funk/errors"
 )
 
-func ParseErr(err *error, val interface{}) {
-	switch _val := val.(type) {
-	case nil:
-		return
-	case Error:
-		*err = _val.Err()
-	case interface{ Unwrap() error }:
-		if _val.Unwrap() != nil {
-			*err = xerr.WrapXErr(_val.Unwrap()).WrapF("%#v", _val)
-		} else {
-			*err = fmt.Errorf("%#v", _val)
-		}
-	case error:
-		*err = _val
-	case string:
-		*err = errors.New(_val)
-	case []byte:
-		*err = errors.New(string(_val))
-	default:
-		*err = fmt.Errorf("%#v", _val)
-	}
-	*err = xerr.WrapXErr(*err)
-}
-
 func WithErr(err error) Error {
-	switch err.(type) {
-	case nil:
-		return Error{}
-	default:
-		return Error{e: xerr.WrapXErr(err)}
-	}
+	return Error{e: err}
 }
 
 func NilErr() Error {
@@ -56,28 +26,14 @@ func (e Error) String() string {
 	return fmt.Sprintf("err=%q detail=%#v", e.e.Error(), e.e)
 }
 
-func (e Error) IsNil() bool { return xerr.IsNil(e.e) }
-
-func (e Error) IsErr() bool { return !e.IsNil() }
-
-func (e Error) Must(check ...func(err Error) Error) {
-	if e.IsNil() {
-		return
-	}
-
-	if len(check) > 0 && check[0] != nil {
-		panic(xerr.Wrap(check[0](e).e))
-	} else {
-		panic(xerr.Wrap(e.e))
-	}
-}
+func (e Error) IsNil() bool { return errors.IsNil(e.e) }
 
 func (e Error) Wrap(args ...interface{}) Error {
 	if e.IsNil() {
 		return e
 	}
 
-	return Error{e: xerr.Wrap(e.e, args...)}
+	return Error{e: errors.Wrap(e.e, fmt.Sprint(args...))}
 }
 
 func (e Error) Do(fn func(err Error)) {
@@ -88,12 +44,12 @@ func (e Error) Do(fn func(err Error)) {
 	fn(e)
 }
 
-func (e Error) WrapF(msg string, args ...interface{}) Error {
+func (e Error) Wrapf(msg string, args ...interface{}) Error {
 	if e.IsNil() {
 		return e
 	}
 
-	return Error{e: xerr.WrapF(e.e, msg, args...)}
+	return Error{e: errors.Wrapf(e.e, msg, args...)}
 }
 
 func (e Error) OrElse(wrap func(e Error) Error) Error {
@@ -105,12 +61,14 @@ func (e Error) OrElse(wrap func(e Error) Error) Error {
 }
 
 func (e Error) WithErr(err error) Error { e.e = err; return e }
-func (e Error) WithMeta(k string, v interface{}) Error {
+func (e Error) WithTag(k string, v interface{}) Error {
 	if e.IsNil() {
 		return e
 	}
 
-	e.e = xerr.WrapXErr(e.e).WithMeta(k, v)
+	e.e = errors.WrapFn(e.e, func(xrr errors.XError) {
+		xrr.AddTag(k, v)
+	})
 	return e
 }
 func (e Error) Err() error    { return e.e }
@@ -120,5 +78,5 @@ func (e Error) Expect(msg string, args ...interface{}) {
 		return
 	}
 
-	panic(xerr.WrapF(e.e, msg, args...))
+	panic(errors.Wrapf(e.e, msg, args...))
 }

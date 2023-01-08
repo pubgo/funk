@@ -4,16 +4,19 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pubgo/funk/xerr"
 	"github.com/stretchr/testify/assert"
 )
 
-func panicErr() (*xerr.Err, error) {
+type errBase struct {
+	msg string
+}
+
+func panicErr() (*errBase, error) {
 	return nil, fmt.Errorf("error")
 }
 
-func panicNoErr() (*xerr.Err, error) {
-	return &xerr.Err{Msg: "ok"}, nil
+func panicNoErr() (*errBase, error) {
+	return &errBase{msg: "ok"}, nil
 }
 
 func TestPanicErr(t *testing.T) {
@@ -25,7 +28,7 @@ func TestPanicErr(t *testing.T) {
 
 	is.NotPanics(func() {
 		var ret = Must1(panicNoErr())
-		fmt.Println(ret.Msg)
+		fmt.Println(ret.msg)
 	})
 }
 
@@ -38,7 +41,7 @@ func TestRespNext(t *testing.T) {
 }
 
 func testPanic1(t *testing.T) {
-	//XError.Must(XError.New("ok"))
+	//xerrImpl.Must(xerrImpl.New("ok"))
 	Must(init1Next())
 }
 
