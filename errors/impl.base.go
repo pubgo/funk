@@ -13,6 +13,7 @@ import (
 )
 
 var _ XError = (*baseErr)(nil)
+var _ fmt.Formatter = (*baseErr)(nil)
 
 type baseErr struct {
 	err    error
@@ -23,6 +24,20 @@ type baseErr struct {
 	msg     string
 	stacks  []*stack.Frame
 	tags    Tags
+}
+
+func (t *baseErr) Format(f fmt.State, verb rune) {
+	switch verb {
+	case 'v':
+		var data, err = t.MarshalJSON()
+		if err != nil {
+			fmt.Fprintln(f, err.Error())
+		} else {
+			fmt.Fprintln(f, string(data))
+		}
+	case 's', 'q':
+		fmt.Fprintln(f, t.String())
+	}
 }
 
 func (t *baseErr) String() string {

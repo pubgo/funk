@@ -17,7 +17,7 @@ func TestErr(t *testing.T) {
 	})
 
 	err = &Err{Err: err, Msg: "this is nest msg", Detail: "this is nest detail", Caller: stack.Caller(0)}
-	Debug(err)
+	fmt.Printf("%s\n", err)
 
 	var data, _ = json.MarshalIndent(err, "  ", "  ")
 	fmt.Println(string(data))
