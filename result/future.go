@@ -28,8 +28,3 @@ func (f *Future[T]) Await() Result[T] {
 	<-f.done
 	return f.v
 }
-
-func (f *Future[T]) Unwrap() T {
-	<-f.done
-	return f.v.Unwrap()
-}

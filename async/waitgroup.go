@@ -1,6 +1,7 @@
 package async
 
 import (
+	"runtime"
 	"sync"
 	"sync/atomic"
 	_ "unsafe"
@@ -8,14 +9,22 @@ import (
 	"github.com/pubgo/funk/fastrand"
 )
 
-const DefaultConcurrent = 16
-
 //go:linkname state sync.(*WaitGroup).state
 func state(*sync.WaitGroup) (*uint64, *uint32)
 
+var defaultConcurrent = uint32(runtime.NumCPU() * 2)
+
+func NewWaitGroup(maxConcurrent ...uint32) *WaitGroup {
+	var c = defaultConcurrent
+	if len(maxConcurrent) > 0 {
+		c = maxConcurrent[0]
+	}
+	return &WaitGroup{maxConcurrent: c}
+}
+
 type WaitGroup struct {
-	wg         sync.WaitGroup
-	Concurrent uint32
+	wg            sync.WaitGroup
+	maxConcurrent uint32
 }
 
 func (t *WaitGroup) Count() uint32 {
@@ -24,16 +33,12 @@ func (t *WaitGroup) Count() uint32 {
 }
 
 func (t *WaitGroup) check() {
-	if t.Concurrent == 0 {
-		t.Concurrent = DefaultConcurrent
-	}
-
 	// 阻塞, 等待任务处理完毕
 	// 采样率(10), 打印log
-	if t.Count() >= t.Concurrent && fastrand.Sampling(10) {
-		logs.Info().
+	if t.Count() >= t.maxConcurrent && fastrand.Sampling(10) {
+		logs.Warn().
 			Uint32("current", t.Count()).
-			Uint32("maximum", t.Concurrent).
+			Uint32("maximum", t.maxConcurrent).
 			Msg("WaitGroup current concurrent number exceeds the maximum concurrent number of the system")
 	}
 }

@@ -10,44 +10,44 @@ import (
 )
 
 func TestAsync(t *testing.T) {
-	t.Log(Async(func() result.Result[*http.Response] {
-		return result.Wrap(http.Get("https://www.baidu.com"))
-	}).Await())
+	t.Log(Async(func() (*http.Response, error) {
+		return http.Get("https://www.baidu.com")
+	}).Await().Unwrap())
 }
 
 func TestYield(t *testing.T) {
 	t.Run("sync", func(t *testing.T) {
-		t.Log(Yield(func(yield func(string)) result.Error {
+		t.Log(Yield(func(yield func(string)) error {
 			yield(time.Now().String())
 			yield(time.Now().String())
 			yield(time.Now().String())
 			panic("d")
-		}).ToResult())
+		}).Chan())
 
-		t.Log(Yield(func(yield func(string)) result.Error {
+		t.Log(Yield(func(yield func(string)) error {
 			yield(time.Now().String())
 			yield(time.Now().String())
 			yield(time.Now().String())
-			return result.WithErr(fmt.Errorf("err test"))
-		}).ToResult())
+			return fmt.Errorf("err test")
+		}).Chan())
 
-		t.Log(Yield(func(yield func(string)) result.Error {
+		t.Log(Yield(func(yield func(string)) error {
 			yield(time.Now().String())
 			yield(time.Now().String())
 			yield(time.Now().String())
-			return result.NilErr()
-		}).ToResult())
+			return nil
+		}).Chan())
 	})
 }
 
-func httpGetList() result.Chan[*http.Response] {
-	return AsyncGroup(func(async func(func() result.Result[*http.Response])) result.Error {
+func httpGetList() *result.Iterator[*http.Response] {
+	return Group(func(async func(func() (*http.Response, error))) error {
 		for i := 2; i > 0; i-- {
-			async(func() result.Result[*http.Response] {
-				return result.Wrap(http.Get("https://www.baidu.com"))
+			async(func() (*http.Response, error) {
+				return http.Get("https://www.baidu.com")
 			})
 		}
-		return result.Error{}
+		return nil
 	})
 }
 
@@ -57,19 +57,20 @@ func TestGoChan(t *testing.T) {
 		fmt.Println(time.Since(now))
 	}()
 
-	var val1 = Async(func() result.Result[string] {
+	var val1 = Async(func() (string, error) {
 		time.Sleep(time.Millisecond)
 		fmt.Println("2")
 		//return WithErr(errors.New("error"))
-		return result.OK("hello")
+		return "hello", nil
 	})
 
-	var val2 = Async(func() result.Result[string] {
+	var val2 = Async(func() (string, error) {
 		time.Sleep(time.Millisecond)
 		fmt.Println("3")
 		//return WithErr(errors.New("error"))
-		return result.OK("hello")
+		return "hello", nil
 	})
 
-	fmt.Println(Wait(val1, val2).ToResult())
+	_ = val1
+	_ = val2
 }

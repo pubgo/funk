@@ -26,7 +26,7 @@ func WithErr(gErr *error, fn func() error) {
 	err = errors.Parse(fn())
 }
 
-func Try(fn func()) (gErr error) {
+func Try(fn func() error) (gErr error) {
 	assert.If(fn == nil, "[fn] is nil")
 
 	defer func() {
@@ -44,8 +44,7 @@ func Try(fn func()) (gErr error) {
 		gErr = err
 	}()
 
-	fn()
-	return
+	return fn()
 }
 
 func Result[T any](fn func() result.Result[T]) (g result.Result[T]) {

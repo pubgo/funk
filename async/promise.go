@@ -11,56 +11,50 @@ import (
 	"github.com/pubgo/funk/try"
 )
 
-func Promise[T any](fn func(resolve func(T), reject func(result.Error))) *Future[T] {
+func Promise[T any](fn func(resolve func(T), reject func(err error))) *result.Future[T] {
 	assert.If(fn == nil, "[fn] is nil")
 
-	var f = newFuture[T]()
+	var f = result.NewFuture[T]()
 	go func() {
-		defer recovery.Recovery(func(err errors.XErr) {
-			f.failed(result.WithErr(err).WrapF("fn=%s", stack.CallerWithFunc(fn)))
+		defer recovery.Recovery(func(err errors.XError) {
+			err.AddTag("fn", stack.CallerWithFunc(fn).String())
+			f.Err(err)
 		})
 
-		fn(func(t T) { f.success(result.OK(t)) }, f.failed)
+		fn(func(t T) { f.OK(t) }, func(err error) { f.Err(err) })
 	}()
 	return f
 }
 
-func AsyncGroup[T any](do func(async func(func() result.Result[T])) result.Error) result.Chan[T] {
+func Group[T any](do func(async func(func() (T, error))) error) *result.Iterator[T] {
 	assert.If(do == nil, "[Async] [fn] is nil")
 
-	var rr = make(chan result.Result[T])
+	var rr = result.IteratorOf[T]()
 	go func() {
 		var wg sync.WaitGroup
-		rr <- result.Err[T](try.TryErr(func() result.Error {
-			return do(func(f func() result.Result[T]) {
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
-					rr <- try.Result(f)
-				}()
-			})
-		}).Err())
-		wg.Wait()
-		close(rr)
+		defer rr.Done()
+		defer wg.Wait()
+		rr.Chan() <- result.Err[T](do(func(f func() (T, error)) {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				rr.Chan() <- result.Wrap(f())
+			}()
+		}))
 	}()
 
 	return rr
 }
 
-func Wait[T any](val ...*Future[T]) result.List[T] {
-	var valList = make([]result.Result[T], len(val))
-	for i := range val {
-		valList[i] = val[i].Await()
-	}
-	return valList
-}
-
-func Yield[T any](do func(yield func(T)) result.Error) result.Chan[T] {
-	var dd = make(chan result.Result[T])
+func Yield[T any](do func(yield func(T)) error) *result.Iterator[T] {
+	var dd = result.IteratorOf[T]()
 	go func() {
-		defer close(dd)
-		err := try.TryErr(func() result.Error { return do(func(t T) { dd <- result.OK(t) }) })
-		dd <- result.Err[T](err.Err())
+		defer dd.Done()
+		dd.Chan() <- result.Err[T](try.Try(func() error {
+			return do(func(t T) {
+				dd.Chan() <- result.OK(t)
+			})
+		}))
 	}()
 	return dd
 }
