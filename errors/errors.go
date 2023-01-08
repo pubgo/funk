@@ -86,8 +86,6 @@ func As(err error, target any) bool {
 	return errors.As(err, target) //nolint
 }
 
-//func Opaque(err error) error
-
 func Unwrap(err error) error {
 	u, ok := err.(errUnwrap)
 	if !ok {
@@ -95,10 +93,6 @@ func Unwrap(err error) error {
 	}
 	return u.Unwrap()
 }
-
-//func Opaque(err error) error {
-//	return &opaqueWrapper{err: err}
-//}
 
 func Cause(err error) error {
 	for {

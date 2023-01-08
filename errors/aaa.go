@@ -13,10 +13,6 @@ type errUnwrap interface {
 	Unwrap() error
 }
 
-type opaqueWrapper struct {
-	err error
-}
-
 type errIs interface {
 	Is(error) bool
 }
