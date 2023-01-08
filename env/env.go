@@ -1,7 +1,6 @@
 package env
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -26,10 +25,9 @@ func MustGet(names ...string) string {
 	var val string
 	GetWith(&val, names...)
 	assert.Fn(val == "", func() error {
-		return &errors.WrapCaller{
-			Msg:    "env not found",
-			Detail: fmt.Sprintf("names=%v", names),
-		}
+		var err = errors.Parse(errors.New("env not found"))
+		err.AddTag("names", names)
+		return err
 	})
 	return trim(val)
 }

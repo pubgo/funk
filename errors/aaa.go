@@ -26,12 +26,15 @@ type errAs interface {
 }
 
 type XErr = XError
-type XError interface {
+type Error interface {
 	Error() string
 	String() string
 	Unwrap() error
 	MarshalJSON() ([]byte, error)
+}
 
+type XError interface {
+	Error
 	BizCode() string
 	Stack() []*stack.Frame
 	Code() codes.Code

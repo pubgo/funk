@@ -15,8 +15,9 @@ import (
 var _ XError = (*baseErr)(nil)
 
 type baseErr struct {
-	err     error
-	caller  *stack.Frame
+	err    error
+	caller *stack.Frame
+
 	bizCode string
 	code    codes.Code
 	msg     string

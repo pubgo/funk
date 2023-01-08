@@ -13,11 +13,10 @@ import (
 	"io"
 	"strings"
 
-	"golang.org/x/crypto/bcrypt"
-
 	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/errutil"
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/typex"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // SecureKey generates a random 256-bit key for Encrypt() and
@@ -175,7 +174,7 @@ func Decrypt(ciphertext []byte, key *[32]byte) (plaintext []byte, err error) {
 	}
 
 	if len(ciphertext) < gcm.NonceSize() {
-		return nil, errutil.New("malformed ciphertext")
+		return nil, errors.New("malformed ciphertext")
 	}
 
 	return gcm.Open(nil,
