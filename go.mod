@@ -13,7 +13,6 @@ require (
 	github.com/ilyakaznacheev/cleanenv v1.4.2
 	github.com/invopop/jsonschema v0.7.0
 	github.com/k0kubun/pp/v3 v3.2.0
-	github.com/kr/pretty v0.3.0
 	github.com/mattn/go-isatty v0.0.16
 	github.com/mattn/go-sqlite3 v1.14.14
 	github.com/modood/table v0.0.0-20220527013332-8d47e76dad33
@@ -48,7 +47,6 @@ require (
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
-	github.com/rogpeppe/go-internal v1.6.1 // indirect
 	github.com/shurcooL/graphql v0.0.0-20220606043923-3cf50f8a0a29 // indirect
 	github.com/smartystreets/goconvey v1.7.2 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
