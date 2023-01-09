@@ -20,11 +20,11 @@ var _ fmt.Formatter = (*Err)(nil)
 var _ Error = (*Err)(nil)
 
 type Err struct {
-	Caller *stack.Frame `json:"caller"`
-	Err    error        `json:"err"`
-	Msg    string       `json:"msg"`
-	Detail string       `json:"detail"`
-	Tags   Tags         `json:"tags"`
+	Caller *stack.Frame `json:"caller,omitempty"`
+	Err    error        `json:"err,omitempty"`
+	Msg    string       `json:"msg,omitempty"`
+	Detail string       `json:"detail,omitempty"`
+	Tags   Tags         `json:"tags,omitempty"`
 }
 
 func (e Err) Format(f fmt.State, verb rune) {
