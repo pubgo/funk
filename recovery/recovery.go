@@ -51,7 +51,6 @@ func Raise(fns ...func(err errors.XError)) {
 		return
 	}
 
-	debug.PrintStack()
 	if len(fns) > 0 && fns[0] != nil {
 		fns[0](err)
 	}
