@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/alecthomas/repr"
 	jjson "github.com/goccy/go-json"
 	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/stack"
@@ -67,7 +68,7 @@ func (e Err) MarshalJSON() ([]byte, error) {
 		data["cause"] = _err
 	} else if e.Err != nil {
 		data["err_msg"] = e.Err.Error()
-		data["err_detail"] = fmt.Sprintf("%#v", e.Err)
+		data["err_detail"] = repr.String(e.Err)
 	}
 	return jjson.Marshal(data)
 }

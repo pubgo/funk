@@ -12,7 +12,7 @@ import (
 func TestAsync(t *testing.T) {
 	t.Log(Async(func() (*http.Response, error) {
 		return http.Get("https://www.baidu.com")
-	}).Await().Unwrap())
+	}))
 }
 
 func TestYield(t *testing.T) {

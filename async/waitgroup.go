@@ -23,8 +23,10 @@ func NewWaitGroup(maxConcurrent ...uint32) *WaitGroup {
 }
 
 type WaitGroup struct {
+	_             noCopy
 	wg            sync.WaitGroup
 	maxConcurrent uint32
+	err           error
 }
 
 func (t *WaitGroup) Count() uint32 {
@@ -34,17 +36,37 @@ func (t *WaitGroup) Count() uint32 {
 
 func (t *WaitGroup) check() {
 	// 阻塞, 等待任务处理完毕
-	// 采样率(10), 打印log
-	if t.Count() >= t.maxConcurrent && fastrand.Sampling(10) {
-		logs.Warn().
-			Uint32("current", t.Count()).
-			Uint32("maximum", t.maxConcurrent).
-			Msg("WaitGroup current concurrent number exceeds the maximum concurrent number of the system")
+	// 采样率(1), 打印log
+	for t.Count() >= t.maxConcurrent {
+		if fastrand.Sampling(1) {
+			logs.Warn().
+				Uint32("current", t.Count()).
+				Uint32("maximum", t.maxConcurrent).
+				Msg("WaitGroup current concurrent number exceeds the maximum concurrent number of the system")
+		}
+
+		runtime.Gosched()
 	}
 }
 
-func (t *WaitGroup) Inc()          { t.check(); t.wg.Add(1) }
-func (t *WaitGroup) Dec()          { t.wg.Done() }
-func (t *WaitGroup) Done()         { t.wg.Done() }
-func (t *WaitGroup) Wait()         { t.wg.Wait() }
-func (t *WaitGroup) Add(delta int) { t.check(); t.wg.Add(delta) }
+func (t *WaitGroup) GO(fn func()) {
+	t.wg.Add(1)
+	t.check()
+	GoSafe(
+		func() error { fn(); return nil },
+		func(err error) {
+			t.err = err
+		},
+	)
+}
+
+func (t *WaitGroup) Wait() error {
+	t.wg.Wait()
+	return t.err
+}
+
+type noCopy struct{}
+
+// Lock is a no-op used by -copylocks checker from `go vet`.
+func (*noCopy) Lock()   {}
+func (*noCopy) Unlock() {}

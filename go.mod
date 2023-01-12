@@ -3,6 +3,7 @@ module github.com/pubgo/funk
 go 1.19
 
 require (
+	github.com/alecthomas/repr v0.2.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.13.0
 	github.com/goccy/go-json v0.10.0

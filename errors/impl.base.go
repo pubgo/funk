@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/alecthomas/repr"
 	jjson "github.com/goccy/go-json"
 	"github.com/pubgo/funk/internal/color"
 	"github.com/pubgo/funk/pretty"
@@ -105,9 +106,9 @@ func (t *baseErr) getData() map[string]any {
 
 	if _err, ok := t.err.(json.Marshaler); ok {
 		data["cause"] = _err
-	} else {
-		data["msg"] = t.err.Error()
-		data["detail"] = pretty.Sprint(t.err)
+	} else if _err != nil {
+		data["err_msg"] = t.err.Error()
+		data["err_detail"] = repr.String(t.err)
 	}
 
 	return data

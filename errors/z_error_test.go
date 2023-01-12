@@ -27,5 +27,7 @@ func TestFormat(t *testing.T) {
 	err = WrapCode(err, codes.Canceled)
 	err = WrapBizCode(err, "user.not_found")
 	err = WrapStack(err)
-	Debug(err)
+	IfErr(err, func(err error) {
+		Debug(err)
+	})
 }

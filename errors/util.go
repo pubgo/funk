@@ -4,7 +4,7 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/pubgo/funk/pretty"
+	"github.com/alecthomas/repr"
 	"github.com/pubgo/funk/stack"
 )
 
@@ -48,6 +48,6 @@ func parseXError(val interface{}) XError {
 	case []byte:
 		return newErr(errors.New(string(_val)), 1)
 	default:
-		return newErr(errors.New(pretty.Sprint(_val)), 1)
+		return newErr(errors.New(repr.String(_val)), 1)
 	}
 }

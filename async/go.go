@@ -6,26 +6,22 @@ import (
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/stack"
 	"github.com/pubgo/funk/try"
 )
 
 // Async 通过chan的方式同步执行异步任务
-func Async[T any](fn func() (T, error)) *result.Future[T] {
+func Async[T any](fn func() (T, error)) <-chan result.Result[T] {
 	assert.If(fn == nil, "[Async] [fn] is nil")
 
-	var ch = result.NewFuture[T]()
+	var ch = make(chan result.Result[T])
 	go func() {
-		ch.Err(try.Try(func() error {
-			var v, err = fn()
-			if err != nil {
-				return err
-			}
-
-			ch.OK(v)
-			return nil
-		}))
+		defer close(ch)
+		ch <- try.Result(func() result.Result[T] {
+			return result.Wrap(fn())
+		})
 	}()
 	return ch
 }
@@ -35,8 +31,7 @@ func GoSafe(fn func() error, cb ...func(err error)) {
 	assert.If(fn == nil, "[GoSafe] [fn] is nil")
 
 	go func() {
-		var err error
-		try.WithErr(&err, fn)
+		err := try.Try(fn)
 		if errors.IsNil(err) {
 			return
 		}
@@ -107,5 +102,6 @@ func logErr(fn interface{}, err error) {
 
 	logs.Err(err).
 		Str("func", stack.CallerWithFunc(fn).String()).
+		Str("err_stack", pretty.Sprint(err)).
 		Msg(err.Error())
 }

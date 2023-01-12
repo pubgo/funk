@@ -126,7 +126,12 @@ func stack(p uintptr) *Frame {
 
 	var file, line = ff.FileLine(p)
 	ma := strings.Split(ff.Name(), ".")
-	v = &Frame{File: file, Line: line, Name: ma[len(ma)-1], Pkg: strings.Join(ma[:len(ma)-1], ".")}
+	v = &Frame{
+		File: file,
+		Line: line,
+		Name: ma[len(ma)-1],
+		Pkg:  strings.Join(ma[:len(ma)-1], "."),
+	}
 	return v
 }
 
