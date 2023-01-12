@@ -75,7 +75,7 @@ func (e Err) MarshalJSON() ([]byte, error) {
 
 func (e Err) Error() string {
 	if e.Err == nil {
-		return ""
+		return e.Msg
 	}
 
 	return e.Err.Error()
