@@ -72,15 +72,21 @@ func Callers(depth int, skips ...int) []*Frame {
 
 func CallerWithFunc(fn interface{}) *Frame {
 	if fn == nil {
-		return nil
+		panic("[fn] param is nil")
 	}
 
-	var fn1 = reflect.ValueOf(fn)
-	if !fn1.IsValid() || fn1.Kind() != reflect.Func || fn1.IsNil() {
+	var vfn reflect.Value
+	if v, ok := fn.(reflect.Value); ok {
+		vfn = v
+	} else {
+		vfn = reflect.ValueOf(fn)
+	}
+
+	if !vfn.IsValid() || vfn.Kind() != reflect.Func || vfn.IsNil() {
 		panic("[fn] is not func type or type is nil")
 	}
 
-	return stack(fn1.Pointer())
+	return stack(vfn.Pointer())
 }
 
 func GetStack(skip int) uintptr {
