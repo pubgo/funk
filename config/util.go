@@ -4,18 +4,21 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/pubgo/funk/assert"
 )
 
 const pkgKey = "name"
+const defaultKey = "default"
 
 func getPkgId(m map[string]interface{}) string {
 	if m == nil {
-		return consts.KeyDefault
+		return defaultKey
 	}
 
 	var val, ok = m[pkgKey]
 	if !ok || val == nil {
-		return consts.KeyDefault
+		return defaultKey
 	}
 
 	return fmt.Sprintf("%v", val)
@@ -25,7 +28,7 @@ func getPkgId(m map[string]interface{}) string {
 //
 //	[./, ../, ../../, ..., /]
 func getPathList() (paths []string) {
-	var wd = xerror.PanicStr(filepath.Abs(""))
+	var wd = assert.Must1(filepath.Abs(""))
 	for {
 		if len(wd) == 0 || os.IsPathSeparator(wd[len(wd)-1]) {
 			break

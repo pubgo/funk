@@ -16,6 +16,7 @@ func init() {
 		defer recovery.Recovery(func(err errors.XError) {
 			err.AddStack()
 			err.AddTag("headers", c.GetReqHeaders())
+			err.AddTag("url", c.Request().URI().String())
 			gErr = c.JSON(err)
 		})
 
