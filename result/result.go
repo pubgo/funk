@@ -96,7 +96,7 @@ func (r Result[T]) Unwrap(check ...func(err error) error) T {
 
 func (r Result[T]) String() string {
 	if !r.IsErr() {
-		return fmt.Sprintf("%v", r.v)
+		return fmt.Sprintf("%v", *r.v)
 	}
 
 	return r.e.Error()

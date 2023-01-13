@@ -24,11 +24,7 @@ func Get(names ...string) string {
 func MustGet(names ...string) string {
 	var val string
 	GetWith(&val, names...)
-	assert.Fn(val == "", func() error {
-		var err = errors.Parse(errors.New("env not found"))
-		err.AddTag("names", names)
-		return err
-	})
+	assert.Err(val == "", errors.New("env not found, names=%q", names))
 	return trim(val)
 }
 
