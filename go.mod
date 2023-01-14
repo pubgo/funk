@@ -15,12 +15,12 @@ require (
 	github.com/gofiber/fiber/v2 v2.41.0
 	github.com/google/go-github/v48 v48.1.0
 	github.com/google/gops v0.3.26
-	github.com/google/uuid v1.3.0
 	github.com/gopherjs/gopherjs v1.17.2
 	github.com/hashicorp/go-version v1.6.0
 	github.com/iancoleman/strcase v0.2.0
 	github.com/ilyakaznacheev/cleanenv v1.4.2
 	github.com/invopop/jsonschema v0.7.0
+	github.com/jinzhu/copier v0.3.5
 	github.com/k0kubun/pp/v3 v3.2.0
 	github.com/keybase/go-ps v0.0.0-20190827175125-91aafc93ba19
 	github.com/maragudk/gomponents v0.20.0
@@ -56,6 +56,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/pprof v0.0.0-20211214055906-6f57359322fd // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/iancoleman/orderedmap v0.0.0-20190318233801-ac98e3ecb4b0 // indirect
 	github.com/joho/godotenv v1.4.0 // indirect

@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/pubgo/funk/pretty"
+	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
-	"google.golang.org/grpc/codes"
 )
 
 func IfErr(err error, fn func(err error)) {
@@ -102,7 +102,7 @@ func WrapStack(err error) error {
 		return nil
 	}
 
-	base := newErr(Parse(err))
+	base := newErr(err)
 	base.AddStack()
 	return base
 }
@@ -116,7 +116,7 @@ func WrapFn(err error, fn func(xrr XError)) error {
 		panic("[fn] should not be nil")
 	}
 
-	base := newErr(Parse(err))
+	base := newErr(err)
 	fn(base)
 	return base
 }
@@ -134,7 +134,7 @@ func Wrap(err error, msg string) error {
 		return nil
 	}
 
-	base := newErr(Parse(err))
+	base := newErr(err)
 	base.AddMsg(msg)
 	return base
 }
@@ -144,7 +144,7 @@ func Wrapf(err error, format string, args ...interface{}) error {
 		return nil
 	}
 
-	base := newErr(Parse(err))
+	base := newErr(err)
 	base.AddMsg(fmt.Sprintf(format, args...))
 	return base
 }
@@ -154,12 +154,12 @@ func WrapTags(err error, m Tags) error {
 		return nil
 	}
 
-	base := newErr(Parse(err))
+	base := newErr(err)
 	base.AddTags(m)
 	return base
 }
 
-func WrapCode(err error, code codes.Code) error {
+func WrapCode(err error, code errorpb.Code) error {
 	if IsNil(err) {
 		return nil
 	}
@@ -174,7 +174,22 @@ func WrapBizCode(err error, bizCode string) error {
 		return nil
 	}
 
-	base := newErr(Parse(err))
+	base := newErr(err)
 	base.AddBizCode(bizCode)
 	return base
+}
+
+func Append(err error, errs ...error) Errors {
+	switch err := err.(type) {
+	case Errors:
+		var errL = make([]error, 0, len(err)+len(errs))
+		errL = append(errL, err...)
+		errL = append(errL, errs...)
+		return errL
+	default:
+		var errL = make([]error, 0, len(errs)+1)
+		errL = append(errL, err)
+		errL = append(errL, errs...)
+		return errL
+	}
 }

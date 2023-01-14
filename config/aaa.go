@@ -1,37 +1,29 @@
 package config
 
 import (
-	"io"
-
 	"github.com/spf13/viper"
 )
 
-type CfgMap map[string]interface{}
-
-func (t CfgMap) Decode(val interface{}) error {
-	return merge.MapStruct(val, t).Err()
-}
-
-func (t CfgMap) GetString(name string) string {
-	var val, ok = t[name].(string)
-	if ok {
-		return val
-	}
-	return ""
-}
+const (
+	defaultConfigName   = "config"
+	defaultConfigType   = "yaml"
+	defaultConfigPath   = "./configs"
+	includeConfigName   = "resources"
+	componentConfigKey  = "name"
+	defaultComponentKey = "default"
+)
 
 type DecoderOption = viper.DecoderConfigOption
 
 type Config interface {
-	LoadPath(path string) error
 	UnmarshalKey(key string, rawVal interface{}, opts ...DecoderOption) error
-	Unmarshal(rawVal interface{}, opts ...viper.DecoderConfigOption) error
-	Decode(name string, cfgMap interface{}) error
+	Unmarshal(rawVal interface{}, opts ...DecoderOption) error
+
+	// DecodeComponent decode component config to map[string]*struct
+	DecodeComponent(name string, cfgMap interface{}) error
 	Get(key string) interface{}
 	Set(string, interface{})
 	GetString(key string) string
-	GetMap(keys ...string) CfgMap
 	AllKeys() []string
-	MergeConfig(in io.Reader) error
 	All() map[string]interface{}
 }

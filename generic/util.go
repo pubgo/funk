@@ -30,6 +30,7 @@ func DePtr[T any](v *T) (r T) {
 	return *v
 }
 
+//go:inline
 func Ptr[T any](v T) *T {
 	return &v
 }

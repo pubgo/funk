@@ -9,6 +9,7 @@ import (
 
 func GetSysInfo() map[string]string {
 	return map[string]string{
+		"main_path":     version.MainPath(),
 		"grpc_port":     fmt.Sprintf("%v", GrpcPort),
 		"http_post":     fmt.Sprintf("%v", HttpPort),
 		"debug":         fmt.Sprintf("%v", IsDebug),

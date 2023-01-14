@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/pubgo/funk/internal/color"
 
 	"github.com/alecthomas/repr"
 	jjson "github.com/goccy/go-json"
@@ -83,23 +84,24 @@ func (e Err) Error() string {
 
 func (e Err) String() string {
 	var buf = bytes.NewBuffer(nil)
-	if e.Caller != nil {
-		buf.WriteString(fmt.Sprintf("caller: %s\n", e.Caller.String()))
-	}
-
-	buf.WriteString(fmt.Sprintf("msg=%q detail=%q", e.Msg, e.Detail))
-	if e.Tags != nil {
-		buf.WriteString(fmt.Sprintf(" tags=%q", e.Tags))
+	buf.WriteString(fmt.Sprintf("   %s]: %q\n", color.Green.P("msg"), e.Msg))
+	buf.WriteString(fmt.Sprintf("%s]: %s\n", color.Green.P("detail"), pretty.Sprint(e.Detail)))
+	if e.Tags != nil && len(e.Tags) > 0 {
+		buf.WriteString(fmt.Sprintf("  %s]: %s\n", color.Green.P("tags"), pretty.Sprint(e.Tags)))
 	}
 
 	if e.Err != nil {
 		if _err, ok := e.Err.(fmt.Stringer); !ok {
-			buf.WriteString(fmt.Sprintf(" err_msg=%q", e.Err.Error()))
-			buf.WriteString(fmt.Sprintf(" err_detail=%s", pretty.Sprint(e.Err)))
+			buf.WriteString(fmt.Sprintf(" %s]: %q\n", color.Red.P("err_msg"), e.Err.Error()))
+			buf.WriteString(fmt.Sprintf("%s]: %s\n", color.Red.P("err_stack"), pretty.Sprint(e.Err)))
+			if e.Caller != nil {
+				buf.WriteString(fmt.Sprintf("%s]: %s\n", color.Green.P("caller"), e.Caller.String()))
+			}
 		} else {
 			buf.WriteString("\n====================================================================\n")
 			buf.WriteString(_err.String())
 		}
 	}
+
 	return buf.String()
 }

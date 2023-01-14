@@ -9,8 +9,8 @@ import (
 	jjson "github.com/goccy/go-json"
 	"github.com/pubgo/funk/internal/color"
 	"github.com/pubgo/funk/pretty"
+	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
-	"google.golang.org/grpc/codes"
 )
 
 var _ XError = (*baseErr)(nil)
@@ -21,7 +21,7 @@ type baseErr struct {
 	caller *stack.Frame
 
 	bizCode string
-	code    codes.Code
+	code    errorpb.Code
 	msg     string
 	stacks  []*stack.Frame
 	tags    Tags
@@ -106,7 +106,7 @@ func (t *baseErr) getData() map[string]any {
 
 	if _err, ok := t.err.(json.Marshaler); ok {
 		data["cause"] = _err
-	} else if _err != nil {
+	} else if t.err != nil {
 		data["err_msg"] = t.err.Error()
 		data["err_detail"] = repr.String(t.err)
 	}

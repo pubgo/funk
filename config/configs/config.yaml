@@ -1,0 +1,14 @@
+app:
+  addr: ":8080"
+  debug: true
+registry:
+  driver: "mdns"
+tracing:
+  driver: "jaeger"
+metric:
+  driver: "prometheus"
+resources:
+  - "log.yaml"
+  - "orm.yaml"
+  - "redis.yaml"
+  - "service.yaml"
