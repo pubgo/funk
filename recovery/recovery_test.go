@@ -10,7 +10,7 @@ import (
 
 func TestErr(t *testing.T) {
 	var handler = func() (gErr error) {
-		defer ResultErr(&gErr)
+		defer Err(&gErr)
 
 		panic("ok")
 	}

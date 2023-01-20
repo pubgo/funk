@@ -25,19 +25,6 @@ func Result[T any](ret *result.Result[T]) {
 	*ret = result.Err[T](err)
 }
 
-func ResultErr(gErr *error, fns ...func(err errors.XError)) {
-	err := errors.Parse(recover())
-	if errors.IsNil(err) {
-		return
-	}
-
-	if len(fns) > 0 && fns[0] != nil {
-		fns[0](err)
-	}
-
-	*gErr = err
-}
-
 func Err(gErr *error, fns ...func(err errors.XError)) {
 	err := errors.Parse(recover())
 	if errors.IsNil(err) {
