@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/pubgo/funk/pathutil"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -17,7 +18,6 @@ import (
 	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/recovery"
 	"github.com/pubgo/funk/typex"
-	"github.com/pubgo/funk/utils"
 	"github.com/pubgo/funk/version"
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
@@ -163,7 +163,7 @@ func (t *configImpl) initWithConfig() bool {
 		return false
 	}
 
-	assert.If(!utils.DirExists(CfgDir), "config not found, path=%s", CfgDir)
+	assert.If(pathutil.IsDir(CfgDir) && pathutil.IsNotExist(CfgDir), "config not found, path=%s", CfgDir)
 	t.v.AddConfigPath(CfgDir)
 	assert.MustF(t.v.ReadInConfig(), "failed to load config, path=%s", CfgDir)
 	return true
@@ -219,7 +219,7 @@ func (t *configImpl) loadPath(path string) {
 		return
 	}
 
-	assert.If(!utils.FileExists(path), "path not found, path=%s", path)
+	assert.If(pathutil.IsNotExist(path), "path not found, path=%s", path)
 	log.Info().Msgf("load config path, path=%s", path)
 
 	var cfgData = string(assert.Must1(os.ReadFile(path)))

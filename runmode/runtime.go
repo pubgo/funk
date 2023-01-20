@@ -1,6 +1,7 @@
 package runmode
 
 import (
+	"github.com/pubgo/funk/pathutil"
 	"os"
 	"strings"
 
@@ -40,7 +41,7 @@ var (
 		func() string { return os.Getenv("POD_NAMESPACE") },
 		func() string {
 			var file = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
-			if !utils.FileExists(file) {
+			if pathutil.IsNotExist(file) {
 				return ""
 			}
 
