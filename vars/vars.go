@@ -51,7 +51,12 @@ func (f Value) Value() interface{} { return f() }
 
 func (f Value) String() (r string) {
 	defer recovery.Recovery(func(err errors.XErr) {
-		r = err.String()
+		ret := result.Wrap(err.MarshalJSON())
+		if ret.IsErr() {
+			r = pretty.Sprint(ret.Err())
+		} else {
+			r = convert.B2S(ret.Unwrap())
+		}
 	})
 
 	dt := f()
