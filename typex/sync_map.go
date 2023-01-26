@@ -5,16 +5,17 @@ import (
 	"sync"
 
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/recovery"
 )
 
 var NotFound = new(struct{})
 
-type SMap struct {
+type SyncMap struct {
 	data sync.Map
 }
 
-func (t *SMap) Each(fn interface{}) (err error) {
+func (t *SyncMap) Each(fn interface{}) (err error) {
 	defer recovery.Err(&err)
 
 	assert.If(fn == nil, "[fn] should not be nil")
@@ -23,25 +24,25 @@ func (t *SMap) Each(fn interface{}) (err error) {
 	onlyKey := reflect.TypeOf(fn).NumIn() == 1
 	t.data.Range(func(key, value interface{}) bool {
 		if onlyKey {
-			_ = vfn.Call(ListOf(reflect.ValueOf(key)))
+			_ = vfn.Call(generic.ListOf(reflect.ValueOf(key)))
 			return true
 		}
 
-		_ = vfn.Call(ListOf(reflect.ValueOf(key), reflect.ValueOf(value)))
+		_ = vfn.Call(generic.ListOf(reflect.ValueOf(key), reflect.ValueOf(value)))
 		return true
 	})
 
 	return nil
 }
 
-func (t *SMap) Map(fn func(val interface{}) interface{}) {
+func (t *SyncMap) Map(fn func(val interface{}) interface{}) {
 	t.data.Range(func(key, value interface{}) bool {
 		t.data.Store(key, fn(value))
 		return true
 	})
 }
 
-func (t *SMap) MapTo(data interface{}) (err error) {
+func (t *SyncMap) MapTo(data interface{}) (err error) {
 	defer recovery.Err(&err)
 
 	vd := reflect.ValueOf(data)
@@ -62,11 +63,11 @@ func (t *SMap) MapTo(data interface{}) (err error) {
 	return nil
 }
 
-func (t *SMap) Set(key, value interface{}) {
+func (t *SyncMap) Set(key, value interface{}) {
 	t.data.Store(key, value)
 }
 
-func (t *SMap) Get(key interface{}) interface{} {
+func (t *SyncMap) Get(key interface{}) interface{} {
 	value, ok := t.data.Load(key)
 	if ok {
 		return value
@@ -75,10 +76,10 @@ func (t *SMap) Get(key interface{}) interface{} {
 	return NotFound
 }
 
-func (t *SMap) LoadAndDelete(key interface{}) (value interface{}, ok bool) {
+func (t *SyncMap) LoadAndDelete(key interface{}) (value interface{}, ok bool) {
 	return t.data.LoadAndDelete(key)
 }
-func (t *SMap) Load(key interface{}) (value interface{}, ok bool) { return t.data.Load(key) }
-func (t *SMap) Range(f func(key, value interface{}) bool)         { t.data.Range(f) }
-func (t *SMap) Delete(key interface{})                            { t.data.Delete(key) }
-func (t *SMap) Has(key interface{}) (ok bool)                     { _, ok = t.data.Load(key); return }
+func (t *SyncMap) Load(key interface{}) (value interface{}, ok bool) { return t.data.Load(key) }
+func (t *SyncMap) Range(f func(key, value interface{}) bool)         { t.data.Range(f) }
+func (t *SyncMap) Delete(key interface{})                            { t.data.Delete(key) }
+func (t *SyncMap) Has(key interface{}) (ok bool)                     { _, ok = t.data.Load(key); return }

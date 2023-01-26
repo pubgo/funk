@@ -1,6 +1,10 @@
 package typex
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/pubgo/funk/generic"
+)
 
 var globalMutex sync.Mutex
 
@@ -50,7 +54,7 @@ func (t *Map[T]) Get(key string) T {
 		return val
 	}
 
-	return Zero[T]()
+	return generic.Zero[T]()
 }
 
 func (t *Map[T]) Load(key string) (T, bool) {

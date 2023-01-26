@@ -7,7 +7,7 @@ import (
 
 const Name = "healthy"
 
-var healthList typex.SMap
+var healthList typex.SyncMap
 
 func Get(name string) Handler {
 	val, ok := healthList.Load(name)
