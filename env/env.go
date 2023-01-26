@@ -85,7 +85,7 @@ func Lookup(key string) (string, bool) {
 	return os.LookupEnv(Key(key))
 }
 
-func UnSetenv(key string) error {
+func UnSet(key string) error {
 	return os.Unsetenv(Key(key))
 }
 
