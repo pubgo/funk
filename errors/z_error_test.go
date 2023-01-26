@@ -28,7 +28,7 @@ func TestFormat(t *testing.T) {
 	err = WrapCode(err, errorpb.Code_Canceled)
 	err = Append(err, fmt.Errorf("raw error"))
 	err = Append(err, New("New errors error"))
-	err = Append(err, ErrOf(func(err *Err) {
+	err = Append(err, SimpleErr(func(err *Err) {
 		err.Err = fmt.Errorf("test Err")
 		err.Msg = "Err errors error"
 		err.Tags = map[string]any{"tags": "hello"}

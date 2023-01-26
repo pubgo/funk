@@ -9,7 +9,7 @@ import (
 )
 
 func TestErr(t *testing.T) {
-	var err = ErrOf(func(err *Err) {
+	var err = SimpleErr(func(err *Err) {
 		err.Err = fmt.Errorf("this is Err")
 		err.Msg = "this is msg"
 		err.Detail = "this is detail"

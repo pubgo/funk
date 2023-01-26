@@ -11,6 +11,10 @@ import (
 	"github.com/pubgo/funk/pretty"
 )
 
+func (e Errors) Append(err error) Errors {
+	return append(e, err)
+}
+
 func (e Errors) Format(f fmt.State, verb rune) {
 	switch verb {
 	case 'v':
@@ -79,4 +83,12 @@ func (e Errors) Is(target error) bool {
 		return errors.Is(e[0], target)
 	}
 	return false
+}
+
+func (e Errors) ErrorOrNil() error {
+	if e == nil || len(e) == 0 {
+		return nil
+	}
+
+	return e
 }

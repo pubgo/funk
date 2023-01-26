@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/pubgo/funk/internal/color"
 
 	"github.com/alecthomas/repr"
 	jjson "github.com/goccy/go-json"
+	"github.com/pubgo/funk/internal/color"
 	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/stack"
 )
 
-func ErrOf(fn func(err *Err)) *Err {
+func SimpleErr(fn func(err *Err)) *Err {
 	var err = &Err{Caller: stack.Caller(1)}
 	fn(err)
 	return err

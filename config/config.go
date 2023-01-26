@@ -38,6 +38,7 @@ func New() Config {
 
 	// 配置处理
 	v := viper.New()
+	v.MustBindEnv()
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_", "/", "_"))
 	v.SetEnvPrefix(version.Project())
 	v.SetConfigName(defaultConfigName)
