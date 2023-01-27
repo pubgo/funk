@@ -3,8 +3,6 @@ package env
 import (
 	"os"
 	"strings"
-
-	"github.com/iancoleman/strcase"
 )
 
 // 环境变量处理, key转大写, 同时把`-./`转换为`_`
@@ -18,7 +16,10 @@ func init() {
 			continue
 		}
 
-		key = strings.ToUpper(strings.ReplaceAll(replacer.Replace(strcase.ToSnake(key)), "__", "_"))
+		_ = os.Unsetenv(key)
+
+		key = replacer.Replace(key)
+		key = strings.ToUpper(strings.ReplaceAll(key, "__", "_"))
 		_ = os.Setenv(key, envs[1])
 	}
 }
