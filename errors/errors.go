@@ -98,7 +98,7 @@ func As(err error, target any) bool {
 			val.Elem().Set(reflect.ValueOf(err))
 			return true
 		}
-		
+
 		if x, ok := err.(interface{ As(any) bool }); ok && x.As(target) {
 			return true
 		}
@@ -194,7 +194,7 @@ func WrapCode(err error, code errorpb.Code) error {
 		return nil
 	}
 
-	base := newErr(Parse(err))
+	base := newErr(err)
 	base.AddCode(code)
 	return base
 }

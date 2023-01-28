@@ -16,8 +16,8 @@ func TestErr(t *testing.T) {
 		err.Tags = Tags{"tag": "hello"}
 	})
 
-	err = &Err{Err: err, Msg: "this is nest msg", Detail: "this is nest detail", Caller: stack.Caller(0)}
-	fmt.Printf("%s\n", err)
+	err = &Err{Err: err, Msg: "this is next msg", Detail: "this is next detail", Caller: stack.Caller(0)}
+	fmt.Printf("%s", err)
 
 	var data, _ = json.MarshalIndent(err, "  ", "  ")
 	fmt.Println(string(data))
