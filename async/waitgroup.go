@@ -49,7 +49,7 @@ func (t *WaitGroup) check() {
 	}
 }
 
-func (t *WaitGroup) GO(fn func()) {
+func (t *WaitGroup) Go(fn func()) {
 	t.wg.Add(1)
 	t.check()
 	GoSafe(

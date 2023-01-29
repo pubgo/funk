@@ -51,15 +51,6 @@ func (r Result[T]) IsErr() bool {
 	return !errors.IsNil(r.e)
 }
 
-func (r Result[T]) Map(f func(T) T) Result[T] {
-	if r.IsErr() {
-		return r
-	}
-
-	r.v = generic.Ptr(f(generic.DePtr(r.v)))
-	return r
-}
-
 func (r Result[T]) Expect(msg string, args ...interface{}) T {
 	if r.IsErr() {
 		panic(errors.Wrapf(r.e, msg, args...))
