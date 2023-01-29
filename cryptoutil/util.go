@@ -10,13 +10,12 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
-	"github.com/pubgo/funk/result"
 	"io"
 	"strings"
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/typex"
+	"github.com/pubgo/funk/result"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -45,8 +44,8 @@ func removePadding(token string) string {
 	return strings.TrimRight(token, "=")
 }
 
-func AesCBCEncrypt(orig string, key string) typex.Result[string] {
-	var val typex.Result[string]
+func AesCBCEncrypt(orig string, key string) result.Result[string] {
+	var val result.Result[string]
 
 	// 转成字节数组
 	origData := []byte(orig)

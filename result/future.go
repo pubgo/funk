@@ -14,11 +14,6 @@ func (f *Future[T]) OK(v T) {
 	f.v = f.v.WithVal(v)
 }
 
-func (f *Future[T]) Result(r Result[T]) {
-	defer close(f.done)
-	f.v = r
-}
-
 func (f *Future[T]) Err(err error) {
 	defer close(f.done)
 	f.v = f.v.WithErr(err)

@@ -1,13 +1,13 @@
 package runmode
 
 import (
-	"github.com/pubgo/funk/pathutil"
 	"os"
 	"strings"
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/env"
-	"github.com/pubgo/funk/utils"
+	"github.com/pubgo/funk/pathutil"
+	"github.com/pubgo/funk/strutil"
 	"github.com/pubgo/funk/version"
 )
 
@@ -30,13 +30,13 @@ var (
 	Pwd = assert.Exit1(os.Getwd())
 
 	// Hostname 主机名
-	Hostname = utils.FirstFnNotEmpty(
+	Hostname = strutil.FirstFnNotEmpty(
 		func() string { return os.Getenv("HOSTNAME") },
 		func() string { return assert.Exit1(os.Hostname()) },
 	)
 
 	// Namespace K8s命名空间
-	Namespace = utils.FirstFnNotEmpty(
+	Namespace = strutil.FirstFnNotEmpty(
 		func() string { return os.Getenv("NAMESPACE") },
 		func() string { return os.Getenv("POD_NAMESPACE") },
 		func() string {

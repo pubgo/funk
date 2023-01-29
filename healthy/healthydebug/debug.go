@@ -2,13 +2,13 @@ package healthydebug
 
 import (
 	"net/http"
+	"time"
 
 	jjson "github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
-	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/debug"
 	"github.com/pubgo/funk/healthy"
-	"github.com/pubgo/funk/utils"
+	"github.com/pubgo/funk/try"
 )
 
 func init() {
@@ -16,12 +16,10 @@ func init() {
 		var dt = make(map[string]*health)
 		for _, name := range healthy.List() {
 			var h = &health{}
-			var dur, err = utils.Cost(func() { assert.Must(healthy.Get(name)(ctx)) })
-			h.Cost = dur.String()
-			if err != nil {
-				h.Msg = err.Error()
-				h.Err = err
-			}
+			h.Err = try.Try(func() error {
+				defer func(s time.Time) { h.Cost = time.Since(s).String() }(time.Now())
+				return healthy.Get(name)(ctx)
+			})
 			dt[name] = h
 		}
 

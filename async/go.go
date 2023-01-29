@@ -77,19 +77,19 @@ func GoDelay(fn func() error, durations ...time.Duration) {
 }
 
 // Timeout 超时处理
-func Timeout(dur time.Duration, fn func() error) (gErr result.Error) {
+func Timeout(dur time.Duration, fn func() error) (gErr error) {
 	assert.If(fn == nil, "[Timeout] [fn] is nil")
 	assert.If(dur <= 0, "[Timeout] [dur] should not be less than zero")
 
 	var done = make(chan struct{})
 	go func() {
 		defer close(done)
-		gErr = gErr.WithErr(try.Try(fn))
+		gErr = try.Try(fn)
 	}()
 
 	select {
 	case <-time.After(dur):
-		return result.WithErr(context.DeadlineExceeded)
+		return context.DeadlineExceeded
 	case <-done:
 		return
 	}
