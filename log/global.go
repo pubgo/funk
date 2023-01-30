@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/generic"
 	"github.com/rs/zerolog"
 )
@@ -33,10 +34,7 @@ func GetLogger(name string) Logger {
 }
 
 func SetLogger(log *zerolog.Logger) {
-	if log == nil {
-		panic("[log] should not be nil")
-	}
-
+	assert.If(log == nil, "[log] should not be nil")
 	stdZeroLog = log
 }
 
