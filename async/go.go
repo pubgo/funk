@@ -7,23 +7,30 @@ import (
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/pretty"
-	"github.com/pubgo/funk/result"
+	"github.com/pubgo/funk/recovery"
 	"github.com/pubgo/funk/stack"
 	"github.com/pubgo/funk/try"
 )
 
 // Async 通过chan的方式同步执行异步任务
-func Async[T any](fn func() (T, error)) <-chan result.Result[T] {
+func Async[T any](fn func() (T, error)) *Future[T] {
 	assert.If(fn == nil, "[Async] [fn] is nil")
 
-	var ch = make(chan result.Result[T])
+	var f = newFuture[T]()
 	go func() {
-		defer close(ch)
-		ch <- try.Result(func() result.Result[T] {
-			return result.Wrap(fn())
+		defer recovery.Recovery(func(err errors.XError) {
+			err.AddTag("fn_stack", stack.CallerWithFunc(fn).String())
+			f.setErr(err)
 		})
+
+		var t, e = fn()
+		if e != nil {
+			f.setErr(e)
+		} else {
+			f.setOK(t)
+		}
 	}()
-	return ch
+	return f
 }
 
 // GoSafe 安全并发处理

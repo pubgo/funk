@@ -8,20 +8,19 @@ import (
 	"github.com/pubgo/funk/recovery"
 	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/stack"
-	"github.com/pubgo/funk/try"
 )
 
-func Promise[T any](fn func(resolve func(T), reject func(err error))) *result.Future[T] {
+func Promise[T any](fn func(resolve func(T), reject func(err error))) *Future[T] {
 	assert.If(fn == nil, "[fn] is nil")
 
-	var f = result.NewFuture[T]()
+	var f = newFuture[T]()
 	go func() {
 		defer recovery.Recovery(func(err errors.XError) {
 			err.AddTag("fn", stack.CallerWithFunc(fn).String())
-			f.Err(err)
+			f.setErr(err)
 		})
 
-		fn(func(t T) { f.OK(t) }, func(err error) { f.Err(err) })
+		fn(func(t T) { f.setOK(t) }, func(err error) { f.setErr(err) })
 	}()
 	return f
 }
@@ -50,11 +49,15 @@ func Yield[T any](do func(yield func(T)) error) *result.Iterator[T] {
 	var dd = result.IteratorOf[T]()
 	go func() {
 		defer dd.Done()
-		dd.Chan() <- result.Err[T](try.Try(func() error {
-			return do(func(t T) {
-				dd.Chan() <- result.OK(t)
-			})
-		}))
+		defer recovery.Recovery(func(err errors.XError) {
+			err.AddTag("fn_stack", stack.CallerWithFunc(do).String())
+			dd.Chan() <- result.Err[T](err)
+		})
+
+		var err = do(func(t T) { dd.Chan() <- result.OK(t) })
+		if err != nil {
+			dd.Chan() <- result.Err[T](err)
+		}
 	}()
 	return dd
 }
