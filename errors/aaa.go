@@ -1,8 +1,8 @@
 package errors
 
 import (
+	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
-	"google.golang.org/grpc/codes"
 )
 
 type Tags map[string]any
@@ -11,10 +11,6 @@ type Errors []error
 
 type errUnwrap interface {
 	Unwrap() error
-}
-
-type opaqueWrapper struct {
-	err error
 }
 
 type errIs interface {
@@ -37,14 +33,14 @@ type XError interface {
 	Error
 	BizCode() string
 	Stack() []*stack.Frame
-	Code() codes.Code
+	Code() errorpb.Code
 	Msg() string
 	Tags() Tags
 
 	AddBizCode(biz string)
 	AddStack()
 	AddMsg(msg string)
-	AddCode(code codes.Code)
+	AddCode(code errorpb.Code)
 	AddTag(key string, val any)
 	AddTags(m Tags)
 }
@@ -52,7 +48,7 @@ type XError interface {
 type RespErr struct {
 	Cause   error          `json:"cause"`
 	Msg     string         `json:"msg"`
-	Code    codes.Code     `json:"code"`
+	Code    errorpb.Code   `json:"code"`
 	BizCode string         `json:"biz_code"`
 	Tags    map[string]any `json:"tags"`
 }

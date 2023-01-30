@@ -5,3 +5,5 @@ package env
 // https://github.com/Netflix/go-env
 // https://github.com/sethvargo/go-envconfig
 // https://github.com/caarlos0/env
+// https://github.com/joho/godotenv
+// https://github.com/akamensky/envparse

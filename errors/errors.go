@@ -3,17 +3,19 @@ package errors
 import (
 	"errors"
 	"fmt"
+	"reflect"
 
+	"github.com/pubgo/funk/pretty"
+	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
-	"google.golang.org/grpc/codes"
 )
 
-func Expect(err error, msg string, args ...interface{}) {
+func IfErr(err error, fn func(err error)) {
 	if IsNil(err) {
 		return
 	}
 
-	panic(Wrapf(err, msg, args...))
+	fn(err)
 }
 
 func New(format string, a ...interface{}) error {
@@ -28,7 +30,7 @@ func Parse(val interface{}) XError {
 }
 
 func ParseResp(err error) *RespErr {
-	if err == nil || IsNil(err) {
+	if IsNil(err) {
 		return nil
 	}
 
@@ -57,18 +59,54 @@ func ParseResp(err error) *RespErr {
 }
 
 func Debug(err error) {
-	fmt.Println(err.(fmt.Stringer).String())
+	if IsNil(err) {
+		return
+	}
+
+	if _err, ok := err.(fmt.Stringer); ok {
+		fmt.Println(_err.String())
+		return
+	}
+
+	pretty.Println(err)
 }
 
 func Is(err, target error) bool {
 	return errors.Is(err, target)
 }
 
-func As(err error, target any) bool {
-	return errors.As(err, target) //nolint
-}
+var errorType = reflect.TypeOf((*error)(nil)).Elem()
 
-//func Opaque(err error) error
+func As(err error, target any) bool {
+	if target == nil {
+		panic("errors: target cannot be nil")
+	}
+
+	val := reflect.ValueOf(target)
+	typ := val.Type()
+	if typ.Kind() != reflect.Ptr || val.IsNil() {
+		panic("errors: target must be a non-nil pointer")
+	}
+
+	targetType := typ.Elem()
+	if targetType.Kind() != reflect.Interface && !targetType.Implements(errorType) {
+		panic("errors: *target must be interface or implement error")
+	}
+
+	for err != nil {
+		if reflect.TypeOf(err).AssignableTo(targetType) {
+			val.Elem().Set(reflect.ValueOf(err))
+			return true
+		}
+
+		if x, ok := err.(interface{ As(any) bool }); ok && x.As(target) {
+			return true
+		}
+
+		err = Unwrap(err)
+	}
+	return false
+}
 
 func Unwrap(err error) error {
 	u, ok := err.(errUnwrap)
@@ -77,10 +115,6 @@ func Unwrap(err error) error {
 	}
 	return u.Unwrap()
 }
-
-//func Opaque(err error) error {
-//	return &opaqueWrapper{err: err}
-//}
 
 func Cause(err error) error {
 	for {
@@ -94,17 +128,17 @@ func Cause(err error) error {
 }
 
 func WrapStack(err error) error {
-	if err == nil || IsNil(err) {
+	if IsNil(err) {
 		return nil
 	}
 
-	base := newErr(Parse(err))
+	base := newErr(err)
 	base.AddStack()
 	return base
 }
 
 func WrapFn(err error, fn func(xrr XError)) error {
-	if err == nil || IsNil(err) {
+	if IsNil(err) {
 		return nil
 	}
 
@@ -112,13 +146,13 @@ func WrapFn(err error, fn func(xrr XError)) error {
 		panic("[fn] should not be nil")
 	}
 
-	base := newErr(Parse(err))
+	base := newErr(err)
 	fn(base)
 	return base
 }
 
 func WrapCaller(err error, skip ...int) error {
-	if err == nil || IsNil(err) {
+	if IsNil(err) {
 		return nil
 	}
 
@@ -126,51 +160,66 @@ func WrapCaller(err error, skip ...int) error {
 }
 
 func Wrap(err error, msg string) error {
-	if err == nil || IsNil(err) {
+	if IsNil(err) {
 		return nil
 	}
 
-	base := newErr(Parse(err))
+	base := newErr(err)
 	base.AddMsg(msg)
 	return base
 }
 
 func Wrapf(err error, format string, args ...interface{}) error {
-	if err == nil || IsNil(err) {
+	if IsNil(err) {
 		return nil
 	}
 
-	base := newErr(Parse(err))
+	base := newErr(err)
 	base.AddMsg(fmt.Sprintf(format, args...))
 	return base
 }
 
 func WrapTags(err error, m Tags) error {
-	if err == nil || IsNil(err) {
+	if IsNil(err) {
 		return nil
 	}
 
-	base := newErr(Parse(err))
+	base := newErr(err)
 	base.AddTags(m)
 	return base
 }
 
-func WrapCode(err error, code codes.Code) error {
-	if err == nil || IsNil(err) {
+func WrapCode(err error, code errorpb.Code) error {
+	if IsNil(err) {
 		return nil
 	}
 
-	base := newErr(Parse(err))
+	base := newErr(err)
 	base.AddCode(code)
 	return base
 }
 
 func WrapBizCode(err error, bizCode string) error {
-	if err == nil || IsNil(err) {
+	if IsNil(err) {
 		return nil
 	}
 
-	base := newErr(Parse(err))
+	base := newErr(err)
 	base.AddBizCode(bizCode)
 	return base
+}
+
+func Append(err error, errs ...error) Errors {
+	switch err := err.(type) {
+	case Errors:
+		var errL = make([]error, 0, len(err)+len(errs))
+		errL = append(errL, err...)
+		errL = append(errL, errs...)
+		return errL
+	default:
+		var errL = make([]error, 0, len(errs)+1)
+		errL = append(errL, err)
+		errL = append(errL, errs...)
+		return errL
+	}
 }

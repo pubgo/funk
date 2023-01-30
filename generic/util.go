@@ -6,6 +6,10 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
+func AppendOf[T any](v T, vv ...T) []T {
+	return append(append(make([]T, 0, len(vv)+1), v), vv...)
+}
+
 func ListOf[T any](args ...T) []T {
 	return args
 }
@@ -30,6 +34,7 @@ func DePtr[T any](v *T) (r T) {
 	return *v
 }
 
+//go:inline
 func Ptr[T any](v T) *T {
 	return &v
 }

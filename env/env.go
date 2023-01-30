@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/a8m/envsubst"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
 )
@@ -24,11 +25,7 @@ func Get(names ...string) string {
 func MustGet(names ...string) string {
 	var val string
 	GetWith(&val, names...)
-	assert.Fn(val == "", func() error {
-		var err = errors.Parse(errors.New("env not found"))
-		err.AddTag("names", names)
-		return err
-	})
+	assert.Err(val == "", errors.New("env not found, names=%q", names))
 	return trim(val)
 }
 
@@ -88,7 +85,7 @@ func Lookup(key string) (string, bool) {
 	return os.LookupEnv(Key(key))
 }
 
-func UnSetenv(key string) error {
+func UnSet(key string) error {
 	return os.Unsetenv(Key(key))
 }
 
@@ -103,14 +100,7 @@ func UnSetenv(key string) error {
 //	_ = Expand("${GOPATH||/usr/local/go}")
 //	_ = Expand("hello")
 func Expand(value string) string {
-	return os.Expand(value, func(s string) string {
-		values := strings.SplitN(s, "||", 2)
-		v := Get(trim(values[0]))
-		if len(values) == 2 && v == "" {
-			v = trim(values[1])
-		}
-		return v
-	})
+	return assert.Must1(envsubst.String(value))
 }
 
 func Map() map[string]string {

@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/generic"
 	"github.com/rs/zerolog"
 )
@@ -15,11 +16,14 @@ func init() {
 
 var (
 	// stdZeroLog default zerolog just fro debug
-	stdZeroLog = generic.Ptr(zerolog.New(os.Stderr).Level(zerolog.DebugLevel).Output(
-		zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
-			w.Out = os.Stderr
-			w.TimeFormat = time.RFC3339
-		})).With().Timestamp().Caller().Logger())
+	stdZeroLog = generic.Ptr(
+		zerolog.New(os.Stderr).Level(zerolog.DebugLevel).
+			With().Timestamp().Caller().Logger().
+			Output(zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
+				w.Out = os.Stderr
+				w.TimeFormat = time.RFC3339
+			})),
+	)
 
 	// stdLog is the global logger.
 	stdLog = New(nil).WithHooks(new(hookImpl))
@@ -30,10 +34,7 @@ func GetLogger(name string) Logger {
 }
 
 func SetLogger(log *zerolog.Logger) {
-	if log == nil {
-		panic("[log] should not be nil")
-	}
-
+	assert.If(log == nil, "[log] should not be nil")
 	stdZeroLog = log
 }
 

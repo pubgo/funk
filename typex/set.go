@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/recovery"
 	"go.uber.org/atomic"
 )
@@ -58,5 +59,5 @@ func (t *Set) Each(fn interface{}) {
 	assert.If(fn == nil, "[fn] should not be nil")
 
 	vfn := reflect.ValueOf(fn)
-	t.m.Range(func(key, value interface{}) bool { _ = vfn.Call(ListOf(reflect.ValueOf(key))); return true })
+	t.m.Range(func(key, value interface{}) bool { _ = vfn.Call(generic.ListOf(reflect.ValueOf(key))); return true })
 }

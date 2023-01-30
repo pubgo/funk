@@ -3,8 +3,6 @@ package strutil
 import (
 	"reflect"
 	"unsafe"
-
-	_ "github.com/iancoleman/strcase"
 )
 
 // ToBytes converts an existing string into an []byte without allocating.
@@ -16,4 +14,14 @@ func ToBytes(s string) (b []byte) {
 	sliceHdr.Cap = strHdr.Len
 	sliceHdr.Len = strHdr.Len
 	return
+}
+
+func FirstFnNotEmpty(ff ...func() string) string {
+	for i := range ff {
+		var v = ff[i]()
+		if v != "" {
+			return v
+		}
+	}
+	return ""
 }

@@ -72,15 +72,21 @@ func Callers(depth int, skips ...int) []*Frame {
 
 func CallerWithFunc(fn interface{}) *Frame {
 	if fn == nil {
-		return nil
+		panic("[fn] param is nil")
 	}
 
-	var fn1 = reflect.ValueOf(fn)
-	if !fn1.IsValid() || fn1.Kind() != reflect.Func || fn1.IsNil() {
+	var vfn reflect.Value
+	if v, ok := fn.(reflect.Value); ok {
+		vfn = v
+	} else {
+		vfn = reflect.ValueOf(fn)
+	}
+
+	if !vfn.IsValid() || vfn.Kind() != reflect.Func || vfn.IsNil() {
 		panic("[fn] is not func type or type is nil")
 	}
 
-	return stack(fn1.Pointer())
+	return stack(vfn.Pointer())
 }
 
 func GetStack(skip int) uintptr {
@@ -126,7 +132,12 @@ func stack(p uintptr) *Frame {
 
 	var file, line = ff.FileLine(p)
 	ma := strings.Split(ff.Name(), ".")
-	v = &Frame{File: file, Line: line, Name: ma[len(ma)-1], Pkg: strings.Join(ma[:len(ma)-1], ".")}
+	v = &Frame{
+		File: file,
+		Line: line,
+		Name: ma[len(ma)-1],
+		Pkg:  strings.Join(ma[:len(ma)-1], "."),
+	}
 	return v
 }
 

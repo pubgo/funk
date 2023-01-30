@@ -10,59 +10,51 @@ import (
 func WithErr(gErr *error, fn func() error) {
 	assert.If(fn == nil, "[fn] is nil")
 
-	var err errors.XError
-
 	defer func() {
-		if val := recover(); val != nil {
-			err = errors.Parse(val)
+		if err := errors.Parse(recover()); !errors.IsNil(err) {
+			*gErr = errors.WrapStack(err)
 		}
 
-		if err != nil {
-			err.AddTag("fn_caller", stack.CallerWithFunc(fn))
-			*gErr = err
-		}
+		*gErr = errors.WrapFn(*gErr, func(xrr errors.XError) {
+			xrr.AddTag("fn_stack", stack.CallerWithFunc(fn))
+		})
 	}()
 
-	err = errors.Parse(fn())
+	*gErr = fn()
 }
 
 func Try(fn func() error) (gErr error) {
 	assert.If(fn == nil, "[fn] is nil")
 
 	defer func() {
-		val := recover()
-		if val == nil {
-			return
+		if err := errors.Parse(recover()); !errors.IsNil(err) {
+			gErr = errors.WrapStack(err)
 		}
 
-		var err = errors.Parse(val)
-		if err == nil {
-			return
-		}
-
-		err.AddTag("fn_caller", stack.CallerWithFunc(fn))
-		gErr = err
+		gErr = errors.WrapFn(gErr, func(xrr errors.XError) {
+			xrr.AddTag("fn_stack", stack.CallerWithFunc(fn))
+		})
 	}()
 
-	return fn()
+	gErr = fn()
+	return
 }
 
 func Result[T any](fn func() result.Result[T]) (g result.Result[T]) {
 	assert.If(fn == nil, "[fn] is nil")
 
 	defer func() {
-		var err errors.XError
-		if val := recover(); val != nil {
-			err = errors.Parse(val)
+		if err := errors.Parse(recover()); !errors.IsNil(err) {
+			g = g.WithErr(errors.WrapStack(err))
 		}
 
-		if err == nil {
-			return
+		if g.IsErr() {
+			g = g.WithErr(errors.WrapFn(g.Err(), func(xrr errors.XError) {
+				xrr.AddTag("fn_stack", stack.CallerWithFunc(fn))
+			}))
 		}
-
-		err.AddTag("fn", stack.CallerWithFunc(fn))
-		g = result.Err[T](err)
 	}()
 
-	return fn()
+	g = fn()
+	return
 }

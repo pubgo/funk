@@ -6,39 +6,47 @@ import (
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/recovery"
-	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/stack"
-	"github.com/pubgo/funk/try"
 )
 
-func Promise[T any](fn func(resolve func(T), reject func(err error))) *result.Future[T] {
+func Promise[T any](fn func(resolve func(T), reject func(err error))) *Future[T] {
 	assert.If(fn == nil, "[fn] is nil")
 
-	var f = result.NewFuture[T]()
+	var f = newFuture[T]()
 	go func() {
 		defer recovery.Recovery(func(err errors.XError) {
 			err.AddTag("fn", stack.CallerWithFunc(fn).String())
-			f.Err(err)
+			f.setErr(err)
 		})
 
-		fn(func(t T) { f.OK(t) }, func(err error) { f.Err(err) })
+		fn(func(t T) { f.setOK(t) }, func(err error) { f.setErr(err) })
 	}()
 	return f
 }
 
-func Group[T any](do func(async func(func() (T, error))) error) *result.Iterator[T] {
+func Group[T any](do func(async func(func() (T, error))) error) *Iterator[T] {
 	assert.If(do == nil, "[Async] [fn] is nil")
 
-	var rr = result.IteratorOf[T]()
+	var rr = iteratorOf[T]()
 	go func() {
 		var wg sync.WaitGroup
-		defer rr.Done()
+		defer rr.setDone()
 		defer wg.Wait()
-		rr.Chan() <- result.Err[T](do(func(f func() (T, error)) {
+		rr.setErr(do(func(f func() (T, error)) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				rr.Chan() <- result.Wrap(f())
+				defer recovery.Recovery(func(err errors.XError) {
+					err.AddTag("fn_stack", stack.CallerWithFunc(do).String())
+					rr.setErr(err)
+				})
+
+				var t, e = f()
+				if e == nil {
+					rr.setValue(t)
+				} else {
+					rr.setErr(e)
+				}
 			}()
 		}))
 	}()
@@ -46,15 +54,16 @@ func Group[T any](do func(async func(func() (T, error))) error) *result.Iterator
 	return rr
 }
 
-func Yield[T any](do func(yield func(T)) error) *result.Iterator[T] {
-	var dd = result.IteratorOf[T]()
+func Yield[T any](do func(yield func(T)) error) *Iterator[T] {
+	var dd = iteratorOf[T]()
 	go func() {
-		defer dd.Done()
-		dd.Chan() <- result.Err[T](try.Try(func() error {
-			return do(func(t T) {
-				dd.Chan() <- result.OK(t)
-			})
-		}))
+		defer dd.setDone()
+		defer recovery.Recovery(func(err errors.XError) {
+			err.AddTag("fn_stack", stack.CallerWithFunc(do).String())
+			dd.setErr(err)
+		})
+
+		dd.setErr(do(func(t T) { dd.setValue(t) }))
 	}()
 	return dd
 }

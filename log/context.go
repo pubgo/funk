@@ -10,7 +10,7 @@ func (l *loggerImpl) WithCtx(ctx context.Context) context.Context {
 
 // Ctx returns the Logger associated with the ctx.
 func Ctx(ctx context.Context) Logger {
-	if l, ok := ctx.Value(ctxKey{}).(*loggerImpl); ok {
+	if l, ok := ctx.Value(ctxKey{}).(*loggerImpl); ok && l != nil {
 		return l
 	}
 	return stdLog

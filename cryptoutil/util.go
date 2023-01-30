@@ -15,7 +15,7 @@ import (
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/typex"
+	"github.com/pubgo/funk/result"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -44,8 +44,8 @@ func removePadding(token string) string {
 	return strings.TrimRight(token, "=")
 }
 
-func AesCBCEncrypt(orig string, key string) typex.Result[string] {
-	var val typex.Result[string]
+func AesCBCEncrypt(orig string, key string) result.Result[string] {
+	var val result.Result[string]
 
 	// 转成字节数组
 	origData := []byte(orig)
@@ -70,13 +70,13 @@ func AesCBCEncrypt(orig string, key string) typex.Result[string] {
 	return val.WithVal(base64.StdEncoding.EncodeToString(cryted))
 }
 
-func AesCBCDecrypt(cryted string, key string) typex.Result[string] {
-	var val typex.Result[string]
+func AesCBCDecrypt(cryted string, key string) result.Result[string] {
+	var val result.Result[string]
 
 	// 转成字节数组
 	crytedByte, err := base64.StdEncoding.DecodeString(cryted)
 	if err != nil {
-		return typex.Err[string](err)
+		return result.Err[string](err)
 	}
 
 	k := []byte(key)
@@ -126,9 +126,9 @@ func HmacSha256(key, data string) string {
 	return hex.EncodeToString(hash.Sum([]byte("")))
 }
 
-func HashPassword(password string) typex.Result[string] {
+func HashPassword(password string) result.Result[string] {
 	passwd, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return typex.Wrap(string(passwd), err)
+	return result.Wrap(string(passwd), err)
 }
 
 // CheckPassword checks to see if the password matches the hashed password.

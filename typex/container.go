@@ -1,29 +1,27 @@
 package typex
 
-type M[T any] map[string]T
-type D[T any] []*kv[T]
+type Ctx map[string]any
 
-// Map creates a map from the elements of the D.
-func (d D[T]) Map() M[T] {
-	m := make(M[T], len(d))
-	for _, e := range d {
-		m[e.K] = e.V
+func (c Ctx) ToTuple() Tuple {
+	var tt = make(Tuple, 0, len(c))
+	for k := range c {
+		tt = append(tt, KV{K: k, V: c[k]})
 	}
-	return m
+	return tt
 }
 
-func (d *D[T]) Append(kv ...*kv[T]) {
-	*d = append(*d, kv...)
+type List []any
+type Tuple []KV
+
+func (t Tuple) ToCtx() Ctx {
+	var ctx = make(Ctx, len(t))
+	for i := range t {
+		ctx[t[i].K] = t[i].V
+	}
+	return ctx
 }
 
-func KvOf[T any](k string, v T) *kv[T] {
-	return &kv[T]{K: k, V: v}
+type KV struct {
+	K string `json:"key"`
+	V any    `json:"value"`
 }
-
-// kv represents a BSON element for a D. It is usually used inside a D.
-type kv[T any] struct {
-	K string `json:"k"`
-	V T      `json:"v"`
-}
-
-func (kv kv[T]) Map() M[T] { return M[T]{kv.K: kv.V} }

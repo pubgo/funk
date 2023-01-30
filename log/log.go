@@ -75,7 +75,7 @@ func (l *loggerImpl) newEvent(log zerolog.Logger, level zerolog.Level) *zerolog.
 	case zerolog.ErrorLevel:
 		e = log.Error()
 	case zerolog.PanicLevel:
-		e = log.Error()
+		e = log.Panic()
 	case zerolog.WarnLevel:
 		e = log.Warn()
 	case zerolog.FatalLevel:

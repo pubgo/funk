@@ -16,3 +16,6 @@ package docs
 // https://github.com/genkami/dogs
 // https://github.com/life4/genesis
 // https://github.com/yoyofx/glinq
+// https://github.com/esimov/gogu
+// https://github.com/duke-git/lancet
+// https://github.com/tikafog/of

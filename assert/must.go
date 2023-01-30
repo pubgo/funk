@@ -16,6 +16,14 @@ func Must(err error, args ...interface{}) {
 	panic(errors.WrapCaller(errors.Wrap(err, fmt.Sprint(args...))))
 }
 
+func Expect(err error, msg string, args ...interface{}) {
+	if errors.IsNil(err) {
+		return
+	}
+
+	panic(errors.WrapCaller(errors.Wrap(err, fmt.Sprintf(msg, args...))))
+}
+
 func MustF(err error, msg string, args ...interface{}) {
 	if errors.IsNil(err) {
 		return

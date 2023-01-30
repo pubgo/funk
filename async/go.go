@@ -6,28 +6,31 @@ import (
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/result"
+	"github.com/pubgo/funk/pretty"
+	"github.com/pubgo/funk/recovery"
 	"github.com/pubgo/funk/stack"
 	"github.com/pubgo/funk/try"
 )
 
 // Async 通过chan的方式同步执行异步任务
-func Async[T any](fn func() (T, error)) *result.Future[T] {
+func Async[T any](fn func() (T, error)) *Future[T] {
 	assert.If(fn == nil, "[Async] [fn] is nil")
 
-	var ch = result.NewFuture[T]()
+	var f = newFuture[T]()
 	go func() {
-		ch.Err(try.Try(func() error {
-			var v, err = fn()
-			if err != nil {
-				return err
-			}
+		defer recovery.Recovery(func(err errors.XError) {
+			err.AddTag("fn_stack", stack.CallerWithFunc(fn).String())
+			f.setErr(err)
+		})
 
-			ch.OK(v)
-			return nil
-		}))
+		var t, e = fn()
+		if e != nil {
+			f.setErr(e)
+		} else {
+			f.setOK(t)
+		}
 	}()
-	return ch
+	return f
 }
 
 // GoSafe 安全并发处理
@@ -35,8 +38,7 @@ func GoSafe(fn func() error, cb ...func(err error)) {
 	assert.If(fn == nil, "[GoSafe] [fn] is nil")
 
 	go func() {
-		var err error
-		try.WithErr(&err, fn)
+		err := try.Try(fn)
 		if errors.IsNil(err) {
 			return
 		}
@@ -82,19 +84,19 @@ func GoDelay(fn func() error, durations ...time.Duration) {
 }
 
 // Timeout 超时处理
-func Timeout(dur time.Duration, fn func() error) (gErr result.Error) {
+func Timeout(dur time.Duration, fn func() error) (gErr error) {
 	assert.If(fn == nil, "[Timeout] [fn] is nil")
 	assert.If(dur <= 0, "[Timeout] [dur] should not be less than zero")
 
 	var done = make(chan struct{})
 	go func() {
 		defer close(done)
-		gErr = gErr.WithErr(try.Try(fn))
+		gErr = try.Try(fn)
 	}()
 
 	select {
 	case <-time.After(dur):
-		return result.WithErr(context.DeadlineExceeded)
+		return context.DeadlineExceeded
 	case <-done:
 		return
 	}
@@ -107,5 +109,6 @@ func logErr(fn interface{}, err error) {
 
 	logs.Err(err).
 		Str("func", stack.CallerWithFunc(fn).String()).
+		Str("err_stack", pretty.Sprint(err)).
 		Msg(err.Error())
 }
