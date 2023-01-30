@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"testing"
 	"time"
-
-	"github.com/pubgo/funk/result"
 )
 
 func TestAsync(t *testing.T) {
@@ -40,7 +38,7 @@ func TestYield(t *testing.T) {
 	})
 }
 
-func httpGetList() *result.Iterator[*http.Response] {
+func httpGetList() *Iterator[*http.Response] {
 	return Group(func(async func(func() (*http.Response, error))) error {
 		for i := 2; i > 0; i-- {
 			async(func() (*http.Response, error) {

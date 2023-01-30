@@ -6,7 +6,6 @@ import (
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/recovery"
-	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/stack"
 )
 
@@ -25,19 +24,29 @@ func Promise[T any](fn func(resolve func(T), reject func(err error))) *Future[T]
 	return f
 }
 
-func Group[T any](do func(async func(func() (T, error))) error) *result.Iterator[T] {
+func Group[T any](do func(async func(func() (T, error))) error) *Iterator[T] {
 	assert.If(do == nil, "[Async] [fn] is nil")
 
-	var rr = result.IteratorOf[T]()
+	var rr = iteratorOf[T]()
 	go func() {
 		var wg sync.WaitGroup
-		defer rr.Done()
+		defer rr.setDone()
 		defer wg.Wait()
-		rr.Chan() <- result.Err[T](do(func(f func() (T, error)) {
+		rr.setErr(do(func(f func() (T, error)) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				rr.Chan() <- result.Wrap(f())
+				defer recovery.Recovery(func(err errors.XError) {
+					err.AddTag("fn_stack", stack.CallerWithFunc(do).String())
+					rr.setErr(err)
+				})
+
+				var t, e = f()
+				if e == nil {
+					rr.setValue(t)
+				} else {
+					rr.setErr(e)
+				}
 			}()
 		}))
 	}()
@@ -45,19 +54,16 @@ func Group[T any](do func(async func(func() (T, error))) error) *result.Iterator
 	return rr
 }
 
-func Yield[T any](do func(yield func(T)) error) *result.Iterator[T] {
-	var dd = result.IteratorOf[T]()
+func Yield[T any](do func(yield func(T)) error) *Iterator[T] {
+	var dd = iteratorOf[T]()
 	go func() {
-		defer dd.Done()
+		defer dd.setDone()
 		defer recovery.Recovery(func(err errors.XError) {
 			err.AddTag("fn_stack", stack.CallerWithFunc(do).String())
-			dd.Chan() <- result.Err[T](err)
+			dd.setErr(err)
 		})
 
-		var err = do(func(t T) { dd.Chan() <- result.OK(t) })
-		if err != nil {
-			dd.Chan() <- result.Err[T](err)
-		}
+		dd.setErr(do(func(t T) { dd.setValue(t) }))
 	}()
 	return dd
 }
