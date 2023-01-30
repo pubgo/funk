@@ -89,6 +89,5 @@ func (e Errors) ErrorOrNil() error {
 	if e == nil || len(e) == 0 {
 		return nil
 	}
-
 	return e
 }
