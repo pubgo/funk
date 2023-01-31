@@ -43,7 +43,6 @@ func init() {
 			buildTime = setting.Value
 		}
 	}
-
 }
 
 func Check() {
