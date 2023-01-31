@@ -6,7 +6,6 @@ require (
 	github.com/a8m/envsubst v1.3.0
 	github.com/alecthomas/repr v0.2.0
 	github.com/dustin/go-humanize v1.0.0
-	github.com/fatih/color v1.13.0
 	github.com/felixge/fgprof v0.9.3
 	github.com/go-echarts/go-echarts/v2 v2.2.4
 	github.com/go-echarts/statsview v0.3.4
@@ -17,7 +16,6 @@ require (
 	github.com/google/gops v0.3.26
 	github.com/gopherjs/gopherjs v1.17.2
 	github.com/hashicorp/go-version v1.6.0
-	github.com/iancoleman/strcase v0.2.0
 	github.com/invopop/jsonschema v0.7.0
 	github.com/jinzhu/copier v0.3.5
 	github.com/k0kubun/pp/v3 v3.2.0
@@ -26,10 +24,8 @@ require (
 	github.com/mattn/go-isatty v0.0.17
 	github.com/mattn/go-sqlite3 v1.14.14
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/modood/table v0.0.0-20220527013332-8d47e76dad33
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58
 	github.com/phuslu/goid v1.0.0
-	github.com/rodaine/table v1.0.1
 	github.com/rs/xid v1.4.0
 	github.com/rs/zerolog v1.28.0
 	github.com/shurcooL/githubv4 v0.0.0-20221021030919-a134b1472cc7
@@ -69,7 +65,6 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/shurcooL/graphql v0.0.0-20220606043923-3cf50f8a0a29 // indirect
-	github.com/smartystreets/goconvey v1.7.2 // indirect
 	github.com/spf13/afero v1.9.2 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
