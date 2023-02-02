@@ -15,6 +15,7 @@ func init() {
 }
 
 var (
+
 	// stdZeroLog default zerolog just fro debug
 	stdZeroLog = generic.Ptr(
 		zerolog.New(os.Stderr).Level(zerolog.DebugLevel).
