@@ -1,8 +1,9 @@
 package log
 
 import (
-	"github.com/rs/zerolog"
 	"unsafe"
+
+	"github.com/rs/zerolog"
 )
 
 func WithNotice() func(e *Event) {
@@ -21,6 +22,7 @@ func WithEvent(evt *Event) func(e *Event) {
 		e1 := convertEvent(e)
 		e1.buf = append(e1.buf, ',')
 		e1.buf = append(e1.buf, evt1.buf[1:]...)
+		putEvent(evt)
 	}
 }
 

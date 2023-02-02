@@ -29,3 +29,9 @@ func TestEvent(t *testing.T) {
 	ee.Func(log.WithEvent(evt))
 	ee.Msg("dddd")
 }
+
+func TestWithEvent(t *testing.T) {
+	var evt = log.NewEvent().Str("hello", "world").Int("int", 100)
+	ee := log.GetLogger("with_event").WithEvent(evt).Info().Str("info", "abcd")
+	ee.Msg("dddd")
+}

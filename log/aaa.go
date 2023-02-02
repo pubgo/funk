@@ -9,11 +9,13 @@ import (
 type Map = map[string]any
 type Hook = zerolog.Hook
 type Event = zerolog.Event
+
 type Logger interface {
 	WithName(name string) Logger
 	WithFields(m Map) Logger
 	WithHooks(hooks ...Hook) Logger
 	WithCallerSkip(skip int) Logger
+	WithEvent(evt *Event) Logger
 	WithCtx(ctx context.Context) context.Context
 	Debug() *Event
 	Info() *Event
