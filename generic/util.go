@@ -2,6 +2,7 @@ package generic
 
 import (
 	"reflect"
+	"unsafe"
 
 	"golang.org/x/exp/constraints"
 )
@@ -165,4 +166,26 @@ func Min[T constraints.Ordered](a, b T) (r T) {
 	}
 
 	return
+}
+
+// isNilValue copy from <github.com/rs/zerolog.isNilValue>
+func isNilValue(i interface{}) bool {
+	return (*[2]uintptr)(unsafe.Pointer(&i))[1] == 0
+}
+
+func IsNil(err interface{}) bool {
+	if err == nil {
+		return true
+	}
+
+	if isNilValue(err) {
+		return true
+	}
+
+	var v = reflect.ValueOf(err)
+	if !v.IsValid() {
+		return true
+	}
+
+	return v.IsZero()
 }

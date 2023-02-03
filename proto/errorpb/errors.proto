@@ -7,7 +7,7 @@ package lava.errors;
 option go_package = "github.com/pubgo/funk/proto/errorpb";
 
 message Error {
-  Code code = 1 [
+  uint32 code = 1 [
     json_name = "code"
   ];
 

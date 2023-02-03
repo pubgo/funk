@@ -19,13 +19,14 @@ func TestSkip(t *testing.T) {
 func TestFormat(t *testing.T) {
 	var err = WrapCaller(New("hello error"))
 	err = Wrap(err, "next error")
-	err = WrapFn(err, func(xrr XError) {
-		xrr.AddMsg("new error msg")
-		xrr.AddTag("test123", 123)
+	err = WrapEventFn(err, func(evt *Event) {
+		evt.Str("event", "test event")
+		evt.Int64("test123", 123)
+		evt.Str("test", "hello")
 	})
 	err = Wrapf(err, "next error name=%s", "wrapf")
-	err = WrapTags(err, Tags{"test": "hello"})
 	err = WrapCode(err, errorpb.Code_Canceled)
+	err = WrapReason(err, "test reason")
 	err = Append(err, fmt.Errorf("raw error"))
 	err = Append(err, New("New errors error"))
 	err = Append(err, SimpleErr(func(err *Err) {
@@ -33,7 +34,12 @@ func TestFormat(t *testing.T) {
 		err.Msg = "Err errors error"
 		err.Tags = map[string]any{"tags": "hello"}
 	}))
+
 	err = WrapBizCode(err, "user.not_found")
+	err = WrapCodeFn(err, func(err ErrCode) {
+		err.SetReason("user not_found")
+	})
+
 	err = WrapStack(err)
 	IfErr(err, func(err error) {
 		Debug(err)

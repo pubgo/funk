@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	_ "unsafe"
 
+	"github.com/pubgo/funk/async"
 	"github.com/pubgo/funk/fastrand"
 )
 
@@ -52,7 +53,7 @@ func (t *WaitGroup) check() {
 func (t *WaitGroup) Go(fn func()) {
 	t.wg.Add(1)
 	t.check()
-	GoSafe(
+	async.GoSafe(
 		func() error { fn(); return nil },
 		func(err error) {
 			t.err = err

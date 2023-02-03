@@ -2,6 +2,7 @@ package try
 
 import (
 	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/stack"
 )
@@ -13,12 +14,12 @@ func WithErr(gErr *error, fn func() error) {
 	}
 
 	defer func() {
-		if err := errors.Parse(recover()); !errors.IsNil(err) {
+		if err := errors.Parse(recover()); !generic.IsNil(err) {
 			*gErr = errors.WrapStack(err)
 		}
 
-		*gErr = errors.WrapFn(*gErr, func(xrr errors.XError) {
-			xrr.AddTag("fn_stack", stack.CallerWithFunc(fn))
+		*gErr = errors.WrapTagsFn(*gErr, func() errors.Tags {
+			return errors.Tags{"fn_stack": stack.CallerWithFunc(fn)}
 		})
 	}()
 
@@ -32,7 +33,7 @@ func Try(fn func() error) (gErr error) {
 	}
 
 	defer func() {
-		if err := errors.Parse(recover()); !errors.IsNil(err) {
+		if err := errors.Parse(recover()); !generic.IsNil(err) {
 			gErr = errors.WrapStack(err)
 		}
 
@@ -52,13 +53,13 @@ func Result[T any](fn func() result.Result[T]) (g result.Result[T]) {
 	}
 
 	defer func() {
-		if err := errors.Parse(recover()); !errors.IsNil(err) {
+		if err := errors.Parse(recover()); !generic.IsNil(err) {
 			g = g.WithErr(errors.WrapStack(err))
 		}
 
 		if g.IsErr() {
-			g = g.WithErr(errors.WrapFn(g.Err(), func(xrr errors.XError) {
-				xrr.AddTag("fn_stack", stack.CallerWithFunc(fn))
+			g = g.WithErr(g.Err(func(err errors.XError) {
+				err.AddTag("fn_stack", stack.CallerWithFunc(fn))
 			}))
 		}
 	}()
