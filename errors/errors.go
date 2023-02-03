@@ -12,6 +12,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
+func NewEvent() *Event {
+	return zerolog.Dict()
+}
+
 func IfErr(err error, fn func(err error)) {
 	if generic.IsNil(err) {
 		return
@@ -157,6 +161,23 @@ func WrapEvent(err error, evt *Event) error {
 	}
 
 	base := &errEventImpl{err: err, caller: stack.Caller(1), evt: evt}
+	return base
+}
+
+func WrapKV(err error, k string, v any) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	var base ErrEvent
+	switch err.(type) {
+	case ErrEvent:
+		base = err.(ErrEvent)
+		base.Event().Any(k, v)
+	default:
+		base = &errEventImpl{err: err, caller: stack.Caller(1), evt: zerolog.Dict().Any(k, v)}
+	}
+
 	return base
 }
 

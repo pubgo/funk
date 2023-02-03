@@ -3,7 +3,7 @@ package recovery
 import (
 	"testing"
 
-	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/result"
 )
@@ -16,7 +16,7 @@ func TestErr(t *testing.T) {
 	}
 
 	var err = handler()
-	if errors.IsNil(err) {
+	if generic.IsNil(err) {
 		t.Log(err)
 	}
 }

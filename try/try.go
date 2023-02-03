@@ -18,8 +18,8 @@ func WithErr(gErr *error, fn func() error) {
 			*gErr = errors.WrapStack(err)
 		}
 
-		*gErr = errors.WrapTagsFn(*gErr, func() errors.Tags {
-			return errors.Tags{"fn_stack": stack.CallerWithFunc(fn)}
+		*gErr = errors.WrapEventFn(*gErr, func(evt *errors.Event) {
+			evt.Str("fn_stack", stack.CallerWithFunc(fn).String())
 		})
 	}()
 
@@ -37,8 +37,8 @@ func Try(fn func() error) (gErr error) {
 			gErr = errors.WrapStack(err)
 		}
 
-		gErr = errors.WrapFn(gErr, func(xrr errors.XError) {
-			xrr.AddTag("fn_stack", stack.CallerWithFunc(fn))
+		gErr = errors.WrapEventFn(gErr, func(evt *errors.Event) {
+			evt.Str("fn_stack", stack.CallerWithFunc(fn).String())
 		})
 	}()
 
@@ -58,8 +58,8 @@ func Result[T any](fn func() result.Result[T]) (g result.Result[T]) {
 		}
 
 		if g.IsErr() {
-			g = g.WithErr(g.Err(func(err errors.XError) {
-				err.AddTag("fn_stack", stack.CallerWithFunc(fn))
+			g = g.WithErr(g.Err(func(err error) error {
+				return errors.WrapKV(err, "fn_stack", stack.CallerWithFunc(fn))
 			}))
 		}
 	}()

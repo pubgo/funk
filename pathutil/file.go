@@ -42,9 +42,7 @@ func IsNotExistMkDir(src string) (err error) {
 // MkDir create a directory
 func MkDir(src string) error {
 	var err = os.MkdirAll(src, os.ModePerm)
-	return errors.WrapFn(err, func(xrr errors.XError) {
-		xrr.AddTag("src", src)
-	})
+	return errors.WrapKV(err, "src", src)
 }
 
 // IsExist determines whether the file spcified by the given path is exists.
