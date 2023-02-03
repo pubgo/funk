@@ -26,14 +26,14 @@ func Result[T any](ret *result.Result[T]) {
 	*ret = result.Err[T](err)
 }
 
-func Err(gErr *error, fns ...func(err error) error) {
+func Err(gErr *error, fns ...func(err *errors.Event)) {
 	err := errors.Parse(recover())
 	if generic.IsNil(err) {
 		return
 	}
 
 	if len(fns) > 0 && fns[0] != nil {
-		*gErr = fns[0](err)
+		*gErr = errors.WrapEventFn(err, fns[0])
 		return
 	}
 
