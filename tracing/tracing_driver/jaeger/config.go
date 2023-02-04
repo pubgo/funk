@@ -3,6 +3,9 @@ package jaeger
 import (
 	"fmt"
 
+	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/runmode"
+
 	jaegerCfg "github.com/uber/jaeger-client-go/config"
 	lumberjack "gopkg.in/natefinch/lumberjack.v2"
 )
@@ -17,11 +20,11 @@ const Name = "jaeger"
 
 func DefaultCfg() Cfg {
 	cfg, err := jaegerCfg.FromEnv()
-	xerror.Exit(err)
+	assert.Exit(err)
 
 	cfg.Disabled = false
 	cfg.ServiceName = runmode.Project
-	xerror.Panic(err)
+	assert.Must(err)
 	return Cfg{
 		Configuration: cfg,
 		BatchSize:     1,

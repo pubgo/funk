@@ -2,6 +2,8 @@ package jaeger
 
 import (
 	"github.com/opentracing/opentracing-go"
+	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/recovery"
 	"github.com/pubgo/funk/runmode"
 	"github.com/pubgo/funk/tracing"
 	"github.com/pubgo/funk/tracing/tracing_driver/jaeger/reporter"
@@ -24,7 +26,7 @@ func GetSpanID(ctx opentracing.SpanContext) (string, string) {
 var _ = jaeger.NewNullReporter()
 
 func New(cfg Cfg) (err error) {
-	defer xerror.RecoverErr(&err)
+	defer recovery.Err(&err)
 
 	cfg.Disabled = false
 	if cfg.ServiceName == "" {
@@ -47,7 +49,7 @@ func New(cfg Cfg) (err error) {
 		config.Metrics(metricsFactory),
 		config.Observer(rpcmetrics.NewObserver(metricsFactory, rpcmetrics.DefaultNameNormalizer)),
 	)
-	xerror.Panic(err, "cannot initialize Jaeger Tracer")
+	assert.Must(err, "cannot initialize Jaeger Tracer")
 
 	opentracing.SetGlobalTracer(trace)
 	return nil
