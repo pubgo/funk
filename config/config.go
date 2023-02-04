@@ -195,7 +195,7 @@ func (t *configImpl) initCfg() {
 
 // loadPath 加载指定path的配置
 func (t *configImpl) loadPath(path string) {
-	defer recovery.Exit(func() {
+	defer recovery.Exit(func(evt *errors.Event) {
 		log.Info().Msgf("path=%s", path)
 	})
 

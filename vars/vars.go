@@ -78,6 +78,7 @@ func (f Value) String() (r string) {
 }
 
 func Register(name string, data func() interface{}) {
+	defer recovery.Exit()
 	assert.If(Has(name), "name:%s already exists", name)
 	expvar.Publish(name, Value(data))
 }

@@ -32,7 +32,7 @@ func New(format string, a ...interface{}) error {
 	}
 }
 
-func Parse(val interface{}) Error {
+func Parse(val interface{}) error {
 	return parseXError(val)
 }
 

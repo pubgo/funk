@@ -5,6 +5,7 @@ import (
 
 	semver "github.com/hashicorp/go-version"
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/recovery"
 	"github.com/rs/xid"
@@ -18,7 +19,7 @@ var project string
 var instanceID = xid.New().String()
 
 func init() {
-	defer recovery.Exit(func() {
+	defer recovery.Exit(func(evt *errors.Event) {
 		pretty.Println(
 			mainPath,
 			project,
@@ -46,7 +47,7 @@ func init() {
 }
 
 func Check() {
-	defer recovery.Exit(func() {
+	defer recovery.Exit(func(evt *errors.Event) {
 		pretty.Println(
 			mainPath,
 			project,

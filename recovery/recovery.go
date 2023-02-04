@@ -64,14 +64,16 @@ func Recovery(fn func(err error)) {
 	fn(err)
 }
 
-func Exit(handlers ...func()) {
+func Exit(handlers ...func(evt *errors.Event)) {
 	err := errors.Parse(recover())
 	if generic.IsNil(err) {
 		return
 	}
 
 	if len(handlers) > 0 {
-		handlers[0]()
+		err = errors.WrapEventFn(err, func(evt *errors.Event) {
+			handlers[0](evt)
+		})
 	}
 
 	errors.Debug(err)
