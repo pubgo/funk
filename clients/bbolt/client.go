@@ -28,7 +28,10 @@ type Client struct {
 
 func (t *Client) bucket(name string, tx *bolt.Tx) *bolt.Bucket {
 	var _, err = tx.CreateBucketIfNotExists([]byte(name))
-	logutil.ErrRecord(t.log, err)
+	logutil.ErrRecord(t.log, err, func(evt *log.Event) string {
+		evt.Str("bucket_name", name)
+		return "failed to create bucket"
+	})
 	return tx.Bucket([]byte(name))
 }
 
@@ -46,6 +49,7 @@ func (t *Client) Get(ctx context.Context, key string, names ...string) result.Re
 			return nil
 		}, names...)
 	)
+
 	return result.Wrap(val, err)
 }
 

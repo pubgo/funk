@@ -8,6 +8,20 @@ import (
 	"github.com/pubgo/funk/try"
 )
 
+func HandleClose(log log.Logger, fn func() error) {
+	if fn == nil || log == nil {
+		log.Error().Msgf("log and fn are all required")
+		return
+	}
+
+	var err = fn()
+	if generic.IsNil(err) {
+		return
+	}
+
+	log.Err(err).Msg("failed to handle close")
+}
+
 func LogOrErr(log log.Logger, msg string, fn func() error) {
 	msg = strings.TrimSpace(msg)
 	log = log.WithCallerSkip(1)
@@ -32,11 +46,12 @@ func OkOrFailed(log log.Logger, msg string, fn func() error) {
 	}
 }
 
-func ErrRecord(log log.Logger, err error) bool {
+func ErrRecord(logger log.Logger, err error, fn func(evt *log.Event) string) {
 	if generic.IsNil(err) {
-		return false
+		return
 	}
 
-	log.WithCallerSkip(1).Err(err).Msg(err.Error())
-	return true
+	var evt = log.NewEvent()
+	var msg = fn(evt)
+	logger.WithCallerSkip(1).Err(err).Func(log.WithEvent(evt)).Msg(msg)
 }
