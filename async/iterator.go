@@ -3,11 +3,11 @@ package async
 import "github.com/pubgo/funk/result"
 
 func iteratorOf[T any]() *Iterator[T] {
-	return &Iterator[T]{v: make(chan result.Result[T])}
+	return &Iterator[T]{v: make(chan T)}
 }
 
 type Iterator[T any] struct {
-	v    chan result.Result[T]
+	v    chan T
 	done chan struct{}
 	err  error
 }
@@ -25,20 +25,34 @@ func (cc *Iterator[T]) setErr(err error) {
 }
 
 func (cc *Iterator[T]) setValue(v T) {
-	cc.v <- result.OK(v)
+	cc.v <- v
 }
 
-func (cc *Iterator[T]) Next() (result.Result[T], bool) {
+func (cc *Iterator[T]) Next() (T, bool) {
 	r, ok := <-cc.v
 	return r, ok
 }
 
-func (cc *Iterator[T]) Range(fn func(r result.Result[T])) {
+func (cc *Iterator[T]) Range(fn func(r T)) error {
 	for c := range cc.v {
+		if cc.err != nil {
+			return cc.err
+		}
+
 		fn(c)
 	}
+	return nil
 }
 
-func (cc *Iterator[T]) Chan() <-chan result.Result[T] {
-	return cc.v
+func (cc *Iterator[T]) ToList() result.Result[[]T] {
+	var ret result.Result[[]T]
+	if cc.err != nil {
+		return ret.WithErr(cc.err)
+	}
+
+	var ll []T
+	for c := range cc.v {
+		ll = append(ll, c)
+	}
+	return ret
 }
