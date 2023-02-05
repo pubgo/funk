@@ -41,6 +41,20 @@ func Json(err error) []byte {
 	return data
 }
 
+func JsonPretty(err error) []byte {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	err = errors.Parse(err)
+	data, err := jjson.MarshalIndent(err, " ", "  ")
+	if err != nil {
+		log.Err(err).Stack().Str("err_stack", repr.String(err)).Msg("failed to marshal error")
+		panic(fmt.Errorf("failed to marshal error, err=%w", err))
+	}
+	return data
+}
+
 func parseError(err error) (op string, goType string, desc string, extra map[string]string) {
 	extra = make(map[string]string)
 
