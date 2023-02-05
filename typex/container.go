@@ -25,3 +25,7 @@ type KV struct {
 	K string `json:"key"`
 	V any    `json:"value"`
 }
+
+func StrOf(s ...string) []string {
+	return s
+}
