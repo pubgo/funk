@@ -6,7 +6,7 @@ import (
 	"github.com/opentracing/opentracing-go/ext"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/logutil"
+	"github.com/pubgo/funk/log/logutil"
 	"github.com/pubgo/funk/merge"
 	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/strutil"

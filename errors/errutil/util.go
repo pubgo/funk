@@ -17,6 +17,7 @@ import (
 	"reflect"
 	"runtime"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -53,6 +54,14 @@ func JsonPretty(err error) []byte {
 		panic(fmt.Errorf("failed to marshal error, err=%w", err))
 	}
 	return data
+}
+
+func IsMemoryErr(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	return strings.Contains(err.Error(), "invalid memory address or nil pointer dereference")
 }
 
 func parseError(err error) (op string, goType string, desc string, extra map[string]string) {

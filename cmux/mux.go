@@ -7,11 +7,12 @@ import (
 	"os"
 	"strings"
 
+	"github.com/pubgo/funk/config"
+	"github.com/pubgo/funk/log"
 	"github.com/soheilhy/cmux"
 	"github.com/tmc/grpc-websocket-proxy/wsproxy"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/client/v3/naming/resolver"
-	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 	"google.golang.org/grpc"
 	// https://github.com/shaxbee/go-wsproxy
@@ -94,7 +95,7 @@ func GetHostname(req *http.Request) string {
 	return h
 }
 
-func mustListenCMux(lg *zap.Logger, tlsinfo *transport.TLSInfo) cmux.CMux {
+func mustListenCMux(lg log.Logger, tlsinfo *transport.TLSInfo) cmux.CMux {
 	l, err := net.Listen("tcp", grpcProxyListenAddr)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -108,10 +109,10 @@ func mustListenCMux(lg *zap.Logger, tlsinfo *transport.TLSInfo) cmux.CMux {
 	if tlsinfo != nil {
 		tlsinfo.CRLFile = grpcProxyListenCRL
 		if l, err = transport.NewTLSListener(l, tlsinfo); err != nil {
-			lg.Fatal("failed to create TLS listener", zap.Error(err))
+			lg.Err(err).Msg("failed to create TLS listener")
 		}
 	}
 
-	lg.Info("listening for gRPC proxy client requests", zap.String("address", grpcProxyListenAddr))
+	lg.Info().Str("address", grpcProxyListenAddr).Msg("listening for gRPC proxy client requests")
 	return cmux.New(l)
 }
