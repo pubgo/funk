@@ -27,7 +27,7 @@ func newErr(err error, skip ...int) *baseErr {
 	}
 }
 
-func parseXError(val interface{}) error {
+func parseError(val interface{}) error {
 	if generic.IsNil(val) {
 		return nil
 	}

@@ -24,6 +24,18 @@ type errCodeImpl struct {
 	reason  string
 	bizCode string
 	code    errorpb.Code
+	tags    map[string]string
+}
+
+func (t *errCodeImpl) Tags() map[string]string {
+	return t.tags
+}
+
+func (t *errCodeImpl) AddTag(key string, val string) {
+	if t.tags == nil {
+		t.tags = make(map[string]string)
+	}
+	t.tags[key] = val
 }
 
 func (t *errCodeImpl) Code() errorpb.Code {

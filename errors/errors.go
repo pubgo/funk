@@ -33,7 +33,7 @@ func New(format string, a ...interface{}) error {
 }
 
 func Parse(val interface{}) error {
-	return parseXError(val)
+	return parseError(val)
 }
 
 func Debug(err error) {
@@ -41,7 +41,7 @@ func Debug(err error) {
 		return
 	}
 
-	err = parseXError(err)
+	err = parseError(err)
 	if _err, ok := err.(fmt.Stringer); ok {
 		fmt.Println(_err.String())
 		return

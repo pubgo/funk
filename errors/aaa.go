@@ -40,6 +40,8 @@ type ErrCode interface {
 	BizCode() string
 	Reason() string
 	Code() errorpb.Code
+	Tags() map[string]string
+	AddTag(key string, val string)
 	SetCode(code errorpb.Code)
 	SetReason(reason string)
 	SetBizCode(biz string)

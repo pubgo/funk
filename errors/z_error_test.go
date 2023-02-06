@@ -44,4 +44,8 @@ func TestFormat(t *testing.T) {
 	IfErr(err, func(err error) {
 		Debug(err)
 	})
+
+	var fff ErrCode
+	t.Log(As(err, &fff))
+	t.Log(fff.Reason())
 }
