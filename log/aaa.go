@@ -27,3 +27,9 @@ type Logger interface {
 	Print(msg string)
 	Printf(format string, args ...any)
 }
+
+type StdLogger interface {
+	Printf(format string, v ...interface{})
+	Print(v ...interface{})
+	Println(v ...interface{})
+}
