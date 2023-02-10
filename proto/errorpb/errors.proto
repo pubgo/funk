@@ -1,45 +1,45 @@
 syntax = "proto3";
 
-import "google/protobuf/descriptor.proto";
-
 package lava.errors;
 
-option go_package = "github.com/pubgo/funk/proto/errorpb";
+option go_package = "github.com/pubgo/funk/proto/errorpb;errorpb";
 
 message Error {
-  Code code = 1 [
+  string id = 1;
+
+  Code code = 2 [
     json_name = "code"
   ];
 
-  string biz_code = 2 [
+  string biz_code = 3 [
     json_name = "biz_code"
   ];
 
-  string reason = 3 [
+  string reason = 4 [
     json_name = "reason"
   ];
 
-  string operation = 4 [
+  string operation = 5 [
     json_name = "operation"
   ];
 
-  string service = 5 [
+  string service = 6 [
     json_name = "service"
   ];
 
-  string version = 6 [
+  string version = 7 [
     json_name = "version"
   ];
 
-  string err_msg = 7 [
+  string err_msg = 8 [
     json_name = "err_msg"
   ];
 
-  string err_detail = 8 [
+  string err_detail = 9 [
     json_name = "err_detail"
   ];
 
-  map<string, string>  tags = 9 [
+  map<string, string>  tags = 10 [
     json_name = "tags"
   ];
 }
@@ -62,4 +62,5 @@ enum Code {
   Unavailable = 14;
   DataLoss = 15;
   Unauthenticated = 16;
+  TooManyRequests = 17;
 }

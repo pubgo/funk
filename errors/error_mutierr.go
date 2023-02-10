@@ -3,7 +3,6 @@ package errors
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	"github.com/alecthomas/repr"
@@ -11,11 +10,22 @@ import (
 	"github.com/pubgo/funk/pretty"
 )
 
-func (e Errors) Append(err error) Errors {
-	return append(e, err)
+var _ Errors = (*errorsImpl)(nil)
+
+type errorsImpl struct {
+	errs []error
 }
 
-func (e Errors) Format(f fmt.State, verb rune) {
+func (e *errorsImpl) Errors() []error {
+	return e.errs
+}
+
+func (e *errorsImpl) Append(err error) error {
+	e.errs = append(e.errs, err)
+	return e
+}
+
+func (e *errorsImpl) Format(f fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		var data, err = e.MarshalJSON()
@@ -29,65 +39,58 @@ func (e Errors) Format(f fmt.State, verb rune) {
 	}
 }
 
-func (e Errors) String() string {
+func (e *errorsImpl) String() string {
 	var buf = bytes.NewBuffer(nil)
 
-	for i := range e {
+	for i := range e.errs {
 		buf.WriteString("====================================================================\n")
-		if _err, ok := e[i].(fmt.Stringer); ok {
+		if _err, ok := e.errs[i].(fmt.Stringer); ok {
 			buf.WriteString(_err.String())
 		} else {
-			buf.WriteString(pretty.Sprintln(e[i]))
+			buf.WriteString(pretty.Sprintln(e.errs[i]))
 		}
 	}
 
 	return buf.String()
 }
 
-func (e Errors) MarshalJSON() ([]byte, error) {
+func (e *errorsImpl) MarshalJSON() ([]byte, error) {
 	var errs []interface{}
-	for i := range e {
-		if _err, ok := e[i].(json.Marshaler); ok {
+	for i := range e.errs {
+		if _err, ok := e.errs[i].(json.Marshaler); ok {
 			errs = append(errs, _err)
-		} else if e[i] != nil {
-			errs = append(errs, json.RawMessage(repr.String(e[i])))
+		} else if e.errs[i] != nil {
+			errs = append(errs, json.RawMessage(repr.String(e.errs[i])))
 		}
 	}
 	return jjson.Marshal(errs)
 }
 
-func (e Errors) Error() string {
-	if len(e) > 0 {
-		return e[0].Error()
+func (e *errorsImpl) Error() string {
+	if len(e.errs) > 0 {
+		return e.errs[0].Error()
 	}
 	return ""
 }
 
-func (e Errors) Unwrap() error {
-	if len(e) == 1 {
+func (e *errorsImpl) Unwrap() error {
+	if len(e.errs) == 1 {
 		return nil
 	}
 
-	return e[1:]
+	return &errorsImpl{errs: e.errs[1:]}
 }
 
-func (e Errors) As(target interface{}) bool {
-	if len(e) > 0 {
-		return errors.As(e[0], target)
+func (e *errorsImpl) As(target interface{}) bool {
+	if len(e.errs) > 0 {
+		return As(e.errs[0], target)
 	}
 	return false
 }
 
-func (e Errors) Is(target error) bool {
-	if len(e) > 0 {
-		return errors.Is(e[0], target)
+func (e *errorsImpl) Is(target error) bool {
+	if len(e.errs) > 0 {
+		return Is(e.errs[0], target)
 	}
 	return false
-}
-
-func (e Errors) ErrorOrNil() error {
-	if e == nil || len(e) == 0 {
-		return nil
-	}
-	return e
 }

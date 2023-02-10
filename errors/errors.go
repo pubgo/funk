@@ -249,17 +249,17 @@ func WrapReason(err error, reason string) error {
 	return base
 }
 
-func Append(err error, errs ...error) Errors {
-	switch err := err.(type) {
+func Append(err error, errs ...error) error {
+	switch err1 := err.(type) {
 	case Errors:
-		var errL = make([]error, 0, len(err)+len(errs))
-		errL = append(errL, err...)
+		var errL = make([]error, 0, len(err1.Errors())+len(errs))
+		errL = append(errL, err1.Errors()...)
 		errL = append(errL, errs...)
-		return errL
+		return &errorsImpl{errs: errL}
 	default:
 		var errL = make([]error, 0, len(errs)+1)
-		errL = append(errL, err)
+		errL = append(errL, err1)
 		errL = append(errL, errs...)
-		return errL
+		return &errorsImpl{errs: errL}
 	}
 }

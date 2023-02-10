@@ -8,7 +8,12 @@ import (
 
 type Event = zerolog.Event
 type Tags map[string]any
-type Errors []error
+
+type Errors interface {
+	Error
+	Errors() []error
+	Append(err error) error
+}
 
 type ErrUnwrap interface {
 	Unwrap() error
