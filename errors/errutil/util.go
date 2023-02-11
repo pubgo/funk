@@ -432,11 +432,11 @@ func ParseError(err error) *errorpb.Error {
 		return &errorpb.Error{
 			Service:   version.Project(),
 			Version:   version.Version(),
-			Code:      ce.Code(),
+			Code:      uint32(ce.Code()),
 			BizCode:   ce.BizCode(),
 			Reason:    ce.Reason(),
 			ErrMsg:    err.Error(),
-			ErrDetail: fmt.Sprintf("%#v", err),
+			ErrDetail: []byte(fmt.Sprintf("%#v", err)),
 			Tags:      ce.Tags(),
 		}
 	}
@@ -457,15 +457,15 @@ func ParseError(err error) *errorpb.Error {
 
 		return &errorpb.Error{
 			ErrMsg:    err.Error(),
-			ErrDetail: fmt.Sprintf("%v", gs.GRPCStatus().Details()),
+			ErrDetail: []byte(fmt.Sprintf("%v", gs.GRPCStatus().Details())),
 			Reason:    gs.GRPCStatus().Message(),
-			Code:      errorpb.Code(gs.GRPCStatus().Code())}
+			Code:      uint32(errorpb.Code(gs.GRPCStatus().Code()))}
 	}
 
 	return &errorpb.Error{
 		ErrMsg:    err.Error(),
-		ErrDetail: fmt.Sprintf("%#v", err),
+		ErrDetail: []byte(fmt.Sprintf("%#v", err)),
 		Reason:    err.Error(),
-		Code:      errorpb.Code_Unknown,
+		Code:      uint32(errorpb.Code_Unknown),
 	}
 }

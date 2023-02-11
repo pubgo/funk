@@ -7,7 +7,7 @@ option go_package = "github.com/pubgo/funk/proto/errorpb;errorpb";
 message Error {
   string id = 1;
 
-  Code code = 2 [
+  uint32 code = 2 [
     json_name = "code"
   ];
 
@@ -35,7 +35,7 @@ message Error {
     json_name = "err_msg"
   ];
 
-  string err_detail = 9 [
+  bytes err_detail = 9 [
     json_name = "err_detail"
   ];
 
