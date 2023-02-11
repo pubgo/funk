@@ -30,7 +30,9 @@ func init() {
 	})
 
 	bi, ok := debug.ReadBuildInfo()
-	assert.If(!ok, "failed to read debug build info")
+	if !ok {
+		return
+	}
 
 	mainPath = bi.Main.Path
 
