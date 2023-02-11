@@ -2,15 +2,18 @@ version: v1
 vendor: .proto
 checksum: 050e5a71ba4de3f034ea40ed09d2d3582f4e2110
 root:
-- proto
+  - proto
 deps:
-- name: google
-  url: github.com/googleapis/googleapis
-  path: /google
-  version: v0.0.0-20220224004616-3c171936039b
-- name: google/protobuf
-  url: /usr/local/include/google/protobuf
+  - name: google
+    url: github.com/googleapis/googleapis
+    path: /google
+    version: v0.0.0-20220224004616-3c171936039b
+  - name: google/protobuf
+    url: /usr/local/include/google/protobuf
 plugins:
-- name: go
-  opt:
-  - paths=source_relative
+  - name: go
+    opt:
+      - paths=source_relative
+  - name: lava-errors
+    opt:
+      - paths=source_relative

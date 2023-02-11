@@ -1,4 +1,4 @@
-package resputil
+package responses
 
 import (
 	"github.com/pubgo/funk/proto/errorpb"

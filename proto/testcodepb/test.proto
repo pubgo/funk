@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package demo.test.v1;
+
+import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/pubgo/funk/proto/testcodepb;testcodepb";
+
+enum TestErrCode {
+  OK = 0;
+
+  // NotFound 找不到
+  NotFound = 100000;
+
+  // Unknown 未知
+  Unknown = 100001;
+
+  // db connect error
+  DbConn = 100003;
+}
