@@ -42,14 +42,17 @@ type ErrEvent interface {
 
 type ErrCode interface {
 	Error
-	BizCode() string
+	Name() string
 	Reason() string
 	Code() errorpb.Code
+	Status() uint32
 	Tags() map[string]string
-	AddTag(key string, val string)
-	SetCode(code errorpb.Code)
-	SetReason(reason string)
-	SetBizCode(biz string)
+
+	SetErr(err error) ErrCode
+	AddTag(key string, val string) ErrCode
+	SetCode(code errorpb.Code) ErrCode
+	SetReason(reason string) ErrCode
+	SetName(biz string) ErrCode
 }
 
 type ErrStack interface {

@@ -181,72 +181,8 @@ func WrapKV(err error, k string, v any) error {
 	return base
 }
 
-func WrapCode(err error, code errorpb.Code) error {
-	if generic.IsNil(err) {
-		return nil
-	}
-
-	var base ErrCode
-	switch err.(type) {
-	case ErrCode:
-		base = err.(ErrCode)
-		base.SetCode(code)
-	default:
-		base = &errCodeImpl{err: err, caller: stack.Caller(1), code: code}
-	}
-
-	return base
-}
-
-func WrapBizCode(err error, bizCode string) error {
-	if generic.IsNil(err) {
-		return nil
-	}
-
-	var base ErrCode
-	switch err.(type) {
-	case ErrCode:
-		base = err.(ErrCode)
-		base.SetBizCode(bizCode)
-	default:
-		base = &errCodeImpl{err: err, caller: stack.Caller(1), bizCode: bizCode}
-	}
-
-	return base
-}
-
-func WrapCodeFn(err error, code func(err ErrCode)) error {
-	if generic.IsNil(err) {
-		return nil
-	}
-
-	var base ErrCode
-	switch err.(type) {
-	case ErrCode:
-		base = err.(ErrCode)
-	default:
-		base = &errCodeImpl{err: err, caller: stack.Caller(1)}
-	}
-
-	code(base)
-	return base
-}
-
-func WrapReason(err error, reason string) error {
-	if generic.IsNil(err) {
-		return nil
-	}
-
-	var base ErrCode
-	switch err.(type) {
-	case ErrCode:
-		base = err.(ErrCode)
-		base.SetReason(reason)
-	default:
-		base = &errCodeImpl{err: err, caller: stack.Caller(1), reason: reason}
-	}
-
-	return base
+func NewCode(code errorpb.Code) ErrCode {
+	return &errCodeImpl{caller: stack.Caller(1), code: code, tags: make(map[string]string)}
 }
 
 func Append(err error, errs ...error) error {

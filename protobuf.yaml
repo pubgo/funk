@@ -1,13 +1,11 @@
 version: v1
 vendor: .proto
-checksum: 050e5a71ba4de3f034ea40ed09d2d3582f4e2110
+checksum: 85da3b3146c7021097b973c086b0a12dae70c023
 root:
   - proto
+includes:
+  - proto
 deps:
-  - name: google
-    url: github.com/googleapis/googleapis
-    path: /google
-    version: v0.0.0-20220224004616-3c171936039b
   - name: google/protobuf
     url: /usr/local/include/google/protobuf
 plugins:

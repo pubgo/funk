@@ -6,6 +6,7 @@ require (
 	github.com/a8m/envsubst v1.3.0
 	github.com/alecthomas/repr v0.2.0
 	github.com/chenquan/zap-plus v0.1.1
+	github.com/dave/jennifer v1.6.0
 	github.com/dustin/go-humanize v1.0.0
 	github.com/felixge/fgprof v0.9.3
 	github.com/go-echarts/go-echarts/v2 v2.2.4
@@ -18,6 +19,7 @@ require (
 	github.com/google/gops v0.3.26
 	github.com/gopherjs/gopherjs v1.17.2
 	github.com/hashicorp/go-version v1.6.0
+	github.com/iancoleman/strcase v0.2.0
 	github.com/invopop/jsonschema v0.7.0
 	github.com/jaegertracing/jaeger v1.41.0
 	github.com/jinzhu/copier v0.3.5
@@ -54,7 +56,6 @@ require (
 	go.opentelemetry.io/otel/sdk v1.12.0
 	go.opentelemetry.io/otel/trace v1.12.0
 	go.uber.org/atomic v1.10.0
-	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.4.0
 	golang.org/x/exp v0.0.0-20221114191408-850992195362
 	golang.org/x/net v0.4.0
@@ -124,6 +125,7 @@ require (
 	github.com/valyala/fasthttp v1.43.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
+	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/mod v0.6.0 // indirect
 	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/text v0.5.0 // indirect
