@@ -5,13 +5,19 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
+	"github.com/rs/zerolog"
 )
 
+func NewEvent() *Event {
+	return zerolog.Dict()
+}
+
 func IfErr(err error, fn func(err error)) {
-	if IsNil(err) {
+	if generic.IsNil(err) {
 		return
 	}
 
@@ -20,49 +26,22 @@ func IfErr(err error, fn func(err error)) {
 
 func New(format string, a ...interface{}) error {
 	return &baseErr{
+		msg:    fmt.Sprintf(format, a...),
 		err:    fmt.Errorf(format, a...),
 		caller: stack.Caller(1),
 	}
 }
 
-func Parse(val interface{}) XError {
-	return parseXError(val)
-}
-
-func ParseResp(err error) *RespErr {
-	if IsNil(err) {
-		return nil
-	}
-
-	var rsp = &RespErr{Tags: make(map[string]any), Cause: err, Msg: err.Error()}
-	for err != nil {
-		switch _err := err.(type) {
-		case XError:
-			if rsp.Code == 0 {
-				rsp.Code = _err.Code()
-			}
-
-			if rsp.BizCode == "" {
-				rsp.BizCode = _err.BizCode()
-			}
-
-			if tags := _err.Tags(); tags != nil && len(tags) > 0 {
-				for k, v := range tags {
-					rsp.Tags[k] = v
-				}
-			}
-		}
-
-		err = Unwrap(err)
-	}
-	return rsp
+func Parse(val interface{}) error {
+	return parseError(val)
 }
 
 func Debug(err error) {
-	if IsNil(err) {
+	if generic.IsNil(err) {
 		return
 	}
 
+	err = parseError(err)
 	if _err, ok := err.(fmt.Stringer); ok {
 		fmt.Println(_err.String())
 		return
@@ -109,7 +88,7 @@ func As(err error, target any) bool {
 }
 
 func Unwrap(err error) error {
-	u, ok := err.(errUnwrap)
+	u, ok := err.(ErrUnwrap)
 	if !ok {
 		return nil
 	}
@@ -119,7 +98,7 @@ func Unwrap(err error) error {
 func Cause(err error) error {
 	for {
 		err1 := Unwrap(err)
-		if err1 == nil || IsNil(err1) {
+		if generic.IsNil(err1) {
 			return err
 		}
 
@@ -128,31 +107,18 @@ func Cause(err error) error {
 }
 
 func WrapStack(err error) error {
-	if IsNil(err) {
+	if generic.IsNil(err) {
 		return nil
 	}
 
 	base := newErr(err)
-	base.AddStack()
-	return base
-}
-
-func WrapFn(err error, fn func(xrr XError)) error {
-	if IsNil(err) {
-		return nil
-	}
-
-	if fn == nil {
-		panic("[fn] should not be nil")
-	}
-
-	base := newErr(err)
-	fn(base)
+	var impl = &errStackImpl{err: err}
+	impl.AddStack()
 	return base
 }
 
 func WrapCaller(err error, skip ...int) error {
-	if IsNil(err) {
+	if generic.IsNil(err) {
 		return nil
 	}
 
@@ -160,66 +126,140 @@ func WrapCaller(err error, skip ...int) error {
 }
 
 func Wrap(err error, msg string) error {
-	if IsNil(err) {
+	if generic.IsNil(err) {
 		return nil
 	}
 
 	base := newErr(err)
-	base.AddMsg(msg)
+	base.msg = msg
 	return base
 }
 
 func Wrapf(err error, format string, args ...interface{}) error {
-	if IsNil(err) {
+	if generic.IsNil(err) {
 		return nil
 	}
 
 	base := newErr(err)
-	base.AddMsg(fmt.Sprintf(format, args...))
+	base.msg = fmt.Sprintf(format, args...)
 	return base
 }
 
-func WrapTags(err error, m Tags) error {
-	if IsNil(err) {
+func WrapEventFn(err error, evt func(evt *Event)) error {
+	if generic.IsNil(err) {
 		return nil
 	}
 
-	base := newErr(err)
-	base.AddTags(m)
+	base := &errEventImpl{err: err, caller: stack.Caller(1), evt: zerolog.Dict()}
+	evt(base.evt)
+	return base
+}
+
+func WrapEvent(err error, evt *Event) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	base := &errEventImpl{err: err, caller: stack.Caller(1), evt: evt}
+	return base
+}
+
+func WrapKV(err error, k string, v any) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	var base ErrEvent
+	switch err.(type) {
+	case ErrEvent:
+		base = err.(ErrEvent)
+		base.Event().Any(k, v)
+	default:
+		base = &errEventImpl{err: err, caller: stack.Caller(1), evt: zerolog.Dict().Any(k, v)}
+	}
+
 	return base
 }
 
 func WrapCode(err error, code errorpb.Code) error {
-	if IsNil(err) {
+	if generic.IsNil(err) {
 		return nil
 	}
 
-	base := newErr(err)
-	base.AddCode(code)
+	var base ErrCode
+	switch err.(type) {
+	case ErrCode:
+		base = err.(ErrCode)
+		base.SetCode(code)
+	default:
+		base = &errCodeImpl{err: err, caller: stack.Caller(1), code: code}
+	}
+
 	return base
 }
 
 func WrapBizCode(err error, bizCode string) error {
-	if IsNil(err) {
+	if generic.IsNil(err) {
 		return nil
 	}
 
-	base := newErr(err)
-	base.AddBizCode(bizCode)
+	var base ErrCode
+	switch err.(type) {
+	case ErrCode:
+		base = err.(ErrCode)
+		base.SetBizCode(bizCode)
+	default:
+		base = &errCodeImpl{err: err, caller: stack.Caller(1), bizCode: bizCode}
+	}
+
 	return base
 }
 
-func Append(err error, errs ...error) Errors {
-	switch err := err.(type) {
+func WrapCodeFn(err error, code func(err ErrCode)) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	var base ErrCode
+	switch err.(type) {
+	case ErrCode:
+		base = err.(ErrCode)
+	default:
+		base = &errCodeImpl{err: err, caller: stack.Caller(1)}
+	}
+
+	code(base)
+	return base
+}
+
+func WrapReason(err error, reason string) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	var base ErrCode
+	switch err.(type) {
+	case ErrCode:
+		base = err.(ErrCode)
+		base.SetReason(reason)
+	default:
+		base = &errCodeImpl{err: err, caller: stack.Caller(1), reason: reason}
+	}
+
+	return base
+}
+
+func Append(err error, errs ...error) error {
+	switch err1 := err.(type) {
 	case Errors:
-		var errL = make([]error, 0, len(err)+len(errs))
-		errL = append(errL, err...)
+		var errL = make([]error, 0, len(err1.Errors())+len(errs))
+		errL = append(errL, err1.Errors()...)
 		errL = append(errL, errs...)
-		return errL
+		return &errorsImpl{errs: errL}
 	default:
 		var errL = make([]error, 0, len(errs)+1)
-		errL = append(errL, err)
+		errL = append(errL, err1)
 		errL = append(errL, errs...)
-		return errL
+		return &errorsImpl{errs: errL}
 	}
 }

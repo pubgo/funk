@@ -2,24 +2,17 @@ package errors
 
 import (
 	"errors"
-	"reflect"
+	"unsafe"
 
 	"github.com/alecthomas/repr"
 	"github.com/pubgo/funk/convert"
+	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/stack"
+	"github.com/rs/zerolog"
 )
 
-func IsNil(err interface{}) bool {
-	if err == nil {
-		return true
-	}
-
-	var v = reflect.ValueOf(err)
-	if !v.IsValid() {
-		return true
-	}
-
-	return v.IsZero()
+func convertEvent(evt *zerolog.Event) *event {
+	return (*event)(unsafe.Pointer(evt))
 }
 
 func newErr(err error, skip ...int) *baseErr {
@@ -34,13 +27,13 @@ func newErr(err error, skip ...int) *baseErr {
 	}
 }
 
-func parseXError(val interface{}) XError {
-	if IsNil(val) {
+func parseError(val interface{}) error {
+	if generic.IsNil(val) {
 		return nil
 	}
 
 	switch _val := val.(type) {
-	case XError:
+	case Error:
 		return _val
 	case error:
 		return newErr(_val, 1)

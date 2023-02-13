@@ -1,22 +1,25 @@
 package try
 
 import (
-	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/stack"
 )
 
 func WithErr(gErr *error, fn func() error) {
-	assert.If(fn == nil, "[fn] is nil")
+	if fn == nil {
+		*gErr = errors.WrapStack(errors.New("[fn] is nil"))
+		return
+	}
 
 	defer func() {
-		if err := errors.Parse(recover()); !errors.IsNil(err) {
+		if err := errors.Parse(recover()); !generic.IsNil(err) {
 			*gErr = errors.WrapStack(err)
 		}
 
-		*gErr = errors.WrapFn(*gErr, func(xrr errors.XError) {
-			xrr.AddTag("fn_stack", stack.CallerWithFunc(fn))
+		*gErr = errors.WrapEventFn(*gErr, func(evt *errors.Event) {
+			evt.Str("fn_stack", stack.CallerWithFunc(fn).String())
 		})
 	}()
 
@@ -24,15 +27,18 @@ func WithErr(gErr *error, fn func() error) {
 }
 
 func Try(fn func() error) (gErr error) {
-	assert.If(fn == nil, "[fn] is nil")
+	if fn == nil {
+		gErr = errors.WrapStack(errors.New("[fn] is nil"))
+		return
+	}
 
 	defer func() {
-		if err := errors.Parse(recover()); !errors.IsNil(err) {
+		if err := errors.Parse(recover()); !generic.IsNil(err) {
 			gErr = errors.WrapStack(err)
 		}
 
-		gErr = errors.WrapFn(gErr, func(xrr errors.XError) {
-			xrr.AddTag("fn_stack", stack.CallerWithFunc(fn))
+		gErr = errors.WrapEventFn(gErr, func(evt *errors.Event) {
+			evt.Str("fn_stack", stack.CallerWithFunc(fn).String())
 		})
 	}()
 
@@ -41,16 +47,19 @@ func Try(fn func() error) (gErr error) {
 }
 
 func Result[T any](fn func() result.Result[T]) (g result.Result[T]) {
-	assert.If(fn == nil, "[fn] is nil")
+	if fn == nil {
+		g = g.WithErr(errors.WrapStack(errors.New("[fn] is nil")))
+		return
+	}
 
 	defer func() {
-		if err := errors.Parse(recover()); !errors.IsNil(err) {
+		if err := errors.Parse(recover()); !generic.IsNil(err) {
 			g = g.WithErr(errors.WrapStack(err))
 		}
 
 		if g.IsErr() {
-			g = g.WithErr(errors.WrapFn(g.Err(), func(xrr errors.XError) {
-				xrr.AddTag("fn_stack", stack.CallerWithFunc(fn))
+			g = g.WithErr(g.Err(func(err error) error {
+				return errors.WrapKV(err, "fn_stack", stack.CallerWithFunc(fn))
 			}))
 		}
 	}()

@@ -6,6 +6,7 @@ import (
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/recovery"
 	"github.com/pubgo/funk/stack"
@@ -18,8 +19,8 @@ func Async[T any](fn func() (T, error)) *Future[T] {
 
 	var f = newFuture[T]()
 	go func() {
-		defer recovery.Recovery(func(err errors.XError) {
-			err.AddTag("fn_stack", stack.CallerWithFunc(fn).String())
+		defer recovery.Recovery(func(err error) {
+			err = errors.WrapKV(err, "fn_stack", stack.CallerWithFunc(fn).String())
 			f.setErr(err)
 		})
 
@@ -39,7 +40,7 @@ func GoSafe(fn func() error, cb ...func(err error)) {
 
 	go func() {
 		err := try.Try(fn)
-		if errors.IsNil(err) {
+		if generic.IsNil(err) {
 			return
 		}
 
@@ -103,7 +104,7 @@ func Timeout(dur time.Duration, fn func() error) (gErr error) {
 }
 
 func logErr(fn interface{}, err error) {
-	if errors.IsNil(err) {
+	if generic.IsNil(err) {
 		return
 	}
 

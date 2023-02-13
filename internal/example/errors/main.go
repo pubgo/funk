@@ -11,8 +11,8 @@ import (
 var err1 = &errors.Err{Msg: "业务错误处理", Detail: "详细信息"}
 
 func Hello() {
-	defer recovery.Raise(func(err errors.XErr) {
-		err.AddMsg("Hello wrap")
+	defer recovery.Raise(func(err error) error {
+		return errors.Wrap(err, "Hello wrap")
 	})
 
 	var err2 = errors.Wrapf(err1, "处理 wrap")
@@ -21,9 +21,8 @@ func Hello() {
 }
 
 func CallHello() (gErr error) {
-	defer recovery.Recovery(func(err errors.XErr) {
-		err.AddMsg("CallHello wrap")
-		gErr = err
+	defer recovery.Recovery(func(err error) {
+		gErr = errors.Wrap(err, "CallHello wrap")
 	})
 
 	Hello()

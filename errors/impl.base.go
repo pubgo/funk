@@ -7,24 +7,19 @@ import (
 
 	"github.com/alecthomas/repr"
 	jjson "github.com/goccy/go-json"
+	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/internal/color"
 	"github.com/pubgo/funk/pretty"
-	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
 )
 
-var _ XError = (*baseErr)(nil)
+var _ Error = (*baseErr)(nil)
 var _ fmt.Formatter = (*baseErr)(nil)
 
 type baseErr struct {
 	err    error
 	caller *stack.Frame
-
-	bizCode string
-	code    errorpb.Code
-	msg     string
-	stacks  []*stack.Frame
-	tags    Tags
+	msg    string
 }
 
 func (t *baseErr) Format(f fmt.State, verb rune) {
@@ -42,25 +37,13 @@ func (t *baseErr) Format(f fmt.State, verb rune) {
 }
 
 func (t *baseErr) String() string {
-	if t.err == nil || IsNil(t.err) {
+	if generic.IsNil(t.err) {
 		return ""
 	}
 
 	var buf = bytes.NewBuffer(nil)
-	if t.code != 0 {
-		buf.WriteString(fmt.Sprintf("  %s]: %s\n", color.Green.P("code"), t.code.String()))
-	}
-
-	if t.bizCode != "" {
-		buf.WriteString(fmt.Sprintf("   %s]: %s\n", color.Green.P("biz"), t.bizCode))
-	}
-
 	if t.msg != "" {
 		buf.WriteString(fmt.Sprintf("   %s]: %q\n", color.Green.P("msg"), t.msg))
-	}
-
-	if t.tags != nil && len(t.tags) > 0 {
-		buf.WriteString(fmt.Sprintf("  %s]: %s\n", color.Green.P("tags"), pretty.Sprint(t.tags)))
 	}
 
 	if t.err != nil {
@@ -72,10 +55,6 @@ func (t *baseErr) String() string {
 
 	if t.caller != nil {
 		buf.WriteString(fmt.Sprintf("%s]: %s\n", color.Green.P("caller"), t.caller.String()))
-	}
-
-	for i := range t.stacks {
-		buf.WriteString(fmt.Sprintf(" %s]: %s\n", color.Yellow.P("stack"), t.stacks[i].String()))
 	}
 
 	if t.err != nil {
@@ -90,11 +69,7 @@ func (t *baseErr) String() string {
 
 func (t *baseErr) MarshalJSON() ([]byte, error) {
 	var data = t.getData()
-	data["biz_code"] = t.bizCode
-	data["code"] = t.code.String()
 	data["msg"] = t.msg
-	data["stacks"] = t.stacks
-	data["tags"] = t.tags
 	return jjson.Marshal(data)
 }
 
@@ -118,7 +93,7 @@ func (t *baseErr) Unwrap() error { return t.err }
 
 // Error
 func (t *baseErr) Error() string {
-	if t.err == nil || IsNil(t.err) {
+	if generic.IsNil(t.err) {
 		return ""
 	}
 

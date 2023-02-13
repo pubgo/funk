@@ -20,10 +20,10 @@ func Copy[A any, B any](dst A, src B, opts ...Option) result.Result[A] {
 	}
 
 	var errH = func(err error) error {
-		return errors.WrapFn(err, func(xrr errors.XError) {
-			xrr.AddTag("dst", dst)
-			xrr.AddTag("src", src)
-			xrr.AddTag("decoder_config", pretty.Sprint(opt))
+		return errors.WrapEventFn(err, func(evt *errors.Event) {
+			evt.Any("dst", dst)
+			evt.Any("src", src)
+			evt.Any("decoder_config", pretty.Sprint(opt))
 		})
 	}
 
@@ -59,10 +59,10 @@ func MapStruct[A any, B any](dst A, src B, opts ...func(cfg *mapstructure.Decode
 	}
 
 	var errH = func(err error) error {
-		return errors.WrapFn(err, func(xrr errors.XError) {
-			xrr.AddTag("dst", dst)
-			xrr.AddTag("src", src)
-			xrr.AddTag("decoder_config", pretty.Sprint(cfg))
+		return errors.WrapEventFn(err, func(evt *errors.Event) {
+			evt.Any("dst", dst)
+			evt.Any("src", src)
+			evt.Any("decoder_config", pretty.Sprint(cfg))
 		})
 	}
 

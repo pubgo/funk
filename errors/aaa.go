@@ -3,25 +3,30 @@ package errors
 import (
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
+	"github.com/rs/zerolog"
 )
 
+type Event = zerolog.Event
 type Tags map[string]any
 
-type Errors []error
+type Errors interface {
+	Error
+	Errors() []error
+	Append(err error) error
+}
 
-type errUnwrap interface {
+type ErrUnwrap interface {
 	Unwrap() error
 }
 
-type errIs interface {
+type ErrIs interface {
 	Is(error) bool
 }
 
-type errAs interface {
+type ErrAs interface {
 	As(any) bool
 }
 
-type XErr = XError
 type Error interface {
 	Error() string
 	String() string
@@ -29,26 +34,31 @@ type Error interface {
 	MarshalJSON() ([]byte, error)
 }
 
-type XError interface {
+type ErrEvent interface {
 	Error
-	BizCode() string
-	Stack() []*stack.Frame
-	Code() errorpb.Code
-	Msg() string
-	Tags() Tags
-
-	AddBizCode(biz string)
-	AddStack()
-	AddMsg(msg string)
-	AddCode(code errorpb.Code)
-	AddTag(key string, val any)
-	AddTags(m Tags)
+	Event() *Event
+	AddEvent(evt *Event)
 }
 
-type RespErr struct {
-	Cause   error          `json:"cause"`
-	Msg     string         `json:"msg"`
-	Code    errorpb.Code   `json:"code"`
-	BizCode string         `json:"biz_code"`
-	Tags    map[string]any `json:"tags"`
+type ErrCode interface {
+	Error
+	BizCode() string
+	Reason() string
+	Code() errorpb.Code
+	Tags() map[string]string
+	AddTag(key string, val string)
+	SetCode(code errorpb.Code)
+	SetReason(reason string)
+	SetBizCode(biz string)
+}
+
+type ErrStack interface {
+	Error
+	AddStack()
+	Stack() []*stack.Frame
+}
+
+// event 和<zerolog.Event>内存对齐
+type event struct {
+	buf []byte
 }

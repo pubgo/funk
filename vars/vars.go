@@ -7,7 +7,6 @@ import (
 	jjson "github.com/goccy/go-json"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/convert"
-	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/recovery"
 	"github.com/pubgo/funk/result"
@@ -50,8 +49,8 @@ type Value func() interface{}
 func (f Value) Value() interface{} { return f() }
 
 func (f Value) String() (r string) {
-	defer recovery.Recovery(func(err errors.XErr) {
-		ret := result.Wrap(err.MarshalJSON())
+	defer recovery.Recovery(func(err error) {
+		ret := result.Wrap(jjson.Marshal(err))
 		if ret.IsErr() {
 			r = pretty.Sprint(ret.Err())
 		} else {
@@ -79,6 +78,7 @@ func (f Value) String() (r string) {
 }
 
 func Register(name string, data func() interface{}) {
+	defer recovery.Exit()
 	assert.If(Has(name), "name:%s already exists", name)
 	expvar.Publish(name, Value(data))
 }

@@ -51,3 +51,11 @@ func getCfgData() interface{} {
 		"all_config": cfg.All(),
 	}
 }
+
+func Unmarshal[T any](c Config) T {
+	assert.If(c == nil, "config is nil")
+
+	var cfg T
+	assert.Must(c.Unmarshal(&cfg))
+	return cfg
+}

@@ -14,3 +14,6 @@ plugins:
   - name: go
     opt:
       - paths=source_relative
+  - name: lava-errors
+    opt:
+      - paths=source_relative

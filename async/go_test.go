@@ -20,21 +20,21 @@ func TestYield(t *testing.T) {
 			yield(time.Now().String())
 			yield(time.Now().String())
 			panic("d")
-		}).Chan())
+		}).ToList())
 
 		t.Log(Yield(func(yield func(string)) error {
 			yield(time.Now().String())
 			yield(time.Now().String())
 			yield(time.Now().String())
 			return fmt.Errorf("err test")
-		}).Chan())
+		}).ToList())
 
 		t.Log(Yield(func(yield func(string)) error {
 			yield(time.Now().String())
 			yield(time.Now().String())
 			yield(time.Now().String())
 			return nil
-		}).Chan())
+		}).ToList())
 	})
 }
 

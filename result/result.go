@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
 )
 
@@ -17,6 +16,10 @@ func Err[T any](err error) Result[T] {
 }
 
 func Wrap[T any](v T, err error) Result[T] {
+	return Result[T]{v: &v, e: err}
+}
+
+func Of[T any](v T, err error) Result[T] {
 	return Result[T]{v: &v, e: err}
 }
 
@@ -42,20 +45,13 @@ func (r Result[T]) Err(check ...func(err error) error) error {
 
 	if len(check) > 0 && check[0] != nil {
 		return check[0](r.e)
-	} else {
-		return r.e
 	}
+
+	return r.e
 }
 
 func (r Result[T]) IsErr() bool {
-	return !errors.IsNil(r.e)
-}
-
-func (r Result[T]) Expect(msg string, args ...interface{}) T {
-	if r.IsErr() {
-		panic(errors.Wrapf(r.e, msg, args...))
-	}
-	return generic.DePtr(r.v)
+	return !generic.IsNil(r.e)
 }
 
 func (r Result[T]) OrElse(v T) T {
@@ -66,10 +62,11 @@ func (r Result[T]) OrElse(v T) T {
 }
 
 func (r Result[T]) OnErr(check func(err error) error) Result[T] {
-	if r.IsErr() {
-		r.e = check(r.e)
+	if !r.IsErr() {
+		return r
 	}
 
+	r.e = check(r.e)
 	return r
 }
 

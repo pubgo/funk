@@ -14,8 +14,8 @@ func Promise[T any](fn func(resolve func(T), reject func(err error))) *Future[T]
 
 	var f = newFuture[T]()
 	go func() {
-		defer recovery.Recovery(func(err errors.XError) {
-			err.AddTag("fn", stack.CallerWithFunc(fn).String())
+		defer recovery.Recovery(func(err error) {
+			err = errors.WrapKV(err, "fn", stack.CallerWithFunc(fn).String())
 			f.setErr(err)
 		})
 
@@ -36,8 +36,8 @@ func Group[T any](do func(async func(func() (T, error))) error) *Iterator[T] {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				defer recovery.Recovery(func(err errors.XError) {
-					err.AddTag("fn_stack", stack.CallerWithFunc(do).String())
+				defer recovery.Recovery(func(err error) {
+					err = errors.WrapKV(err, "fn_stack", stack.CallerWithFunc(do).String())
 					rr.setErr(err)
 				})
 
@@ -58,8 +58,8 @@ func Yield[T any](do func(yield func(T)) error) *Iterator[T] {
 	var dd = iteratorOf[T]()
 	go func() {
 		defer dd.setDone()
-		defer recovery.Recovery(func(err errors.XError) {
-			err.AddTag("fn_stack", stack.CallerWithFunc(do).String())
+		defer recovery.Recovery(func(err error) {
+			err = errors.WrapKV(err, "fn_stack", stack.CallerWithFunc(do).String())
 			dd.setErr(err)
 		})
 
