@@ -6,7 +6,7 @@ import (
 
 	"github.com/dave/jennifer/jen"
 	"github.com/iancoleman/strcase"
-	"github.com/pubgo/funk/errorpb"
+	"github.com/pubgo/funk/proto/errorpb"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 )
