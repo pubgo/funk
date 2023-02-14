@@ -28,6 +28,11 @@ type errCodeImpl struct {
 	tags   map[string]string
 }
 
+func (t *errCodeImpl) SetStatus(status uint32) ErrCode {
+	t.status = status
+	return t
+}
+
 func (t *errCodeImpl) Name() string {
 	return t.name
 }

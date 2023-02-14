@@ -8,6 +8,7 @@ package testcodepb
 
 import (
 	errors "github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/proto/errorpb"
 	grpc "google.golang.org/grpc"
 )
 
@@ -17,6 +18,6 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 var ErrTestOK = errors.WrapBizCode(errors.WrapReason(errors.New("ok"), "ok"), "demo.test.v1.test.ok")
-var ErrTestNotFound = errors.WrapBizCode(errors.WrapReason(errors.New("NotFound 找不到"), "NotFound 找不到"), "demo.test.v1.test.not_found")
+var ErrTestNotFound = errors.NewCode(errorpb.Code_NotFound).SetName("demo.test.v1.test.not_found").SetReason("NotFound 找不到").SetStatus(1000)
 var ErrTestUnknown = errors.WrapBizCode(errors.WrapReason(errors.New("Unknown 未知"), "Unknown 未知"), "demo.test.v1.test.unknown")
 var ErrTestDbConn = errors.WrapBizCode(errors.WrapReason(errors.New("db connect error"), "db connect error"), "demo.test.v1.test.db_conn")

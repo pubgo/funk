@@ -59,6 +59,7 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 				strcase.ToSnake(string(codeName.Desc.Name())),
 			))
 
+			//var ErrTestNotFound = errors.NewCode(errorpb.Code_NotFound).SetName("demo.test.v1.test.not_found").SetReason("NotFound 找不到").SetStatus(1000)
 			// comment
 			var rr = strings.TrimSpace(strings.ToLower(string(codeName.Desc.Name())))
 			rr = strings.Join(strings.Split(rr, "_"), " ")

@@ -51,6 +51,7 @@ type ErrCode interface {
 	SetErr(err error) ErrCode
 	AddTag(key string, val string) ErrCode
 	SetCode(code errorpb.Code) ErrCode
+	SetStatus(status uint32) ErrCode
 	SetReason(reason string) ErrCode
 	SetName(biz string) ErrCode
 }
