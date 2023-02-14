@@ -2,7 +2,6 @@ package internal
 
 import (
 	"fmt"
-	"github.com/pubgo/funk/log"
 	"strings"
 
 	"github.com/dave/jennifer/jen"
@@ -13,6 +12,7 @@ import (
 )
 
 const errorPkg = "github.com/pubgo/funk/errors"
+const errorPbPkg = "github.com/pubgo/funk/proto/errorpb"
 
 // GenerateFile generates a .errors.pb.go file containing service definitions.
 func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
@@ -47,19 +47,16 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 
 		for j := range m.Values {
 			codeName := m.Values[j]
-			log.Info().Msg(fmt.Sprintln(file.Desc.Package(), codeName.GoIdent.GoName, codeName.Desc.Name(), codeName.Desc.Index(), codeName.Desc.Number(), codeName.Comments.Leading.String()))
 			tag, ok = proto.GetExtension(codeName.Desc.Options(), errorpb.E_Field).(*errorpb.GenStatus)
-			if ok && tag != nil {
-				log.Info().Msg(fmt.Sprintln(tag.Code.String(), tag.Code))
-			}
-
-			var bizCode = strings.ToLower(fmt.Sprintf("%s.%s.%s",
+			var name = strings.ToLower(fmt.Sprintf("%s.%s.%s",
 				file.Desc.Package(),
 				strings.TrimSuffix(string(m.Desc.Name()), "ErrCode"),
 				strcase.ToSnake(string(codeName.Desc.Name())),
 			))
 
-			//var ErrTestNotFound = errors.NewCode(errorpb.Code_NotFound).SetName("demo.test.v1.test.not_found").SetReason("NotFound 找不到").SetStatus(1000)
+			genFile.ImportAlias(errorPkg, "errors")
+			genFile.ImportAlias(errorPbPkg, "errorpb")
+
 			// comment
 			var rr = strings.TrimSpace(strings.ToLower(string(codeName.Desc.Name())))
 			rr = strings.Join(strings.Split(rr, "_"), " ")
@@ -68,15 +65,15 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 				rr = strings.TrimSpace(strings.Trim(strings.TrimSpace(rr), "/"))
 			}
 
-			genFile.Var().Id(
-				fmt.Sprintf("Err%s%s", strings.TrimSuffix(string(m.Desc.Name()), "ErrCode"), string(codeName.Desc.Name())),
-			).Op("=").Qual(errorPkg, "WrapBizCode").ParamsFunc(func(group *jen.Group) {
-				group.Qual(errorPkg, "WrapReason").ParamsFunc(func(group *jen.Group) {
-					group.Qual(errorPkg, "New").Params(jen.Lit(rr))
-					group.Lit(rr)
-				})
-				group.Lit(bizCode)
-			})
+			var statusName = "OK"
+			if tag != nil {
+				statusName = tag.Code.String()
+			}
+
+			genFile.Var().
+				Id("Err"+string(m.Desc.Name())+string(codeName.Desc.Name())).Id("=").
+				Qual(errorPkg, "NewCode").Call(jen.Qual(errorPbPkg, "Code_"+statusName)).
+				Id(fmt.Sprintf(`.SetName("%s").SetReason("%s").SetStatus(%d)`, name, rr, codeName.Desc.Number()))
 		}
 	}
 
