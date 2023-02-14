@@ -1,13 +1,22 @@
 syntax = "proto3";
 
-package lava.status;
+package status;
 
 option go_package = "github.com/pubgo/funk/proto/errorpb;errorpb";
 
 import "google/protobuf/descriptor.proto";
 
+message GenStatus {
+  bool gen_enable = 1;
+  Code code = 2;
+}
+
 extend google.protobuf.EnumValueOptions {
-  Code code = 100000;
+  GenStatus field = 100002;
+}
+
+extend google.protobuf.EnumOptions {
+  GenStatus opts = 100001;
 }
 
 enum Code {

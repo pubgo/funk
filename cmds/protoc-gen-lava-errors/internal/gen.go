@@ -2,11 +2,14 @@ package internal
 
 import (
 	"fmt"
+	"github.com/pubgo/funk/log"
 	"strings"
 
 	"github.com/dave/jennifer/jen"
 	"github.com/iancoleman/strcase"
+	"github.com/pubgo/funk/errorpb"
 	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/proto"
 )
 
 const errorPkg = "github.com/pubgo/funk/errors"
@@ -32,16 +35,24 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 	genFile.Comment("Requires gRPC-Go v1.32.0 or later.")
 	genFile.Id("const _ =").Qual("google.golang.org/grpc", "SupportPackageIsVersion7")
 	g.Skip()
+
 	for i := range file.Enums {
 		m := file.Enums[i]
-		var name = strings.ToLower(string(m.Desc.Name()))
-		if !strings.HasSuffix(name, "errcode") {
+		var tag, ok = proto.GetExtension(m.Desc.Options(), errorpb.E_Opts).(*errorpb.GenStatus)
+		if !ok || tag == nil || !tag.GenEnable {
 			continue
 		}
 
 		g.Unskip()
+
 		for j := range m.Values {
 			codeName := m.Values[j]
+			log.Info().Msg(fmt.Sprintln(file.Desc.Package(), codeName.GoIdent.GoName, codeName.Desc.Name(), codeName.Desc.Index(), codeName.Desc.Number(), codeName.Comments.Leading.String()))
+			tag, ok = proto.GetExtension(codeName.Desc.Options(), errorpb.E_Field).(*errorpb.GenStatus)
+			if ok && tag != nil {
+				log.Info().Msg(fmt.Sprintln(tag.Code.String(), tag.Code))
+			}
+
 			var bizCode = strings.ToLower(fmt.Sprintf("%s.%s.%s",
 				file.Desc.Package(),
 				strings.TrimSuffix(string(m.Desc.Name()), "ErrCode"),
