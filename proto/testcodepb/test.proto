@@ -3,18 +3,27 @@ syntax = "proto3";
 package demo.test.v1;
 
 import "google/protobuf/descriptor.proto";
+import "errorpb/status.proto";
 
 option go_package = "github.com/pubgo/funk/proto/testcodepb;testcodepb";
 
-enum TestErrCode {
+enum Code {
+  option (status.opts).gen_enable = true;
+
   OK = 0;
 
   // NotFound 找不到
-  NotFound = 100000;
+  NotFound = 100000 [
+    (status.field).code = NotFound
+  ];
 
   // Unknown 未知
-  Unknown = 100001;
+  Unknown = 100001 [
+    (status.field).code = NotFound
+  ];
 
   // db connect error
-  DbConn = 100003;
+  DbConn = 100003 [
+    (status.field).code = Internal
+  ];
 }

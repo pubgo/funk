@@ -52,10 +52,8 @@ func getCfgData() interface{} {
 	}
 }
 
-func Unmarshal[T any](c Config) T {
-	assert.If(c == nil, "config is nil")
-
-	var cfg T
+func Unmarshal[T any](cfg T) T {
+	var c = New()
 	assert.Must(c.Unmarshal(&cfg))
 	return cfg
 }

@@ -433,7 +433,7 @@ func ParseError(err error) *errorpb.Error {
 			Service:   version.Project(),
 			Version:   version.Version(),
 			Code:      uint32(ce.Code()),
-			BizCode:   ce.BizCode(),
+			Name:      ce.Name(),
 			Reason:    ce.Reason(),
 			ErrMsg:    err.Error(),
 			ErrDetail: []byte(fmt.Sprintf("%#v", err)),
