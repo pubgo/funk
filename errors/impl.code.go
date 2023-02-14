@@ -113,6 +113,14 @@ func (t *errCodeImpl) String() string {
 		buf.WriteString(fmt.Sprintf("%s]: %q\n", color.Green.P("reason"), t.reason))
 	}
 
+	if t.status != 0 {
+		buf.WriteString(fmt.Sprintf("%s]: %d\n", color.Green.P("status"), t.status))
+	}
+
+	if len(t.tags) > 0 {
+		buf.WriteString(fmt.Sprintf("  %s]: %q\n", color.Green.P("tags"), t.tags))
+	}
+
 	if t.err != nil {
 		if _, ok := t.err.(fmt.Stringer); !ok {
 			buf.WriteString(fmt.Sprintf(" %s]: %q\n", color.Red.P("error"), t.err.Error()))
@@ -136,6 +144,8 @@ func (t *errCodeImpl) String() string {
 
 func (t *errCodeImpl) MarshalJSON() ([]byte, error) {
 	var data = t.getData()
+	data["tags"] = t.tags
+	data["status"] = t.status
 	data["name"] = t.name
 	data["code"] = t.code.String()
 	data["reason"] = t.reason

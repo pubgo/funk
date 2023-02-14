@@ -25,8 +25,6 @@ func TestFormat(t *testing.T) {
 		evt.Str("test", "hello")
 	})
 	err = Wrapf(err, "next error name=%s", "wrapf")
-	err = WrapCode(err, errorpb.Code_Canceled)
-	err = WrapReason(err, "test reason")
 	err = Append(err, fmt.Errorf("raw error"))
 	err = Append(err, New("New errors error"))
 	err = Append(err, SimpleErr(func(err *Err) {
@@ -35,10 +33,11 @@ func TestFormat(t *testing.T) {
 		err.Tags = map[string]any{"tags": "hello"}
 	}))
 
-	err = WrapBizCode(err, "user.not_found")
-	err = WrapCodeFn(err, func(err ErrCode) {
-		err.SetReason("user not_found")
-	})
+	err = NewCode(errorpb.Code_Canceled).
+		SetReason("user not_found").
+		SetName("user.not_found").
+		SetStatus(100).
+		SetErr(err).AddTag("hello", "world")
 
 	err = WrapStack(err)
 	IfErr(err, func(err error) {
