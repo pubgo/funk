@@ -135,6 +135,18 @@ func Wrap(err error, msg string) error {
 	return base
 }
 
+func WrapCode(err error, code ErrCode) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	if code == nil {
+		panic("error code is nil")
+	}
+
+	return code.SetErr(err)
+}
+
 func Wrapf(err error, format string, args ...interface{}) error {
 	if generic.IsNil(err) {
 		return nil
