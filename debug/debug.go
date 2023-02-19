@@ -1,7 +1,6 @@
 package debug
 
 import (
-	"fmt"
 	"sort"
 	"strings"
 
@@ -31,13 +30,7 @@ func initDebug() {
 
 		var pathList []string
 		for k := range pathMap {
-			k = strings.TrimRight(k, "/") + "/"
-
-			if strings.Contains(strings.Trim(k, "/"), "/") {
-				continue
-			}
-
-			pathList = append(pathList, fmt.Sprintf("/debug%s", k))
+			pathList = append(pathList, k)
 		}
 		sort.Strings(pathList)
 
