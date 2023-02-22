@@ -31,7 +31,7 @@ func TestEvent(t *testing.T) {
 }
 
 func TestWithEvent(t *testing.T) {
-	var evt = log.NewEvent().Str("hello", "world").Int("int", 100)
+	var evt = log.NewEvent().Str("hello", "hello world").Int("int", 100)
 	ee := log.GetLogger("with_event").WithEvent(evt).Info().Str("info", "abcd")
 	ee.Msg("dddd")
 }

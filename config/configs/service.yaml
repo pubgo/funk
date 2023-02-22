@@ -1,6 +1,4 @@
 service:
-  middlewares:
-    - accesslog
   print-route: true
   grpc-cfg:
     write_buffer_size: 1024

@@ -8,7 +8,6 @@ tracing:
 metric:
   driver: "prometheus"
 resources:
-  - "log.yaml"
   - "orm.yaml"
   - "redis.yaml"
   - "service.yaml"

@@ -1,3 +1,4 @@
 metric:
   driver: "prometheus"
-  path: "/etcd"
+  driver_config:
+    path: "/etcd"

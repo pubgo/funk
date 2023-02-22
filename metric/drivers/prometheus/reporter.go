@@ -19,7 +19,7 @@ func New(conf *metric.Cfg, log log.Logger) map[string]*tally.ScopeOptions {
 
 	opts := tally.ScopeOptions{}
 	opts.Separator = prometheus.DefaultSeparator
-	opts.SanitizeOptions = &prometheus.DefaultSanitizerOpts
+	//opts.SanitizeOptions = &prometheus.DefaultSanitizerOpts
 
 	var proCfg = &prometheus.Configuration{}
 	if conf.DriverCfg != nil {

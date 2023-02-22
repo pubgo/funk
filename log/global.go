@@ -15,8 +15,8 @@ func init() {
 }
 
 var (
-	// stdZeroLog default zerolog just fro debug
-	stdZeroLog = generic.Ptr(
+	// stdZerolog default zerolog just for debug
+	stdZerolog = generic.Ptr(
 		zerolog.New(os.Stderr).Level(zerolog.DebugLevel).
 			With().Timestamp().Caller().Logger().
 			Output(zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
@@ -35,7 +35,7 @@ func GetLogger(name string) Logger {
 
 func SetLogger(log *zerolog.Logger) {
 	assert.If(log == nil, "[log] should not be nil")
-	stdZeroLog = log
+	stdZerolog = log
 }
 
 // Err starts a new message with error level with err as a field if not nil or
