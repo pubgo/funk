@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+
 	"github.com/alecthomas/repr"
 	jjson "github.com/goccy/go-json"
 	"github.com/pubgo/funk/errors/internal"
@@ -59,7 +60,7 @@ func (t *errEventImpl) String() string {
 
 	var buf = bytes.NewBuffer(nil)
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, t.Kind()))
-	
+
 	if t.evt != nil && len(convertEvent(t.evt).buf) > 1 {
 		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorEvent, append(convertEvent(t.evt).buf, '}')))
 	}

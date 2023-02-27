@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/pubgo/funk/errors/internal"
 
 	"github.com/alecthomas/repr"
 	jjson "github.com/goccy/go-json"
+	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/stack"
