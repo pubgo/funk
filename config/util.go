@@ -52,8 +52,9 @@ func getCfgData() interface{} {
 	}
 }
 
-func Unmarshal[T any](cfg T) T {
+func Load[T any]() T {
 	var c = New()
+	var cfg T
 	assert.Must(c.Unmarshal(&cfg))
 	return cfg
 }

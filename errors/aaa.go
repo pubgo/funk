@@ -54,7 +54,7 @@ type ErrCode interface {
 	SetCode(code errorpb.Code) ErrCode
 	SetStatus(status uint32) ErrCode
 	SetReason(reason string) ErrCode
-	SetName(biz string) ErrCode
+	SetName(name string) ErrCode
 }
 
 type ErrStack interface {
