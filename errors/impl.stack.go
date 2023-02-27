@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/pubgo/funk/errors/internal"
 
 	"github.com/alecthomas/repr"
 	jjson "github.com/goccy/go-json"
 	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/internal/color"
 	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/stack"
 )
@@ -45,15 +45,17 @@ func (t *errStackImpl) String() string {
 	}
 
 	var buf = bytes.NewBuffer(nil)
+	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, t.Kind()))
+
 	if t.err != nil {
 		if _, ok := t.err.(fmt.Stringer); !ok {
-			buf.WriteString(fmt.Sprintf(" %s]: %q\n", color.Red.P("error"), t.err.Error()))
-			buf.WriteString(fmt.Sprintf("%s]: %s\n", color.Red.P("detail"), pretty.Sprint(t.err)))
+			buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorErrMsg, t.err.Error()))
+			buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorErrDetail, pretty.Sprint(t.err)))
 		}
 	}
 
 	for i := range t.stacks {
-		buf.WriteString(fmt.Sprintf(" %s]: %s\n", color.Yellow.P("stack"), t.stacks[i].String()))
+		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorStack, t.stacks[i].String()))
 	}
 
 	if t.err != nil {

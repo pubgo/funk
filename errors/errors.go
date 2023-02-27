@@ -111,10 +111,9 @@ func WrapStack(err error) error {
 		return nil
 	}
 
-	base := newErr(err)
 	var impl = &errStackImpl{err: err}
 	impl.AddStack()
-	return base
+	return impl
 }
 
 func WrapCaller(err error, skip ...int) error {

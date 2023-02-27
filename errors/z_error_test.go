@@ -17,7 +17,7 @@ func TestSkip(t *testing.T) {
 }
 
 func TestFormat(t *testing.T) {
-	var err = WrapCaller(New("hello error"))
+	var err = WrapCaller(fmt.Errorf("test error, err=%w", New("hello error")))
 	err = Wrap(err, "next error")
 	err = WrapEventFn(err, func(evt *Event) {
 		evt.Str("event", "test event")

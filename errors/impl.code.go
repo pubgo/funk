@@ -7,8 +7,8 @@ import (
 
 	"github.com/alecthomas/repr"
 	jjson "github.com/goccy/go-json"
+	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/internal/color"
 	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
@@ -105,35 +105,37 @@ func (t *errCodeImpl) String() string {
 	}
 
 	var buf = bytes.NewBuffer(nil)
+	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, t.Kind()))
+
 	if t.code != 0 {
-		buf.WriteString(fmt.Sprintf("  %s]: %s\n", color.Green.P("code"), t.code.String()))
+		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCode, t.code.String()))
 	}
 
 	if t.name != "" {
-		buf.WriteString(fmt.Sprintf("  %s]: %s\n", color.Green.P("name"), t.name))
+		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorName, t.name))
 	}
 
 	if t.reason != "" {
-		buf.WriteString(fmt.Sprintf("%s]: %q\n", color.Green.P("reason"), t.reason))
+		buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorReason, t.reason))
 	}
 
 	if t.status != 0 {
-		buf.WriteString(fmt.Sprintf("%s]: %d\n", color.Green.P("status"), t.status))
+		buf.WriteString(fmt.Sprintf("%s]: %d\n", internal.ColorStatus, t.status))
 	}
 
 	if len(t.tags) > 0 {
-		buf.WriteString(fmt.Sprintf("  %s]: %q\n", color.Green.P("tags"), t.tags))
+		buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorTags, t.tags))
 	}
 
 	if t.err != nil {
 		if _, ok := t.err.(fmt.Stringer); !ok {
-			buf.WriteString(fmt.Sprintf(" %s]: %q\n", color.Red.P("error"), t.err.Error()))
-			buf.WriteString(fmt.Sprintf("%s]: %s\n", color.Red.P("detail"), pretty.Sprint(t.err)))
+			buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorErrMsg, t.err.Error()))
+			buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorErrDetail, pretty.Sprint(t.err)))
 		}
 	}
 
 	if t.caller != nil {
-		buf.WriteString(fmt.Sprintf("%s]: %s\n", color.Green.P("caller"), t.caller.String()))
+		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCaller, t.caller.String()))
 	}
 
 	if t.err != nil {

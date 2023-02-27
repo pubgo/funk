@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-
 	"github.com/alecthomas/repr"
 	jjson "github.com/goccy/go-json"
+	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/internal/color"
 	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/stack"
 	"github.com/rs/zerolog"
@@ -59,19 +58,21 @@ func (t *errEventImpl) String() string {
 	}
 
 	var buf = bytes.NewBuffer(nil)
+	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, t.Kind()))
+	
 	if t.evt != nil && len(convertEvent(t.evt).buf) > 1 {
-		buf.WriteString(fmt.Sprintf(" %s]: %s\n", color.Green.P("event"), append(convertEvent(t.evt).buf, '}')))
+		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorEvent, append(convertEvent(t.evt).buf, '}')))
 	}
 
 	if t.err != nil {
 		if _, ok := t.err.(fmt.Stringer); !ok {
-			buf.WriteString(fmt.Sprintf(" %s]: %q\n", color.Red.P("error"), t.err.Error()))
-			buf.WriteString(fmt.Sprintf("%s]: %s\n", color.Red.P("detail"), pretty.Sprint(t.err)))
+			buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorErrMsg, t.err.Error()))
+			buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorErrDetail, pretty.Sprint(t.err)))
 		}
 	}
 
 	if t.caller != nil {
-		buf.WriteString(fmt.Sprintf("%s]: %s\n", color.Green.P("caller"), t.caller.String()))
+		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCaller, t.caller.String()))
 	}
 
 	if t.err != nil {

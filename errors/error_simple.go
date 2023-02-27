@@ -7,7 +7,7 @@ import (
 
 	"github.com/alecthomas/repr"
 	jjson "github.com/goccy/go-json"
-	"github.com/pubgo/funk/internal/color"
+	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/stack"
 )
@@ -53,7 +53,7 @@ func (e Err) Unwrap() error {
 
 func (e Err) MarshalJSON() ([]byte, error) {
 	var data = make(map[string]any, 10)
-	data["name"] = "simple_err"
+	data["kind"] = "simple"
 
 	if e.Msg != "" {
 		data["msg"] = e.Msg
@@ -90,18 +90,17 @@ func (e Err) Error() string {
 
 func (e Err) String() string {
 	var buf = bytes.NewBuffer(nil)
-	buf.WriteString(fmt.Sprintf("   %s]: %q\n", color.Green.P("msg"), e.Msg))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", color.Green.P("detail"), pretty.Sprint(e.Detail)))
-	if e.Tags != nil && len(e.Tags) > 0 {
-		buf.WriteString(fmt.Sprintf("  %s]: %s\n", color.Green.P("tags"), pretty.Sprint(e.Tags)))
-	}
+	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, e.Kind()))
+	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorMsg, e.Msg))
+	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorDetail, e.Detail))
+	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorTags, repr.String(e.Tags)))
 
 	if e.Err != nil {
 		if _err, ok := e.Err.(fmt.Stringer); !ok {
-			buf.WriteString(fmt.Sprintf("  %s]: %q\n", color.Red.P("errMsg"), e.Err.Error()))
-			buf.WriteString(fmt.Sprintf("%s]: %s\n", color.Red.P("errStack"), pretty.Sprint(e.Err)))
+			buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorErrMsg, e.Err.Error()))
+			buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorErrDetail, pretty.Sprint(e.Err)))
 			if e.Caller != nil {
-				buf.WriteString(fmt.Sprintf("%s]: %s\n", color.Green.P("caller"), e.Caller.String()))
+				buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCaller, e.Caller.String()))
 			}
 		} else {
 			buf.WriteString("\n====================================================================\n")
