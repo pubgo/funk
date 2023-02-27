@@ -29,6 +29,10 @@ type Err struct {
 	Tags   Tags         `json:"tags,omitempty"`
 }
 
+func (e Err) Kind() string {
+	return "simple"
+}
+
 func (e Err) Format(f fmt.State, verb rune) {
 	switch verb {
 	case 'v':
@@ -48,7 +52,9 @@ func (e Err) Unwrap() error {
 }
 
 func (e Err) MarshalJSON() ([]byte, error) {
-	var data = make(map[string]any)
+	var data = make(map[string]any, 10)
+	data["name"] = "simple_err"
+
 	if e.Msg != "" {
 		data["msg"] = e.Msg
 	}
@@ -92,8 +98,8 @@ func (e Err) String() string {
 
 	if e.Err != nil {
 		if _err, ok := e.Err.(fmt.Stringer); !ok {
-			buf.WriteString(fmt.Sprintf(" %s]: %q\n", color.Red.P("err_msg"), e.Err.Error()))
-			buf.WriteString(fmt.Sprintf("%s]: %s\n", color.Red.P("err_stack"), pretty.Sprint(e.Err)))
+			buf.WriteString(fmt.Sprintf("  %s]: %q\n", color.Red.P("errMsg"), e.Err.Error()))
+			buf.WriteString(fmt.Sprintf("%s]: %s\n", color.Red.P("errStack"), pretty.Sprint(e.Err)))
 			if e.Caller != nil {
 				buf.WriteString(fmt.Sprintf("%s]: %s\n", color.Green.P("caller"), e.Caller.String()))
 			}

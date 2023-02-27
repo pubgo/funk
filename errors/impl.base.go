@@ -22,6 +22,10 @@ type baseErr struct {
 	msg    string
 }
 
+func (t *baseErr) Kind() string {
+	return "base"
+}
+
 func (t *baseErr) Format(f fmt.State, verb rune) {
 	switch verb {
 	case 'v':

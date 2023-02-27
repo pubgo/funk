@@ -23,6 +23,10 @@ type errEventImpl struct {
 	evt    *zerolog.Event
 }
 
+func (t *errEventImpl) Kind() string {
+	return "event"
+}
+
 func (t *errEventImpl) Event() *zerolog.Event {
 	return t.evt
 }

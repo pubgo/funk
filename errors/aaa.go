@@ -28,6 +28,7 @@ type ErrAs interface {
 }
 
 type Error interface {
+	Kind() string
 	Error() string
 	String() string
 	Unwrap() error

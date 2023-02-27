@@ -414,8 +414,8 @@ func ConvertErr2Status(err *errorpb.Error) *status.Status {
 
 	var st, err1 = status.New(codes.Code(err.Code), err.ErrMsg).WithDetails(err)
 	if err1 != nil {
-		log.Err(err1).Any("convert-err", err).Msg("failed to convert error detail")
-		status.New(codes.Internal, err1.Error())
+		log.Err(err1).Any("lava-error", err).Msg("failed to convert error to grpc status")
+		return status.New(codes.Internal, err1.Error())
 	}
 	return st
 }
@@ -432,7 +432,8 @@ func ParseError(err error) *errorpb.Error {
 		return &errorpb.Error{
 			Service:   version.Project(),
 			Version:   version.Version(),
-			Code:      uint32(ce.Code()),
+			Code:      ce.Code(),
+			Status:    ce.Status(),
 			Name:      ce.Name(),
 			Reason:    ce.Reason(),
 			ErrMsg:    err.Error(),
@@ -459,13 +460,18 @@ func ParseError(err error) *errorpb.Error {
 			ErrMsg:    err.Error(),
 			ErrDetail: []byte(fmt.Sprintf("%v", gs.GRPCStatus().Details())),
 			Reason:    gs.GRPCStatus().Message(),
-			Code:      uint32(errorpb.Code(gs.GRPCStatus().Code()))}
+			Code:      errorpb.Code(gs.GRPCStatus().Code()),
+			Status:    uint32(gs.GRPCStatus().Code()),
+			Name:      "lava.grpc.status",
+		}
 	}
 
 	return &errorpb.Error{
 		ErrMsg:    err.Error(),
 		ErrDetail: []byte(fmt.Sprintf("%#v", err)),
 		Reason:    err.Error(),
-		Code:      uint32(errorpb.Code_Unknown),
+		Code:      errorpb.Code_Unknown,
+		Status:    uint32(errorpb.Code_Unknown),
+		Name:      "lava.unknown",
 	}
 }

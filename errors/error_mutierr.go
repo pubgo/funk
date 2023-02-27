@@ -16,6 +16,10 @@ type errorsImpl struct {
 	errs []error
 }
 
+func (e *errorsImpl) Kind() string {
+	return "multi"
+}
+
 func (e *errorsImpl) Errors() []error {
 	return e.errs
 }

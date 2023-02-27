@@ -21,6 +21,10 @@ type errStackImpl struct {
 	stacks []*stack.Frame
 }
 
+func (t *errStackImpl) Kind() string {
+	return "stack"
+}
+
 func (t *errStackImpl) Format(f fmt.State, verb rune) {
 	switch verb {
 	case 'v':
