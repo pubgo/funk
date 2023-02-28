@@ -274,8 +274,6 @@ github.com/huandu/go-assert v1.1.5 h1:fjemmA7sSfYHJD7CUqs9qTwwfdNAx7/j2/ZlHXzNB3
 github.com/huandu/go-assert v1.1.5/go.mod h1:yOLvuqZwmcHIC5rIzrBhT7D3Q9c3GFnd0JrPVhn/06U=
 github.com/huandu/go-clone v1.5.1 h1:1wlwYRlHZo4HspdOM0YQ6O7Y7bjtxTrrt+4jnDeejVo=
 github.com/huandu/go-clone v1.5.1/go.mod h1:ReGivhG6op3GYr+UY3lS6mxjKp7MIGTknuU5TbTVaXE=
-github.com/huandu/go-clone/generic v1.5.1 h1:imLp4LwEmdoryrkIWG9YT9l7cVzipkf/emusX5XQXrw=
-github.com/huandu/go-clone/generic v1.5.1/go.mod h1:e5+xQAEqMRs6ScpWrg8yCHMvOCemfz6qSHzXjbsCabY=
 github.com/iancoleman/orderedmap v0.0.0-20190318233801-ac98e3ecb4b0 h1:i462o439ZjprVSFSZLZxcsoAe592sZB1rci2Z8j4wdk=
 github.com/iancoleman/orderedmap v0.0.0-20190318233801-ac98e3ecb4b0/go.mod h1:N0Wam8K1arqPXNWjMo21EXnBPOPp36vB07FNRdD2geA=
 github.com/iancoleman/strcase v0.2.0 h1:05I4QRnGpI0m37iZQRuskXh+w77mr6Z41lwQzuHLwW0=
