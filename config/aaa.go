@@ -4,6 +4,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/pubgo/funk/merge"
 	"github.com/spf13/viper"
+	"strings"
 )
 
 const (
@@ -13,6 +14,12 @@ const (
 	includeConfigName   = "resources"
 	componentConfigKey  = "name"
 	defaultComponentKey = "default"
+)
+
+var (
+	CfgDir   string
+	CfgPath  string
+	Replacer = strings.NewReplacer(".", "_", "-", "_", "/", "_")
 )
 
 type DecoderOption = viper.DecoderConfigOption

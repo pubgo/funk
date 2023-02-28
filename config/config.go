@@ -11,6 +11,7 @@ import (
 	"github.com/a8m/envsubst"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/env"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/merge"
@@ -23,11 +24,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-var (
-	CfgDir  string
-	CfgPath string
-)
-
 // New 处理所有的配置,环境变量和flag
 // 配置顺序, 默认值->环境变量->配置文件->flag
 // 配置文件中可以设置环境变量
@@ -36,16 +32,25 @@ var (
 func New() Config {
 	defer recovery.Exit()
 
+	var prefix = strings.ToUpper(Replacer.Replace(version.Project()))
+
 	// 配置处理
 	v := viper.New()
-	v.MustBindEnv()
-	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_", "/", "_"))
-	v.SetEnvPrefix(version.Project())
+	v.SetEnvKeyReplacer(Replacer)
+	v.SetEnvPrefix(prefix)
 	v.SetConfigName(defaultConfigName)
 	v.SetConfigType(defaultConfigType)
 	v.AutomaticEnv()
 	v.AddConfigPath(".")
 	v.AddConfigPath(defaultConfigPath)
+
+	for name, val := range env.Map() {
+		if !strings.HasPrefix(name, prefix) {
+			continue
+		}
+
+		v.SetDefault(name, val)
+	}
 
 	var t = &configImpl{v: v}
 	// 初始化框架, 加载环境变量, 加载本地配置
