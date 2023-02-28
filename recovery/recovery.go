@@ -23,7 +23,7 @@ func Result[T any](ret *result.Result[T]) {
 		return
 	}
 
-	*ret = result.Err[T](err)
+	*ret = result.Err[T](errors.WrapStack(err))
 }
 
 func Err(gErr *error, fns ...func(err *errors.Event)) {
@@ -37,7 +37,7 @@ func Err(gErr *error, fns ...func(err *errors.Event)) {
 		return
 	}
 
-	*gErr = err
+	*gErr = errors.WrapStack(err)
 }
 
 func Raise(fns ...func(err error) error) {
@@ -50,7 +50,7 @@ func Raise(fns ...func(err error) error) {
 		panic(errors.WrapCaller(fns[0](err), 1))
 	}
 
-	panic(errors.WrapCaller(err, 1))
+	panic(errors.WrapStack(err))
 }
 
 func Recovery(fn func(err error)) {
@@ -61,7 +61,7 @@ func Recovery(fn func(err error)) {
 		return
 	}
 
-	fn(err)
+	fn(errors.WrapStack(err))
 }
 
 func Exit(handlers ...func(evt *errors.Event)) {
@@ -76,7 +76,7 @@ func Exit(handlers ...func(evt *errors.Event)) {
 		})
 	}
 
-	errors.Debug(err)
+	errors.Debug(errors.WrapStack(err))
 	debug.PrintStack()
 	os.Exit(1)
 }
@@ -87,7 +87,7 @@ func DebugPrint() {
 		return
 	}
 
-	errors.Debug(err)
+	errors.Debug(errors.WrapStack(err))
 	debug.PrintStack()
 }
 
