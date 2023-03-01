@@ -15,7 +15,7 @@ func Must(err error, args ...interface{}) {
 		return
 	}
 
-	panic(errors.WrapCaller(errors.Wrap(err, fmt.Sprint(args...))))
+	panic(errors.WrapStack(errors.Wrap(err, fmt.Sprint(args...))))
 }
 
 func MustFn(errFn func() error, args ...interface{}) {
@@ -24,7 +24,7 @@ func MustFn(errFn func() error, args ...interface{}) {
 		return
 	}
 
-	panic(errors.WrapCaller(errors.Wrap(err, fmt.Sprint(args...))))
+	panic(errors.WrapStack(errors.Wrap(err, fmt.Sprint(args...))))
 }
 
 func MustF(err error, msg string, args ...interface{}) {
@@ -32,12 +32,12 @@ func MustF(err error, msg string, args ...interface{}) {
 		return
 	}
 
-	panic(errors.WrapCaller(errors.Wrap(err, fmt.Sprintf(msg, args...))))
+	panic(errors.WrapStack(errors.Wrap(err, fmt.Sprintf(msg, args...))))
 }
 
 func Must1[T any](ret T, err error) T {
 	if !generic.IsNil(err) {
-		panic(errors.WrapCaller(err))
+		panic(errors.WrapStack(err))
 	}
 
 	return ret
@@ -48,7 +48,7 @@ func Exit(err error, args ...interface{}) {
 		return
 	}
 
-	errors.Debug(errors.WrapCaller(errors.Wrap(err, fmt.Sprint(args...))))
+	errors.Debug(errors.WrapStack(errors.Wrap(err, fmt.Sprint(args...))))
 	debug.PrintStack()
 	os.Exit(1)
 }
@@ -59,7 +59,7 @@ func ExitFn(errFn func() error, args ...interface{}) {
 		return
 	}
 
-	errors.Debug(errors.WrapCaller(errors.Wrap(err, fmt.Sprint(args...))))
+	errors.Debug(errors.WrapStack(errors.Wrap(err, fmt.Sprint(args...))))
 	debug.PrintStack()
 	os.Exit(1)
 }
@@ -69,14 +69,14 @@ func ExitF(err error, msg string, args ...interface{}) {
 		return
 	}
 
-	errors.Debug(errors.WrapCaller(errors.Wrapf(err, msg, args...)))
+	errors.Debug(errors.WrapStack(errors.Wrapf(err, msg, args...)))
 	debug.PrintStack()
 	os.Exit(1)
 }
 
 func Exit1[T any](ret T, err error) T {
 	if !generic.IsNil(err) {
-		errors.Debug(errors.WrapCaller(err))
+		errors.Debug(errors.WrapStack(err))
 		debug.PrintStack()
 		os.Exit(1)
 	}

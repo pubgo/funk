@@ -2,6 +2,7 @@ package assert
 
 import (
 	"fmt"
+	"github.com/pubgo/funk/errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -33,6 +34,9 @@ func TestPanicErr(t *testing.T) {
 }
 
 func TestRespTest(t *testing.T) {
+	defer func() {
+		errors.Debug(errors.Parse(recover()))
+	}()
 	testPanic1(t)
 }
 

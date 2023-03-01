@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/alecthomas/repr"
 	jjson "github.com/goccy/go-json"
@@ -109,6 +110,10 @@ func (t *errStackImpl) AddStack() {
 		}
 
 		if cc.IsRuntime() {
+			continue
+		}
+
+		if pkgRoot != "" && strings.HasPrefix(cc.File, pkgRoot) {
 			continue
 		}
 
