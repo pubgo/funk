@@ -49,16 +49,7 @@ func init() {
 }
 
 func Check() {
-	defer recovery.Exit(func(evt *errors.Event) {
-		pretty.Println(
-			mainPath,
-			project,
-			version,
-			commitID,
-			buildTime,
-		)
-	})
-
+	defer recovery.Exit()
 	assert.Must1(semver.NewVersion(version))
 	assert.If(project == "", "project is null")
 	assert.If(version == "", "version is null")
