@@ -2,7 +2,7 @@ package mysql
 
 import (
 	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/clients/orm"
+	"github.com/pubgo/funk/clients/orm/drivers"
 	"github.com/pubgo/funk/config"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/merge"
@@ -24,7 +24,7 @@ type Config struct {
 }
 
 func init() {
-	orm.Register("mysql", func(cfg config.CfgMap) gorm.Dialector {
+	drivers.Register("mysql", func(cfg config.CfgMap) gorm.Dialector {
 		defer recovery.Raise(func(err error) error {
 			return errors.WrapKV(err, "cfg", cfg)
 		})

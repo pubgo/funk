@@ -2,6 +2,8 @@ package orm
 
 import (
 	"fmt"
+	"github.com/pubgo/funk/clients/orm/drivers"
+	"gorm.io/gorm/schema"
 	"time"
 
 	"github.com/pubgo/funk/assert"
@@ -17,6 +19,7 @@ import (
 )
 
 type Cfg struct {
+	TablePrefix                              string                 `json:"table_prefix" yaml:"table_prefix"`
 	Driver                                   string                 `json:"driver" yaml:"driver"`
 	DriverCfg                                map[string]interface{} `json:"driver_config" yaml:"driver_config"`
 	SkipDefaultTransaction                   bool                   `json:"skip_default_transaction" yaml:"skip_default_transaction"`
@@ -47,19 +50,18 @@ func (t *Cfg) Build() (err error) {
 		level = gl.Error
 	}
 
-	if t.log != nil {
-		ormCfg.Logger = gl.New(
-			t.log.WithName(Name).WithCallerSkip(4),
-			gl.Config{
-				SlowThreshold:             200 * time.Millisecond,
-				LogLevel:                  level,
-				IgnoreRecordNotFoundError: false,
-				Colorful:                  true,
-			},
-		)
-	}
+	ormCfg.NamingStrategy = schema.NamingStrategy{TablePrefix: t.TablePrefix}
+	ormCfg.Logger = gl.New(
+		t.log.WithName(Name).WithCallerSkip(4),
+		gl.Config{
+			SlowThreshold:             200 * time.Millisecond,
+			LogLevel:                  level,
+			IgnoreRecordNotFoundError: false,
+			Colorful:                  true,
+		},
+	)
 
-	var factory = Get(t.Driver)
+	var factory = drivers.Get(t.Driver)
 	assert.If(factory == nil, "driver factory[%s] not found", t.Driver)
 	dialect := factory(t.DriverCfg)
 

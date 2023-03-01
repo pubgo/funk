@@ -2,10 +2,10 @@ package sqlite
 
 import (
 	"fmt"
+	"github.com/pubgo/funk/clients/orm/drivers"
 	"path/filepath"
 
 	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/clients/orm"
 	"github.com/pubgo/funk/config"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/pathutil"
@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	orm.Register("sqlite3", func(cfg config.CfgMap) gorm.Dialector {
+	drivers.Register("sqlite3", func(cfg config.CfgMap) gorm.Dialector {
 		defer recovery.Raise(func(err error) error {
 			return errors.WrapKV(err, "cfg", cfg)
 		})

@@ -1,4 +1,4 @@
-package orm
+package drivers
 
 import (
 	"github.com/pubgo/funk/assert"

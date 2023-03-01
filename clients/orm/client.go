@@ -12,6 +12,7 @@ const Name = "orm"
 
 type Client struct {
 	*gorm.DB
+	TablePrefix string
 }
 
 func (c *Client) Ping() error {
