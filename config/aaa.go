@@ -1,10 +1,11 @@
 package config
 
 import (
+	"strings"
+
 	"github.com/mitchellh/mapstructure"
 	"github.com/pubgo/funk/merge"
 	"github.com/spf13/viper"
-	"strings"
 )
 
 const (

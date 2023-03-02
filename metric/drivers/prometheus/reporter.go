@@ -23,7 +23,7 @@ func New(conf *metric.Cfg, log log.Logger) map[string]*tally.ScopeOptions {
 
 	var proCfg = &prometheus.Configuration{}
 	if conf.DriverCfg != nil {
-		assert.Must(conf.DriverCfg.Decode(proCfg, "yaml"))
+		assert.Must(conf.DriverCfg.Decode(proCfg))
 	}
 
 	var logs = log.WithName(metric.Name).WithName(Name)
