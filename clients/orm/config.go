@@ -2,11 +2,10 @@ package orm
 
 import (
 	"fmt"
-	"github.com/pubgo/funk/clients/orm/drivers"
-	"gorm.io/gorm/schema"
 	"time"
 
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/clients/orm/drivers"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/merge"
@@ -15,6 +14,7 @@ import (
 	"github.com/pubgo/funk/tracing"
 	"gorm.io/gorm"
 	gl "gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
 	opentracing "gorm.io/plugin/opentracing"
 )
 
