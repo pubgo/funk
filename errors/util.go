@@ -1,7 +1,10 @@
 package errors
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
+	"github.com/pubgo/funk/errors/internal"
 	"unsafe"
 
 	"github.com/alecthomas/repr"
@@ -45,4 +48,31 @@ func parseError(val interface{}) error {
 	default:
 		return newErr(errors.New(repr.String(_val)), 1)
 	}
+}
+
+func stringify(buf *bytes.Buffer, err error) {
+	if err == nil {
+		return
+	}
+
+	if err1, ok := err.(fmt.Stringer); !ok {
+		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorErrMsg, err.Error()))
+		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorErrDetail, fmt.Sprintf("%#v", err)))
+		err = Unwrap(err)
+		if err != nil {
+			buf.WriteString("====================================================================\n")
+			stringify(buf, err)
+		}
+	} else {
+		buf.WriteString("====================================================================\n")
+		buf.WriteString(err1.String())
+	}
+}
+
+func jsonify(err error) map[string]any {
+	if err == nil {
+		return nil
+	}
+
+	return nil
 }

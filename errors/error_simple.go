@@ -9,7 +9,6 @@ import (
 	jjson "github.com/goccy/go-json"
 
 	"github.com/pubgo/funk/errors/internal"
-	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/stack"
 )
 
@@ -99,15 +98,6 @@ func (e Err) String() string {
 		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCaller, e.Caller.String()))
 	}
 
-	if e.Err != nil {
-		if _err, ok := e.Err.(fmt.Stringer); !ok {
-			buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorErrMsg, e.Err.Error()))
-			buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorErrDetail, pretty.Sprint(e.Err)))
-		} else {
-			buf.WriteString("\n====================================================================\n")
-			buf.WriteString(_err.String())
-		}
-	}
-
+	stringify(buf, e.Err)
 	return buf.String()
 }

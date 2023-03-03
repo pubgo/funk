@@ -10,7 +10,7 @@ import (
 
 func TestErr(t *testing.T) {
 	var err = SimpleErr(func(err *Err) {
-		err.Err = fmt.Errorf("this is Err")
+		err.Err = fmt.Errorf("this is Err, %w", New("test errors"))
 		err.Msg = "this is msg"
 		err.Detail = "this is detail"
 		err.Tags = Tags{"tag": "hello"}

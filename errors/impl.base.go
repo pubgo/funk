@@ -10,7 +10,6 @@ import (
 
 	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/stack"
 )
 
@@ -52,23 +51,11 @@ func (t *baseErr) String() string {
 		buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorMsg, t.msg))
 	}
 
-	if t.err != nil {
-		if _, ok := t.err.(fmt.Stringer); !ok {
-			buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorErrMsg, t.err.Error()))
-			buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorErrDetail, pretty.Sprint(t.err)))
-		}
-	}
-
 	if t.caller != nil {
 		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCaller, t.caller.String()))
 	}
 
-	if t.err != nil {
-		if _err, ok := t.err.(fmt.Stringer); ok {
-			buf.WriteString("====================================================================\n")
-			buf.WriteString(_err.String())
-		}
-	}
+	stringify(buf, t.err)
 
 	return buf.String()
 }

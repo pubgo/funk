@@ -125,6 +125,16 @@ func WrapCaller(err error, skip ...int) error {
 	return newErr(err, skip...)
 }
 
+func Wrapf(err error, format string, args ...interface{}) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	base := newErr(err)
+	base.msg = fmt.Sprintf(format, args...)
+	return base
+}
+
 func Wrap(err error, msg string) error {
 	if generic.IsNil(err) {
 		return nil
@@ -145,16 +155,6 @@ func WrapCode(err error, code ErrCode) error {
 	}
 
 	return code.SetErr(err)
-}
-
-func Wrapf(err error, format string, args ...interface{}) error {
-	if generic.IsNil(err) {
-		return nil
-	}
-
-	base := newErr(err)
-	base.msg = fmt.Sprintf(format, args...)
-	return base
 }
 
 func WrapEventFn(err error, evt func(evt *Event)) error {

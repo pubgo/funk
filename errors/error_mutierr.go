@@ -9,7 +9,6 @@ import (
 	jjson "github.com/goccy/go-json"
 
 	"github.com/pubgo/funk/errors/internal"
-	"github.com/pubgo/funk/pretty"
 )
 
 var _ Errors = (*errorsImpl)(nil)
@@ -51,14 +50,10 @@ func (e *errorsImpl) String() string {
 	}
 
 	var buf = bytes.NewBuffer(nil)
+	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, e.Kind()))
 	for i := range e.errs {
 		buf.WriteString("====================================================================\n")
-		if _err, ok := e.errs[i].(fmt.Stringer); ok {
-			buf.WriteString(_err.String())
-		} else {
-			buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, e.Kind()))
-			buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorErrDetail, pretty.Sprint(e.errs[i])))
-		}
+		stringify(buf, e.errs[i])
 	}
 
 	return buf.String()
