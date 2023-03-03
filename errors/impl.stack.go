@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/alecthomas/repr"
 	jjson "github.com/goccy/go-json"
+
 	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/pretty"
@@ -113,7 +113,7 @@ func (t *errStackImpl) AddStack() {
 			continue
 		}
 
-		if pkgRoot != "" && strings.HasPrefix(cc.File, pkgRoot) {
+		if _, ok := filterStack.Load(cc.Pkg); ok {
 			continue
 		}
 

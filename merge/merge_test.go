@@ -18,7 +18,7 @@ type src struct {
 }
 
 func TestStruct(t *testing.T) {
-	pretty.Println(Struct(&dst{name: "1", Hello: "1"}, src{Name: "2", Hello: "2"}))
+	pretty.Println(Struct(&dst{name: "1", Hello: "1"}, &src{Name: "2", Hello: "2"}))
 	pretty.Println(Struct(&dst{name: "1", Hello: "1"}, &src{Name: "2", Hello: "2"}))
 
 	var dd = &dst{name: "1", Hello: "1"}

@@ -2,9 +2,9 @@ package assert
 
 import (
 	"fmt"
-	"github.com/pubgo/funk/errors"
 	"testing"
 
+	"github.com/pubgo/funk/errors"
 	"github.com/stretchr/testify/assert"
 )
 

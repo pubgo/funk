@@ -2,27 +2,15 @@ package errors
 
 import (
 	"errors"
-	"strings"
 	"unsafe"
 
 	"github.com/alecthomas/repr"
+	"github.com/rs/zerolog"
+
 	"github.com/pubgo/funk/convert"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/stack"
-	"github.com/rs/zerolog"
 )
-
-var pkgRoot string
-
-func init() {
-	tt := stack.Callers(1)
-	if len(tt) == 0 {
-		return
-	}
-
-	var files = strings.Split(tt[0].File, "/")
-	pkgRoot = strings.Join(files[:len(files)-1], "/")
-}
 
 func convertEvent(evt *zerolog.Event) *event {
 	return (*event)(unsafe.Pointer(evt))

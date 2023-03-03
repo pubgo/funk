@@ -7,6 +7,7 @@ import (
 
 	"github.com/alecthomas/repr"
 	jjson "github.com/goccy/go-json"
+
 	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/stack"

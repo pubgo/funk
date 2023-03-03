@@ -7,11 +7,12 @@ import (
 
 	"github.com/alecthomas/repr"
 	jjson "github.com/goccy/go-json"
+	"github.com/rs/zerolog"
+
 	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/stack"
-	"github.com/rs/zerolog"
 )
 
 var _ ErrEvent = (*errEventImpl)(nil)

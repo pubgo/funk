@@ -1,9 +1,10 @@
 package errors
 
 import (
+	"github.com/rs/zerolog"
+
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
-	"github.com/rs/zerolog"
 )
 
 type Event = zerolog.Event

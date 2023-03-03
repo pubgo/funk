@@ -1,8 +1,9 @@
 package assert
 
 import (
-	"github.com/pubgo/funk/errors"
 	"testing"
+
+	"github.com/pubgo/funk/errors"
 )
 
 func TestCheckNil(t *testing.T) {

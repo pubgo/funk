@@ -1,21 +1,7 @@
 package orm
 
 import (
-	"fmt"
 	"time"
-
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/clients/orm/drivers"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/merge"
-	"github.com/pubgo/funk/recovery"
-	"github.com/pubgo/funk/runmode"
-	"github.com/pubgo/funk/tracing"
-	"gorm.io/gorm"
-	gl "gorm.io/gorm/logger"
-	"gorm.io/gorm/schema"
-	opentracing "gorm.io/plugin/opentracing"
 )
 
 type Cfg struct {
@@ -35,67 +21,6 @@ type Cfg struct {
 	MaxConnTime                              time.Duration          `json:"max_conn_time" yaml:"max_conn_time"`
 	MaxConnIdle                              int                    `json:"max_conn_idle" yaml:"max_conn_idle"`
 	MaxConnOpen                              int                    `json:"max_conn_open" yaml:"max_conn_open"`
-	log                                      log.Logger
-	db                                       *gorm.DB
-}
-
-func (t *Cfg) Build() (err error) {
-	defer recovery.Err(&err)
-	ormCfg := merge.Struct(new(gorm.Config), t).Unwrap(func(err error) error {
-		return errors.WrapKV(err, "cfg", t)
-	})
-
-	var level = gl.Info
-	if !runmode.IsDebug {
-		level = gl.Error
-	}
-
-	ormCfg.NamingStrategy = schema.NamingStrategy{TablePrefix: t.TablePrefix}
-	ormCfg.Logger = gl.New(
-		t.log.WithName(Name).WithCallerSkip(4),
-		gl.Config{
-			SlowThreshold:             200 * time.Millisecond,
-			LogLevel:                  level,
-			IgnoreRecordNotFoundError: false,
-			Colorful:                  true,
-		},
-	)
-
-	var factory = drivers.Get(t.Driver)
-	assert.If(factory == nil, "driver factory[%s] not found", t.Driver)
-	dialect := factory(t.DriverCfg)
-
-	db := assert.Must1(gorm.Open(dialect, ormCfg))
-
-	// 添加链路追踪
-	assert.Must(db.Use(opentracing.New(
-		opentracing.WithErrorTagHook(tracing.SetIfErr),
-	)))
-
-	// 服务连接校验
-	sqlDB := assert.Must1(db.DB())
-	assert.Must(sqlDB.Ping())
-
-	if t.MaxConnTime != 0 {
-		sqlDB.SetConnMaxLifetime(t.MaxConnTime)
-	}
-
-	if t.MaxConnIdle != 0 {
-		sqlDB.SetMaxIdleConns(t.MaxConnIdle)
-	}
-
-	if t.MaxConnOpen != 0 {
-		sqlDB.SetMaxOpenConns(t.MaxConnOpen)
-	}
-	t.db = db
-	return
-}
-
-func (t *Cfg) Get() *gorm.DB {
-	assert.Fn(t.db == nil, func() error {
-		return fmt.Errorf("please init orm")
-	})
-	return t.db
 }
 
 func DefaultCfg() *Cfg {

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/alecthomas/repr"
+
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"

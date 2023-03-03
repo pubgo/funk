@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/rs/zerolog"
+
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
-	"github.com/rs/zerolog"
 )
 
 func NewEvent() *Event {

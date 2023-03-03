@@ -17,7 +17,7 @@ func ErrNotFound(err error) bool {
 	return errors.Is(err, gorm.ErrRecordNotFound)
 }
 
-func Columns(cols ...field.Expr) gen.Columns { return cols }
+func SubQuery(cols ...field.Expr) gen.Columns { return cols }
 
 var _ clause.Expression = (*expr)(nil)
 var _ gen.Condition = (*expr)(nil)
@@ -26,7 +26,7 @@ type expr struct {
 	*clause.Expr
 }
 
-func Cond(sql string, args ...interface{}) gen.Condition {
+func Where(sql string, args ...interface{}) gen.Condition {
 	return expr{&clause.Expr{SQL: sql, Vars: args}}
 }
 

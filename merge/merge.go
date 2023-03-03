@@ -13,7 +13,7 @@ type Option func(opts *copier.Option)
 // Copy
 // struct<->struct
 // 各种类型结构体之间的field copy
-func Copy[A any, B any](dst A, src B, opts ...Option) result.Result[A] {
+func Copy[A any, B any](dst *A, src *B, opts ...Option) result.Result[*A] {
 	var opt = copier.Option{DeepCopy: true, IgnoreEmpty: true}
 	for i := range opts {
 		opts[i](&opt)
@@ -29,13 +29,13 @@ func Copy[A any, B any](dst A, src B, opts ...Option) result.Result[A] {
 
 	var err = copier.CopyWithOption(dst, src, opt)
 	if err != nil {
-		return result.Err[A](errH(err))
+		return result.Err[*A](errH(err))
 	}
 
 	return result.OK(dst)
 }
 
-func Struct[A any, B any](dst A, src B, opts ...Option) result.Result[A] {
+func Struct[A any, B any](dst *A, src *B, opts ...Option) result.Result[*A] {
 	return Copy(dst, src, opts...)
 }
 

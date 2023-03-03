@@ -2,6 +2,7 @@ package assert
 
 import (
 	"fmt"
+
 	"github.com/pubgo/funk/errors"
 )
 
@@ -39,4 +40,8 @@ func Lazy(lazy func() bool, err error) {
 	if lazy() {
 		panic(errors.WrapStack(err))
 	}
+}
+
+func init() {
+	errors.RegStackFilter()
 }
