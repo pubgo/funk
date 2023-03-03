@@ -40,7 +40,7 @@ require (
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.8.1
-	github.com/uber-go/tally/v4 v4.1.5
+	github.com/uber-go/tally/v4 v4.1.6
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	github.com/uber/jaeger-lib v2.4.1+incompatible
 	github.com/valyala/fastrand v1.1.0
@@ -65,7 +65,6 @@ require (
 	gorm.io/driver/sqlite v1.4.4
 	gorm.io/gen v0.3.21
 	gorm.io/gorm v1.24.5
-	gorm.io/plugin/opentracing v0.0.0-20211220013347-7d2b2af23560
 	modernc.org/sqlite v1.18.0
 )
 

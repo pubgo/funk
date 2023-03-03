@@ -13,7 +13,7 @@ func New(m lifecycle.Lifecycle, cfg *Cfg, optMap map[string]*tally.ScopeOptions)
 	cfg = merge.Struct(generic.Ptr(DefaultCfg()), cfg).Unwrap()
 	var opts = optMap[cfg.Driver]
 	if opts == nil {
-		opts = &tally.ScopeOptions{Reporter: tally.NullStatsReporter}
+		return tally.NoopScope
 	}
 
 	opts.Tags = Tags{"project": version.Project()}

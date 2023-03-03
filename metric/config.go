@@ -19,6 +19,6 @@ func DefaultCfg() Cfg {
 	return Cfg{
 		Driver:    "noop",
 		Interval:  time.Second,
-		Separator: "_",
+		Separator: ".",
 	}
 }

@@ -19,11 +19,9 @@ func New(conf *metric.Cfg, log log.Logger) map[string]*tally.ScopeOptions {
 
 	opts := tally.ScopeOptions{}
 	opts.Separator = prometheus.DefaultSeparator
-	//opts.SanitizeOptions = &prometheus.DefaultSanitizerOpts
+	opts.SanitizeOptions = &prometheus.DefaultSanitizerOpts
 
-	var proCfg = &prometheus.Configuration{
-		TimerType: "histogram",
-	}
+	var proCfg = &prometheus.Configuration{TimerType: "histogram"}
 
 	if conf.DriverCfg != nil {
 		assert.Must(conf.DriverCfg.Decode(proCfg))
