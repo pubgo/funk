@@ -1,4 +1,4 @@
-package varsdebug
+package vars
 
 import (
 	"expvar"

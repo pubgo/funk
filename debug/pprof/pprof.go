@@ -1,4 +1,4 @@
-package pprofdebug
+package pprof
 
 import (
 	"errors"

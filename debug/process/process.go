@@ -1,4 +1,4 @@
-package processdebug
+package process
 
 import (
 	"bufio"

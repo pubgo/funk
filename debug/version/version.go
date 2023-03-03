@@ -1,4 +1,4 @@
-package versiondebug
+package version
 
 import (
 	"net/http"

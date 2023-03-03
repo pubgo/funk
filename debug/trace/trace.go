@@ -1,4 +1,4 @@
-package tracedebug
+package trace
 
 import (
 	"github.com/gofiber/adaptor/v2"

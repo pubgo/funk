@@ -1,4 +1,4 @@
-package statsdebug
+package stats
 
 import (
 	"context"
