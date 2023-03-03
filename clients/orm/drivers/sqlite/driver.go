@@ -2,10 +2,10 @@ package sqlite
 
 import (
 	"fmt"
-	"github.com/pubgo/funk/clients/orm/drivers"
 	"path/filepath"
 
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/clients/orm/drivers"
 	"github.com/pubgo/funk/config"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/pathutil"
@@ -20,8 +20,9 @@ func init() {
 			return errors.WrapKV(err, "cfg", cfg)
 		})
 
+		assert.If(cfg["dsn"] == nil, "dsn not found")
+
 		var dsn = fmt.Sprintf("%v", cfg["dsn"])
-		assert.If(dsn == "", "dsn not found")
 		assert.Must(pathutil.IsNotExistMkDir(filepath.Dir(dsn)))
 		return sqlite.Open(dsn)
 	})

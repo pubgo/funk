@@ -2,9 +2,9 @@ package sqlite
 
 import (
 	"fmt"
-	"github.com/pubgo/funk/clients/orm/drivers"
 
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/clients/orm/drivers"
 	"github.com/pubgo/funk/config"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/recovery"
@@ -18,13 +18,10 @@ func init() {
 			return errors.WrapKV(err, "cfg", cfg)
 		})
 
-		var dsn = fmt.Sprintf("%v", cfg["dsn"])
-		assert.Fn(dsn == "", func() error {
-			return errors.New("dsn not found")
-		})
+		assert.If(cfg["dsn"] == nil, "dsn not found")
 
 		return postgres.New(postgres.Config{
-			DSN: dsn,
+			DSN: fmt.Sprintf("%v", cfg["dsn"]),
 			// refer: https://github.com/go-gorm/postgres
 			// disables implicit prepared statement usage. By default pgx automatically uses the extended protocol
 			PreferSimpleProtocol: true,
