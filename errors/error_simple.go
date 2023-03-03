@@ -2,7 +2,6 @@ package errors
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 
 	"github.com/alecthomas/repr"
@@ -71,11 +70,11 @@ func (e Err) MarshalJSON() ([]byte, error) {
 		data["tags"] = e.Tags
 	}
 
-	if _err, ok := e.Err.(json.Marshaler); ok && _err != nil {
-		data["cause"] = _err
-	} else if e.Err != nil {
-		data["err_msg"] = e.Err.Error()
-		data["err_detail"] = repr.String(e.Err)
+	var mm = errJsonify(e.Err)
+	if mm != nil {
+		for k, v := range mm {
+			data[k] = v
+		}
 	}
 	return jjson.Marshal(data)
 }
@@ -98,6 +97,6 @@ func (e Err) String() string {
 		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCaller, e.Caller.String()))
 	}
 
-	stringify(buf, e.Err)
+	errStringify(buf, e.Err)
 	return buf.String()
 }

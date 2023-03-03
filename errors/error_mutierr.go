@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/alecthomas/repr"
 	jjson "github.com/goccy/go-json"
 
 	"github.com/pubgo/funk/errors/internal"
@@ -53,7 +52,7 @@ func (e *errorsImpl) String() string {
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, e.Kind()))
 	for i := range e.errs {
 		buf.WriteString("====================================================================\n")
-		stringify(buf, e.errs[i])
+		errStringify(buf, e.errs[i])
 	}
 
 	return buf.String()
@@ -65,7 +64,7 @@ func (e *errorsImpl) MarshalJSON() ([]byte, error) {
 		if _err, ok := e.errs[i].(json.Marshaler); ok {
 			errs = append(errs, _err)
 		} else if e.errs[i] != nil {
-			errs = append(errs, json.RawMessage(repr.String(e.errs[i])))
+			errs = append(errs, errJsonify(e.errs[i]))
 		}
 	}
 	return jjson.Marshal(errs)

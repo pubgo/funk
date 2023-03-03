@@ -2,15 +2,16 @@ package errors
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/pubgo/funk/errors/internal"
 	"unsafe"
 
 	"github.com/alecthomas/repr"
 	"github.com/rs/zerolog"
 
 	"github.com/pubgo/funk/convert"
+	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/stack"
 )
@@ -50,18 +51,18 @@ func parseError(val interface{}) error {
 	}
 }
 
-func stringify(buf *bytes.Buffer, err error) {
+func errStringify(buf *bytes.Buffer, err error) {
 	if err == nil {
 		return
 	}
 
 	if err1, ok := err.(fmt.Stringer); !ok {
 		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorErrMsg, err.Error()))
-		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorErrDetail, fmt.Sprintf("%#v", err)))
+		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorErrDetail, fmt.Sprintf("%v", err)))
 		err = Unwrap(err)
 		if err != nil {
 			buf.WriteString("====================================================================\n")
-			stringify(buf, err)
+			errStringify(buf, err)
 		}
 	} else {
 		buf.WriteString("====================================================================\n")
@@ -69,10 +70,21 @@ func stringify(buf *bytes.Buffer, err error) {
 	}
 }
 
-func jsonify(err error) map[string]any {
+func errJsonify(err error) map[string]any {
 	if err == nil {
 		return nil
 	}
 
-	return nil
+	var data = make(map[string]any, 2)
+	if _err, ok := err.(json.Marshaler); ok {
+		data["cause"] = _err
+	} else {
+		data["err_msg"] = err.Error()
+		data["err_detail"] = fmt.Sprintf("%v", err)
+		err = Unwrap(err)
+		if err != nil {
+			data["cause"] = errJsonify(err)
+		}
+	}
+	return data
 }

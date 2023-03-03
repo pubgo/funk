@@ -2,10 +2,7 @@ package errors
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
-
-	"github.com/alecthomas/repr"
 	jjson "github.com/goccy/go-json"
 
 	"github.com/pubgo/funk/errors/internal"
@@ -55,7 +52,7 @@ func (t *baseErr) String() string {
 		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCaller, t.caller.String()))
 	}
 
-	stringify(buf, t.err)
+	errStringify(buf, t.err)
 
 	return buf.String()
 }
@@ -72,11 +69,11 @@ func (t *baseErr) getData() map[string]any {
 		data["caller"] = t.caller
 	}
 
-	if _err, ok := t.err.(json.Marshaler); ok {
-		data["cause"] = _err
-	} else if t.err != nil {
-		data["err_msg"] = t.err.Error()
-		data["err_detail"] = repr.String(t.err)
+	var mm = errJsonify(t.err)
+	if mm != nil {
+		for k, v := range mm {
+			data[k] = v
+		}
 	}
 
 	return data
