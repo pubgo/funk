@@ -4,22 +4,26 @@ import (
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/lifecycle"
+	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/merge"
+	"github.com/pubgo/funk/metric/drivers"
 	"github.com/pubgo/funk/version"
 	"github.com/uber-go/tally/v4"
 )
 
-func New(m lifecycle.Lifecycle, cfg *Cfg, optMap map[string]*tally.ScopeOptions) Metric {
+func New(m lifecycle.Lifecycle, cfg *Cfg, log log.Logger) Metric {
 	cfg = merge.Struct(generic.Ptr(DefaultCfg()), cfg).Unwrap()
-	var opts = optMap[cfg.Driver]
+
+	log = log.WithName(Name)
+
+	var factory = drivers.Get(cfg.Driver)
+	assert.If(factory == nil, "driver factory[%s] not found", cfg.Driver)
+	opts := factory(cfg, log)
 	if opts == nil {
 		return tally.NoopScope
 	}
 
 	opts.Tags = Tags{"project": version.Project()}
-	if cfg.Separator != "" {
-		opts.Separator = cfg.Separator
-	}
 
 	scope, closer := tally.NewRootScope(*opts, cfg.Interval)
 	m.BeforeStop(func() { assert.Must(closer.Close()) })

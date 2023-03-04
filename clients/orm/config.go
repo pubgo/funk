@@ -23,8 +23,8 @@ type Cfg struct {
 	MaxConnOpen                              int                    `json:"max_conn_open" yaml:"max_conn_open"`
 }
 
-func DefaultCfg() *Cfg {
-	return &Cfg{
+func DefaultCfg() Cfg {
+	return Cfg{
 		SkipDefaultTransaction: true,
 		MaxConnTime:            time.Hour,
 		MaxConnIdle:            10,

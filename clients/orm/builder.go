@@ -10,6 +10,7 @@ import (
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/clients/orm/drivers"
+	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/merge"
 	"github.com/pubgo/funk/recovery"
@@ -20,8 +21,7 @@ func New(cfg *Cfg, log log.Logger) *Client {
 	assert.If(cfg == nil, "config is nil")
 	log = log.WithName(Name)
 
-	var builder = DefaultCfg()
-	builder = merge.Struct(builder, cfg).Unwrap()
+	builder := merge.Struct(generic.Ptr(DefaultCfg()), cfg).Unwrap()
 	ormCfg := merge.Struct(new(gorm.Config), builder).Unwrap()
 
 	var level = logger.Info

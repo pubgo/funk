@@ -12,13 +12,11 @@ type Cfg struct {
 	Driver    string        `json:"driver"`
 	DriverCfg config.CfgMap `json:"driver_config"`
 	Interval  time.Duration `json:"interval"`
-	Separator string        `json:"separator"`
 }
 
 func DefaultCfg() Cfg {
 	return Cfg{
-		Driver:    "noop",
-		Interval:  time.Second,
-		Separator: ".",
+		Driver:   "noop",
+		Interval: 2 * time.Second,
 	}
 }

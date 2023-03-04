@@ -5,6 +5,7 @@ import (
 	"github.com/pubgo/funk/debug"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/metric"
+	"github.com/pubgo/funk/metric/drivers"
 	tally "github.com/uber-go/tally/v4"
 	"github.com/uber-go/tally/v4/prometheus"
 )
@@ -12,7 +13,11 @@ import (
 const Name = "prometheus"
 const urlPath = "/metrics"
 
-func New(conf *metric.Cfg, log log.Logger) map[string]*tally.ScopeOptions {
+func init() {
+	drivers.Register(Name, New)
+}
+
+func New(conf *metric.Cfg, log log.Logger) *tally.ScopeOptions {
 	if conf.Driver != Name {
 		return nil
 	}
@@ -38,5 +43,5 @@ func New(conf *metric.Cfg, log log.Logger) map[string]*tally.ScopeOptions {
 	debug.Get(urlPath, debug.Wrap(reporter.HTTPHandler()))
 
 	opts.CachedReporter = reporter
-	return map[string]*tally.ScopeOptions{Name: &opts}
+	return &opts
 }
