@@ -1,4 +1,0 @@
-metric:
-  driver: "prometheus"
-  driver_config:
-    path: "/etcd"
