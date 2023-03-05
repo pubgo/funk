@@ -44,18 +44,16 @@ type ErrEvent interface {
 
 type ErrCode interface {
 	Error
-	Name() string
 	Reason() string
 	Code() errorpb.Code
-	Status() uint32
+	Status() string
 	Tags() map[string]string
 
 	SetErr(err error) ErrCode
 	AddTag(key string, val string) ErrCode
 	SetCode(code errorpb.Code) ErrCode
-	SetStatus(status uint32) ErrCode
+	SetStatus(status string) ErrCode
 	SetReason(reason string) ErrCode
-	SetName(name string) ErrCode
 }
 
 type ErrStack interface {

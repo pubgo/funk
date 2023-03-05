@@ -9,10 +9,8 @@ import "errorpb/status.proto";
 message Error {
   string id = 1;
   status.Code code = 2;
-  uint32 status = 3;
-
   // demo.test.v1.test.not_found
-  string name = 4;
+  string status = 3;
   string reason = 5;
   string operation = 6;
   string service = 7;

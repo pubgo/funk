@@ -434,7 +434,6 @@ func ParseError(err error) *errorpb.Error {
 			Version:   version.Version(),
 			Code:      ce.Code(),
 			Status:    ce.Status(),
-			Name:      ce.Name(),
 			Reason:    ce.Reason(),
 			ErrMsg:    err.Error(),
 			ErrDetail: []byte(fmt.Sprintf("%#v", err)),
@@ -461,8 +460,7 @@ func ParseError(err error) *errorpb.Error {
 			ErrDetail: []byte(fmt.Sprintf("%v", gs.GRPCStatus().Details())),
 			Reason:    gs.GRPCStatus().Message(),
 			Code:      errorpb.Code(gs.GRPCStatus().Code()),
-			Status:    uint32(gs.GRPCStatus().Code()),
-			Name:      "lava.grpc.status",
+			Status:    "lava.grpc.status",
 		}
 	}
 
@@ -471,7 +469,6 @@ func ParseError(err error) *errorpb.Error {
 		ErrDetail: []byte(fmt.Sprintf("%#v", err)),
 		Reason:    err.Error(),
 		Code:      errorpb.Code_Unknown,
-		Status:    uint32(errorpb.Code_Unknown),
-		Name:      "lava.unknown",
+		Status:    "lava.unknown",
 	}
 }

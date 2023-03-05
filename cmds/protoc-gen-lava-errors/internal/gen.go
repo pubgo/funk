@@ -73,7 +73,7 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 			genFile.Var().
 				Id("Err"+string(m.Desc.Name())+string(codeName.Desc.Name())).Id("=").
 				Qual(errorPkg, "NewCode").Call(jen.Qual(errorPbPkg, "Code_"+statusName)).
-				Id(fmt.Sprintf(`.SetName("%s").SetReason("%s").SetStatus(%d)`, name, rr, codeName.Desc.Number()))
+				Id(fmt.Sprintf(`.SetStatus("%s").SetReason("%s")`, name, rr))
 		}
 	}
 

@@ -35,8 +35,7 @@ func TestFormat(t *testing.T) {
 
 	err = NewCode(errorpb.Code_Canceled).
 		SetReason("user not_found").
-		SetName("user.not_found").
-		SetStatus(100).
+		SetStatus("user.not_found").
 		SetErr(err).AddTag("hello", "world")
 
 	err = WrapStack(err)

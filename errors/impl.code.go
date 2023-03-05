@@ -20,17 +20,12 @@ type errCodeImpl struct {
 	caller *stack.Frame
 
 	reason string
-	name   string
-	status uint32
+	status string
 	code   errorpb.Code
 	tags   map[string]string
 }
 
-func (t *errCodeImpl) Name() string {
-	return t.name
-}
-
-func (t *errCodeImpl) SetStatus(status uint32) ErrCode {
+func (t *errCodeImpl) SetStatus(status string) ErrCode {
 	t.status = status
 	return t
 }
@@ -39,7 +34,7 @@ func (t *errCodeImpl) Kind() string {
 	return "code"
 }
 
-func (t *errCodeImpl) Status() uint32 {
+func (t *errCodeImpl) Status() string {
 	return t.status
 }
 
@@ -78,11 +73,6 @@ func (t *errCodeImpl) SetReason(reason string) ErrCode {
 	return t
 }
 
-func (t *errCodeImpl) SetName(name string) ErrCode {
-	t.name = name
-	return t
-}
-
 func (t *errCodeImpl) Format(f fmt.State, verb rune) {
 	switch verb {
 	case 'v':
@@ -109,16 +99,12 @@ func (t *errCodeImpl) String() string {
 		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCode, t.code.String()))
 	}
 
-	if t.name != "" {
-		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorName, t.name))
-	}
-
 	if t.reason != "" {
 		buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorReason, t.reason))
 	}
 
-	if t.status != 0 {
-		buf.WriteString(fmt.Sprintf("%s]: %d\n", internal.ColorStatus, t.status))
+	if t.status != "" {
+		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorStatus, t.status))
 	}
 
 	if len(t.tags) > 0 {
@@ -138,7 +124,6 @@ func (t *errCodeImpl) MarshalJSON() ([]byte, error) {
 	var data = t.getData()
 	data["tags"] = t.tags
 	data["status"] = t.status
-	data["name"] = t.name
 	data["code"] = t.code.String()
 	data["reason"] = t.reason
 	return jjson.Marshal(data)
