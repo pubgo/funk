@@ -50,7 +50,7 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 			tag, ok = proto.GetExtension(codeName.Desc.Options(), errorpb.E_Field).(*errorpb.GenStatus)
 			var name = strings.ToLower(fmt.Sprintf("%s.%s.%s",
 				file.Desc.Package(),
-				strings.TrimSuffix(string(m.Desc.Name()), "ErrCode"),
+				strcase.ToSnake(string(m.Desc.Name())),
 				strcase.ToSnake(string(codeName.Desc.Name())),
 			))
 
@@ -70,8 +70,9 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 				statusName = tag.Code.String()
 			}
 
+			// string(m.Desc.Name())+
 			genFile.Var().
-				Id("Err"+string(m.Desc.Name())+string(codeName.Desc.Name())).Id("=").
+				Id("ErrCode"+string(codeName.Desc.Name())).Id("=").
 				Qual(errorPkg, "NewCode").Call(jen.Qual(errorPbPkg, "Code_"+statusName)).
 				Id(fmt.Sprintf(`.SetStatus("%s").SetReason("%s")`, name, rr))
 		}
