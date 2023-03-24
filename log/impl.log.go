@@ -15,6 +15,13 @@ type loggerImpl struct {
 	fields     Map
 	content    []byte
 	callerSkip int
+	lvl        Level
+}
+
+func (l *loggerImpl) WithLevel(lvl Level) Logger {
+	var log = l.copy()
+	log.lvl = lvl
+	return log
 }
 
 func (l *loggerImpl) WithEvent(evt *Event) Logger {
@@ -177,7 +184,7 @@ func (l *loggerImpl) Printf(format string, args ...any) {
 }
 
 func (l *loggerImpl) enabled(lvl zerolog.Level) bool {
-	if lvl >= zerolog.GlobalLevel() {
+	if lvl >= l.lvl {
 		return true
 	}
 	return false

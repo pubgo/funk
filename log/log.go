@@ -11,5 +11,6 @@ func NewStd(log Logger) StdLogger {
 func New(log *zerolog.Logger) Logger {
 	return &loggerImpl{
 		log: log,
+		lvl: zerolog.GlobalLevel(),
 	}
 }

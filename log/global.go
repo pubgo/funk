@@ -10,11 +10,12 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func init() {
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
-}
-
 var (
+	_ = func() interface{} {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		return nil
+	}()
+
 	// stdZerolog default zerolog just for debug
 	stdZerolog = generic.Ptr(
 		zerolog.New(os.Stderr).Level(zerolog.DebugLevel).

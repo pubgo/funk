@@ -1,14 +1,13 @@
 package log
 
 import (
-	"context"
-
 	"github.com/rs/zerolog"
 )
 
 type Map = map[string]any
 type Hook = zerolog.Hook
 type Event = zerolog.Event
+type Level = zerolog.Level
 
 type Logger interface {
 	WithName(name string) Logger
@@ -16,7 +15,7 @@ type Logger interface {
 	WithHooks(hooks ...Hook) Logger
 	WithCallerSkip(skip int) Logger
 	WithEvent(evt *Event) Logger
-	WithCtx(ctx context.Context) context.Context
+	WithLevel(lvl Level) Logger
 	Debug() *Event
 	Info() *Event
 	Warn() *Event

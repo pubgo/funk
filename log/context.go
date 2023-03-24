@@ -4,12 +4,8 @@ import "context"
 
 type ctxKey struct{}
 
-func (l *loggerImpl) ParseCtx(ctx context.Context) Logger {
-
-}
-
-func (l *loggerImpl) WithCtx(ctx context.Context) context.Context {
-	return context.WithValue(ctx, ctxKey{}, l)
+func WithCtx(ctx context.Context, log Logger) context.Context {
+	return context.WithValue(ctx, ctxKey{}, log)
 }
 
 // Ctx returns the Logger associated with the ctx.
