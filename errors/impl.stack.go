@@ -56,6 +56,7 @@ func (t *errStackImpl) String() string {
 
 func (t *errStackImpl) MarshalJSON() ([]byte, error) {
 	var data = t.getData()
+	data["kind"] = t.Kind()
 	data["stacks"] = t.stacks
 	return jjson.Marshal(data)
 }
@@ -90,7 +91,7 @@ func (t *errStackImpl) AddStack() {
 			continue
 		}
 
-		if _, ok := filterStack.Load(cc.Pkg); ok {
+		if _, ok := skipStack.Load(cc.Pkg); ok {
 			continue
 		}
 

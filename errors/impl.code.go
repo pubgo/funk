@@ -131,6 +131,7 @@ func (t *errCodeImpl) MarshalJSON() ([]byte, error) {
 
 func (t *errCodeImpl) getData() map[string]any {
 	var data = make(map[string]any)
+	data["kind"] = t.Kind()
 	if t.caller != nil {
 		data["caller"] = t.caller
 	}

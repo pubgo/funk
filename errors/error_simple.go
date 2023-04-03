@@ -52,7 +52,7 @@ func (e Err) Unwrap() error {
 
 func (e Err) MarshalJSON() ([]byte, error) {
 	var data = make(map[string]any, 10)
-	data["kind"] = "simple"
+	data["kind"] = e.Kind()
 
 	if e.Msg != "" {
 		data["msg"] = e.Msg
