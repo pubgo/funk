@@ -16,10 +16,6 @@ func (e *EventEnc) Msg(msg string) {
 	e.evt.Msg(msg)
 }
 
-// Msgf sends the event with formatted msg added as the message field if not empty.
-//
-// NOTICE: once this method is called, the *EventEnc be disposed.
-// .evt Calling Msgf twice can have unexpected result.
 func (e *EventEnc) Msgf(format string, v ...interface{}) {
 	e.evt.Msgf(format, v...)
 }
@@ -69,35 +65,21 @@ func (e *EventEnc) Hex(key string, val []byte) *EventEnc {
 	return e
 }
 
-// RawJSON adds already encoded JSON to the log line under key.
-//
-// No sanity check is performed on b; it must not contain carriage returns and
-// be valid JSON.
 func (e *EventEnc) RawJSON(key string, b []byte) *EventEnc {
 	e.evt.RawJSON(key, b)
 	return e
 }
 
-// If err is nil, no field is added.
 func (e *EventEnc) AnErr(key string, err error) *EventEnc {
 	e.evt.AnErr(key, err)
 	return e
 }
 
-// *Event context.
 func (e *EventEnc) Errs(key string, errs []error) *EventEnc {
 	e.evt.Errs(key, errs)
 	return e
 }
 
-// Err adds the field "error" with serialized err to the *EventEnc context.e..
-// .evt If err is nil, no field is added.
-//
-// To customize the key name, change zerolog.ErrorFieldName.
-//
-// If Stack() has been called before and zerolog.ErrorStackMarshaler is defined,
-// the err is passed to ErrorStackMarshaler and the result is appended to the
-// zerolog.ErrorStackFieldName.
 func (e *EventEnc) Err(err error) *EventEnc {
 	e.evt.Err(err)
 	return e
