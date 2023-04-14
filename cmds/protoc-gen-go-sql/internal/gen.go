@@ -34,19 +34,40 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 			return
 		}
 
+		//if val==nil{
+		//		return nil
+		//	}
 		g.Unskip()
 		genFile.
 			Func().Params(jen.Id("x *").Id(child.GoIdent.GoName)).
-			Id("Scan").Params(jen.Id("val interface{}")).Error().BlockFunc(func(group *jen.Group) {
-			group.Return(jen.Qual("google.golang.org/protobuf/proto", "Unmarshal").Call(jen.Id("val.([]byte)"), jen.Id("x")))
-		})
+			Id("Scan").Params(jen.Id("val interface{}")).Error().
+			BlockFunc(func(group *jen.Group) {
+				group.If(jen.Id("val").Op("==").Nil()).BlockFunc(func(group *jen.Group) {
+					group.Return(jen.Nil())
+				}).Line()
+
+				group.Return(
+					jen.Qual("google.golang.org/protobuf/encoding/protojson", "UnmarshalOptions").
+						Block(jen.Id("DiscardUnknown").Op(":").True().Op(",")).
+						Op(".").Id("Unmarshal").Call(jen.Id("val.([]byte)"), jen.Id("x")),
+				)
+			})
 		genFile.Line()
 
 		genFile.
 			Func().Params(jen.Id("x *").Id(child.GoIdent.GoName)).
-			Id("Value").Params().Params(jen.Qual("database/sql/driver", "Value"), jen.Error()).BlockFunc(func(group *jen.Group) {
-			group.Return(jen.Qual("google.golang.org/protobuf/proto", "Marshal").Call(jen.Id("x")))
-		})
+			Id("Value").Params().Params(jen.Qual("database/sql/driver", "Value"), jen.Error()).
+			BlockFunc(func(group *jen.Group) {
+				group.Return(
+					jen.Qual("google.golang.org/protobuf/encoding/protojson", "MarshalOptions").
+						Block(
+							jen.Id("UseEnumNumbers").Op(":").False().Op(","),
+							jen.Id("EmitUnpopulated").Op(":").False().Op(","),
+							jen.Id("UseProtoNames").Op(":").False().Op(","),
+						).
+						Op(".").Id("Marshal").Call(jen.Id("x")),
+				)
+			})
 		genFile.Line()
 	})
 
