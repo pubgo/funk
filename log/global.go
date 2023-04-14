@@ -36,6 +36,7 @@ func GetLogger(name string) Logger {
 
 func SetLogger(log *zerolog.Logger) {
 	assert.If(log == nil, "[log] should not be nil")
+	log.Hook(new(hookImpl))
 	stdZerolog = log
 }
 
