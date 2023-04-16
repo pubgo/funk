@@ -58,15 +58,17 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 			Func().Params(jen.Id("x *").Id(child.GoIdent.GoName)).
 			Id("Value").Params().Params(jen.Qual("database/sql/driver", "Value"), jen.Error()).
 			BlockFunc(func(group *jen.Group) {
-				group.Return(
-					jen.Qual("google.golang.org/protobuf/encoding/protojson", "MarshalOptions").
-						Block(
-							jen.Id("UseEnumNumbers").Op(":").False().Op(","),
-							jen.Id("EmitUnpopulated").Op(":").False().Op(","),
-							jen.Id("UseProtoNames").Op(":").False().Op(","),
-						).
-						Op(".").Id("Marshal").Call(jen.Id("x")),
-				)
+				group.Var().Id("val").Op(",").Id("err").Op("=").
+					Qual("google.golang.org/protobuf/encoding/protojson", "MarshalOptions").
+					Block(
+						jen.Id("UseEnumNumbers").Op(":").False().Op(","),
+						jen.Id("EmitUnpopulated").Op(":").False().Op(","),
+						jen.Id("UseProtoNames").Op(":").False().Op(","),
+					).
+					Op(".").Id("Marshal").Call(jen.Id("x")).Line()
+
+				group.If(jen.Id("err").Op("==").Nil()).Block(jen.Return(jen.Id("string(val)").Op(",").Nil()))
+				group.Return(jen.Nil().Op(",").Id("err"))
 			})
 		genFile.Line()
 	})
