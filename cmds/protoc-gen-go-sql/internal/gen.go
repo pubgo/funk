@@ -48,8 +48,8 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 
 				group.Return(
 					jen.Qual("google.golang.org/protobuf/encoding/protojson", "UnmarshalOptions").
-						Block(jen.Id("DiscardUnknown").Op(":").True().Op(",")).
-						Op(".").Id("Unmarshal").Call(jen.Id("val.([]byte)"), jen.Id("x")),
+						Values(jen.Dict{jen.Id("DiscardUnknown"): jen.True()}).
+						Dot("Unmarshal").Call(jen.Id("val.([]byte)"), jen.Id("x")),
 				)
 			})
 		genFile.Line()
@@ -60,12 +60,11 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 			BlockFunc(func(group *jen.Group) {
 				group.Var().Id("val").Op(",").Id("err").Op("=").
 					Qual("google.golang.org/protobuf/encoding/protojson", "MarshalOptions").
-					Block(
-						jen.Id("UseEnumNumbers").Op(":").False().Op(","),
-						jen.Id("EmitUnpopulated").Op(":").False().Op(","),
-						jen.Id("UseProtoNames").Op(":").False().Op(","),
-					).
-					Op(".").Id("Marshal").Call(jen.Id("x")).Line()
+					Values(jen.Dict{
+						jen.Id("UseEnumNumbers"):  jen.False(),
+						jen.Id("EmitUnpopulated"): jen.False(),
+						jen.Id("UseProtoNames"):   jen.False(),
+					}).Dot("Marshal").Call(jen.Id("x")).Line()
 
 				group.If(jen.Id("err").Op("==").Nil()).Block(jen.Return(jen.Id("string(val)").Op(",").Nil()))
 				group.Return(jen.Nil().Op(",").Id("err"))

@@ -412,7 +412,7 @@ func ConvertErr2Status(err *errorpb.Error) *status.Status {
 		return status.New(codes.OK, "OK")
 	}
 
-	var st, err1 = status.New(codes.Code(err.Code), err.ErrMsg).WithDetails(err)
+	var st, err1 = status.New(codes.Code(err.Code.Code), err.Msg.Msg).WithDetails(err)
 	if err1 != nil {
 		log.Err(err1).Any("lava-error", err).Msg("failed to convert error to grpc status")
 		return status.New(codes.Internal, err1.Error())
@@ -430,14 +430,21 @@ func ParseError(err error) *errorpb.Error {
 	var ce errors.ErrCode
 	if errors.As(err, &ce) {
 		return &errorpb.Error{
-			Service:   version.Project(),
-			Version:   version.Version(),
-			Code:      ce.Code(),
-			Status:    ce.Status(),
-			Reason:    ce.Reason(),
-			ErrMsg:    err.Error(),
-			ErrDetail: []byte(fmt.Sprintf("%#v", err)),
-			Tags:      ce.Tags(),
+			Code: &errorpb.ErrCode{
+				Code:   ce.Code(),
+				Status: ce.Status(),
+				Reason: ce.Reason(),
+			},
+
+			Trace: &errorpb.ErrTrace{
+				Service: version.Project(),
+				Version: version.Version(),
+			},
+			Msg: &errorpb.ErrMsg{
+				Msg:    err.Error(),
+				Detail: []byte(fmt.Sprintf("%#v", err)),
+				Tags:   ce.Tags(),
+			},
 		}
 	}
 
@@ -456,19 +463,35 @@ func ParseError(err error) *errorpb.Error {
 		}
 
 		return &errorpb.Error{
-			ErrMsg:    err.Error(),
-			ErrDetail: []byte(fmt.Sprintf("%v", gs.GRPCStatus().Details())),
-			Reason:    gs.GRPCStatus().Message(),
-			Code:      errorpb.Code(gs.GRPCStatus().Code()),
-			Status:    "lava.grpc.status",
+			Code: &errorpb.ErrCode{
+				Reason: gs.GRPCStatus().Message(),
+				Code:   errorpb.Code(gs.GRPCStatus().Code()),
+				Status: "lava.grpc.status",
+			},
+			Trace: &errorpb.ErrTrace{
+				Service: version.Project(),
+				Version: version.Version(),
+			},
+			Msg: &errorpb.ErrMsg{
+				Msg:    err.Error(),
+				Detail: []byte(fmt.Sprintf("%v", gs.GRPCStatus().Details())),
+			},
 		}
 	}
 
 	return &errorpb.Error{
-		ErrMsg:    err.Error(),
-		ErrDetail: []byte(fmt.Sprintf("%#v", err)),
-		Reason:    err.Error(),
-		Code:      errorpb.Code_Unknown,
-		Status:    "lava.unknown",
+		Code: &errorpb.ErrCode{
+			Reason: err.Error(),
+			Code:   errorpb.Code_Unknown,
+			Status: "lava.unknown",
+		},
+		Trace: &errorpb.ErrTrace{
+			Service: version.Project(),
+			Version: version.Version(),
+		},
+		Msg: &errorpb.ErrMsg{
+			Msg:    err.Error(),
+			Detail: []byte(fmt.Sprintf("%#v", err)),
+		},
 	}
 }

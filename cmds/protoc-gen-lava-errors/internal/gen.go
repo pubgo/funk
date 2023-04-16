@@ -11,7 +11,6 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const errorPkg = "github.com/pubgo/funk/errors"
 const errorPbPkg = "github.com/pubgo/funk/proto/errorpb"
 
 // GenerateFile generates a .errors.pb.go file containing service definitions.
@@ -38,8 +37,8 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 
 	for i := range file.Enums {
 		m := file.Enums[i]
-		var tag, ok = proto.GetExtension(m.Desc.Options(), errorpb.E_Opts).(*errorpb.GenStatus)
-		if !ok || tag == nil || !tag.GenEnable {
+		var tag, ok = proto.GetExtension(m.Desc.Options(), errorpb.E_Opts).(*errorpb.Options)
+		if !ok || tag == nil || !tag.GetGen() {
 			continue
 		}
 
@@ -47,34 +46,37 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 
 		for j := range m.Values {
 			codeName := m.Values[j]
-			tag, ok = proto.GetExtension(codeName.Desc.Options(), errorpb.E_Field).(*errorpb.GenStatus)
+			tag, ok = proto.GetExtension(codeName.Desc.Options(), errorpb.E_Field).(*errorpb.Options)
 			var name = strings.ToLower(fmt.Sprintf("%s.%s.%s",
 				file.Desc.Package(),
 				strcase.ToSnake(string(m.Desc.Name())),
 				strcase.ToSnake(string(codeName.Desc.Name())),
 			))
 
-			genFile.ImportAlias(errorPkg, "errors")
-			genFile.ImportAlias(errorPbPkg, "errorpb")
-
 			// comment
-			var rr = strings.TrimSpace(strings.ToLower(string(codeName.Desc.Name())))
-			rr = strings.Join(strings.Split(rr, "_"), " ")
+			var rr = string(codeName.Desc.Name())
 			if codeName.Comments.Leading.String() != "" {
 				rr = codeName.Comments.Leading.String()
-				rr = strings.TrimSpace(strings.Trim(strings.TrimSpace(rr), "/"))
+				rr = strings.Trim(strings.TrimSpace(rr), "/")
 			}
+			rr = strings.ToLower(strcase.ToSnake(rr))
+			rr = strings.ReplaceAll(rr, "_", " ")
+			rr = strings.TrimSpace(strings.ReplaceAll(rr, "  ", " "))
 
 			var statusName = "OK"
 			if tag != nil {
 				statusName = tag.Code.String()
 			}
 
-			// string(m.Desc.Name())+
 			genFile.Var().
-				Id("ErrCode"+string(codeName.Desc.Name())).Id("=").
-				Qual(errorPkg, "NewCode").Call(jen.Qual(errorPbPkg, "Code_"+statusName)).
-				Id(fmt.Sprintf(`.SetStatus("%s").SetReason("%s")`, name, rr))
+				Id("ErrCode"+string(codeName.Desc.Name())).
+				Id("=").
+				Op("&").Qual(errorPbPkg, "ErrCode").
+				Values(jen.Dict{
+					jen.Id("Code"):   jen.Qual(errorPbPkg, "Code_"+statusName),
+					jen.Id("Status"): jen.Lit(name),
+					jen.Id("Reason"): jen.Lit(rr),
+				}).Line()
 		}
 	}
 

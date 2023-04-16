@@ -3,92 +3,38 @@ syntax = "proto3";
 package status;
 
 option go_package = "github.com/pubgo/funk/proto/errorpb;errorpb";
-
 import "google/protobuf/descriptor.proto";
 
-message GenStatus {
-  bool gen_enable = 1;
+message Options {
+  bool gen = 1;
   Code code = 2;
 }
 
 extend google.protobuf.EnumValueOptions {
-  GenStatus field = 100002;
+  Options field = 100002;
 }
 
 extend google.protobuf.EnumOptions {
-  GenStatus opts = 100001;
+  Options opts = 100001;
 }
 
 enum Code {
-  option (opts).gen_enable = true;
   OK = 0;
-
-  Canceled = 1[
-    (status.field).code = Canceled
-  ];
-
-  Unknown = 2[
-    (status.field).code = Unknown
-  ];
-
-  InvalidArgument = 3[
-    (status.field).code = InvalidArgument
-  ];
-
-  DeadlineExceeded = 4[
-    (status.field).code = DeadlineExceeded
-  ];
-
-  NotFound = 5[
-    (status.field).code = NotFound
-  ];
-
-  AlreadyExists = 6[
-    (status.field).code = AlreadyExists
-  ];
-
-  PermissionDenied = 7[
-    (status.field).code = PermissionDenied
-  ];
-
-  ResourceExhausted = 8[
-    (status.field).code = ResourceExhausted
-  ];
-
-  FailedPrecondition = 9[
-    (status.field).code = FailedPrecondition
-  ];
-
-  Aborted = 10[
-    (status.field).code = Aborted
-  ];
-
-  OutOfRange = 11[
-    (status.field).code = OutOfRange
-  ];
-
-  Unimplemented = 12[
-    (status.field).code = Unimplemented
-  ];
-
-  Internal = 13[
-    (status.field).code = Internal
-  ];
-
-  Unavailable = 14[
-    (status.field).code = Unavailable
-  ];
-
-  DataLoss = 15[
-    (status.field).code = DataLoss
-  ];
-
-  Unauthenticated = 16[
-    (status.field).code = Unauthenticated
-  ];
-
-  TooManyRequests = 17[
-    (status.field).code = TooManyRequests
-  ];
-
+  Canceled = 1;
+  Unknown = 2;
+  InvalidArgument = 3;
+  DeadlineExceeded = 4;
+  NotFound = 5;
+  AlreadyExists = 6;
+  PermissionDenied = 7;
+  ResourceExhausted = 8;
+  FailedPrecondition = 9;
+  Aborted = 10;
+  OutOfRange = 11;
+  Unimplemented = 12;
+  Internal = 13;
+  Unavailable = 14;
+  DataLoss = 15;
+  Unauthenticated = 16;
+  TooManyRequests = 17;
 }

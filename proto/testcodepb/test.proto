@@ -8,7 +8,7 @@ import "errorpb/status.proto";
 option go_package = "github.com/pubgo/funk/proto/testcodepb;testcodepb";
 
 enum Code {
-  option (status.opts).gen_enable = true;
+  option (status.opts).gen = true;
 
   OK = 0;
 

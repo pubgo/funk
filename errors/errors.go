@@ -26,9 +26,10 @@ func IfErr(err error, fn func(err error)) {
 }
 
 func New(format string, a ...interface{}) error {
+	var err = fmt.Errorf(format, a...)
 	return &baseErr{
-		msg:    fmt.Sprintf(format, a...),
-		err:    fmt.Errorf(format, a...),
+		msg:    err.Error(),
+		err:    err,
 		caller: stack.Caller(1),
 	}
 }

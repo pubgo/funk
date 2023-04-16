@@ -7,7 +7,6 @@
 package testcodepb
 
 import (
-	errors "github.com/pubgo/funk/errors"
 	errorpb "github.com/pubgo/funk/proto/errorpb"
 	grpc "google.golang.org/grpc"
 )
@@ -17,7 +16,26 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-var ErrCodeOK = errors.NewCode(errorpb.Code_OK).SetStatus("demo.test.v1.code.ok").SetReason("ok")
-var ErrCodeNotFound = errors.NewCode(errorpb.Code_NotFound).SetStatus("demo.test.v1.code.not_found").SetReason("NotFound 找不到")
-var ErrCodeUnknown = errors.NewCode(errorpb.Code_NotFound).SetStatus("demo.test.v1.code.unknown").SetReason("Unknown 未知")
-var ErrCodeDbConn = errors.NewCode(errorpb.Code_Internal).SetStatus("demo.test.v1.code.db_conn").SetReason("db connect error")
+var ErrCodeOK = &errorpb.ErrCode{
+	Code:   errorpb.Code_OK,
+	Reason: "ok",
+	Status: "demo.test.v1.code.ok",
+}
+
+var ErrCodeNotFound = &errorpb.ErrCode{
+	Code:   errorpb.Code_NotFound,
+	Reason: "not found 找不到",
+	Status: "demo.test.v1.code.not_found",
+}
+
+var ErrCodeUnknown = &errorpb.ErrCode{
+	Code:   errorpb.Code_NotFound,
+	Reason: "unknown 未知",
+	Status: "demo.test.v1.code.unknown",
+}
+
+var ErrCodeDbConn = &errorpb.ErrCode{
+	Code:   errorpb.Code_Internal,
+	Reason: "db connect error",
+	Status: "demo.test.v1.code.db_conn",
+}
