@@ -49,7 +49,8 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 			tag, ok = proto.GetExtension(codeName.Desc.Options(), errorpb.E_Field).(*errorpb.Options)
 			var name = strings.ToLower(fmt.Sprintf("%s.%s.%s",
 				file.Desc.Package(),
-				strcase.ToSnake(string(m.Desc.Name())),
+				//strcase.ToSnake(string(m.Desc.Name())),
+				"err_code",
 				strcase.ToSnake(string(codeName.Desc.Name())),
 			))
 
