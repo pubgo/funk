@@ -19,23 +19,23 @@ const _ = grpc.SupportPackageIsVersion7
 var ErrCodeOK = &errorpb.ErrCode{
 	Code:   errorpb.Code_OK,
 	Reason: "ok",
-	Status: "demo.test.v1.code.ok",
+	Status: "demo.test.v1.err_code.ok",
 }
 
 var ErrCodeNotFound = &errorpb.ErrCode{
 	Code:   errorpb.Code_NotFound,
 	Reason: "not found 找不到",
-	Status: "demo.test.v1.code.not_found",
+	Status: "demo.test.v1.err_code.not_found",
 }
 
 var ErrCodeUnknown = &errorpb.ErrCode{
 	Code:   errorpb.Code_NotFound,
 	Reason: "unknown 未知",
-	Status: "demo.test.v1.code.unknown",
+	Status: "demo.test.v1.err_code.unknown",
 }
 
 var ErrCodeDbConn = &errorpb.ErrCode{
 	Code:   errorpb.Code_Internal,
 	Reason: "db connect error",
-	Status: "demo.test.v1.code.db_conn",
+	Status: "demo.test.v1.err_code.db_conn",
 }
