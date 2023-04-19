@@ -3,6 +3,7 @@ package errors
 import (
 	"bytes"
 	"fmt"
+
 	jjson "github.com/goccy/go-json"
 
 	"github.com/pubgo/funk/errors/internal"
