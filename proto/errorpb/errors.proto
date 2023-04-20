@@ -7,27 +7,11 @@ option go_package = "github.com/pubgo/funk/proto/errorpb;errorpb";
 import "errorpb/status.proto";
 import "google/protobuf/any.proto";
 
-message Tag {
-  string key = 1;
-  string value = 2;
-}
-
 message ErrMsg {
   string msg = 1;
   string detail = 2;
   string stack = 3;
   map<string, string> tags = 4;
-}
-
-message ErrWrap {
-  oneof err {
-    ErrMsg msg = 1;
-    ErrCode code = 2;
-    ErrTrace trace = 3;
-  }
-  ErrWrap child = 4;
-  string caller = 5;
-  repeated Tag tags = 6;
 }
 
 message ErrCode {

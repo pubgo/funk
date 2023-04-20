@@ -195,7 +195,7 @@ func WrapKV(err error, k string, v any) error {
 }
 
 func NewCode(code errorpb.Code) ErrCode {
-	return &errCodeImpl{caller: stack.Caller(1), code: code, tags: make(map[string]string)}
+	return &ErrCode{caller: stack.Caller(1), code: code, tags: make(map[string]string)}
 }
 
 func Append(err error, errs ...error) error {

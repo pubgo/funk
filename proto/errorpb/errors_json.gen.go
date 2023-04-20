@@ -6,17 +6,6 @@ import (
 	jsonpb "github.com/golang/protobuf/jsonpb"
 )
 
-// MarshalJSON is a custom marshaler for Tag
-func (this *Tag) MarshalJSON() ([]byte, error) {
-	str, err := ErrorsMarshaler.MarshalToString(this)
-	return []byte(str), err
-}
-
-// UnmarshalJSON is a custom unmarshaler for Tag
-func (this *Tag) UnmarshalJSON(b []byte) error {
-	return ErrorsUnmarshaler.Unmarshal(bytes.NewReader(b), this)
-}
-
 // MarshalJSON is a custom marshaler for ErrMsg
 func (this *ErrMsg) MarshalJSON() ([]byte, error) {
 	str, err := ErrorsMarshaler.MarshalToString(this)
@@ -25,17 +14,6 @@ func (this *ErrMsg) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON is a custom unmarshaler for ErrMsg
 func (this *ErrMsg) UnmarshalJSON(b []byte) error {
-	return ErrorsUnmarshaler.Unmarshal(bytes.NewReader(b), this)
-}
-
-// MarshalJSON is a custom marshaler for ErrWrap
-func (this *ErrWrap) MarshalJSON() ([]byte, error) {
-	str, err := ErrorsMarshaler.MarshalToString(this)
-	return []byte(str), err
-}
-
-// UnmarshalJSON is a custom unmarshaler for ErrWrap
-func (this *ErrWrap) UnmarshalJSON(b []byte) error {
 	return ErrorsUnmarshaler.Unmarshal(bytes.NewReader(b), this)
 }
 
