@@ -23,8 +23,6 @@ type Logger interface {
 	Err(err error) *Event
 	Panic() *Event
 	Fatal() *Event
-	Print(msg string)
-	Printf(format string, args ...any)
 }
 
 type StdLogger interface {

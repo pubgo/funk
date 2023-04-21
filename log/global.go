@@ -36,8 +36,8 @@ func GetLogger(name string) Logger {
 
 func SetLogger(log *zerolog.Logger) {
 	assert.If(log == nil, "[log] should not be nil")
-	log.Hook(new(hookImpl))
 	stdZerolog = log
+	stdLog = stdLog.WithLevel(zerolog.GlobalLevel())
 }
 
 // Err starts a new message with error level with err as a field if not nil or
