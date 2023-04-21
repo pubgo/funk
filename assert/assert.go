@@ -41,7 +41,3 @@ func Lazy(lazy func() bool, err error) {
 		panic(errors.WrapStack(err))
 	}
 }
-
-func init() {
-	errors.RegStackPkgFilter()
-}
