@@ -144,6 +144,27 @@ func Wrap(err error, msg string) error {
 	}
 }
 
+func T(k string, v any) Tag {
+	return Tag{k: k, v: v}
+}
+
+func WrapTagL(err error, tags ...Tag) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	var m = make(Tags, len(tags))
+	for i := range tags {
+		m[tags[i].k] = tags[i].v
+	}
+
+	return &ErrWrap{
+		err:    err,
+		caller: stack.Caller(1),
+		fields: m,
+	}
+}
+
 func WrapTags(err error, tags Tags) error {
 	if generic.IsNil(err) {
 		return nil

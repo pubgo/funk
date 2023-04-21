@@ -25,6 +25,7 @@ func TestFormat(t *testing.T) {
 		Msg: "this is msg",
 	})
 
+	err = WrapTagL(err, T("name", "value"))
 	err = WrapTrace(err, &errorpb.ErrTrace{
 		Version: version.Version(),
 		Service: version.Project(),

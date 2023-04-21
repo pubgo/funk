@@ -1,6 +1,10 @@
 package errors
 
 type Tags map[string]any
+type Tag struct {
+	k string
+	v any
+}
 
 type ErrUnwrap interface {
 	Unwrap() error
