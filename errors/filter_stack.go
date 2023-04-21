@@ -7,14 +7,10 @@ import (
 	"github.com/pubgo/funk/stack"
 )
 
-var skipStack sync.Map
+var skipStackMap sync.Map
 
-func RegStackFilter() {
+func RegStackPkgFilter() {
 	var s = stack.Caller(1)
 	pkgL := strings.Split(s.Pkg, ".")
-	skipStack.Store(strings.Join(pkgL[:len(pkgL)-1], "."), nil)
-}
-
-func init() {
-	//RegStackFilter()
+	skipStackMap.Store(strings.Join(pkgL[:len(pkgL)-1], "."), nil)
 }

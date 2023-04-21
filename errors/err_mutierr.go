@@ -2,7 +2,6 @@ package errors
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 
 	jjson "github.com/goccy/go-json"
@@ -16,21 +15,15 @@ type errorsImpl struct {
 	errs []error
 }
 
-func (e *errorsImpl) Kind() string {
-	return "multi"
-}
-
-func (e *errorsImpl) Errors() []error {
-	return e.errs
-}
-
+func (e *errorsImpl) Kind() string    { return "multi" }
+func (e *errorsImpl) Errors() []error { return e.errs }
 func (e *errorsImpl) Append(err error) error {
 	e.errs = append(e.errs, err)
 	return e
 }
 
 func (e *errorsImpl) Format(f fmt.State, verb rune) {
-	Format(f, verb, e)
+	strFormat(f, verb, e)
 }
 
 func (e *errorsImpl) String() string {
@@ -40,22 +33,16 @@ func (e *errorsImpl) String() string {
 
 	var buf = bytes.NewBuffer(nil)
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, e.Kind()))
-	for i := range e.errs {
-		buf.WriteString("====================================================================\n")
+	for i := len(e.errs) - 1; i >= 0; i-- {
 		errStringify(buf, e.errs[i])
 	}
-
 	return buf.String()
 }
 
 func (e *errorsImpl) MarshalJSON() ([]byte, error) {
 	var errs []interface{}
 	for i := range e.errs {
-		if _err, ok := e.errs[i].(json.Marshaler); ok {
-			errs = append(errs, _err)
-		} else if e.errs[i] != nil {
-			errs = append(errs, errJsonify(e.errs[i]))
-		}
+		errs = append(errs, errJsonify(e.errs[i]))
 	}
 	return jjson.Marshal(errs)
 }
@@ -69,9 +56,8 @@ func (e *errorsImpl) Error() string {
 
 func (e *errorsImpl) Unwrap() error {
 	if len(e.errs) == 1 {
-		return nil
+		return e.errs[0]
 	}
-
 	return &errorsImpl{errs: e.errs[1:]}
 }
 

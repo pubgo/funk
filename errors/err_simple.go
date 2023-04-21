@@ -10,12 +10,6 @@ import (
 	"github.com/pubgo/funk/errors/internal"
 )
 
-func SimpleErr(fn func(err *Err)) error {
-	var err = &Err{}
-	fn(err)
-	return err
-}
-
 var _ fmt.Formatter = (*Err)(nil)
 
 type Err struct {
@@ -24,9 +18,8 @@ type Err struct {
 	Tags   Tags   `json:"tags,omitempty"`
 }
 
-func (e Err) Kind() string {
-	return "simple"
-}
+func (e Err) Kind() string  { return "simple" }
+func (e Err) Error() string { return e.Msg }
 
 func (e Err) Format(f fmt.State, verb rune) {
 	switch verb {
@@ -43,26 +36,12 @@ func (e Err) Format(f fmt.State, verb rune) {
 }
 
 func (e Err) MarshalJSON() ([]byte, error) {
-	var data = make(map[string]any, 10)
+	var data = make(map[string]any, 4)
 	data["kind"] = e.Kind()
-
-	if e.Msg != "" {
-		data["msg"] = e.Msg
-	}
-
-	if e.Detail != "" {
-		data["detail"] = e.Detail
-	}
-
-	if e.Tags != nil {
-		data["tags"] = e.Tags
-	}
-
+	data["msg"] = e.Msg
+	data["detail"] = e.Detail
+	data["tags"] = e.Tags
 	return jjson.Marshal(data)
-}
-
-func (e Err) Error() string {
-	return e.Msg
 }
 
 func (e Err) String() string {

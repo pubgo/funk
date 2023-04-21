@@ -3,10 +3,6 @@ package version
 import (
 	"runtime/debug"
 
-	semver "github.com/hashicorp/go-version"
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/pretty"
-	"github.com/pubgo/funk/recovery"
 	"github.com/rs/xid"
 )
 
@@ -18,17 +14,6 @@ var project string
 var instanceID = xid.New().String()
 
 func init() {
-	defer recovery.Exit(func(err error) error {
-		pretty.Println(
-			mainPath,
-			project,
-			version,
-			commitID,
-			buildTime,
-		)
-		return err
-	})
-
 	bi, ok := debug.ReadBuildInfo()
 	if !ok {
 		return
@@ -46,13 +31,4 @@ func init() {
 			buildTime = setting.Value
 		}
 	}
-}
-
-func Check() {
-	defer recovery.Exit()
-	assert.Must1(semver.NewVersion(version))
-	assert.If(project == "", "project is null")
-	assert.If(version == "", "version is null")
-	assert.If(commitID == "", "commitID is null")
-	assert.If(buildTime == "", "buildTime is null")
 }

@@ -4,6 +4,9 @@ import (
 	"fmt"
 	rt "runtime"
 
+	semver "github.com/hashicorp/go-version"
+	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/recovery"
 	"github.com/pubgo/funk/version"
 )
 
@@ -28,4 +31,13 @@ func GetSysInfo() map[string]string {
 		"num_cpu":       fmt.Sprintf("%v", rt.NumCPU()),
 		"num_goroutine": fmt.Sprintf("%v", rt.NumGoroutine()),
 	}
+}
+
+func Check() {
+	defer recovery.Exit()
+	assert.Must1(semver.NewVersion(version.Version()))
+	assert.If(version.Project() == "", "project is null")
+	assert.If(version.Version() == "", "version is null")
+	assert.If(version.CommitID() == "", "commitID is null")
+	assert.If(version.BuildTime() == "", "buildTime is null")
 }

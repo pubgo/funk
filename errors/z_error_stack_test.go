@@ -18,9 +18,6 @@ func TestStack(t *testing.T) {
 	err = Wrapf(err, "next error name=%s", "wrapf")
 	err = Append(err, fmt.Errorf("raw error"))
 	err = Append(err, New("New errors error"))
-	err = Append(err, SimpleErr(func(err *Err) {
-		err.Msg = "Err errors error"
-		err.Tags = map[string]any{"tags": "hello"}
-	}))
+	err = Append(err, &Err{Msg: "Err errors error", Tags: map[string]any{"tags": "hello"}})
 	Debug(err)
 }

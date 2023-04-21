@@ -19,12 +19,8 @@ func IfErr(err error, fn func(err error)) {
 	fn(err)
 }
 
-func New(format string, a ...interface{}) error {
-	var err = fmt.Errorf(format, a...)
-	return &ErrMsg{
-		ErrBase: &ErrBase{err: err},
-		pb:      &errorpb.ErrMsg{Msg: err.Error()},
-	}
+func New(msg string) error {
+	return &Err{Msg: msg}
 }
 
 func Parse(val interface{}) error {
@@ -113,7 +109,7 @@ func WrapStack(err error) error {
 	}
 }
 
-func WrapCaller(err error, skip ...int) error {
+func WrapCaller(err error) error {
 	if generic.IsNil(err) {
 		return nil
 	}
@@ -172,6 +168,21 @@ func WrapTag(err error, key string, value any) error {
 	}
 }
 
+func WrapMsg(err error, msg *errorpb.ErrMsg) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	if msg == nil {
+		panic("error msg is nil")
+	}
+
+	return &ErrWrap{
+		caller: stack.Caller(1),
+		err:    &ErrMsg{pb: msg, err: err},
+	}
+}
+
 func WrapCode(err error, code *errorpb.ErrCode) error {
 	if generic.IsNil(err) {
 		return nil
@@ -183,24 +194,54 @@ func WrapCode(err error, code *errorpb.ErrCode) error {
 
 	return &ErrWrap{
 		caller: stack.Caller(1),
-		err: &ErrCode{
-			pb:      code,
-			ErrBase: &ErrBase{err: err},
-		},
+		err:    &ErrCode{pb: code, err: err},
+	}
+}
+
+func WrapTrace(err error, trace *errorpb.ErrTrace) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	if trace == nil {
+		panic("error trace is nil")
+	}
+
+	return &ErrWrap{
+		caller: stack.Caller(1),
+		err:    &ErrTrace{pb: trace, err: err},
 	}
 }
 
 func Append(err error, errs ...error) error {
+	if len(errs) == 0 {
+		return &ErrWrap{
+			err:    err,
+			caller: stack.Caller(1),
+		}
+	}
+
+	if err == nil {
+		return &ErrWrap{
+			err:    &errorsImpl{errs: errs},
+			caller: stack.Caller(1),
+		}
+	}
+
+	var errL []error
 	switch err1 := err.(type) {
 	case Errors:
-		var errL = make([]error, 0, len(err1.Errors())+len(errs))
+		errL = make([]error, 0, len(err1.Errors())+len(errs))
 		errL = append(errL, err1.Errors()...)
 		errL = append(errL, errs...)
-		return &errorsImpl{errs: errL}
 	default:
-		var errL = make([]error, 0, len(errs)+1)
+		errL = make([]error, 0, len(errs)+1)
 		errL = append(errL, err1)
 		errL = append(errL, errs...)
-		return &errorsImpl{errs: errL}
+	}
+
+	return &ErrWrap{
+		err:    &errorsImpl{errs: errL},
+		caller: stack.Caller(1),
 	}
 }

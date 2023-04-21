@@ -43,5 +43,5 @@ func Lazy(lazy func() bool, err error) {
 }
 
 func init() {
-	errors.RegStackFilter()
+	errors.RegStackPkgFilter()
 }
