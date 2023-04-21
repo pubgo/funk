@@ -2,13 +2,14 @@ package gitutil
 
 import (
 	"context"
+	"os"
+	"testing"
+
 	"github.com/google/go-github/v48/github"
 	"github.com/k0kubun/pp/v3"
 	"github.com/rs/xid"
 	"github.com/shurcooL/githubv4"
 	"golang.org/x/oauth2"
-	"os"
-	"testing"
 )
 
 func TestName(t *testing.T) {

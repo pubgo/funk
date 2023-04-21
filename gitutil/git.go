@@ -2,12 +2,12 @@ package gitutil
 
 import (
 	"context"
-	_ "github.com/google/go-github/v48/github"
-	"github.com/shurcooL/githubv4"
-	"golang.org/x/oauth2"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/shurcooL/githubv4"
+	"golang.org/x/oauth2"
 )
 
 // Client is a GitHub client.

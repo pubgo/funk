@@ -59,7 +59,7 @@ func Yield[T any](do func(yield func(T)) error) *Iterator[T] {
 	go func() {
 		defer dd.setDone()
 		defer recovery.Recovery(func(err error) {
-			err = errors.WrapKV(err, "fn_stack", stack.CallerWithFunc(do).String())
+			err = errors.WrapTag(err, "fn_stack", stack.CallerWithFunc(do).String())
 			dd.setErr(err)
 		})
 

@@ -7,7 +7,6 @@ import (
 
 	"github.com/a8m/envsubst"
 	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/errors"
 )
 
 var trim = strings.TrimSpace
@@ -25,7 +24,7 @@ func Get(names ...string) string {
 func MustGet(names ...string) string {
 	var val string
 	GetWith(&val, names...)
-	assert.Err(val == "", errors.New("env not found, names=%q", names))
+	assert.If(val == "", "env not found, names=%q", names)
 	return trim(val)
 }
 

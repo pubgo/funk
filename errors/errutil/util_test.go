@@ -8,11 +8,11 @@ import (
 )
 
 func TestJson(t *testing.T) {
-	var err = errors.SimpleErr(func(err *errors.Err) {
-		err.Msg = "this is msg"
-		err.Detail = "this is detail"
-		err.Tags = errors.Tags{"tag": "hello"}
-	})
+	var err error = &errors.Err{
+		Msg:    "this is msg",
+		Detail: "this is detail",
+		Tags:   errors.Tags{"tag": "hello"},
+	}
 
 	err = errors.Wrap(err, "this is next msg")
 	fmt.Printf("%s", err)

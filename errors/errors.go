@@ -168,6 +168,18 @@ func WrapTag(err error, key string, value any) error {
 	}
 }
 
+func WrapKV(err error, key string, value any) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	return &ErrWrap{
+		err:    err,
+		caller: stack.Caller(1),
+		fields: map[string]any{key: value},
+	}
+}
+
 func WrapMsg(err error, msg *errorpb.ErrMsg) error {
 	if generic.IsNil(err) {
 		return nil

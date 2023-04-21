@@ -52,7 +52,8 @@ func (cc *Iterator[T]) ToList() result.Result[[]T] {
 
 	var ll []T
 	for c := range cc.v {
-		ll = append(ll, c)
+		c1 := c
+		ll = append(ll, c1)
 	}
 	return ret
 }

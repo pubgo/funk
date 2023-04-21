@@ -3,8 +3,8 @@ package merge
 import (
 	"github.com/jinzhu/copier"
 	"github.com/mitchellh/mapstructure"
+
 	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/result"
 )
 
@@ -20,10 +20,10 @@ func Copy[A any, B any](dst *A, src *B, opts ...Option) result.Result[*A] {
 	}
 
 	var errH = func(err error) error {
-		return errors.WrapEventFn(err, func(evt *errors.Event) {
-			evt.Any("dst", dst)
-			evt.Any("src", src)
-			evt.Any("decoder_config", pretty.Sprint(opt))
+		return errors.WrapTags(err, errors.Tags{
+			"dst":            dst,
+			"src":            src,
+			"decoder_config": opt,
 		})
 	}
 
@@ -59,10 +59,10 @@ func MapStruct[A any, B any](dst A, src B, opts ...func(cfg *mapstructure.Decode
 	}
 
 	var errH = func(err error) error {
-		return errors.WrapEventFn(err, func(evt *errors.Event) {
-			evt.Any("dst", dst)
-			evt.Any("src", src)
-			evt.Any("decoder_config", pretty.Sprint(cfg))
+		return errors.WrapTags(err, errors.Tags{
+			"dst":            dst,
+			"src":            src,
+			"decoder_config": cfg,
 		})
 	}
 
