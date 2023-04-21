@@ -19,6 +19,10 @@ type ErrCode struct {
 	pb  *errorpb.ErrCode
 }
 
+func (t *ErrCode) Proto() *errorpb.ErrCode {
+	return t.pb
+}
+
 func (t *ErrCode) Kind() string {
 	return "code"
 }
@@ -46,23 +50,15 @@ func (t *ErrCode) String() string {
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, t.Kind()))
 
 	if t.pb.Code != 0 {
-		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCode, t.code.String()))
+		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCode, t.pb.Code.String()))
 	}
 
-	if t.pb.reason != "" {
-		buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorReason, t.reason))
+	if t.pb.Reason != "" {
+		buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorReason, t.pb.Reason))
 	}
 
-	if t.pb.status != "" {
-		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorStatus, t.status))
-	}
-
-	if len(t.pb.tags) > 0 {
-		buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorTags, t.tags))
-	}
-
-	if t.caller != nil {
-		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCaller, t.caller.String()))
+	if t.pb.Status != "" {
+		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorStatus, t.pb.Status))
 	}
 
 	errStringify(buf, t.err)
@@ -72,19 +68,15 @@ func (t *ErrCode) String() string {
 
 func (t *ErrCode) MarshalJSON() ([]byte, error) {
 	var data = t.getData()
-	data["tags"] = t.tags
-	data["status"] = t.status
-	data["code"] = t.code.String()
-	data["reason"] = t.reason
+	data["status"] = t.pb.Status
+	data["code"] = t.pb.Code.String()
+	data["reason"] = t.pb.Reason
 	return jjson.Marshal(data)
 }
 
 func (t *ErrCode) getData() map[string]any {
 	var data = make(map[string]any)
 	data["kind"] = t.Kind()
-	if t.caller != nil {
-		data["caller"] = t.caller
-	}
 
 	var mm = errJsonify(t.err)
 	if mm != nil {
@@ -98,11 +90,6 @@ func (t *ErrCode) getData() map[string]any {
 
 func (t *ErrCode) Unwrap() error { return t.err }
 
-// Error
 func (t *ErrCode) Error() string {
-	if generic.IsNil(t.err) {
-		return ""
-	}
-
 	return t.err.Error()
 }

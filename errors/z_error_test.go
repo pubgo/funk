@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pubgo/funk/proto/errorpb"
+	"github.com/pubgo/funk/proto/testcodepb"
 )
 
 func init1() error {
@@ -19,11 +19,11 @@ func TestSkip(t *testing.T) {
 func TestFormat(t *testing.T) {
 	var err = WrapCaller(fmt.Errorf("test error, err=%w", New("hello error")))
 	err = Wrap(err, "next error")
-	err = WrapEventFn(err, func(evt *Event) {
-		evt.Str("event", "test event")
-		evt.Int64("test123", 123)
-		evt.Str("test", "hello")
-	})
+	//err = WrapEventFn(err, func(evt *Event) {
+	//	evt.Str("event", "test event")
+	//	evt.Int64("test123", 123)
+	//	evt.Str("test", "hello")
+	//})
 	err = Wrapf(err, "next error name=%s", "wrapf")
 	err = Append(err, fmt.Errorf("raw error"))
 	err = Append(err, New("New errors error"))
@@ -33,17 +33,14 @@ func TestFormat(t *testing.T) {
 		err.Tags = map[string]any{"tags": "hello"}
 	}))
 
-	err = NewCode(errorpb.Code_Canceled).
-		SetReason("user not_found").
-		SetStatus("user.not_found").
-		SetErr(err).AddTag("hello", "world")
+	err = WrapCode(err, testcodepb.ErrCodeNotFound)
 
 	err = WrapStack(err)
 	IfErr(err, func(err error) {
 		Debug(err)
 	})
 
-	var fff ErrCode
+	var fff *ErrCode
 	t.Log(As(err, &fff))
-	t.Log(fff.Reason())
+	t.Log(fff.Proto())
 }

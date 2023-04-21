@@ -1,10 +1,5 @@
 package errors
 
-import (
-	"github.com/rs/zerolog"
-)
-
-type Event = zerolog.Event
 type Tags map[string]any
 
 type ErrUnwrap interface {
@@ -19,15 +14,16 @@ type ErrAs interface {
 	As(any) bool
 }
 
+type Errors interface {
+	Error
+	Errors() []error
+	Append(err error) error
+}
+
 type Error interface {
 	Kind() string
 	Error() string
 	String() string
 	Unwrap() error
 	MarshalJSON() ([]byte, error)
-}
-
-// event 和<zerolog.Event>内存对齐
-type event struct {
-	buf []byte
 }

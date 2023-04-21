@@ -8,23 +8,22 @@ import (
 
 	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/stack"
+	"github.com/pubgo/funk/proto/errorpb"
 )
 
-var _ Error = (*baseErr)(nil)
-var _ fmt.Formatter = (*baseErr)(nil)
+var _ Error = (*ErrMsg)(nil)
+var _ fmt.Formatter = (*ErrMsg)(nil)
 
-type baseErr struct {
-	err    error
-	caller *stack.Frame
-	msg    string
+type ErrMsg struct {
+	*ErrBase
+	pb *errorpb.ErrMsg
 }
 
-func (t *baseErr) Kind() string {
-	return "base"
+func (t *ErrMsg) Kind() string {
+	return "err_msg"
 }
 
-func (t *baseErr) Format(f fmt.State, verb rune) {
+func (t *ErrMsg) Format(f fmt.State, verb rune) {
 	switch verb {
 	case 'v':
 		var data, err = t.MarshalJSON()
@@ -38,19 +37,27 @@ func (t *baseErr) Format(f fmt.State, verb rune) {
 	}
 }
 
-func (t *baseErr) String() string {
+func (t *ErrMsg) String() string {
 	if generic.IsNil(t.err) {
 		return ""
 	}
 
 	var buf = bytes.NewBuffer(nil)
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, t.Kind()))
-	if t.msg != "" {
-		buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorMsg, t.msg))
+	if t.pb.Msg != "" {
+		buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorMsg, t.pb.Msg))
 	}
 
-	if t.caller != nil {
-		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCaller, t.caller.String()))
+	if t.pb.Detail != "" {
+		buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorMsg, t.pb.Detail))
+	}
+
+	if t.pb.Stack != "" {
+		buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorMsg, t.pb.Stack))
+	}
+
+	if t.pb.Tags != nil {
+		buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorMsg, t.pb.Tags))
 	}
 
 	errStringify(buf, t.err)
@@ -58,36 +65,11 @@ func (t *baseErr) String() string {
 	return buf.String()
 }
 
-func (t *baseErr) MarshalJSON() ([]byte, error) {
+func (t *ErrMsg) MarshalJSON() ([]byte, error) {
 	var data = t.getData()
-	data["msg"] = t.msg
+	data["msg"] = t.pb.Msg
+	data["detail"] = t.pb.Detail
+	data["stack"] = t.pb.Stack
+	data["tags"] = t.pb.Tags
 	return jjson.Marshal(data)
-}
-
-func (t *baseErr) getData() map[string]any {
-	var data = make(map[string]any)
-	data["kind"] = t.Kind()
-	if t.caller != nil {
-		data["caller"] = t.caller
-	}
-
-	var mm = errJsonify(t.err)
-	if mm != nil {
-		for k, v := range mm {
-			data[k] = v
-		}
-	}
-
-	return data
-}
-
-func (t *baseErr) Unwrap() error { return t.err }
-
-// Error
-func (t *baseErr) Error() string {
-	if generic.IsNil(t.err) {
-		return ""
-	}
-
-	return t.err.Error()
 }

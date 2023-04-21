@@ -8,11 +8,11 @@ import (
 func TestStack(t *testing.T) {
 	var err = WrapCaller(New("hello error"))
 	err = Wrap(err, "next error")
-	err = WrapEventFn(err, func(evt *Event) {
-		evt.Str("event", "test event")
-		evt.Int64("test123", 123)
-		evt.Str("test", "hello")
-	})
+	//err = WrapEventFn(err, func(evt *Event) {
+	//	evt.Str("event", "test event")
+	//	evt.Int64("test123", 123)
+	//	evt.Str("test", "hello")
+	//})
 	err = WrapStack(err)
 	err = Wrapf(err, "next error name=%s", "wrapf")
 	err = Append(err, fmt.Errorf("raw error"))

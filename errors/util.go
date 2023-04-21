@@ -5,30 +5,22 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"unsafe"
-
 	"github.com/alecthomas/repr"
-	"github.com/rs/zerolog"
-
 	"github.com/pubgo/funk/convert"
 	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/stack"
+	"github.com/pubgo/funk/proto/errorpb"
 )
 
-func convertEvent(evt *zerolog.Event) *event {
-	return (*event)(unsafe.Pointer(evt))
-}
-
-func newErr(err error, skip ...int) *baseErr {
+func newErr(err error, skip ...int) *ErrMsg {
 	var sk = 2
 	if len(skip) > 0 {
 		sk = sk + skip[0]
 	}
 
-	return &baseErr{
-		err:    err,
-		caller: stack.Caller(sk),
+	return &ErrMsg{
+		ErrBase: &ErrBase{err: err},
+		pb:      &errorpb.ErrMsg{},
 	}
 }
 
