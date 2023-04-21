@@ -1,27 +1,12 @@
 package logutil
 
 import (
-	"io"
-	"net/http"
 	"strings"
 
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/try"
 )
-
-// GracefulClose drains http.Response.Body until it hits EOF
-// and closes it. This prevents TCP/TLS connections from closing,
-// therefore available for reuse.
-// Borrowed from golang/net/context/ctxhttp/cancelreq.go.
-func GracefulClose(resp *http.Response) {
-	if resp == nil || resp.Body == nil {
-		return
-	}
-
-	_, _ = io.Copy(io.Discard, resp.Body)
-	_ = resp.Body.Close()
-}
 
 func HandleClose(log log.Logger, fn func() error) {
 	if fn == nil || log == nil {

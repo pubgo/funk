@@ -3,7 +3,7 @@ package clone
 import (
 	"reflect"
 	"unsafe"
-	
+
 	"github.com/huandu/go-clone"
 )
 

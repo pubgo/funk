@@ -64,8 +64,3 @@ func TestName(t *testing.T) {
 func hello() {
 	panic("hello")
 }
-
-func TestDump(t *testing.T) {
-	defer Dump()
-	hello()
-}

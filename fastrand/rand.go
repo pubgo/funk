@@ -14,22 +14,16 @@ func Uint32n(maxN uint32) uint32 { return fastrand.Uint32n(maxN) }
 
 // Probability 小于prob的概率, prob is in the range [0,1000)
 func Probability(prob uint32) bool {
-	if prob > Uint32n(1000) {
-		return true
-	}
-	return false
+	return prob > Uint32n(1000)
 }
 
 // Sampling 采样率, [rate] is in the range [0,100)
 func Sampling(rate uint8) bool {
-	if uint32(rate) > Uint32n(uint32(100)) {
-		return true
-	}
-	return false
+	return uint32(rate) > Uint32n(uint32(100))
 }
 
 // Perm
-// 	returns a random permutation of the range [0,n).
+// returns a random permutation of the range [0,n).
 func Perm(n uint32) []uint32 {
 	m := make([]uint32, n)
 	for i := uint32(1); i < n; i++ {
@@ -41,8 +35,9 @@ func Perm(n uint32) []uint32 {
 }
 
 // Shuffle pseudo-randomizes the order of elements.
-// 	n: is the number of elements. Shuffle panics if n < 0.
-// 	swap: swaps the elements with indexes i and j.
+//
+//	n: is the number of elements. Shuffle panics if n < 0.
+//	swap: swaps the elements with indexes i and j.
 func Shuffle(n int, swap func(i, j int)) {
 	if n < 0 {
 		panic("invalid argument to Shuffle")
@@ -61,7 +56,8 @@ func Shuffle(n int, swap func(i, j int)) {
 }
 
 // Random
-// 	return random string from string slice
+//
+//	return random string from string slice
 func Random(ss []string) []string {
 	for i := uint32(len(ss)) - 1; i > 0; i-- {
 		num := Uint32n(i + 1)

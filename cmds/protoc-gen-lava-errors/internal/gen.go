@@ -37,19 +37,16 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 
 	for i := range file.Enums {
 		m := file.Enums[i]
-		var tag, ok = proto.GetExtension(m.Desc.Options(), errorpb.E_Opts).(*errorpb.Options)
+		tag, ok := proto.GetExtension(m.Desc.Options(), errorpb.E_Opts).(*errorpb.Options)
 		if !ok || tag == nil || !tag.GetGen() {
 			continue
 		}
 
 		g.Unskip()
 
-		for j := range m.Values {
-			codeName := m.Values[j]
-			tag, ok = proto.GetExtension(codeName.Desc.Options(), errorpb.E_Field).(*errorpb.Options)
+		for _, codeName := range m.Values {
 			var name = strings.ToLower(fmt.Sprintf("%s.%s.%s",
 				file.Desc.Package(),
-				//strcase.ToSnake(string(m.Desc.Name())),
 				"err_code",
 				strcase.ToSnake(string(codeName.Desc.Name())),
 			))
@@ -65,7 +62,8 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 			rr = strings.TrimSpace(strings.ReplaceAll(rr, "  ", " "))
 
 			var statusName = "OK"
-			if tag != nil {
+			tag, ok = proto.GetExtension(codeName.Desc.Options(), errorpb.E_Field).(*errorpb.Options)
+			if ok && tag != nil {
 				statusName = tag.Code.String()
 			}
 

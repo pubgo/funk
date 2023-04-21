@@ -17,7 +17,6 @@ func Hello() {
 
 	var err2 = errors.Wrapf(err1, "处理 wrap")
 	assert.MustF(err2, "处理 panic")
-	return
 }
 
 func CallHello() (gErr error) {

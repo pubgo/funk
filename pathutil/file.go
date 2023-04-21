@@ -30,7 +30,7 @@ func CheckPermission(src string) bool {
 // IsNotExistMkDir create a directory if it does not exist
 func IsNotExistMkDir(src string) (err error) {
 	defer recovery.Err(&err)
-	if notExist := IsNotExist(src); notExist == true {
+	if IsNotExist(src) {
 		assert.Must(MkDir(src), "MkDir Error")
 	}
 
@@ -270,85 +270,4 @@ func ListDir(dirPth, suffix string) (files []string, err error) {
 	}
 
 	return files, nil
-}
-
-// Walk walk file
-func Walk(dirPth, suffix string) (files []string, err error) {
-	files = make([]string, 0, 30)
-	suffix = strings.ToUpper(suffix)
-	err = filepath.Walk(
-		dirPth, func(filename string, fi os.FileInfo, err error) error {
-			if fi.IsDir() {
-				return nil
-			}
-
-			if strings.HasSuffix(strings.ToUpper(fi.Name()), suffix) {
-				files = append(files, filename)
-			}
-			return nil
-		})
-
-	return files, err
-}
-
-// WalkDir walk dir
-func WalkDir(dirPth, suffix string) (files []string, err error) {
-	files = make([]string, 0, 30)
-	suffix = strings.ToUpper(suffix)
-	err = filepath.Walk(
-		dirPth, func(filename string, fi os.FileInfo, err error) error {
-			if !fi.IsDir() {
-				return nil
-			}
-
-			if strings.HasSuffix(strings.ToUpper(fi.Name()), suffix) {
-				files = append(files, filename)
-			}
-			return nil
-		})
-
-	return files, err
-}
-
-// Copy copies file from source to target path.
-func Copy(src, dst string) error {
-	// Gather file information to set back later.
-	si, err := os.Lstat(src)
-	if err != nil {
-		return err
-	}
-
-	// Handle symbolic link.
-	if si.Mode()&os.ModeSymlink != 0 {
-		target, err := os.Readlink(src)
-		if err != nil {
-			return err
-		}
-
-		// NOTE: os.Chmod and os.Chtimes don't recoganize symbolic link,
-		// which will lead "no such file or directory" error.
-		return os.Symlink(target, dst)
-	}
-
-	sr, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer sr.Close()
-
-	dw, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer dw.Close()
-
-	if _, err = io.Copy(dw, sr); err != nil {
-		return err
-	}
-
-	// Set back file information.
-	if err = os.Chtimes(dst, si.ModTime(), si.ModTime()); err != nil {
-		return err
-	}
-	return os.Chmod(dst, si.Mode())
 }

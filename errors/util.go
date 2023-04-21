@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/alecthomas/repr"
-	"github.com/pubgo/funk/errors/internal"
 	"strings"
 
+	"github.com/alecthomas/repr"
+
 	"github.com/pubgo/funk/convert"
+	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/stack"
 )

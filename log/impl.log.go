@@ -71,7 +71,7 @@ func (l *loggerImpl) WithName(name string) Logger {
 }
 
 func (l *loggerImpl) WithFields(m Map) Logger {
-	if m == nil || len(m) == 0 {
+	if len(m) == 0 {
 		return l
 	}
 
@@ -184,10 +184,7 @@ func (l *loggerImpl) Printf(format string, args ...any) {
 }
 
 func (l *loggerImpl) enabled(lvl zerolog.Level) bool {
-	if lvl >= l.lvl {
-		return true
-	}
-	return false
+	return lvl >= l.lvl
 }
 
 func (l *loggerImpl) copy() *loggerImpl {
@@ -221,6 +218,8 @@ func (l *loggerImpl) newEvent(log zerolog.Logger, level zerolog.Level) *zerolog.
 		e = log.Warn()
 	case zerolog.FatalLevel:
 		e = log.Fatal()
+	default:
+		e = log.Debug()
 	}
 
 	if l.name != "" {

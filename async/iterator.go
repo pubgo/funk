@@ -7,9 +7,8 @@ func iteratorOf[T any]() *Iterator[T] {
 }
 
 type Iterator[T any] struct {
-	v    chan T
-	done chan struct{}
-	err  error
+	v   chan T
+	err error
 }
 
 func (cc *Iterator[T]) Err() error {
@@ -55,5 +54,5 @@ func (cc *Iterator[T]) ToList() result.Result[[]T] {
 		c1 := c
 		ll = append(ll, c1)
 	}
-	return ret
+	return ret.WithVal(ll)
 }
