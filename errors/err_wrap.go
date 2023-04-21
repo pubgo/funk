@@ -34,7 +34,6 @@ func (e *ErrWrap) String() string {
 	for i := range e.stack {
 		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorStack, e.stack[i].String()))
 	}
-
 	errStringify(buf, e.err)
 	return buf.String()
 }
