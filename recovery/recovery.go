@@ -27,15 +27,14 @@ func Result[T any](ret *result.Result[T]) {
 	*ret = result.Err[T](errors.WrapStack(err))
 }
 
-func Err(gErr *error, fns ...func(err *errors.Event)) {
+func Err(gErr *error, fns ...func(err error) error) {
 	err := errors.Parse(recover())
 	if generic.IsNil(err) {
 		return
 	}
 
-	if len(fns) > 0 && fns[0] != nil {
-		*gErr = errors.WrapEventFn(err, fns[0])
-		return
+	for i := range fns {
+		err = fns[i](err)
 	}
 
 	*gErr = errors.WrapStack(err)
@@ -65,16 +64,14 @@ func Recovery(fn func(err error)) {
 	fn(errors.WrapStack(err))
 }
 
-func Exit(handlers ...func(evt *errors.Event)) {
+func Exit(handlers ...func(err error) error) {
 	err := errors.Parse(recover())
 	if generic.IsNil(err) {
 		return
 	}
 
-	if len(handlers) > 0 {
-		err = errors.WrapEventFn(err, func(evt *errors.Event) {
-			handlers[0](evt)
-		})
+	for i := range handlers {
+		err = handlers[i](err)
 	}
 
 	errors.Debug(errors.WrapStack(err))

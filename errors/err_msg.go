@@ -24,17 +24,7 @@ func (t *ErrMsg) Kind() string {
 }
 
 func (t *ErrMsg) Format(f fmt.State, verb rune) {
-	switch verb {
-	case 'v':
-		var data, err = t.MarshalJSON()
-		if err != nil {
-			fmt.Fprintln(f, err.Error())
-		} else {
-			fmt.Fprintln(f, string(data))
-		}
-	case 's', 'q':
-		fmt.Fprintln(f, t.String())
-	}
+	Format(f, verb, t)
 }
 
 func (t *ErrMsg) String() string {

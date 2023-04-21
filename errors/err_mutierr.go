@@ -30,17 +30,7 @@ func (e *errorsImpl) Append(err error) error {
 }
 
 func (e *errorsImpl) Format(f fmt.State, verb rune) {
-	switch verb {
-	case 'v':
-		var data, err = e.MarshalJSON()
-		if err != nil {
-			fmt.Fprintln(f, err.Error())
-		} else {
-			fmt.Fprintln(f, string(data))
-		}
-	case 's', 'q':
-		fmt.Fprintln(f, e.String())
-	}
+	Format(f, verb, e)
 }
 
 func (e *errorsImpl) String() string {

@@ -148,6 +148,30 @@ func Wrap(err error, msg string) error {
 	}
 }
 
+func WrapTags(err error, tags Tags) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	return &ErrWrap{
+		err:    err,
+		caller: stack.Caller(1),
+		fields: tags,
+	}
+}
+
+func WrapTag(err error, key string, value any) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	return &ErrWrap{
+		err:    err,
+		caller: stack.Caller(1),
+		fields: map[string]any{key: value},
+	}
+}
+
 func WrapCode(err error, code *errorpb.ErrCode) error {
 	if generic.IsNil(err) {
 		return nil
@@ -160,8 +184,8 @@ func WrapCode(err error, code *errorpb.ErrCode) error {
 	return &ErrWrap{
 		caller: stack.Caller(1),
 		err: &ErrCode{
-			pb:  code,
-			err: err,
+			pb:      code,
+			ErrBase: &ErrBase{err: err},
 		},
 	}
 }

@@ -15,8 +15,8 @@ var _ Error = (*ErrCode)(nil)
 var _ fmt.Formatter = (*ErrCode)(nil)
 
 type ErrCode struct {
-	err error
-	pb  *errorpb.ErrCode
+	*ErrBase
+	pb *errorpb.ErrCode
 }
 
 func (t *ErrCode) Proto() *errorpb.ErrCode {
@@ -28,17 +28,7 @@ func (t *ErrCode) Kind() string {
 }
 
 func (t *ErrCode) Format(f fmt.State, verb rune) {
-	switch verb {
-	case 'v':
-		var data, err = t.MarshalJSON()
-		if err != nil {
-			fmt.Fprintln(f, err.Error())
-		} else {
-			fmt.Fprintln(f, string(data))
-		}
-	case 's', 'q':
-		fmt.Fprintln(f, t.String())
-	}
+	Format(f, verb, t)
 }
 
 func (t *ErrCode) String() string {
@@ -68,28 +58,9 @@ func (t *ErrCode) String() string {
 
 func (t *ErrCode) MarshalJSON() ([]byte, error) {
 	var data = t.getData()
+	data["kind"] = t.Kind()
 	data["status"] = t.pb.Status
 	data["code"] = t.pb.Code.String()
 	data["reason"] = t.pb.Reason
 	return jjson.Marshal(data)
-}
-
-func (t *ErrCode) getData() map[string]any {
-	var data = make(map[string]any)
-	data["kind"] = t.Kind()
-
-	var mm = errJsonify(t.err)
-	if mm != nil {
-		for k, v := range mm {
-			data[k] = v
-		}
-	}
-
-	return data
-}
-
-func (t *ErrCode) Unwrap() error { return t.err }
-
-func (t *ErrCode) Error() string {
-	return t.err.Error()
 }

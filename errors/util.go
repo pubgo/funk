@@ -10,6 +10,7 @@ import (
 	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/proto/errorpb"
+	"github.com/pubgo/funk/stack"
 )
 
 func newErr(err error, skip ...int) *ErrMsg {
@@ -53,11 +54,9 @@ func errStringify(buf *bytes.Buffer, err error) {
 		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorErrDetail, fmt.Sprintf("%v", err)))
 		err = Unwrap(err)
 		if err != nil {
-			buf.WriteString("====================================================================\n")
 			errStringify(buf, err)
 		}
 	} else {
-		buf.WriteString("====================================================================\n")
 		buf.WriteString(err1.String())
 	}
 }
@@ -79,4 +78,39 @@ func errJsonify(err error) map[string]any {
 		}
 	}
 	return data
+}
+
+func Format(f fmt.State, verb rune, err Error) {
+	switch verb {
+	case 'v':
+		var data, err = err.MarshalJSON()
+		if err != nil {
+			fmt.Fprintln(f, err.Error())
+		} else {
+			fmt.Fprintln(f, string(data))
+		}
+	case 's', 'q':
+		fmt.Fprintln(f, err.String())
+	}
+}
+
+func getStack() []*stack.Frame {
+	var ss []*stack.Frame
+	for i := 0; ; i++ {
+		var cc = stack.Caller(1 + i)
+		if cc == nil {
+			break
+		}
+
+		if cc.IsRuntime() {
+			continue
+		}
+
+		if _, ok := skipStack.Load(cc.Pkg); ok {
+			continue
+		}
+
+		ss = append(ss, cc)
+	}
+	return ss
 }

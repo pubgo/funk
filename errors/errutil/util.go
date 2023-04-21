@@ -427,23 +427,22 @@ func ParseError(err error) *errorpb.Error {
 		return nil
 	}
 
-	var ce errors.ErrCode
+	var ce *errors.ErrCode
 	if errors.As(err, &ce) {
-		return &errorpb.Error{
-			Code: &errorpb.ErrCode{
-				Code:   ce.Code(),
-				Status: ce.Status(),
-				Reason: ce.Reason(),
-			},
+		pb := ce.Proto()
+		if pb.Reason == "" {
+			pb.Reason = err.Error()
+		}
 
+		return &errorpb.Error{
+			Code: pb,
 			Trace: &errorpb.ErrTrace{
 				Service: version.Project(),
 				Version: version.Version(),
 			},
 			Msg: &errorpb.ErrMsg{
 				Msg:    err.Error(),
-				Detail: []byte(fmt.Sprintf("%#v", err)),
-				Tags:   ce.Tags(),
+				Detail: fmt.Sprintf("%#v", err),
 			},
 		}
 	}
@@ -474,7 +473,7 @@ func ParseError(err error) *errorpb.Error {
 			},
 			Msg: &errorpb.ErrMsg{
 				Msg:    err.Error(),
-				Detail: []byte(fmt.Sprintf("%v", gs.GRPCStatus().Details())),
+				Detail: fmt.Sprintf("%v", gs.GRPCStatus().Details()),
 			},
 		}
 	}
@@ -491,7 +490,7 @@ func ParseError(err error) *errorpb.Error {
 		},
 		Msg: &errorpb.ErrMsg{
 			Msg:    err.Error(),
-			Detail: []byte(fmt.Sprintf("%#v", err)),
+			Detail: fmt.Sprintf("%#v", err),
 		},
 	}
 }
