@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"reflect"
 	"sync"
 
 	"github.com/pubgo/funk/stack"
@@ -9,11 +10,16 @@ import (
 var skipStackMap sync.Map
 
 func RegStackPkgFilter(fn ...interface{}) {
-	var s *stack.Frame
-	if len(fn) == 0 || fn[0] == nil {
-		s = stack.Caller(1)
-	} else {
-		s = stack.CallerWithFunc(fn[0])
+	if len(fn) == 0 {
+		skipStackMap.Store(stack.Caller(1).Pkg, nil)
+		return
 	}
-	skipStackMap.Store(s.Pkg, nil)
+
+	for i := range fn {
+		if reflect.TypeOf(fn[i]).Kind() == reflect.String {
+			skipStackMap.Store(fn[i].(string), nil)
+		} else {
+			skipStackMap.Store(stack.CallerWithFunc(fn[0]).Pkg, nil)
+		}
+	}
 }
