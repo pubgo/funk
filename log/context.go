@@ -3,8 +3,9 @@ package log
 import "context"
 
 type ctxKey struct{}
+type ctxEventKey struct{}
 
-func WithCtx(ctx context.Context, log Logger) context.Context {
+func CreateCtx(ctx context.Context, log Logger) context.Context {
 	if log == nil {
 		panic("log is nil")
 	}
@@ -22,4 +23,20 @@ func Ctx(ctx context.Context, defLog ...Logger) Logger {
 	}
 
 	return stdLog
+}
+
+func CreateEventCtx(ctx context.Context, evt *Event) context.Context {
+	if evt == nil {
+		panic("log event is nil")
+	}
+	return context.WithValue(ctx, ctxEventKey{}, evt)
+}
+
+func WithEventCtx(ctx context.Context) func(e *Event) {
+	return func(e *Event) {
+		var evt, ok = ctx.Value(ctxEventKey{}).(*Event)
+		if ok {
+			WithEvent(evt)(e)
+		}
+	}
 }
