@@ -15,15 +15,12 @@ type errorsImpl struct {
 	errs []error
 }
 
-func (e *errorsImpl) Kind() string    { return "multi" }
-func (e *errorsImpl) Errors() []error { return e.errs }
+func (e *errorsImpl) Format(f fmt.State, verb rune) { strFormat(f, verb, e) }
+func (e *errorsImpl) Kind() string                  { return "multi" }
+func (e *errorsImpl) Errors() []error               { return e.errs }
 func (e *errorsImpl) Append(err error) error {
 	e.errs = append(e.errs, err)
 	return e
-}
-
-func (e *errorsImpl) Format(f fmt.State, verb rune) {
-	strFormat(f, verb, e)
 }
 
 func (e *errorsImpl) String() string {

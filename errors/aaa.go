@@ -1,6 +1,11 @@
 package errors
 
 type Tags map[string]any
+
+func (t Tags) Set(key string, val any) {
+	t[key] = val
+}
+
 type Tag struct {
 	k string
 	v any
@@ -28,6 +33,5 @@ type Error interface {
 	Kind() string
 	Error() string
 	String() string
-	Unwrap() error
 	MarshalJSON() ([]byte, error)
 }

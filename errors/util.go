@@ -35,7 +35,9 @@ func parseError(val interface{}) error {
 func errStringify(buf *bytes.Buffer, err error) {
 	err1, ok := err.(fmt.Stringer)
 	if ok {
-		buf.WriteString("error:\n")
+		if _, ok = err.(*ErrWrap); !ok {
+			buf.WriteString("error:\n")
+		}
 		buf.WriteString(err1.String())
 		return
 	}

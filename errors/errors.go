@@ -11,12 +11,12 @@ import (
 	"github.com/pubgo/funk/stack"
 )
 
-func IfErr(err error, fn func(err error)) {
+func IfErr(err error, fn func(err error) error) error {
 	if generic.IsNil(err) {
-		return
+		return nil
 	}
 
-	fn(err)
+	return fn(err)
 }
 
 func New(msg string) error {
@@ -86,17 +86,6 @@ func Unwrap(err error) error {
 	return u.Unwrap()
 }
 
-func Cause(err error) error {
-	for {
-		err1 := Unwrap(err)
-		if generic.IsNil(err1) {
-			return err
-		}
-
-		err = err1
-	}
-}
-
 func WrapStack(err error) error {
 	if generic.IsNil(err) {
 		return nil
@@ -148,7 +137,7 @@ func T(k string, v any) Tag {
 	return Tag{k: k, v: v}
 }
 
-func WrapTagL(err error, tags ...Tag) error {
+func WrapTag(err error, tags ...Tag) error {
 	if generic.IsNil(err) {
 		return nil
 	}
@@ -177,15 +166,18 @@ func WrapTags(err error, tags Tags) error {
 	}
 }
 
-func WrapTag(err error, key string, value any) error {
+func WrapFn(err error, fn func(tag Tags)) error {
 	if generic.IsNil(err) {
 		return nil
 	}
+	
+	var tags = make(Tags)
+	fn(tags)
 
 	return &ErrWrap{
 		err:    err,
 		caller: stack.Caller(1),
-		fields: map[string]any{key: value},
+		fields: tags,
 	}
 }
 

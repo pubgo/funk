@@ -11,6 +11,7 @@ import (
 )
 
 var _ fmt.Formatter = (*Err)(nil)
+var _ Error = (*Err)(nil)
 
 type Err struct {
 	Msg    string `json:"msg,omitempty"`
@@ -18,22 +19,9 @@ type Err struct {
 	Tags   Tags   `json:"tags,omitempty"`
 }
 
-func (e Err) Kind() string  { return "simple" }
-func (e Err) Error() string { return e.Msg }
-
-func (e Err) Format(f fmt.State, verb rune) {
-	switch verb {
-	case 'v':
-		var data, err = e.MarshalJSON()
-		if err != nil {
-			fmt.Fprintln(f, err.Error())
-		} else {
-			fmt.Fprintln(f, string(data))
-		}
-	case 's', 'q':
-		fmt.Fprintln(f, e.String())
-	}
-}
+func (e Err) Kind() string                  { return "simple" }
+func (e Err) Error() string                 { return e.Msg }
+func (e Err) Format(f fmt.State, verb rune) { strFormat(f, verb, e) }
 
 func (e Err) MarshalJSON() ([]byte, error) {
 	var data = make(map[string]any, 4)

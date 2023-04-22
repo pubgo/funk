@@ -28,6 +28,7 @@ func (e *ErrWrap) Error() string                 { return e.err.Error() }
 
 func (e *ErrWrap) String() string {
 	var buf = bytes.NewBuffer(nil)
+	buf.WriteString("===============================================================\n")
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, e.Kind()))
 	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCaller, e.caller.String()))
 	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorTags, repr.String(e.fields)))
