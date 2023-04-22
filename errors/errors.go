@@ -98,14 +98,19 @@ func WrapStack(err error) error {
 	}
 }
 
-func WrapCaller(err error) error {
+func WrapCaller(err error, skip ...int) error {
 	if generic.IsNil(err) {
 		return nil
 	}
 
+	var depth = 1
+	if len(skip) > 0 {
+		depth += skip[0]
+	}
+
 	return &ErrWrap{
 		err:    err,
-		caller: stack.Caller(1),
+		caller: stack.Caller(depth),
 	}
 }
 
@@ -170,7 +175,7 @@ func WrapFn(err error, fn func(tag Tags)) error {
 	if generic.IsNil(err) {
 		return nil
 	}
-	
+
 	var tags = make(Tags)
 	fn(tags)
 

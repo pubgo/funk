@@ -39,7 +39,7 @@ func Raise(fns ...func(err error) error) {
 	}
 
 	if len(fns) > 0 && fns[0] != nil {
-		panic(errors.WrapCaller(fns[0](err)))
+		panic(errors.WrapCaller(fns[0](err), 1))
 	}
 
 	panic(errors.WrapStack(err))
