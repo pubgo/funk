@@ -29,7 +29,7 @@ func Nil[T any]() (t *T) {
 }
 
 func DePtr[T any](v *T) (r T) {
-	if v == nil || reflect.ValueOf(*v).IsNil() {
+	if v == nil {
 		return
 	}
 	return *v
