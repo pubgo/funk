@@ -2,11 +2,12 @@ package log_test
 
 import (
 	"errors"
-	"github.com/pubgo/funk/generic"
-	"github.com/rs/zerolog"
-	zl "github.com/rs/zerolog/log"
 	"testing"
 
+	"github.com/rs/zerolog"
+	zl "github.com/rs/zerolog/log"
+
+	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/log"
 )
 

@@ -1,6 +1,7 @@
 package log
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/rs/zerolog"
@@ -11,7 +12,6 @@ var _ Logger = (*loggerImpl)(nil)
 type loggerImpl struct {
 	name       string
 	log        *zerolog.Logger
-	hooks      []zerolog.Hook
 	fields     Map
 	content    []byte
 	callerSkip int
@@ -89,77 +89,99 @@ func (l *loggerImpl) WithFields(m Map) Logger {
 	return log
 }
 
-func (l *loggerImpl) WithHooks(hooks ...zerolog.Hook) Logger {
-	if len(hooks) == 0 {
-		return l
-	}
-
-	var log = l.copy()
-	var logHook = make([]zerolog.Hook, 0, len(hooks)+len(log.hooks))
-	logHook = append(logHook, hooks...)
-	logHook = append(logHook, log.hooks...)
-	log.hooks = logHook
-	return log
-}
-
-func (l *loggerImpl) Debug() *zerolog.Event {
+func (l *loggerImpl) Debug(ctxL ...context.Context) *zerolog.Event {
 	if !l.enabled(zerolog.DebugLevel) {
 		return nil
 	}
 
-	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Debug() })
+	var ctx = context.Background()
+	if len(ctxL) > 0 {
+		ctx = ctxL[0]
+	}
+
+	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Debug().Func(withEventCtx(ctx)) })
 }
 
-func (l *loggerImpl) Info() *zerolog.Event {
+func (l *loggerImpl) Info(ctxL ...context.Context) *zerolog.Event {
 	if !l.enabled(zerolog.InfoLevel) {
 		return nil
 	}
 
-	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Info() })
+	var ctx = context.Background()
+	if len(ctxL) > 0 {
+		ctx = ctxL[0]
+	}
+
+	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Info().Func(withEventCtx(ctx)) })
 }
 
-func (l *loggerImpl) Warn() *zerolog.Event {
+func (l *loggerImpl) Warn(ctxL ...context.Context) *zerolog.Event {
 	if !l.enabled(zerolog.WarnLevel) {
 		return nil
 	}
 
-	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Warn() })
+	var ctx = context.Background()
+	if len(ctxL) > 0 {
+		ctx = ctxL[0]
+	}
+
+	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Warn().Func(withEventCtx(ctx)) })
 }
 
-func (l *loggerImpl) Error() *zerolog.Event {
+func (l *loggerImpl) Error(ctxL ...context.Context) *zerolog.Event {
 	if !l.enabled(zerolog.ErrorLevel) {
 		return nil
 	}
 
-	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Error() })
+	var ctx = context.Background()
+	if len(ctxL) > 0 {
+		ctx = ctxL[0]
+	}
+
+	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Error().Func(withEventCtx(ctx)) })
 }
 
-func (l *loggerImpl) Err(err error) *zerolog.Event {
+func (l *loggerImpl) Err(err error, ctxL ...context.Context) *zerolog.Event {
 	if !l.enabled(zerolog.ErrorLevel) {
 		return nil
 	}
 
-	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Err(err) })
+	var ctx = context.Background()
+	if len(ctxL) > 0 {
+		ctx = ctxL[0]
+	}
+
+	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Err(err).Func(withEventCtx(ctx)) })
 }
 
-func (l *loggerImpl) Panic() *zerolog.Event {
+func (l *loggerImpl) Panic(ctxL ...context.Context) *zerolog.Event {
 	if !l.enabled(zerolog.PanicLevel) {
 		return nil
 	}
 
-	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Panic() })
+	var ctx = context.Background()
+	if len(ctxL) > 0 {
+		ctx = ctxL[0]
+	}
+
+	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Panic().Func(withEventCtx(ctx)) })
 }
 
-func (l *loggerImpl) Fatal() *zerolog.Event {
+func (l *loggerImpl) Fatal(ctxL ...context.Context) *zerolog.Event {
 	if !l.enabled(zerolog.FatalLevel) {
 		return nil
 	}
 
-	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Fatal() })
+	var ctx = context.Background()
+	if len(ctxL) > 0 {
+		ctx = ctxL[0]
+	}
+
+	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Fatal().Func(withEventCtx(ctx)) })
 }
 
 func (l *loggerImpl) enabled(lvl zerolog.Level) bool {
-	return lvl >= l.lvl
+	return lvl >= l.lvl && lvl >= zerolog.GlobalLevel()
 }
 
 func (l *loggerImpl) copy() *loggerImpl {
@@ -175,12 +197,8 @@ func (l *loggerImpl) getLog() *zerolog.Logger {
 }
 
 func (l *loggerImpl) newEvent(fn func(log *zerolog.Logger) *zerolog.Event) *zerolog.Event {
-	var log = *l.getLog()
-	for i := range l.hooks {
-		log = log.Hook(l.hooks[i])
-	}
-
-	e := fn(&log)
+	var log = l.getLog()
+	e := fn(log)
 	if l.name != "" {
 		e = e.Str("logger", l.name)
 	}

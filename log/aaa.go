@@ -1,6 +1,8 @@
 package log
 
 import (
+	"context"
+
 	"github.com/rs/zerolog"
 )
 
@@ -12,17 +14,16 @@ type Level = zerolog.Level
 type Logger interface {
 	WithName(name string) Logger
 	WithFields(m Map) Logger
-	WithHooks(hooks ...Hook) Logger
 	WithCallerSkip(skip int) Logger
 	WithEvent(evt *Event) Logger
 	WithLevel(lvl Level) Logger
-	Debug() *Event
-	Info() *Event
-	Warn() *Event
-	Error() *Event
-	Err(err error) *Event
-	Panic() *Event
-	Fatal() *Event
+	Debug(ctx ...context.Context) *Event
+	Info(ctx ...context.Context) *Event
+	Warn(ctx ...context.Context) *Event
+	Error(ctx ...context.Context) *Event
+	Err(err error, ctx ...context.Context) *Event
+	Panic(ctx ...context.Context) *Event
+	Fatal(ctx ...context.Context) *Event
 }
 
 type StdLogger interface {

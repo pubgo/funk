@@ -1,6 +1,7 @@
 package log
 
 import (
+	"github.com/pubgo/funk/version"
 	"github.com/rs/zerolog"
 )
 
@@ -10,7 +11,7 @@ func NewStd(log Logger) StdLogger {
 
 func New(log *zerolog.Logger) Logger {
 	return &loggerImpl{
-		log: log,
-		lvl: zerolog.GlobalLevel(),
+		log:  log,
+		name: version.Project(),
 	}
 }
