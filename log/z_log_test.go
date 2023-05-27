@@ -1,6 +1,7 @@
 package log_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -29,8 +30,8 @@ func TestName(t *testing.T) {
 
 func TestEvent(t *testing.T) {
 	var evt = log.NewEvent().Str("hello", "world").Int("int", 100)
-	ee := log.Info().Str("info", "abcd")
-	ee.Func(log.WithEvent(evt))
+	ctx := log.CreateEventCtx(context.Background(), evt)
+	ee := log.Info(ctx).Str("info", "abcd")
 	ee.Msg("dddd")
 }
 
