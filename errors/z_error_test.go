@@ -14,7 +14,7 @@ import (
 func TestFormat(t *testing.T) {
 	var err = WrapCaller(fmt.Errorf("test error, err=%w", New("hello error")))
 	err = Wrap(err, "next error")
-	err = WrapTags(err, Tags{T("event", "test event"), T("test123", 123), T("test", "hello")})
+	err = WrapTag(err, T("event", "test event"), T("test123", 123), T("test", "hello"))
 	err = Wrapf(err, "next error name=%s", "wrapf")
 	err = Append(err, fmt.Errorf("raw error"))
 	err = Append(err, New("New errors error"))
@@ -37,7 +37,7 @@ func TestFormat(t *testing.T) {
 		}
 	})
 
-	err = WrapTag(err, T("name", "value"), T("name", "value"))
+	err = WrapTag(err, T("name", "value"), T("name1", "value"))
 	err = WrapTrace(err, &errorpb.ErrTrace{
 		Version: version.Version(),
 		Service: version.Project(),

@@ -8,11 +8,11 @@ import (
 func TestStack(t *testing.T) {
 	var err = WrapCaller(New("hello error"))
 	err = Wrap(err, "next error")
-	err = WrapTags(err, Tags{
+	err = WrapTag(err,
 		T("event", "test event"),
 		T("test123", 123),
 		T("test", "hello"),
-	})
+	)
 
 	err = WrapStack(err)
 	err = Wrapf(err, "next error name=%s", "wrapf")

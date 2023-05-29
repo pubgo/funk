@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/alecthomas/repr"
 	jjson "github.com/goccy/go-json"
 
 	"github.com/pubgo/funk/errors/internal"
@@ -31,7 +30,7 @@ func (e *ErrWrap) String() string {
 	buf.WriteString("===============================================================\n")
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, e.Kind()))
 	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCaller, e.caller.String()))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorTags, repr.String(e.fields)))
+	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorTags, e.fields))
 	for i := range e.stack {
 		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorStack, e.stack[i].String()))
 	}

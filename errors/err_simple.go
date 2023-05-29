@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/alecthomas/repr"
 	jjson "github.com/goccy/go-json"
 
 	"github.com/pubgo/funk/errors/internal"
@@ -37,6 +36,6 @@ func (e Err) String() string {
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, e.Kind()))
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorMsg, e.Msg))
 	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorDetail, e.Detail))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorTags, repr.String(e.Tags)))
+	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorTags, e.Tags))
 	return buf.String()
 }

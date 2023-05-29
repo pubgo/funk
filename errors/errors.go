@@ -154,18 +154,6 @@ func WrapTag(err error, tags ...Tag) error {
 	}
 }
 
-func WrapTags(err error, tags Tags) error {
-	if generic.IsNil(err) {
-		return nil
-	}
-
-	return &ErrWrap{
-		err:    err,
-		caller: stack.Caller(1),
-		fields: tags,
-	}
-}
-
 func WrapFn(err error, fn func() Tags) error {
 	if generic.IsNil(err) {
 		return nil
