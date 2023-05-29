@@ -11,7 +11,7 @@ func TestJson(t *testing.T) {
 	var err error = &errors.Err{
 		Msg:    "this is msg",
 		Detail: "this is detail",
-		Tags:   errors.Tags{"tag": "hello"},
+		Tags:   errors.Tags{errors.T("tag", "hello")},
 	}
 
 	err = errors.Wrap(err, "this is next msg")

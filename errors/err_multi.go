@@ -18,8 +18,15 @@ type errorsImpl struct {
 func (e *errorsImpl) Format(f fmt.State, verb rune) { strFormat(f, verb, e) }
 func (e *errorsImpl) Kind() string                  { return "multi" }
 func (e *errorsImpl) Errors() []error               { return e.errs }
-func (e *errorsImpl) Append(err error) error {
-	e.errs = append(e.errs, err)
+func (e *errorsImpl) Append(err ...error) error {
+	if len(err) == 0 {
+		return e
+	}
+
+	errL := make([]error, 0, len(e.errs)+len(err))
+	errL = append(errL, e.errs...)
+	errL = append(errL, err...)
+	e.errs = errL
 	return e
 }
 

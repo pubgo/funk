@@ -1,14 +1,9 @@
 package errors
 
-type Tags map[string]any
-
-func (t Tags) Set(key string, val any) {
-	t[key] = val
-}
-
+type Tags []Tag
 type Tag struct {
-	k string
-	v any
+	K string
+	V any
 }
 
 type ErrUnwrap interface {
@@ -26,7 +21,7 @@ type ErrAs interface {
 type Errors interface {
 	Error
 	Errors() []error
-	Append(err error) error
+	Append(err ...error) error
 }
 
 type Error interface {

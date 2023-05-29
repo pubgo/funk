@@ -122,7 +122,7 @@ func Wrapf(err error, format string, args ...interface{}) error {
 	return &ErrWrap{
 		err:    err,
 		caller: stack.Caller(1),
-		fields: map[string]any{"msg": fmt.Sprintf(format, args...)},
+		fields: Tags{T("msg", fmt.Sprintf(format, args...))},
 	}
 }
 
@@ -134,12 +134,12 @@ func Wrap(err error, msg string) error {
 	return &ErrWrap{
 		err:    err,
 		caller: stack.Caller(1),
-		fields: map[string]any{"msg": msg},
+		fields: Tags{T("msg", msg)},
 	}
 }
 
 func T(k string, v any) Tag {
-	return Tag{k: k, v: v}
+	return Tag{K: k, V: v}
 }
 
 func WrapTag(err error, tags ...Tag) error {
@@ -147,15 +147,10 @@ func WrapTag(err error, tags ...Tag) error {
 		return nil
 	}
 
-	var m = make(Tags, len(tags))
-	for i := range tags {
-		m[tags[i].k] = tags[i].v
-	}
-
 	return &ErrWrap{
 		err:    err,
 		caller: stack.Caller(1),
-		fields: m,
+		fields: tags,
 	}
 }
 
@@ -171,18 +166,15 @@ func WrapTags(err error, tags Tags) error {
 	}
 }
 
-func WrapFn(err error, fn func(tag Tags)) error {
+func WrapFn(err error, fn func() Tags) error {
 	if generic.IsNil(err) {
 		return nil
 	}
 
-	var tags = make(Tags)
-	fn(tags)
-
 	return &ErrWrap{
 		err:    err,
 		caller: stack.Caller(1),
-		fields: tags,
+		fields: fn(),
 	}
 }
 
@@ -194,7 +186,7 @@ func WrapKV(err error, key string, value any) error {
 	return &ErrWrap{
 		err:    err,
 		caller: stack.Caller(1),
-		fields: map[string]any{key: value},
+		fields: Tags{T(key, value)},
 	}
 }
 
@@ -244,6 +236,10 @@ func WrapTrace(err error, trace *errorpb.ErrTrace) error {
 }
 
 func Append(err error, errs ...error) error {
+	if err == nil && len(errs) == 0 {
+		return nil
+	}
+
 	if len(errs) == 0 {
 		return &ErrWrap{
 			err:    err,
@@ -261,9 +257,7 @@ func Append(err error, errs ...error) error {
 	var errL []error
 	switch err1 := err.(type) {
 	case Errors:
-		errL = make([]error, 0, len(err1.Errors())+len(errs))
-		errL = append(errL, err1.Errors()...)
-		errL = append(errL, errs...)
+		return err1.Append(errs...)
 	default:
 		errL = make([]error, 0, len(errs)+1)
 		errL = append(errL, err1)

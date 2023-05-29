@@ -14,11 +14,11 @@ import (
 func TestFormat(t *testing.T) {
 	var err = WrapCaller(fmt.Errorf("test error, err=%w", New("hello error")))
 	err = Wrap(err, "next error")
-	err = WrapTags(err, Tags{"event": "test event", "test123": 123, "test": "hello"})
+	err = WrapTags(err, Tags{T("event", "test event"), T("test123", 123), T("test", "hello")})
 	err = Wrapf(err, "next error name=%s", "wrapf")
 	err = Append(err, fmt.Errorf("raw error"))
 	err = Append(err, New("New errors error"))
-	err = Append(err, &Err{Msg: "Err errors error", Tags: map[string]any{"tags": "hello"}})
+	err = Append(err, &Err{Msg: "Err errors error", Tags: Tags{T("tags", "hello")}})
 
 	err = WrapCode(err, testcodepb.ErrCodeNotFound)
 	err = WrapMsg(err, &errorpb.ErrMsg{
@@ -31,8 +31,10 @@ func TestFormat(t *testing.T) {
 		})
 	})
 
-	err = WrapFn(err, func(tag Tags) {
-		tag.Set("key", "map value")
+	err = WrapFn(err, func() Tags {
+		return Tags{
+			{"key", "map value"},
+		}
 	})
 
 	err = WrapTag(err, T("name", "value"), T("name", "value"))

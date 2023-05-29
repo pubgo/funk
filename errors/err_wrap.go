@@ -18,7 +18,7 @@ type ErrWrap struct {
 	err    error
 	caller *stack.Frame
 	stack  []*stack.Frame
-	fields map[string]any
+	fields Tags
 }
 
 func (e *ErrWrap) Format(f fmt.State, verb rune) { strFormat(f, verb, e) }
