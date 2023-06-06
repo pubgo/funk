@@ -62,9 +62,9 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 			rr = strings.TrimSpace(strings.ReplaceAll(rr, "  ", " "))
 
 			var statusName = "OK"
-			tag, ok = proto.GetExtension(codeName.Desc.Options(), errorpb.E_Field).(*errorpb.Options)
-			if ok && tag != nil {
-				statusName = tag.Code.String()
+			field, ok := proto.GetExtension(codeName.Desc.Options(), errorpb.E_Field).(*errorpb.Fields)
+			if ok && field != nil {
+				statusName = field.Code.String()
 			}
 
 			genFile.Var().

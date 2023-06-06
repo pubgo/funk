@@ -15,4 +15,3 @@ plugins:
   - name: lava-errors
   - name: golang-jsonshim
   - name: golang-deepcopy
-  - name: test

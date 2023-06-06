@@ -23,19 +23,19 @@ var ErrCodeOK = &errorpb.ErrCode{
 }
 
 var ErrCodeNotFound = &errorpb.ErrCode{
-	Code:   errorpb.Code_NotFound,
+	Code:   errorpb.Code_OK,
 	Reason: "not found 找不到",
 	Status: "demo.test.v1.err_code.not_found",
 }
 
 var ErrCodeUnknown = &errorpb.ErrCode{
-	Code:   errorpb.Code_NotFound,
+	Code:   errorpb.Code_OK,
 	Reason: "unknown 未知",
 	Status: "demo.test.v1.err_code.unknown",
 }
 
 var ErrCodeDbConn = &errorpb.ErrCode{
-	Code:   errorpb.Code_Internal,
+	Code:   errorpb.Code_OK,
 	Reason: "db connect error",
 	Status: "demo.test.v1.err_code.db_conn",
 }

@@ -17,6 +17,17 @@ func (this *Options) UnmarshalJSON(b []byte) error {
 	return StatusUnmarshaler.Unmarshal(bytes.NewReader(b), this)
 }
 
+// MarshalJSON is a custom marshaler for Fields
+func (this *Fields) MarshalJSON() ([]byte, error) {
+	str, err := StatusMarshaler.MarshalToString(this)
+	return []byte(str), err
+}
+
+// UnmarshalJSON is a custom unmarshaler for Fields
+func (this *Fields) UnmarshalJSON(b []byte) error {
+	return StatusUnmarshaler.Unmarshal(bytes.NewReader(b), this)
+}
+
 var (
 	StatusMarshaler   = &jsonpb.Marshaler{}
 	StatusUnmarshaler = &jsonpb.Unmarshaler{AllowUnknownFields: true}

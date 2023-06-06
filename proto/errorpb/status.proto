@@ -7,11 +7,16 @@ import "google/protobuf/descriptor.proto";
 
 message Options {
   bool gen = 1;
-  Code code = 2;
+  Code default_code = 2;
+}
+
+message Fields {
+  Code code = 1;
+  string msg = 2;
 }
 
 extend google.protobuf.EnumValueOptions {
-  Options field = 100002;
+  Fields field = 100002;
 }
 
 extend google.protobuf.EnumOptions {
