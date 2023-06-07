@@ -6,6 +6,7 @@ import (
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/env"
+	"github.com/pubgo/funk/netutil"
 	"github.com/pubgo/funk/pathutil"
 	"github.com/pubgo/funk/strutil"
 	"github.com/pubgo/funk/version"
@@ -28,6 +29,9 @@ var (
 
 	// Pwd 当前目录
 	Pwd = assert.Exit1(os.Getwd())
+
+	// LocalIP 当前服务的本地IP
+	LocalIP = netutil.GetLocalIP()
 
 	// Hostname 主机名
 	Hostname = strutil.FirstFnNotEmpty(
