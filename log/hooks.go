@@ -18,6 +18,6 @@ func (h *hookImpl) Run(e *zerolog.Event, level zerolog.Level, message string) {
 		return
 	}
 
-	e.Int64("go_id", goid.Goid())
-	e.Uint64("log_count", atomic.AddUint64(&h.count, 1))
+	e.Int64("go-id", goid.Goid())
+	e.Uint64("log-num", atomic.AddUint64(&h.count, 1))
 }

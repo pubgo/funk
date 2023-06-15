@@ -16,7 +16,7 @@ func withEventCtx(ctx context.Context) func(e *Event) {
 	return func(e *Event) {
 		var evt, ok = ctx.Value(ctxEventKey{}).(*Event)
 		if ok {
-			WithEvent(evt)(e)
+			withEvent(evt)(e)
 		}
 	}
 }
