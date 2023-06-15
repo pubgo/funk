@@ -15,8 +15,9 @@ message ErrMsg {
 }
 
 message ErrCode {
-  status.Code code = 2;
-  string status = 3;
+  status.Code code = 1;
+  int32 biz_code = 2;
+  string name = 3;
   string reason = 4;
 }
 

@@ -7,8 +7,45 @@ import (
 	jjson "github.com/goccy/go-json"
 
 	"github.com/pubgo/funk/errors/internal"
+	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/stack"
 )
+
+func WrapTag(err error, tags ...Tag) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	return &ErrWrap{
+		err:    err,
+		caller: stack.Caller(1),
+		fields: tags,
+	}
+}
+
+func WrapFn(err error, fn func() Tags) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	return &ErrWrap{
+		err:    err,
+		caller: stack.Caller(1),
+		fields: fn(),
+	}
+}
+
+func WrapKV(err error, key string, value any) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	return &ErrWrap{
+		err:    err,
+		caller: stack.Caller(1),
+		fields: Tags{T(key, value)},
+	}
+}
 
 var _ Error = (*ErrWrap)(nil)
 var _ fmt.Formatter = (*ErrWrap)(nil)
@@ -40,8 +77,8 @@ func (e *ErrWrap) String() string {
 
 func (e *ErrWrap) MarshalJSON() ([]byte, error) {
 	var data = errJsonify(e.err)
-	data["fields"] = e.fields
 	data["kind"] = e.Kind()
+	data["fields"] = e.fields
 	data["stacks"] = e.stack
 	data["caller"] = e.caller.String()
 	return jjson.Marshal(data)

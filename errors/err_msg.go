@@ -4,11 +4,28 @@ import (
 	"bytes"
 	"fmt"
 
-	jjson "github.com/goccy/go-json"
+	json "github.com/goccy/go-json"
 
 	"github.com/pubgo/funk/errors/internal"
+	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/proto/errorpb"
+	"github.com/pubgo/funk/stack"
 )
+
+func WrapMsg(err error, msg *errorpb.ErrMsg) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	if msg == nil {
+		panic("error msg is nil")
+	}
+
+	return &ErrWrap{
+		caller: stack.Caller(1),
+		err:    &ErrMsg{pb: msg, err: err},
+	}
+}
 
 var _ Error = (*ErrMsg)(nil)
 var _ fmt.Formatter = (*ErrMsg)(nil)
@@ -37,9 +54,10 @@ func (t *ErrMsg) String() string {
 
 func (t *ErrMsg) MarshalJSON() ([]byte, error) {
 	var data = errJsonify(t.err)
+	data["kind"] = t.Kind()
 	data["msg"] = t.pb.Msg
 	data["detail"] = t.pb.Detail
 	data["stack"] = t.pb.Stack
 	data["tags"] = t.pb.Tags
-	return jjson.Marshal(data)
+	return json.Marshal(data)
 }

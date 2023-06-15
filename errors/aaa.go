@@ -1,9 +1,9 @@
 package errors
 
 import (
-	"encoding/json"
 	"fmt"
-	jjson "github.com/goccy/go-json"
+
+	json "github.com/goccy/go-json"
 )
 
 var _ json.Marshaler = (Tags)(nil)
@@ -17,7 +17,7 @@ func (t Tags) Format(f fmt.State, verb rune) {
 		tags[t[i].K] = t[i].V
 	}
 
-	var data, err = jjson.Marshal(tags)
+	var data, err = json.Marshal(tags)
 	if err != nil {
 		fmt.Fprintf(f, "%v", err)
 	} else {
@@ -30,7 +30,7 @@ func (t Tags) MarshalJSON() ([]byte, error) {
 	for i := range t {
 		tags[t[i].K] = t[i].V
 	}
-	return jjson.Marshal(tags)
+	return json.Marshal(tags)
 }
 
 type Tag struct {

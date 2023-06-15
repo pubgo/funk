@@ -4,12 +4,49 @@ import (
 	"bytes"
 	"fmt"
 
-	jjson "github.com/goccy/go-json"
+	json "github.com/goccy/go-json"
 
 	"github.com/pubgo/funk/errors/internal"
+	"github.com/pubgo/funk/stack"
 )
 
+func Append(err error, errs ...error) error {
+	if err == nil && len(errs) == 0 {
+		return nil
+	}
+
+	if len(errs) == 0 {
+		return &ErrWrap{
+			err:    err,
+			caller: stack.Caller(1),
+		}
+	}
+
+	if err == nil {
+		return &ErrWrap{
+			err:    &errorsImpl{errs: errs},
+			caller: stack.Caller(1),
+		}
+	}
+
+	var errL []error
+	switch err1 := err.(type) {
+	case Errors:
+		return err1.Append(errs...)
+	default:
+		errL = make([]error, 0, len(errs)+1)
+		errL = append(errL, err1)
+		errL = append(errL, errs...)
+	}
+
+	return &ErrWrap{
+		err:    &errorsImpl{errs: errL},
+		caller: stack.Caller(1),
+	}
+}
+
 var _ Errors = (*errorsImpl)(nil)
+var _ fmt.Formatter = (*errorsImpl)(nil)
 
 type errorsImpl struct {
 	errs []error
@@ -48,7 +85,7 @@ func (e *errorsImpl) MarshalJSON() ([]byte, error) {
 	for i := range e.errs {
 		errs = append(errs, errJsonify(e.errs[i]))
 	}
-	return jjson.Marshal(errs)
+	return json.Marshal(errs)
 }
 
 func (e *errorsImpl) Error() string {

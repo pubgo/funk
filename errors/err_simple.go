@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
-	jjson "github.com/goccy/go-json"
+	json "github.com/goccy/go-json"
 
 	"github.com/pubgo/funk/errors/internal"
 )
@@ -28,7 +28,7 @@ func (e Err) MarshalJSON() ([]byte, error) {
 	data["msg"] = e.Msg
 	data["detail"] = e.Detail
 	data["tags"] = e.Tags
-	return jjson.Marshal(data)
+	return json.Marshal(data)
 }
 
 func (e Err) String() string {

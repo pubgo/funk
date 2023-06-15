@@ -7,8 +7,25 @@ import (
 	jjson "github.com/goccy/go-json"
 
 	"github.com/pubgo/funk/errors/internal"
+	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/proto/errorpb"
+	"github.com/pubgo/funk/stack"
 )
+
+func WrapTrace(err error, trace *errorpb.ErrTrace) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	if trace == nil {
+		panic("error trace is nil")
+	}
+
+	return &ErrWrap{
+		caller: stack.Caller(1),
+		err:    &ErrTrace{pb: trace, err: err},
+	}
+}
 
 var _ Error = (*ErrTrace)(nil)
 var _ fmt.Formatter = (*ErrTrace)(nil)
@@ -37,6 +54,7 @@ func (t *ErrTrace) String() string {
 
 func (t *ErrTrace) MarshalJSON() ([]byte, error) {
 	var data = errJsonify(t.err)
+	data["kind"] = t.Kind()
 	data["id"] = t.pb.Id
 	data["operation"] = t.pb.Operation
 	data["service"] = t.pb.Service

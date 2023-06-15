@@ -227,7 +227,7 @@ func ParseError(err error) *errorpb.Error {
 			Code: &errorpb.ErrCode{
 				Reason: gs.GRPCStatus().Message(),
 				Code:   errorpb.Code(gs.GRPCStatus().Code()),
-				Status: "lava.grpc.status",
+				Name:   "lava.grpc.status",
 			},
 			Trace: &errorpb.ErrTrace{
 				Service: version.Project(),
@@ -244,7 +244,7 @@ func ParseError(err error) *errorpb.Error {
 		Code: &errorpb.ErrCode{
 			Reason: err.Error(),
 			Code:   errorpb.Code_Unknown,
-			Status: "lava.unknown",
+			Name:   "lava.unknown",
 		},
 		Trace: &errorpb.ErrTrace{
 			Service: version.Project(),

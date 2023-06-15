@@ -12,6 +12,6 @@ deps:
     url: /usr/local/include/google/protobuf
 plugins:
   - name: go
-  - name: lava-errors
+  - name: go-errors
   - name: golang-jsonshim
   - name: golang-deepcopy
