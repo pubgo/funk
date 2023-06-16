@@ -14,7 +14,7 @@ type event struct {
 //go:linkname putEvent github.com/rs/zerolog.putEvent
 func putEvent(e *Event)
 
-func withEvent(evt *Event) func(e *Event) {
+func WithEvent(evt *Event) func(e *Event) {
 	return func(e *Event) {
 		evt1 := convertEvent(evt)
 		if evt1.buf[0] == '{' && len(evt1.buf) == 1 {
