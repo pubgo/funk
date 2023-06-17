@@ -19,6 +19,7 @@ require (
 	github.com/mattn/go-isatty v0.0.17
 	github.com/mattn/go-sqlite3 v1.14.15
 	github.com/mitchellh/mapstructure v1.5.0
+	github.com/open2b/scriggo v0.56.1
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58
 	github.com/phuslu/goid v1.0.0
 	github.com/rs/xid v1.4.0
