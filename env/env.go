@@ -1,6 +1,7 @@
 package env
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -11,8 +12,10 @@ import (
 
 var trim = strings.TrimSpace
 
-func Set(key, value string) error {
-	return os.Setenv(Key(key), value)
+func Set(key, value string) {
+	k, v, ok := Normalize(fmt.Sprintf("%s=%s", key, value))
+	assert.If(!ok, "env key is incorrect")
+	assert.Must(os.Setenv(Key(k), v))
 }
 
 func Get(names ...string) string {
@@ -34,6 +37,7 @@ func GetWith(val *string, names ...string) {
 		env = trim(env)
 		if ok && env != "" {
 			*val = trim(env)
+			break
 		}
 	}
 }
@@ -84,20 +88,10 @@ func Lookup(key string) (string, bool) {
 	return os.LookupEnv(Key(key))
 }
 
-func UnSet(key string) error {
-	return os.Unsetenv(Key(key))
+func Delete(key string) {
+	assert.Must(os.Unsetenv(Key(key)))
 }
 
-// Expand returns value of convert with environment variable.
-// Return environment variable if value start with "${" and end with "}".
-// Return default value if environment variable is empty or not exist.
-//
-// It accepts value formats "${env}" ,"${env||defaultValue}" , "defaultValue".
-// Examples:
-//
-//	_ = Expand("${GOPATH}")
-//	_ = Expand("${GOPATH||/usr/local/go}")
-//	_ = Expand("hello")
 func Expand(value string) string {
 	return assert.Must1(envsubst.String(value))
 }
@@ -106,12 +100,7 @@ func Map() map[string]string {
 	var data = make(map[string]string, len(os.Environ()))
 	for _, env := range os.Environ() {
 		envs := strings.SplitN(env, "=", 2)
-		var key = trim(envs[0])
-		if len(envs) != 2 || key == "" || strings.HasPrefix(key, "_") {
-			continue
-		}
-
-		data[key] = trim(envs[1])
+		data[envs[0]] = envs[1]
 	}
 	return data
 }
