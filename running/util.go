@@ -1,10 +1,11 @@
-package runmode
+package running
 
 import (
 	"fmt"
 	rt "runtime"
 
 	semver "github.com/hashicorp/go-version"
+
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/recovery"
 	"github.com/pubgo/funk/version"
@@ -33,7 +34,7 @@ func GetSysInfo() map[string]string {
 	}
 }
 
-func Check() {
+func CheckVersion() {
 	defer recovery.Exit()
 	assert.Must1(semver.NewVersion(version.Version()))
 	assert.If(version.Project() == "", "project is null")

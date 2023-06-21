@@ -1,8 +1,10 @@
-package runmode
+package running
 
 import (
 	"os"
 	"strings"
+
+	"github.com/rs/xid"
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/env"
@@ -18,10 +20,11 @@ var (
 	GrpcPort = 50051
 	Project  = version.Project()
 
+	Env     = "debug"
 	IsDebug bool
 
 	// InstanceID service id
-	InstanceID = version.InstanceID()
+	InstanceID = xid.New().String()
 
 	Version = version.Version()
 
@@ -55,5 +58,6 @@ var (
 )
 
 func init() {
-	env.GetBoolVal(&IsDebug, "enable_debug", "enable_debug_mode")
+	env.GetBoolVal(&IsDebug, "enable_debug", "debug")
+	env.GetWith(&Env, "env", "run_mode")
 }

@@ -2,8 +2,6 @@ package version
 
 import (
 	"runtime/debug"
-
-	"github.com/rs/xid"
 )
 
 var mainPath string
@@ -11,7 +9,6 @@ var commitID string
 var buildTime string
 var version = "v0.0.1-dev-99"
 var project string
-var instanceID = xid.New().String()
 
 func init() {
 	bi, ok := debug.ReadBuildInfo()
