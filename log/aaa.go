@@ -17,6 +17,7 @@ type Logger interface {
 	WithCallerSkip(skip int) Logger
 	WithEvent(evt *Event) Logger
 	WithLevel(lvl Level) Logger
+	WithNameFilter(filters map[string]func(name string) bool) Logger
 	Debug(ctx ...context.Context) *Event
 	Info(ctx ...context.Context) *Event
 	Warn(ctx ...context.Context) *Event

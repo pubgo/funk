@@ -16,6 +16,13 @@ type loggerImpl struct {
 	content    []byte
 	callerSkip int
 	lvl        Level
+	filters    map[string]func(name string) bool
+}
+
+func (l *loggerImpl) WithNameFilter(filters map[string]func(name string) bool) Logger {
+	var log = l.copy()
+	log.filters = filters
+	return log
 }
 
 func (l *loggerImpl) WithLevel(lvl Level) Logger {
@@ -89,8 +96,25 @@ func (l *loggerImpl) WithFields(m Map) Logger {
 	return log
 }
 
+func (l *loggerImpl) isFilterEnabled() bool {
+	if l.filters == nil {
+		return true
+	}
+
+	filter := l.filters[l.name]
+	if filter == nil {
+		return true
+	}
+
+	return filter(l.name)
+}
+
 func (l *loggerImpl) Debug(ctxL ...context.Context) *zerolog.Event {
 	if !l.enabled(zerolog.DebugLevel) {
+		return nil
+	}
+
+	if !l.isFilterEnabled() {
 		return nil
 	}
 
@@ -104,6 +128,10 @@ func (l *loggerImpl) Debug(ctxL ...context.Context) *zerolog.Event {
 
 func (l *loggerImpl) Info(ctxL ...context.Context) *zerolog.Event {
 	if !l.enabled(zerolog.InfoLevel) {
+		return nil
+	}
+
+	if !l.isFilterEnabled() {
 		return nil
 	}
 
