@@ -118,7 +118,7 @@ func Load[T any]() T {
 	return cfg
 }
 
-func MergeR[A any | *any](dst *A, src ...A) (ret result.Result[*A]) {
+func MergeR[A any, B any | *any](dst *A, src ...B) (ret result.Result[*A]) {
 	if len(src) == 0 {
 		return ret.WithVal(dst)
 	}
@@ -130,7 +130,7 @@ func MergeR[A any | *any](dst *A, src ...A) (ret result.Result[*A]) {
 	return ret.WithVal(dst)
 }
 
-func Merge[A any | *any](dst *A, src ...A) error {
+func Merge[A any, B any | *any](dst *A, src ...B) error {
 	for i := range src {
 		err := mergo.Merge(dst, src[i], mergo.WithOverride, mergo.WithAppendSlice, mergo.WithTransformers(new(transformer)))
 		if err != nil {
