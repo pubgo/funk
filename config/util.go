@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"github.com/pubgo/funk/result"
 	"log"
 	"os"
 	"path/filepath"
@@ -15,6 +14,7 @@ import (
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/pathutil"
+	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/vars"
 )
 
@@ -118,7 +118,11 @@ func Load[T any]() T {
 	return cfg
 }
 
-func MergeR[A any](dst *A, src ...A) (ret result.Result[*A]) {
+func MergeR[A any | *any](dst *A, src ...A) (ret result.Result[*A]) {
+	if len(src) == 0 {
+		return ret.WithVal(dst)
+	}
+
 	var err = Merge(dst, src...)
 	if err != nil {
 		return ret.WithErr(err)
@@ -126,7 +130,7 @@ func MergeR[A any](dst *A, src ...A) (ret result.Result[*A]) {
 	return ret.WithVal(dst)
 }
 
-func Merge[A any](dst *A, src ...A) error {
+func Merge[A any | *any](dst *A, src ...A) error {
 	for i := range src {
 		err := mergo.Merge(dst, src[i], mergo.WithOverride, mergo.WithAppendSlice, mergo.WithTransformers(new(transformer)))
 		if err != nil {
