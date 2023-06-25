@@ -3,6 +3,8 @@ package errors
 import (
 	"fmt"
 	"testing"
+
+	"github.com/pubgo/funk/stack"
 )
 
 func TestStack(t *testing.T) {
@@ -12,6 +14,7 @@ func TestStack(t *testing.T) {
 		T("event", "test event"),
 		T("test123", 123),
 		T("test", "hello"),
+		T("fn_stack", stack.CallerWithFunc(stack.CallerWithFunc)),
 	)
 
 	err = WrapStack(err)

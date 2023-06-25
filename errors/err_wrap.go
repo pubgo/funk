@@ -67,7 +67,10 @@ func (e *ErrWrap) String() string {
 	buf.WriteString("===============================================================\n")
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, e.Kind()))
 	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCaller, e.caller.String()))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorTags, e.fields))
+	for i := range e.fields {
+		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorTags, e.fields[i].String()))
+	}
+
 	for i := range e.stack {
 		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorStack, e.stack[i].String()))
 	}

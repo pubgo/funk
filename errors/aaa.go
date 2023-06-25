@@ -38,6 +38,10 @@ type Tag struct {
 	V any
 }
 
+func (t Tag) String() string {
+	return fmt.Sprintf("%s: %v", t.K, t.V)
+}
+
 type ErrUnwrap interface {
 	Unwrap() error
 }

@@ -36,6 +36,8 @@ func (e Err) String() string {
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, e.Kind()))
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorMsg, e.Msg))
 	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorDetail, e.Detail))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorTags, e.Tags))
+	for i := range e.Tags {
+		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorTags, e.Tags[i].String()))
+	}
 	return buf.String()
 }
