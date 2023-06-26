@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"gopkg.in/yaml.v3"
 )
 
@@ -16,10 +17,15 @@ var (
 )
 
 var _ yaml.Unmarshaler = (*Node)(nil)
+var _ json.Marshaler = (*Node)(nil)
 
 type Node struct {
 	maps  map[string]any
 	value *yaml.Node
+}
+
+func (c *Node) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.maps)
 }
 
 func (c *Node) UnmarshalYAML(value *yaml.Node) error {
