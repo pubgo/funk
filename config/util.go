@@ -26,7 +26,7 @@ func GetConfigPath() string {
 	return configPath
 }
 
-func getConfigPath(name, typ string, configDir ...string) (config string, dir string) {
+func getConfigPath(name, typ string, configDir ...string) (string, string) {
 	if len(configDir) == 0 {
 		configDir = append(configDir, "./", defaultConfigPath)
 	}
@@ -43,11 +43,11 @@ func getConfigPath(name, typ string, configDir ...string) (config string, dir st
 	var notFoundPath []string
 	for _, path := range getPathList() {
 		for _, dir := range configDir {
-			var configPath = filepath.Join(path, dir, configName)
-			if pathutil.IsNotExist(configPath) {
-				notFoundPath = append(notFoundPath, configPath)
+			var cfgPath = filepath.Join(path, dir, configName)
+			if pathutil.IsNotExist(cfgPath) {
+				notFoundPath = append(notFoundPath, cfgPath)
 			} else {
-				return configPath, filepath.Dir(configPath)
+				return cfgPath, filepath.Dir(cfgPath)
 			}
 		}
 	}
@@ -69,8 +69,13 @@ func getPathList() (paths []string) {
 	return
 }
 
-func Load[T any]() T {
-	configPath, configDir = getConfigPath("", "")
+func Load[T any](confPath ...string) T {
+	configPath, configDir = getConfigPath(defaultConfigName, defaultConfigType)
+	if len(confPath) > 0 && confPath[0] != "" {
+		configPath = confPath[0]
+		configDir = filepath.Dir(configPath)
+	}
+
 	configBytes := assert.Must1(os.ReadFile(configPath))
 	configBytes = assert.Must1(envsubst.Bytes(configBytes))
 

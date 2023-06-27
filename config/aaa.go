@@ -55,6 +55,9 @@ type NamedConfig interface {
 }
 
 type Resources struct {
-	Resources      []string `yaml:"resources"`
+	// Resources resource config file must exist
+	Resources []string `yaml:"resources"`
+
+	// PatchResources resource config not required to exist
 	PatchResources []string `yaml:"patch_resources"`
 }
