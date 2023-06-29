@@ -197,3 +197,20 @@ func (s *transformer) Transformer(t reflect.Type) func(dst, src reflect.Value) e
 		return nil
 	}
 }
+
+func unmarshalOneOrList[T any](list *[]T, value *yaml.Node) error {
+	if value.Kind == yaml.MappingNode {
+		var t T
+		if err := value.Decode(&t); err != nil {
+			return err
+		}
+		*list = append(*list, t)
+		return nil
+	} else if value.Kind == yaml.SequenceNode {
+		if err := value.Decode(list); err != nil {
+			return err
+		}
+		return nil
+	}
+	return fmt.Errorf("unmarshalable node: %v", value.Value)
+}
