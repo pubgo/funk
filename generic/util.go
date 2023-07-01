@@ -29,7 +29,7 @@ func Nil[T any]() (t *T) {
 }
 
 func DePtr[T any](v *T) (r T) {
-	if v == nil || reflect.ValueOf(*v).IsNil() {
+	if v == nil {
 		return
 	}
 	return *v
@@ -126,7 +126,7 @@ func FilterInPlace[T any](set []T, criteria func(T) bool) []T {
 func Delete[T comparable](set []T, value T) []T {
 	for i := 0; i < len(set); i++ {
 		if set[i] == value {
-			set = append(set[:i], set[i:]...)
+			set = append(set[:i], set[i+1:]...)
 			break
 		}
 	}

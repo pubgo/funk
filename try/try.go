@@ -18,9 +18,7 @@ func WithErr(gErr *error, fn func() error) {
 			*gErr = errors.WrapStack(err)
 		}
 
-		*gErr = errors.WrapEventFn(*gErr, func(evt *errors.Event) {
-			evt.Str("fn_stack", stack.CallerWithFunc(fn).String())
-		})
+		*gErr = errors.WrapKV(*gErr, "fn_stack", stack.CallerWithFunc(fn).String())
 	}()
 
 	*gErr = fn()
@@ -37,9 +35,7 @@ func Try(fn func() error) (gErr error) {
 			gErr = errors.WrapStack(err)
 		}
 
-		gErr = errors.WrapEventFn(gErr, func(evt *errors.Event) {
-			evt.Str("fn_stack", stack.CallerWithFunc(fn).String())
-		})
+		gErr = errors.WrapKV(gErr, "fn_stack", stack.CallerWithFunc(fn).String())
 	}()
 
 	gErr = fn()

@@ -1,12 +1,28 @@
 package recovery
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/result"
 )
+
+func testExit1() {
+	testExit()
+}
+
+func testExit() {
+	defer Exit()
+
+	assert.Must(fmt.Errorf("test"))
+}
+
+func TestExit(t *testing.T) {
+	testExit1()
+}
 
 func TestErr(t *testing.T) {
 	var handler = func() (gErr error) {
@@ -47,9 +63,4 @@ func TestName(t *testing.T) {
 
 func hello() {
 	panic("hello")
-}
-
-func TestDump(t *testing.T) {
-	defer Dump()
-	hello()
 }

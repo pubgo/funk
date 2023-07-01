@@ -14,6 +14,10 @@ type hookImpl struct {
 }
 
 func (h *hookImpl) Run(e *zerolog.Event, level zerolog.Level, message string) {
-	e.Int64("goroutine", goid.Goid())
-	e.Uint64("num", atomic.AddUint64(&h.count, 1))
+	if zerolog.GlobalLevel() >= zerolog.WarnLevel {
+		return
+	}
+
+	e.Int64("go-id", goid.Goid())
+	e.Uint64("log-num", atomic.AddUint64(&h.count, 1))
 }

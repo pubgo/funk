@@ -17,7 +17,7 @@ func (d Retry) Do(f func(i int) error) (err error) {
 	var b = d()
 	for i := 0; ; i++ {
 		if err = wrap(i); err == nil {
-			return
+			return nil
 		}
 
 		dur, stop := b.Next()
@@ -38,7 +38,7 @@ func (d Retry) DoVal(f func(i int) (interface{}, error)) (val interface{}, err e
 	var b = d()
 	for i := 0; ; i++ {
 		if val, err = wrap(i); err == nil {
-			return
+			return val, nil
 		}
 
 		dur, stop := b.Next()

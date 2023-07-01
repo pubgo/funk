@@ -80,8 +80,6 @@ func GoDelay(fn func() error, durations ...time.Duration) {
 	go func() { logErr(fn, try.Try(fn)) }()
 
 	time.Sleep(dur)
-
-	return
 }
 
 // Timeout 超时处理

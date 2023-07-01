@@ -26,6 +26,7 @@ func init3() {
 }
 
 func TestCallerWithDepth(t *testing.T) {
+	fmt.Println(Caller(0).String())
 	init1()
 	fmt.Print("\n\n\n")
 	init2()

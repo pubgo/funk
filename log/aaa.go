@@ -9,23 +9,21 @@ import (
 type Map = map[string]any
 type Hook = zerolog.Hook
 type Event = zerolog.Event
+type Level = zerolog.Level
 
 type Logger interface {
 	WithName(name string) Logger
 	WithFields(m Map) Logger
-	WithHooks(hooks ...Hook) Logger
 	WithCallerSkip(skip int) Logger
 	WithEvent(evt *Event) Logger
-	WithCtx(ctx context.Context) context.Context
-	Debug() *Event
-	Info() *Event
-	Warn() *Event
-	Error() *Event
-	Err(err error) *Event
-	Panic() *Event
-	Fatal() *Event
-	Print(msg string)
-	Printf(format string, args ...any)
+	WithLevel(lvl Level) Logger
+	Debug(ctx ...context.Context) *Event
+	Info(ctx ...context.Context) *Event
+	Warn(ctx ...context.Context) *Event
+	Error(ctx ...context.Context) *Event
+	Err(err error, ctx ...context.Context) *Event
+	Panic(ctx ...context.Context) *Event
+	Fatal(ctx ...context.Context) *Event
 }
 
 type StdLogger interface {

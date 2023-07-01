@@ -1,18 +1,45 @@
 package errors
 
 import (
-	"github.com/pubgo/funk/proto/errorpb"
-	"github.com/pubgo/funk/stack"
-	"github.com/rs/zerolog"
+	"fmt"
+
+	json "github.com/goccy/go-json"
 )
 
-type Event = zerolog.Event
-type Tags map[string]any
+var _ json.Marshaler = (Tags)(nil)
+var _ fmt.Formatter = (Tags)(nil)
 
-type Errors interface {
-	Error
-	Errors() []error
-	Append(err error) error
+type Tags []Tag
+
+func (t Tags) Format(f fmt.State, verb rune) {
+	var tags = make(map[string]any, len(t))
+	for i := range t {
+		tags[t[i].K] = t[i].V
+	}
+
+	var data, err = json.Marshal(tags)
+	if err != nil {
+		fmt.Fprintf(f, "%v", err)
+	} else {
+		fmt.Fprintln(f, string(data))
+	}
+}
+
+func (t Tags) MarshalJSON() ([]byte, error) {
+	var tags = make(map[string]any, len(t))
+	for i := range t {
+		tags[t[i].K] = t[i].V
+	}
+	return json.Marshal(tags)
+}
+
+type Tag struct {
+	K string
+	V any
+}
+
+func (t Tag) String() string {
+	return fmt.Sprintf("%s: %v", t.K, t.V)
 }
 
 type ErrUnwrap interface {
@@ -27,42 +54,15 @@ type ErrAs interface {
 	As(any) bool
 }
 
+type Errors interface {
+	Error
+	Errors() []error
+	Append(err ...error) error
+}
+
 type Error interface {
+	Kind() string
 	Error() string
 	String() string
-	Unwrap() error
 	MarshalJSON() ([]byte, error)
-}
-
-type ErrEvent interface {
-	Error
-	Event() *Event
-	AddEvent(evt *Event)
-}
-
-type ErrCode interface {
-	Error
-	Name() string
-	Reason() string
-	Code() errorpb.Code
-	Status() uint32
-	Tags() map[string]string
-
-	SetErr(err error) ErrCode
-	AddTag(key string, val string) ErrCode
-	SetCode(code errorpb.Code) ErrCode
-	SetStatus(status uint32) ErrCode
-	SetReason(reason string) ErrCode
-	SetName(biz string) ErrCode
-}
-
-type ErrStack interface {
-	Error
-	AddStack()
-	Stack() []*stack.Frame
-}
-
-// event 和<zerolog.Event>内存对齐
-type event struct {
-	buf []byte
 }

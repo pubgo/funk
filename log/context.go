@@ -2,16 +2,21 @@ package log
 
 import "context"
 
-type ctxKey struct{}
+type ctxEventKey struct{}
 
-func (l *loggerImpl) WithCtx(ctx context.Context) context.Context {
-	return context.WithValue(ctx, ctxKey{}, l)
+func CreateEventCtx(ctx context.Context, evt *Event) context.Context {
+	if evt == nil || ctx == nil {
+		panic("ctx or log event is nil")
+	}
+
+	return context.WithValue(ctx, ctxEventKey{}, evt)
 }
 
-// Ctx returns the Logger associated with the ctx.
-func Ctx(ctx context.Context) Logger {
-	if l, ok := ctx.Value(ctxKey{}).(*loggerImpl); ok && l != nil {
-		return l
+func withEventCtx(ctx context.Context) func(e *Event) {
+	return func(e *Event) {
+		var evt, ok = ctx.Value(ctxEventKey{}).(*Event)
+		if ok {
+			WithEvent(evt)(e)
+		}
 	}
-	return stdLog
 }

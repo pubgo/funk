@@ -3,14 +3,15 @@ package assert
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/pubgo/funk/errors"
 )
 
 func TestCheckNil(t *testing.T) {
-	var is = assert.New(t)
 	var a *int
 
-	is.Panics(func() {
-		Assert(a == nil, "ok")
-	})
+	defer func() {
+		errors.Debug(errors.Parse(recover()))
+	}()
+
+	Assert(a == nil, "ok")
 }

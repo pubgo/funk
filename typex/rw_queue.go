@@ -38,7 +38,7 @@ func (t *Queue) PopFirst() interface{} {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
-	if len(t.data)==0{
+	if len(t.data) == 0 {
 		return nil
 	}
 

@@ -4,43 +4,32 @@ package errors;
 
 option go_package = "github.com/pubgo/funk/proto/errorpb;errorpb";
 
+import "errorpb/status.proto";
+import "google/protobuf/any.proto";
+
+message ErrMsg {
+  string msg = 1;
+  string detail = 2;
+  string stack = 3;
+  map<string, string> tags = 4;
+}
+
+message ErrCode {
+  status.Code code = 1;
+  int32 biz_code = 2;
+  string name = 3;
+  string reason = 4;
+}
+
+message ErrTrace {
+  string id = 2;
+  string operation = 3;
+  string service = 4;
+  string version = 5;
+}
+
 message Error {
-  string id = 1;
-
-  uint32 code = 2 [
-    json_name = "code"
-  ];
-
-  // demo.test.v1.test.not_found
-  string name = 3 [
-    json_name = "biz_code"
-  ];
-
-  string reason = 4 [
-    json_name = "reason"
-  ];
-
-  string operation = 5 [
-    json_name = "operation"
-  ];
-
-  string service = 6 [
-    json_name = "service"
-  ];
-
-  string version = 7 [
-    json_name = "version"
-  ];
-
-  string err_msg = 8 [
-    json_name = "err_msg"
-  ];
-
-  bytes err_detail = 9 [
-    json_name = "err_detail"
-  ];
-
-  map<string, string>  tags = 10 [
-    json_name = "tags"
-  ];
+  ErrCode code = 1;
+  ErrTrace trace = 2;
+  ErrMsg msg = 3;
 }

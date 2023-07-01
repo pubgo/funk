@@ -1,6 +1,8 @@
-version: v1
-vendor: .proto
 checksum: 85da3b3146c7021097b973c086b0a12dae70c023
+vendor: .proto
+base:
+  out: proto
+  paths: source_relative
 root:
   - proto
 includes:
@@ -10,10 +12,6 @@ deps:
     url: /usr/local/include/google/protobuf
 plugins:
   - name: go
-    out: proto
-    opt:
-      - paths=source_relative
-  - name: lava-errors
-    out: proto
-    opt:
-      - paths=source_relative
+  - name: go-errors
+  - name: golang-jsonshim
+  - name: golang-deepcopy

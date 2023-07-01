@@ -1,9 +1,14 @@
 package log_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 
+	"github.com/rs/zerolog"
+	zl "github.com/rs/zerolog/log"
+
+	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/log"
 )
 
@@ -25,8 +30,8 @@ func TestName(t *testing.T) {
 
 func TestEvent(t *testing.T) {
 	var evt = log.NewEvent().Str("hello", "world").Int("int", 100)
-	ee := log.Info().Str("info", "abcd")
-	ee.Func(log.WithEvent(evt))
+	ctx := log.CreateEventCtx(context.Background(), evt)
+	ee := log.Info(ctx).Str("info", "abcd")
 	ee.Msg("dddd")
 }
 
@@ -34,4 +39,13 @@ func TestWithEvent(t *testing.T) {
 	var evt = log.NewEvent().Str("hello", "hello world").Int("int", 100)
 	ee := log.GetLogger("with_event").WithEvent(evt).Info().Str("info", "abcd")
 	ee.Msg("dddd")
+}
+
+func TestSetLog(t *testing.T) {
+	//zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	log.SetLogger(generic.Ptr(zl.Output(zerolog.NewConsoleWriter())))
+	log.Debug().Msg("test")
+	log.Debug().Msg("test")
+	log.Debug().Msg("test")
+	log.Debug().Msg("test")
 }

@@ -2,23 +2,28 @@ package bbolt
 
 import (
 	"context"
+	"path/filepath"
 
-	"github.com/opentracing/opentracing-go/ext"
+	bolt "go.etcd.io/bbolt"
+
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/config"
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/log/logutil"
 	"github.com/pubgo/funk/merge"
+	"github.com/pubgo/funk/pathutil"
 	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/strutil"
-	"github.com/pubgo/funk/tracing"
-	bolt "go.etcd.io/bbolt"
 )
 
 func New(cfg *Config, log log.Logger) *Client {
 	cfg = merge.Copy(DefaultConfig(), cfg).Unwrap()
-	assert.MustF(cfg.Build(), "build failed, cfg=%#v", cfg)
 
-	return &Client{DB: cfg.Get(), log: log}
+	path := filepath.Join(config.GetConfigDir(), cfg.Path)
+	assert.Must(pathutil.IsNotExistMkDir(filepath.Dir(path)))
+	db := assert.Must1(bolt.Open(path, cfg.FileMode, cfg.getOpts()))
+
+	return &Client{DB: db, log: log}
 }
 
 type Client struct {
@@ -26,13 +31,13 @@ type Client struct {
 	log log.Logger
 }
 
-func (t *Client) bucket(name string, tx *bolt.Tx) *bolt.Bucket {
-	var _, err = tx.CreateBucketIfNotExists([]byte(name))
-	logutil.ErrRecord(t.log, err, func(evt *log.Event) string {
-		evt.Str("bucket_name", name)
-		return "failed to create bucket"
-	})
-	return tx.Bucket([]byte(name))
+func (t *Client) bucket(name string, tx *bolt.Tx) (*bolt.Bucket, error) {
+	_, err := tx.CreateBucketIfNotExists([]byte(name))
+	if err != nil {
+		return nil, errors.WrapKV(err, "bucket_name", name)
+	}
+
+	return tx.Bucket([]byte(name)), nil
 }
 
 func (t *Client) Set(ctx context.Context, key string, val []byte, names ...string) error {
@@ -66,23 +71,23 @@ func (t *Client) Delete(ctx context.Context, key string, names ...string) error 
 func (t *Client) View(ctx context.Context, fn func(*bolt.Bucket) error, names ...string) error {
 	name := strutil.GetDefault(names...)
 
-	var span = tracing.CreateChild(ctx, name)
-	defer span.Finish()
-	ext.DBType.Set(span, Name)
-
 	return t.DB.View(func(tx *bolt.Tx) error {
-		return fn(t.bucket(name, tx))
+		bucket, err := t.bucket(name, tx)
+		if err != nil {
+			return err
+		}
+		return fn(bucket)
 	})
 }
 
 func (t *Client) Update(ctx context.Context, fn func(*bolt.Bucket) error, names ...string) error {
 	name := strutil.GetDefault(names...)
 
-	var span = tracing.CreateChild(ctx, name)
-	defer span.Finish()
-	ext.DBType.Set(span, Name)
-
 	return t.DB.Update(func(tx *bolt.Tx) (err error) {
-		return fn(t.bucket(name, tx))
+		bucket, err := t.bucket(name, tx)
+		if err != nil {
+			return err
+		}
+		return fn(bucket)
 	})
 }

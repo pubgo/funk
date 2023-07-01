@@ -1,23 +1,5 @@
 package strutil
 
-import (
-	"reflect"
-	"unsafe"
-
-	"github.com/pubgo/funk/convert"
-)
-
-// ToBytes converts an existing string into an []byte without allocating.
-// The string passed to this functions is not to be used again after this call as it's unsafe; you have been warned.
-func ToBytes(s string) (b []byte) {
-	strHdr := (*reflect.StringHeader)(unsafe.Pointer(&s))
-	sliceHdr := (*reflect.SliceHeader)(unsafe.Pointer(&b))
-	sliceHdr.Data = strHdr.Data
-	sliceHdr.Cap = strHdr.Len
-	sliceHdr.Len = strHdr.Len
-	return
-}
-
 func FirstFnNotEmpty(ff ...func() string) string {
 	for i := range ff {
 		var v = ff[i]()
@@ -28,75 +10,14 @@ func FirstFnNotEmpty(ff ...func() string) string {
 	return ""
 }
 
-// ToLower is the equivalent of strings.ToLower
-func ToLower(b string) string {
-	var res = make([]byte, len(b))
-	copy(res, b)
-	for i := 0; i < len(res); i++ {
-		res[i] = toLowerTable[res[i]]
-	}
-
-	return convert.B2S(res)
-}
-
-// ToUpper is the equivalent of strings.ToUpper
-func ToUpper(b string) string {
-	var res = make([]byte, len(b))
-	copy(res, b)
-	for i := 0; i < len(res); i++ {
-		res[i] = toUpperTable[res[i]]
-	}
-
-	return convert.B2S(res)
-}
-
-// TrimLeft is the equivalent of strings.TrimLeft
-func TrimLeft(s string, cutset byte) string {
-	lenStr, start := len(s), 0
-	for start < lenStr && s[start] == cutset {
-		start++
-	}
-	return s[start:]
-}
-
-// Trim is the equivalent of strings.Trim
-func Trim(s string, cutset byte) string {
-	i, j := 0, len(s)-1
-	for ; i < j; i++ {
-		if s[i] != cutset {
-			break
+func FirstNotEmpty(ff ...string) string {
+	for i := range ff {
+		var v = ff[i]
+		if v != "" {
+			return v
 		}
 	}
-	for ; i < j; j-- {
-		if s[j] != cutset {
-			break
-		}
-	}
-
-	return s[i : j+1]
-}
-
-// TrimRight is the equivalent of strings.TrimRight
-func TrimRight(s string, cutset byte) string {
-	lenStr := len(s)
-	for lenStr > 0 && s[lenStr-1] == cutset {
-		lenStr--
-	}
-	return s[:lenStr]
-}
-
-// EqualFold the equivalent of strings.EqualFold
-func EqualFold(b, s string) (equals bool) {
-	n := len(b)
-	equals = n == len(s)
-	if equals {
-		for i := 0; i < n; i++ {
-			if equals = b[i]|0x20 == s[i]|0x20; !equals {
-				break
-			}
-		}
-	}
-	return
+	return ""
 }
 
 func GetDefault(names ...string) string {

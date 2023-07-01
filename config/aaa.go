@@ -1,40 +1,25 @@
 package config
 
-import (
-	"github.com/mitchellh/mapstructure"
-	"github.com/pubgo/funk/merge"
-	"github.com/spf13/viper"
-)
-
 const (
-	defaultConfigName   = "config"
-	defaultConfigType   = "yaml"
-	defaultConfigPath   = "./configs"
-	includeConfigName   = "resources"
-	componentConfigKey  = "name"
-	defaultComponentKey = "default"
+	defaultConfigName = "config"
+	defaultConfigType = "yaml"
+	defaultConfigPath = "./configs"
 )
 
-type DecoderOption = viper.DecoderConfigOption
-type CfgMap map[string]any
+var (
+	configDir  string
+	configPath string
+)
 
-func (c CfgMap) Decode(val any, tags ...string) error {
-	var tag = "yaml"
-	if len(tags) > 0 && tags[0] != "" {
-		tag = tags[0]
-	}
-	return merge.MapStruct(val, c, func(cfg *mapstructure.DecoderConfig) { cfg.TagName = tag }).Err()
+type NamedConfig interface {
+	// ConfigUniqueName unique name
+	ConfigUniqueName() string
 }
 
-type Config interface {
-	UnmarshalKey(key string, rawVal interface{}, opts ...DecoderOption) error
-	Unmarshal(rawVal interface{}, opts ...DecoderOption) error
+type Resources struct {
+	// Resources resource config file must exist
+	Resources []string `yaml:"resources"`
 
-	// DecodeComponent decode component config to map[string]*struct
-	DecodeComponent(name string, cfgMap interface{}) error
-	Get(key string) interface{}
-	Set(string, interface{})
-	GetString(key string) string
-	AllKeys() []string
-	All() map[string]interface{}
+	// PatchResources resource config not required to exist
+	PatchResources []string `yaml:"patch_resources"`
 }

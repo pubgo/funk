@@ -1,8 +1,8 @@
 package log
 
 import (
+	"context"
 	"fmt"
-
 	"github.com/rs/zerolog"
 )
 
@@ -11,10 +11,16 @@ var _ Logger = (*loggerImpl)(nil)
 type loggerImpl struct {
 	name       string
 	log        *zerolog.Logger
-	hooks      []zerolog.Hook
 	fields     Map
 	content    []byte
 	callerSkip int
+	lvl        Level
+}
+
+func (l *loggerImpl) WithLevel(lvl Level) Logger {
+	var log = l.copy()
+	log.lvl = lvl
+	return log
 }
 
 func (l *loggerImpl) WithEvent(evt *Event) Logger {
@@ -64,7 +70,7 @@ func (l *loggerImpl) WithName(name string) Logger {
 }
 
 func (l *loggerImpl) WithFields(m Map) Logger {
-	if m == nil || len(m) == 0 {
+	if len(m) == 0 {
 		return l
 	}
 
@@ -82,105 +88,99 @@ func (l *loggerImpl) WithFields(m Map) Logger {
 	return log
 }
 
-func (l *loggerImpl) WithHooks(hooks ...zerolog.Hook) Logger {
-	if len(hooks) == 0 {
-		return l
-	}
-
-	var log = l.copy()
-	var logHook = make([]zerolog.Hook, 0, len(hooks)+len(log.hooks))
-	logHook = append(logHook, hooks...)
-	logHook = append(logHook, log.hooks...)
-	log.hooks = logHook
-	return log
-}
-
-func (l *loggerImpl) Debug() *zerolog.Event {
-	var log = l.getLog()
+func (l *loggerImpl) Debug(ctxL ...context.Context) *zerolog.Event {
 	if !l.enabled(zerolog.DebugLevel) {
 		return nil
 	}
 
-	return l.newEvent(*log, zerolog.DebugLevel)
+	var ctx = context.Background()
+	if len(ctxL) > 0 {
+		ctx = ctxL[0]
+	}
+
+	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Debug().Func(withEventCtx(ctx)) })
 }
 
-func (l *loggerImpl) Info() *zerolog.Event {
-	var log = l.getLog()
+func (l *loggerImpl) Info(ctxL ...context.Context) *zerolog.Event {
 	if !l.enabled(zerolog.InfoLevel) {
 		return nil
 	}
 
-	return l.newEvent(*log, zerolog.InfoLevel)
+	var ctx = context.Background()
+	if len(ctxL) > 0 {
+		ctx = ctxL[0]
+	}
+
+	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Info().Func(withEventCtx(ctx)) })
 }
 
-func (l *loggerImpl) Warn() *zerolog.Event {
-	var log = l.getLog()
+func (l *loggerImpl) Warn(ctxL ...context.Context) *zerolog.Event {
 	if !l.enabled(zerolog.WarnLevel) {
 		return nil
 	}
 
-	return l.newEvent(*log, zerolog.WarnLevel)
+	var ctx = context.Background()
+	if len(ctxL) > 0 {
+		ctx = ctxL[0]
+	}
+
+	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Warn().Func(withEventCtx(ctx)) })
 }
 
-func (l *loggerImpl) Error() *zerolog.Event {
-	var log = l.getLog()
+func (l *loggerImpl) Error(ctxL ...context.Context) *zerolog.Event {
 	if !l.enabled(zerolog.ErrorLevel) {
 		return nil
 	}
 
-	return l.newEvent(*log, zerolog.ErrorLevel)
+	var ctx = context.Background()
+	if len(ctxL) > 0 {
+		ctx = ctxL[0]
+	}
+
+	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Error().Func(withEventCtx(ctx)) })
 }
 
-func (l *loggerImpl) Err(err error) *zerolog.Event {
-	var log = l.getLog()
+func (l *loggerImpl) Err(err error, ctxL ...context.Context) *zerolog.Event {
 	if !l.enabled(zerolog.ErrorLevel) {
 		return nil
 	}
 
-	return l.newEvent(*log, zerolog.ErrorLevel).Err(err)
+	var ctx = context.Background()
+	if len(ctxL) > 0 {
+		ctx = ctxL[0]
+	}
+
+	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Err(err).Func(withEventCtx(ctx)) })
 }
 
-func (l *loggerImpl) Panic() *zerolog.Event {
-	var log = l.getLog()
+func (l *loggerImpl) Panic(ctxL ...context.Context) *zerolog.Event {
 	if !l.enabled(zerolog.PanicLevel) {
 		return nil
 	}
 
-	return l.newEvent(*log, zerolog.PanicLevel)
+	var ctx = context.Background()
+	if len(ctxL) > 0 {
+		ctx = ctxL[0]
+	}
+
+	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Panic().Func(withEventCtx(ctx)) })
 }
 
-func (l *loggerImpl) Fatal() *zerolog.Event {
-	var log = l.getLog()
+func (l *loggerImpl) Fatal(ctxL ...context.Context) *zerolog.Event {
 	if !l.enabled(zerolog.FatalLevel) {
 		return nil
 	}
 
-	return l.newEvent(*log, zerolog.FatalLevel)
-}
-
-func (l *loggerImpl) Print(msg string) {
-	var log = l.getLog()
-	if !l.enabled(zerolog.DebugLevel) {
-		return
+	var ctx = context.Background()
+	if len(ctxL) > 0 {
+		ctx = ctxL[0]
 	}
 
-	l.newEvent(*log, zerolog.DebugLevel).CallerSkipFrame(1).Msg(msg)
-}
-
-func (l *loggerImpl) Printf(format string, args ...any) {
-	var log = l.getLog()
-	if !l.enabled(zerolog.DebugLevel) {
-		return
-	}
-
-	l.newEvent(*log, zerolog.DebugLevel).CallerSkipFrame(1).Msgf(format, args...)
+	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Fatal().Func(withEventCtx(ctx)) })
 }
 
 func (l *loggerImpl) enabled(lvl zerolog.Level) bool {
-	if lvl >= zerolog.GlobalLevel() {
-		return true
-	}
-	return false
+	return lvl >= l.lvl && lvl >= zerolog.GlobalLevel()
 }
 
 func (l *loggerImpl) copy() *loggerImpl {
@@ -195,27 +195,9 @@ func (l *loggerImpl) getLog() *zerolog.Logger {
 	return stdZerolog
 }
 
-func (l *loggerImpl) newEvent(log zerolog.Logger, level zerolog.Level) *zerolog.Event {
-	for i := range l.hooks {
-		log = log.Hook(l.hooks[i])
-	}
-
-	var e *zerolog.Event
-	switch level {
-	case zerolog.DebugLevel:
-		e = log.Debug()
-	case zerolog.InfoLevel:
-		e = log.Info()
-	case zerolog.ErrorLevel:
-		e = log.Error()
-	case zerolog.PanicLevel:
-		e = log.Panic()
-	case zerolog.WarnLevel:
-		e = log.Warn()
-	case zerolog.FatalLevel:
-		e = log.Fatal()
-	}
-
+func (l *loggerImpl) newEvent(fn func(log *zerolog.Logger) *zerolog.Event) *zerolog.Event {
+	var log = l.getLog()
+	e := fn(log)
 	if l.name != "" {
 		e = e.Str("logger", l.name)
 	}

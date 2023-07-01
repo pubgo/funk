@@ -19,8 +19,3 @@ func BuildTime() string {
 func Project() string {
 	return project
 }
-
-// InstanceID service instance id
-func InstanceID() string {
-	return instanceID
-}

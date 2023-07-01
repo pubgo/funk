@@ -51,7 +51,7 @@ func generateCert() (cert []byte, privateKey []byte, err error) {
 	}
 
 	var certOut bytes.Buffer
-	if err := pem.Encode(&certOut, &pem.Block{Type: "CERTIFICATE", Bytes: der}); err != nil {
+	if err = pem.Encode(&certOut, &pem.Block{Type: "CERTIFICATE", Bytes: der}); err != nil {
 		return nil, nil, err
 	}
 
