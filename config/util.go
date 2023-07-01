@@ -69,58 +69,60 @@ func getPathList() (paths []string) {
 	return
 }
 
-func Load[T any](confPath ...string) T {
-	configPath, configDir = getConfigPath(defaultConfigName, defaultConfigType)
-	if len(confPath) > 0 && confPath[0] != "" {
-		configPath = confPath[0]
-		configDir = filepath.Dir(configPath)
-	}
-
-	configBytes := assert.Must1(os.ReadFile(configPath))
-	configBytes = assert.Must1(envsubst.Bytes(configBytes))
-
-	var cfg T
-	assert.Must(yaml.Unmarshal(configBytes, &cfg))
-
-	var res Resources
-	assert.Must(yaml.Unmarshal(configBytes, &res))
-
-	var cfgList []T
-	for _, resPath := range res.Resources {
-		var cfg1 T
-		resAbsPath := filepath.Join(configDir, resPath)
-		if pathutil.IsNotExist(resAbsPath) {
-			log.Panicln("resources config path not found:", resAbsPath)
+func Load[T any](confPath ...string) func() T {
+	return func() T {
+		configPath, configDir = getConfigPath(defaultConfigName, defaultConfigType)
+		if len(confPath) > 0 && confPath[0] != "" {
+			configPath = confPath[0]
+			configDir = filepath.Dir(configPath)
 		}
-		resBytes := assert.Must1(os.ReadFile(resAbsPath))
-		resBytes = assert.Must1(envsubst.Bytes(resBytes))
-		assert.Must(yaml.Unmarshal(resBytes, &cfg1))
-		cfgList = append(cfgList, cfg1)
-	}
 
-	for _, resPath := range res.PatchResources {
-		var cfg1 T
-		resAbsPath := filepath.Join(configDir, resPath)
-		if pathutil.IsNotExist(resAbsPath) {
-			continue
+		configBytes := assert.Must1(os.ReadFile(configPath))
+		configBytes = assert.Must1(envsubst.Bytes(configBytes))
+
+		var cfg T
+		assert.Must(yaml.Unmarshal(configBytes, &cfg))
+
+		var res Resources
+		assert.Must(yaml.Unmarshal(configBytes, &res))
+
+		var cfgList []T
+		for _, resPath := range res.Resources {
+			var cfg1 T
+			resAbsPath := filepath.Join(configDir, resPath)
+			if pathutil.IsNotExist(resAbsPath) {
+				log.Panicln("resources config path not found:", resAbsPath)
+			}
+			resBytes := assert.Must1(os.ReadFile(resAbsPath))
+			resBytes = assert.Must1(envsubst.Bytes(resBytes))
+			assert.Must(yaml.Unmarshal(resBytes, &cfg1))
+			cfgList = append(cfgList, cfg1)
 		}
-		resBytes := assert.Must1(os.ReadFile(resAbsPath))
-		resBytes = assert.Must1(envsubst.Bytes(resBytes))
-		assert.Must(yaml.Unmarshal(resBytes, &cfg1))
-		cfgList = append(cfgList, cfg1)
+
+		for _, resPath := range res.PatchResources {
+			var cfg1 T
+			resAbsPath := filepath.Join(configDir, resPath)
+			if pathutil.IsNotExist(resAbsPath) {
+				continue
+			}
+			resBytes := assert.Must1(os.ReadFile(resAbsPath))
+			resBytes = assert.Must1(envsubst.Bytes(resBytes))
+			assert.Must(yaml.Unmarshal(resBytes, &cfg1))
+			cfgList = append(cfgList, cfg1)
+		}
+
+		assert.Must(Merge(&cfg, cfgList...))
+
+		vars.RegisterValue("config", map[string]any{
+			"config_type": defaultConfigType,
+			"config_name": defaultConfigName,
+			"config_path": configPath,
+			"config_dir":  configDir,
+			"config_data": cfg,
+		})
+
+		return cfg
 	}
-
-	assert.Must(Merge(&cfg, cfgList...))
-
-	vars.RegisterValue("config", map[string]any{
-		"config_type": defaultConfigType,
-		"config_name": defaultConfigName,
-		"config_path": configPath,
-		"config_dir":  configDir,
-		"config_data": cfg,
-	})
-
-	return cfg
 }
 
 func MergeR[A any, B any | *any](dst *A, src ...B) (ret result.Result[*A]) {
