@@ -69,11 +69,16 @@ func getPathList() (paths []string) {
 	return
 }
 
-func Load[T any](confPath ...string) T {
-	configPath, configDir = getConfigPath(defaultConfigName, defaultConfigType)
-	if len(confPath) > 0 && confPath[0] != "" {
-		configPath = confPath[0]
+func SetConfigPath(confPath string) {
+	assert.If(configPath == "", "config path is null")
+	configPath = confPath
+}
+
+func Load[T any]() T {
+	if configPath != "" {
 		configDir = filepath.Dir(configPath)
+	} else {
+		configPath, configDir = getConfigPath(defaultConfigName, defaultConfigType)
 	}
 
 	configBytes := assert.Must1(os.ReadFile(configPath))
