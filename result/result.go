@@ -7,6 +7,12 @@ import (
 	"github.com/pubgo/funk/generic"
 )
 
+type R[T any] interface {
+	Unwrap() T
+	IsErr() bool
+	Err() error
+}
+
 func OK[T any](v T) Result[T] {
 	return Result[T]{v: &v}
 }
