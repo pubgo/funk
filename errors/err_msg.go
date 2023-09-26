@@ -2,6 +2,7 @@ package errors
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 
 	json "github.com/goccy/go-json"
@@ -11,6 +12,17 @@ import (
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
 )
+
+func NewMsgErr(msg *errorpb.ErrMsg) error {
+	if generic.IsNil(msg) {
+		return nil
+	}
+
+	return &ErrWrap{
+		caller: stack.Caller(1),
+		err:    &ErrMsg{pb: msg, err: errors.New(msg.Msg)},
+	}
+}
 
 func WrapMsg(err error, msg *errorpb.ErrMsg) error {
 	if generic.IsNil(err) {

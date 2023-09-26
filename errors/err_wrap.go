@@ -11,6 +11,22 @@ import (
 	"github.com/pubgo/funk/stack"
 )
 
+func WrapMapTag(err error, tags Maps) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	if tags == nil {
+		return err
+	}
+
+	return &ErrWrap{
+		err:    err,
+		caller: stack.Caller(1),
+		fields: tags.Tags(),
+	}
+}
+
 func WrapTag(err error, tags ...Tag) error {
 	if generic.IsNil(err) {
 		return nil

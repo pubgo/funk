@@ -9,6 +9,16 @@ import (
 var _ json.Marshaler = (Tags)(nil)
 var _ fmt.Formatter = (Tags)(nil)
 
+type Maps map[string]any
+
+func (t Maps) Tags() Tags {
+	var tags = make(Tags, 0, len(t))
+	for k, v := range t {
+		tags = append(tags, Tag{K: k, V: v})
+	}
+	return tags
+}
+
 type Tags []Tag
 
 func (t Tags) Format(f fmt.State, verb rune) {

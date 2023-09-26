@@ -2,6 +2,7 @@ package errors
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 
 	jjson "github.com/goccy/go-json"
@@ -11,6 +12,17 @@ import (
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
 )
+
+func NewTraceErr(trace *errorpb.ErrTrace) error {
+	if generic.IsNil(trace) {
+		return nil
+	}
+
+	return &ErrWrap{
+		caller: stack.Caller(1),
+		err:    &ErrTrace{pb: trace, err: errors.New(trace.String())},
+	}
+}
 
 func WrapTrace(err error, trace *errorpb.ErrTrace) error {
 	if generic.IsNil(err) {
