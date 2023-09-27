@@ -5,7 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	jjson "github.com/goccy/go-json"
+	json "github.com/goccy/go-json"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/generic"
@@ -50,7 +51,7 @@ type ErrTrace struct {
 func (t *ErrTrace) Unwrap() error                 { return t.err }
 func (t *ErrTrace) Error() string                 { return t.err.Error() }
 func (t *ErrTrace) Kind() string                  { return "err_trace" }
-func (t *ErrTrace) Proto() *errorpb.ErrTrace      { return t.pb }
+func (t *ErrTrace) Proto() proto.Message          { return t.pb }
 func (t *ErrTrace) Format(f fmt.State, verb rune) { strFormat(f, verb, t) }
 
 func (t *ErrTrace) String() string {
@@ -71,5 +72,5 @@ func (t *ErrTrace) MarshalJSON() ([]byte, error) {
 	data["operation"] = t.pb.Operation
 	data["service"] = t.pb.Service
 	data["version"] = t.pb.Version
-	return jjson.Marshal(data)
+	return json.Marshal(data)
 }

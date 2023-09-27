@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	json "github.com/goccy/go-json"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/generic"
@@ -50,7 +51,7 @@ type ErrMsg struct {
 func (t *ErrMsg) Unwrap() error                 { return t.err }
 func (t *ErrMsg) Error() string                 { return t.err.Error() }
 func (t *ErrMsg) Kind() string                  { return "err_msg" }
-func (t *ErrMsg) Proto() *errorpb.ErrMsg        { return t.pb }
+func (t *ErrMsg) Proto() proto.Message          { return t.pb }
 func (t *ErrMsg) Format(f fmt.State, verb rune) { strFormat(f, verb, t) }
 
 func (t *ErrMsg) String() string {
