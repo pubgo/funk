@@ -33,6 +33,10 @@ func parseError(val interface{}) error {
 }
 
 func errStringify(buf *bytes.Buffer, err error) {
+	if err == nil {
+		return
+	}
+
 	err1, ok := err.(fmt.Stringer)
 	if ok {
 		if _, ok = err.(*ErrWrap); !ok {
@@ -51,6 +55,10 @@ func errStringify(buf *bytes.Buffer, err error) {
 }
 
 func errJsonify(err error) map[string]any {
+	if err == nil {
+		return make(map[string]any)
+	}
+
 	var data = make(map[string]any, 6)
 	if _err, ok := err.(json.Marshaler); ok {
 		data["cause"] = _err
