@@ -26,6 +26,7 @@ require (
 	github.com/phuslu/goid v1.0.0
 	github.com/rs/xid v1.4.0
 	github.com/rs/zerolog v1.29.0
+	github.com/samber/lo v1.38.1
 	github.com/stretchr/testify v1.8.1
 	github.com/valyala/fastrand v1.1.0
 	github.com/valyala/fasttemplate v1.2.2

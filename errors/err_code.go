@@ -1,14 +1,6 @@
 package errors
 
 import (
-	"bytes"
-	"errors"
-	"fmt"
-
-	json "github.com/goccy/go-json"
-	"google.golang.org/protobuf/proto"
-
-	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
@@ -20,8 +12,10 @@ func NewCodeErr(code *errorpb.ErrCode) error {
 	}
 
 	return &ErrWrap{
-		caller: stack.Caller(1),
-		err:    &ErrCode{pb: code, err: errors.New(code.Reason)},
+		pb: &errorpb.ErrWrap{
+			Err:    parseToProto(code),
+			Caller: stack.Caller(1).String(),
+		},
 	}
 }
 
@@ -35,42 +29,10 @@ func WrapCode(err error, code *errorpb.ErrCode) error {
 	}
 
 	return &ErrWrap{
-		caller: stack.Caller(1),
-		err:    &ErrCode{pb: code, err: handleGrpcError(err)},
+		pb: &errorpb.ErrWrap{
+			Wrap:   parseErrToWrap(err),
+			Err:    parseToProto(code),
+			Caller: stack.Caller(1).String(),
+		},
 	}
-}
-
-var _ Error = (*ErrCode)(nil)
-var _ fmt.Formatter = (*ErrCode)(nil)
-
-type ErrCode struct {
-	err error
-	pb  *errorpb.ErrCode
-}
-
-func (t *ErrCode) Unwrap() error                 { return t.err }
-func (t *ErrCode) Error() string                 { return t.err.Error() }
-func (t *ErrCode) Proto() proto.Message          { return t.pb }
-func (t *ErrCode) Kind() string                  { return "err_code" }
-func (t *ErrCode) Format(f fmt.State, verb rune) { strFormat(f, verb, t) }
-
-func (t *ErrCode) String() string {
-	var buf = bytes.NewBuffer(nil)
-	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, t.Kind()))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCode, t.pb.Code.String()))
-	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorReason, t.pb.Reason))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorName, t.pb.Name))
-	buf.WriteString(fmt.Sprintf("%s]: %d\n", internal.ColorBiz, t.pb.BizCode))
-	errStringify(buf, t.err)
-	return buf.String()
-}
-
-func (t *ErrCode) MarshalJSON() ([]byte, error) {
-	var data = errJsonify(t.err)
-	data["kind"] = t.Kind()
-	data["name"] = t.pb.Name
-	data["biz_code"] = t.pb.BizCode
-	data["code"] = t.pb.Code.String()
-	data["reason"] = t.pb.Reason
-	return json.Marshal(data)
 }

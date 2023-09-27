@@ -18,32 +18,13 @@ func TestCodeErr(t *testing.T) {
 		Reason:  fmt.Sprintf("test error"),
 	})
 
-	err = WrapMapTag(err, Maps{
-		"event":   "test event",
-		"test123": 123,
-	})
-
 	err = Wrap(err, "next error")
-	err = WrapTag(err, T("test", "hello"))
 	err = Wrapf(err, "next error name=%s", "wrapf")
 
 	err = WrapMsg(err, &errorpb.ErrMsg{
 		Msg: "this is msg",
 	})
 
-	err = IfErr(err, func(err error) error {
-		return WrapMsg(err, &errorpb.ErrMsg{
-			Msg: "this is if err msg",
-		})
-	})
-
-	err = WrapFn(err, func() Tags {
-		return Tags{
-			{"key", "map value"},
-		}
-	})
-
-	err = WrapTag(err, T("name", "value"), T("name1", "value"))
 	err = WrapTrace(err, &errorpb.ErrTrace{
 		Version: version.Version(),
 		Service: version.Project(),
@@ -52,8 +33,4 @@ func TestCodeErr(t *testing.T) {
 
 	err = WrapStack(err)
 	Debug(err)
-
-	var fff *ErrCode
-	t.Log(As(err, &fff))
-	t.Log(fff.Proto())
 }

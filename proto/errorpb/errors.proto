@@ -7,6 +7,14 @@ option go_package = "github.com/pubgo/funk/proto/errorpb;errorpb";
 import "errorpb/code.proto";
 import "google/protobuf/any.proto";
 
+message ErrWrap {
+  ErrWrap    wrap = 1;
+  google.protobuf.Any    err = 2;
+  string caller = 3;
+  repeated string stack = 4;
+  map<string, string> tags = 5;
+}
+
 message ErrRedirect {
   string reply = 1;
   bool shouldRedirect = 2;
@@ -35,10 +43,3 @@ message ErrTrace {
   string service = 4;
   string version = 5;
 }
-
-message Error {
-  ErrCode code = 1;
-  ErrTrace trace = 2;
-  ErrMsg msg = 3;
-}
-

@@ -4,48 +4,51 @@ import (
 	"bytes"
 	"fmt"
 
-	jjson "github.com/goccy/go-json"
-
 	"github.com/pubgo/funk/errors/internal"
-	"github.com/pubgo/funk/stack"
+	"github.com/pubgo/funk/proto/errorpb"
 )
 
-var _ Error = (*ErrWrap)(nil)
-var _ fmt.Formatter = (*ErrWrap)(nil)
-
 type ErrWrap struct {
-	err    error
-	caller *stack.Frame
-	stack  []*stack.Frame
-	fields Tags
+	pb *errorpb.ErrWrap
 }
 
-func (e *ErrWrap) Format(f fmt.State, verb rune) { strFormat(f, verb, e) }
-func (e *ErrWrap) Unwrap() error                 { return e.err }
-func (e *ErrWrap) Kind() string                  { return "err_wrap" }
-func (e *ErrWrap) Error() string                 { return e.err.Error() }
+func (e *ErrWrap) Unwrap() error {
+	if e.pb.Wrap == nil {
+		return nil
+	}
+
+	return &ErrWrap{pb: e.pb.Wrap}
+}
+
+func (e *ErrWrap) Error() string {
+	if e.pb.Wrap == nil {
+		return e.pb.String()
+	}
+
+	return (&ErrWrap{pb: e.pb.Wrap}).Error()
+}
+
+func (e *ErrWrap) Proto() *errorpb.ErrWrap { return e.pb }
 
 func (e *ErrWrap) String() string {
 	var buf = bytes.NewBuffer(nil)
 	buf.WriteString("===============================================================\n")
-	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, e.Kind()))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCaller, e.caller.String()))
-	for i := range e.fields {
-		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorTags, e.fields[i].String()))
+	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCaller, e.pb.Caller))
+	for i := range e.pb.Tags {
+		buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorTags, e.pb.Tags[i]))
 	}
 
-	for i := range e.stack {
-		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorStack, e.stack[i].String()))
+	for i := range e.pb.Stack {
+		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorStack, e.pb.Stack[i]))
 	}
-	errStringify(buf, e.err)
+
+	if e.pb.Err != nil {
+		buf.WriteString(e.pb.Err.String())
+	}
+
+	if e.pb.Wrap != nil {
+		buf.WriteString(e.pb.Wrap.String())
+	}
+
 	return buf.String()
-}
-
-func (e *ErrWrap) MarshalJSON() ([]byte, error) {
-	var data = errJsonify(e.err)
-	data["kind"] = e.Kind()
-	data["fields"] = e.fields
-	data["stacks"] = e.stack
-	data["caller"] = e.caller.String()
-	return jjson.Marshal(data)
 }

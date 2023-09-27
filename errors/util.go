@@ -1,116 +1,68 @@
 package errors
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"strings"
+
+	"github.com/samber/lo"
 
 	"github.com/alecthomas/repr"
-
-	"github.com/pubgo/funk/convert"
-	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func handleGrpcError(err error) error {
-	if err == nil {
+func parseErrToWrap(err error) *errorpb.ErrWrap {
+	if err != nil {
 		return nil
 	}
 
 	switch v := err.(type) {
 	case *ErrWrap:
-		return v
+		return v.pb
+	default:
+		return &errorpb.ErrWrap{
+			Err:    parseToProto(err),
+			Caller: stack.Stack(2).String(),
+		}
+	}
+}
 
+func parseToProto(err interface{}) *anypb.Any {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	switch v := err.(type) {
+	case proto.Message:
+		return lo.Must1(anypb.New(v))
 	case GRPCStatus:
-		return NewCodeErr(&errorpb.ErrCode{
+		return lo.Must1(anypb.New(&errorpb.ErrCode{
 			Reason:  v.GRPCStatus().Message(),
 			Code:    errorpb.Code(v.GRPCStatus().Code()),
 			Name:    "lava.grpc.status",
 			Details: v.GRPCStatus().Proto().Details,
-		})
-	default:
-		return err
-	}
-}
-
-func parseError(val interface{}) error {
-	if generic.IsNil(val) {
-		return nil
-	}
-
-	switch v := val.(type) {
+		}))
 	case error:
-		return v
+		return lo.Must1(anypb.New(&errorpb.ErrMsg{
+			Msg:    v.Error(),
+			Detail: fmt.Sprintf("%v", v),
+		}))
 	case string:
-		return errors.New(v)
-	case []byte:
-		return errors.New(convert.B2S(v))
+		return lo.Must1(anypb.New(&errorpb.ErrMsg{
+			Msg: v,
+		}))
 	default:
-		return &Err{Msg: fmt.Sprintf("%v", v), Detail: repr.String(v)}
+		return lo.Must1(anypb.New(&errorpb.ErrMsg{
+			Msg:    fmt.Sprintf("%v", err),
+			Detail: repr.String(err),
+		}))
 	}
 }
 
-func errStringify(buf *bytes.Buffer, err error) {
-	if err == nil {
-		return
-	}
-
-	err1, ok := err.(fmt.Stringer)
-	if ok {
-		if _, ok = err.(*ErrWrap); !ok {
-			buf.WriteString("error:\n")
-		}
-		buf.WriteString(err1.String())
-		return
-	}
-
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorErrMsg, strings.TrimSpace(err.Error())))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorErrDetail, strings.TrimSpace(fmt.Sprintf("%v", err))))
-	err = Unwrap(err)
-	if err != nil {
-		errStringify(buf, err)
-	}
-}
-
-func errJsonify(err error) map[string]any {
-	if err == nil {
-		return make(map[string]any)
-	}
-
-	var data = make(map[string]any, 6)
-	if _err, ok := err.(json.Marshaler); ok {
-		data["cause"] = _err
-	} else {
-		data["err_msg"] = err.Error()
-		data["err_detail"] = fmt.Sprintf("%v", err)
-		err = Unwrap(err)
-		if err != nil {
-			data["cause"] = errJsonify(err)
-		}
-	}
-	return data
-}
-
-func strFormat(f fmt.State, verb rune, err Error) {
-	switch verb {
-	case 'v':
-		var data, err = err.MarshalJSON()
-		if err != nil {
-			fmt.Fprintln(f, err.Error())
-		} else {
-			fmt.Fprintln(f, string(data))
-		}
-	case 's', 'q':
-		fmt.Fprintln(f, err.String())
-	}
-}
-
-func getStack() []*stack.Frame {
-	var ss []*stack.Frame
+func getStack() []string {
+	var ss []string
 	for i := 0; ; i++ {
 		var cc = stack.Caller(1 + i)
 		if cc == nil {
@@ -125,7 +77,7 @@ func getStack() []*stack.Frame {
 			continue
 		}
 
-		ss = append(ss, cc)
+		ss = append(ss, cc.String())
 	}
 	return ss
 }

@@ -1,29 +1,20 @@
 package errors
 
 import (
-	"errors"
 	"fmt"
-	"reflect"
-
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/pretty"
+	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
 )
 
-func IfErr(err error, fn func(err error) error) error {
-	if generic.IsNil(err) {
-		return nil
-	}
-
-	return fn(err)
-}
-
 func New(msg string) error {
-	return &Err{Msg: msg}
-}
-
-func Parse(val interface{}) error {
-	return parseError(val)
+	return &ErrWrap{
+		pb: &errorpb.ErrWrap{
+			Err:    parseToProto(msg),
+			Caller: stack.Caller(1).String(),
+		},
+	}
 }
 
 func Debug(err error) {
@@ -31,17 +22,12 @@ func Debug(err error) {
 		return
 	}
 
-	err = parseError(err)
 	if _err, ok := err.(fmt.Stringer); ok {
 		fmt.Println(_err.String())
 		return
 	}
 
 	pretty.Println(err)
-}
-
-func Is(err, target error) bool {
-	return errors.Is(err, target)
 }
 
 func UnwrapEach(err error, call func(e error) bool) {
@@ -54,7 +40,7 @@ func UnwrapEach(err error, call func(e error) bool) {
 			return
 		}
 
-		err1, ok := err.(ErrUnwrap)
+		err1, ok := err.(*ErrWrap)
 		if !ok {
 			return
 		}
@@ -63,56 +49,17 @@ func UnwrapEach(err error, call func(e error) bool) {
 	}
 }
 
-var errorType = reflect.TypeOf((*error)(nil)).Elem()
-
-func As(err error, target any) bool {
-	if target == nil {
-		panic("errors: target cannot be nil")
-	}
-
-	val := reflect.ValueOf(target)
-	typ := val.Type()
-	if typ.Kind() != reflect.Ptr || val.IsNil() {
-		panic("errors: target must be a non-nil pointer")
-	}
-
-	targetType := typ.Elem()
-	if targetType.Kind() != reflect.Interface && !targetType.Implements(errorType) {
-		panic("errors: *target must be interface or implement error")
-	}
-
-	for err != nil {
-		if reflect.TypeOf(err).AssignableTo(targetType) {
-			val.Elem().Set(reflect.ValueOf(err))
-			return true
-		}
-
-		if x, ok := err.(interface{ As(any) bool }); ok && x.As(target) {
-			return true
-		}
-
-		err = Unwrap(err)
-	}
-	return false
-}
-
-func Unwrap(err error) error {
-	u, ok := err.(ErrUnwrap)
-	if !ok {
-		return nil
-	}
-	return u.Unwrap()
-}
-
 func WrapStack(err error) error {
 	if generic.IsNil(err) {
 		return nil
 	}
 
 	return &ErrWrap{
-		err:    handleGrpcError(err),
-		caller: stack.Caller(1),
-		stack:  getStack(),
+		pb: &errorpb.ErrWrap{
+			Wrap:   parseErrToWrap(err),
+			Caller: stack.Caller(1).String(),
+			Stack:  getStack(),
+		},
 	}
 }
 
@@ -127,8 +74,10 @@ func WrapCaller(err error, skip ...int) error {
 	}
 
 	return &ErrWrap{
-		err:    handleGrpcError(err),
-		caller: stack.Caller(depth),
+		pb: &errorpb.ErrWrap{
+			Wrap:   parseErrToWrap(err),
+			Caller: stack.Caller(depth).String(),
+		},
 	}
 }
 
@@ -138,9 +87,11 @@ func Wrapf(err error, format string, args ...interface{}) error {
 	}
 
 	return &ErrWrap{
-		err:    handleGrpcError(err),
-		caller: stack.Caller(1),
-		fields: Tags{T("msg", fmt.Sprintf(format, args...))},
+		pb: &errorpb.ErrWrap{
+			Wrap:   parseErrToWrap(err),
+			Caller: stack.Caller(1).String(),
+			Tags:   map[string]string{"msg": fmt.Sprintf(format, args...)},
+		},
 	}
 }
 
@@ -150,49 +101,25 @@ func Wrap(err error, msg string) error {
 	}
 
 	return &ErrWrap{
-		err:    handleGrpcError(err),
-		caller: stack.Caller(1),
-		fields: Tags{T("msg", msg)},
+		pb: &errorpb.ErrWrap{
+			Wrap:   parseErrToWrap(err),
+			Caller: stack.Caller(1).String(),
+			Tags:   map[string]string{"msg": msg},
+		},
 	}
 }
 
-func WrapMapTag(err error, tags Maps) error {
-	if generic.IsNil(err) {
-		return nil
-	}
-
-	if tags == nil {
-		return err
-	}
-
-	return &ErrWrap{
-		err:    handleGrpcError(err),
-		caller: stack.Caller(1),
-		fields: tags.Tags(),
-	}
-}
-
-func WrapTag(err error, tags ...Tag) error {
+func WrapTags(err error, tags map[string]string) error {
 	if generic.IsNil(err) {
 		return nil
 	}
 
 	return &ErrWrap{
-		err:    handleGrpcError(err),
-		caller: stack.Caller(1),
-		fields: tags,
-	}
-}
-
-func WrapFn(err error, fn func() Tags) error {
-	if generic.IsNil(err) {
-		return nil
-	}
-
-	return &ErrWrap{
-		err:    handleGrpcError(err),
-		caller: stack.Caller(1),
-		fields: fn(),
+		pb: &errorpb.ErrWrap{
+			Wrap:   parseErrToWrap(err),
+			Caller: stack.Caller(1).String(),
+			Tags:   tags,
+		},
 	}
 }
 
@@ -202,12 +129,10 @@ func WrapKV(err error, key string, value any) error {
 	}
 
 	return &ErrWrap{
-		err:    handleGrpcError(err),
-		caller: stack.Caller(1),
-		fields: Tags{T(key, value)},
+		pb: &errorpb.ErrWrap{
+			Wrap:   parseErrToWrap(err),
+			Caller: stack.Caller(1).String(),
+			Tags:   map[string]string{key: fmt.Sprintf("%v", value)},
+		},
 	}
-}
-
-func T(k string, v any) Tag {
-	return Tag{K: k, V: v}
 }
