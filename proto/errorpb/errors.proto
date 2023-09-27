@@ -4,7 +4,7 @@ package errors;
 
 option go_package = "github.com/pubgo/funk/proto/errorpb;errorpb";
 
-import "errorpb/status.proto";
+import "errorpb/code.proto";
 import "google/protobuf/any.proto";
 
 message ErrRedirect {
@@ -22,10 +22,11 @@ message ErrMsg {
 }
 
 message ErrCode {
-  status.Code code = 1;
+  errors.Code code = 1;
   int32 biz_code = 2;
   string name = 3;
   string reason = 4;
+  repeated google.protobuf.Any details = 5;
 }
 
 message ErrTrace {
