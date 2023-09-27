@@ -2,6 +2,7 @@ package errors
 
 import (
 	"fmt"
+	"google.golang.org/grpc/status"
 
 	json "github.com/goccy/go-json"
 )
@@ -64,15 +65,13 @@ type ErrAs interface {
 	As(any) bool
 }
 
-type Errors interface {
-	Error
-	Errors() []error
-	Append(err ...error) error
-}
-
 type Error interface {
 	Kind() string
 	Error() string
 	String() string
 	MarshalJSON() ([]byte, error)
+}
+
+type GRPCStatus interface {
+	GRPCStatus() *status.Status
 }

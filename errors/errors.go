@@ -44,6 +44,25 @@ func Is(err, target error) bool {
 	return errors.Is(err, target)
 }
 
+func UnwrapEach(err error, call func(e error) bool) {
+	if err == nil {
+		return
+	}
+
+	for {
+		if !call(err) {
+			return
+		}
+
+		err1, ok := err.(ErrUnwrap)
+		if !ok {
+			return
+		}
+
+		err = err1.Unwrap()
+	}
+}
+
 var errorType = reflect.TypeOf((*error)(nil)).Elem()
 
 func As(err error, target any) bool {
@@ -91,7 +110,7 @@ func WrapStack(err error) error {
 	}
 
 	return &ErrWrap{
-		err:    err,
+		err:    handleGrpcError(err),
 		caller: stack.Caller(1),
 		stack:  getStack(),
 	}
@@ -108,7 +127,7 @@ func WrapCaller(err error, skip ...int) error {
 	}
 
 	return &ErrWrap{
-		err:    err,
+		err:    handleGrpcError(err),
 		caller: stack.Caller(depth),
 	}
 }
@@ -119,7 +138,7 @@ func Wrapf(err error, format string, args ...interface{}) error {
 	}
 
 	return &ErrWrap{
-		err:    err,
+		err:    handleGrpcError(err),
 		caller: stack.Caller(1),
 		fields: Tags{T("msg", fmt.Sprintf(format, args...))},
 	}
@@ -131,9 +150,61 @@ func Wrap(err error, msg string) error {
 	}
 
 	return &ErrWrap{
-		err:    err,
+		err:    handleGrpcError(err),
 		caller: stack.Caller(1),
 		fields: Tags{T("msg", msg)},
+	}
+}
+
+func WrapMapTag(err error, tags Maps) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	if tags == nil {
+		return err
+	}
+
+	return &ErrWrap{
+		err:    handleGrpcError(err),
+		caller: stack.Caller(1),
+		fields: tags.Tags(),
+	}
+}
+
+func WrapTag(err error, tags ...Tag) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	return &ErrWrap{
+		err:    handleGrpcError(err),
+		caller: stack.Caller(1),
+		fields: tags,
+	}
+}
+
+func WrapFn(err error, fn func() Tags) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	return &ErrWrap{
+		err:    handleGrpcError(err),
+		caller: stack.Caller(1),
+		fields: fn(),
+	}
+}
+
+func WrapKV(err error, key string, value any) error {
+	if generic.IsNil(err) {
+		return nil
+	}
+
+	return &ErrWrap{
+		err:    handleGrpcError(err),
+		caller: stack.Caller(1),
+		fields: Tags{T(key, value)},
 	}
 }
 

@@ -35,7 +35,7 @@ func WrapCode(err error, code *errorpb.ErrCode) error {
 
 	return &ErrWrap{
 		caller: stack.Caller(1),
-		err:    &ErrCode{pb: code, err: err},
+		err:    &ErrCode{pb: code, err: handleGrpcError(err)},
 	}
 }
 

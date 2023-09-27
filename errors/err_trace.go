@@ -35,7 +35,7 @@ func WrapTrace(err error, trace *errorpb.ErrTrace) error {
 
 	return &ErrWrap{
 		caller: stack.Caller(1),
-		err:    &ErrTrace{pb: trace, err: err},
+		err:    &ErrTrace{pb: trace, err: handleGrpcError(err)},
 	}
 }
 

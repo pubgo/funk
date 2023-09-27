@@ -12,8 +12,30 @@ import (
 	"github.com/pubgo/funk/convert"
 	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/generic"
+	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
 )
+
+func handleGrpcError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	switch v := err.(type) {
+	case *ErrWrap:
+		return v
+
+	case GRPCStatus:
+		return NewCodeErr(&errorpb.ErrCode{
+			Reason:  v.GRPCStatus().Message(),
+			Code:    errorpb.Code(v.GRPCStatus().Code()),
+			Name:    "lava.grpc.status",
+			Details: v.GRPCStatus().Proto().Details,
+		})
+	default:
+		return err
+	}
+}
 
 func parseError(val interface{}) error {
 	if generic.IsNil(val) {

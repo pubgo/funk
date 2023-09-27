@@ -26,9 +26,6 @@ func TestCodeErr(t *testing.T) {
 	err = Wrap(err, "next error")
 	err = WrapTag(err, T("test", "hello"))
 	err = Wrapf(err, "next error name=%s", "wrapf")
-	err = Append(err, fmt.Errorf("raw error"))
-	err = Append(err, New("New errors error"))
-	err = Append(err, &Err{Msg: "Err errors error", Tags: Tags{T("tags", "hello")}})
 
 	err = WrapMsg(err, &errorpb.ErrMsg{
 		Msg: "this is msg",

@@ -16,9 +16,6 @@ func TestFormat(t *testing.T) {
 	err = Wrap(err, "next error")
 	err = WrapTag(err, T("event", "test event"), T("test123", 123), T("test", "hello"))
 	err = Wrapf(err, "next error name=%s", "wrapf")
-	err = Append(err, fmt.Errorf("raw error"))
-	err = Append(err, New("New errors error"))
-	err = Append(err, &Err{Msg: "Err errors error", Tags: Tags{T("tags", "hello")}})
 
 	err = WrapCode(err, testcodepb.ErrCodeNotFound)
 	err = WrapMsg(err, &errorpb.ErrMsg{

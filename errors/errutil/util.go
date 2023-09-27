@@ -210,7 +210,7 @@ func ParseError(err error) *errorpb.Error {
 	}
 
 	// grpc error
-	gs, ok := err.(interface{ GRPCStatus() *status.Status })
+	gs, ok := err.(errors.GRPCStatus)
 	if ok {
 		if gs.GRPCStatus().Code() == codes.OK {
 			return nil
