@@ -3,6 +3,9 @@ package errors
 import (
 	"bytes"
 	"fmt"
+	"log"
+
+	"google.golang.org/protobuf/proto"
 
 	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/proto/errorpb"
@@ -10,6 +13,31 @@ import (
 
 type ErrWrap struct {
 	pb *errorpb.ErrWrap
+}
+
+func (e *ErrWrap) IsEqual(target any) bool {
+	tse, ok := target.(proto.Message)
+	if !ok {
+		return false
+	}
+	return e.pb.Err.MessageIs(tse)
+}
+
+func (e *ErrWrap) As(target any) bool {
+	tse, ok := target.(proto.Message)
+	if !ok {
+		return false
+	}
+
+	if !e.pb.Err.MessageIs(tse) {
+		return false
+	}
+
+	if err := e.pb.Err.UnmarshalTo(tse); err != nil {
+		log.Println(err)
+	}
+
+	return true
 }
 
 func (e *ErrWrap) Unwrap() error {

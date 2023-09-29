@@ -61,6 +61,17 @@ func (this *ErrTrace) UnmarshalJSON(b []byte) error {
 	return ErrorsUnmarshaler.Unmarshal(bytes.NewReader(b), this)
 }
 
+// MarshalJSON is a custom marshaler for ErrResponse
+func (this *ErrResponse) MarshalJSON() ([]byte, error) {
+	str, err := ErrorsMarshaler.MarshalToString(this)
+	return []byte(str), err
+}
+
+// UnmarshalJSON is a custom unmarshaler for ErrResponse
+func (this *ErrResponse) UnmarshalJSON(b []byte) error {
+	return ErrorsUnmarshaler.Unmarshal(bytes.NewReader(b), this)
+}
+
 var (
 	ErrorsMarshaler   = &jsonpb.Marshaler{}
 	ErrorsUnmarshaler = &jsonpb.Unmarshaler{AllowUnknownFields: true}

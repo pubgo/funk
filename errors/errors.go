@@ -6,6 +6,7 @@ import (
 	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
+	"reflect"
 )
 
 func New(msg string) error {
@@ -30,23 +31,72 @@ func Debug(err error) {
 	pretty.Println(err)
 }
 
-func UnwrapEach(err error, call func(e error) bool) {
-	if err == nil {
-		return
+func Is(err error, target any) bool {
+	if target == nil {
+		return err == target
 	}
 
+	var _, isTargetErr = target.(error)
+
+	isComparable := reflect.TypeOf(target).Comparable()
 	for {
-		if !call(err) {
-			return
+		if isComparable && err == target {
+			return true
 		}
 
-		err1, ok := err.(*ErrWrap)
-		if !ok {
-			return
+		if x, ok := err.(ErrEqual); ok && x.IsEqual(target) {
+			return true
 		}
 
-		err = err1.Unwrap()
+		if x, ok := err.(ErrIs); ok && isTargetErr && x.Is(target.(error)) {
+			return true
+		}
+
+		if err = Unwrap(err); err == nil {
+			return false
+		}
 	}
+}
+
+func As(err error, target any) bool {
+	if err == nil {
+		return false
+	}
+
+	if target == nil {
+		panic("errors: target cannot be nil")
+	}
+
+	val := reflect.ValueOf(target)
+	typ := val.Type()
+	if typ.Kind() != reflect.Ptr || val.IsNil() {
+		panic("errors: target must be a non-nil pointer")
+	}
+
+	targetType := typ.Elem()
+	for err != nil {
+		if reflect.TypeOf(err).AssignableTo(targetType) {
+			val.Elem().Set(reflect.ValueOf(err))
+			return true
+		}
+
+		if x, ok := err.(ErrAs); ok && x.As(target) {
+			return true
+		}
+
+		err = Unwrap(err)
+	}
+
+	return false
+}
+
+func Unwrap(err error) error {
+	u, ok := err.(ErrUnwrap)
+	if !ok {
+		return nil
+	}
+
+	return u.Unwrap()
 }
 
 func WrapStack(err error) error {
@@ -135,4 +185,8 @@ func WrapKV(err error, key string, value any) error {
 			Tags:   map[string]string{key: fmt.Sprintf("%v", value)},
 		},
 	}
+}
+
+func ParseToWrap(err error) *errorpb.ErrWrap {
+	return parseErrToWrap(err)
 }

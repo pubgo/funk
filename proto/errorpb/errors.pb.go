@@ -392,6 +392,61 @@ func (x *ErrTrace) GetVersion() string {
 	return ""
 }
 
+type ErrResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Code   *ErrCode `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
+	Detail *ErrWrap `protobuf:"bytes,2,opt,name=detail,proto3" json:"detail,omitempty"`
+}
+
+func (x *ErrResponse) Reset() {
+	*x = ErrResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_errorpb_errors_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ErrResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ErrResponse) ProtoMessage() {}
+
+func (x *ErrResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_errorpb_errors_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ErrResponse.ProtoReflect.Descriptor instead.
+func (*ErrResponse) Descriptor() ([]byte, []int) {
+	return file_errorpb_errors_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ErrResponse) GetCode() *ErrCode {
+	if x != nil {
+		return x.Code
+	}
+	return nil
+}
+
+func (x *ErrResponse) GetDetail() *ErrWrap {
+	if x != nil {
+		return x.Detail
+	}
+	return nil
+}
+
 var File_errorpb_errors_proto protoreflect.FileDescriptor
 
 var file_errorpb_errors_proto_rawDesc = []byte{
@@ -452,10 +507,16 @@ var file_errorpb_errors_proto_rawDesc = []byte{
 	0x0a, 0x07, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52,
 	0x07, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73,
 	0x69, 0x6f, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69,
-	0x6f, 0x6e, 0x42, 0x2d, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
-	0x2f, 0x70, 0x75, 0x62, 0x67, 0x6f, 0x2f, 0x66, 0x75, 0x6e, 0x6b, 0x2f, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x2f, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x70, 0x62, 0x3b, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x70,
-	0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6f, 0x6e, 0x22, 0x5b, 0x0a, 0x0b, 0x45, 0x72, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x23, 0x0a, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x0f, 0x2e, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x73, 0x2e, 0x45, 0x72, 0x72, 0x43, 0x6f, 0x64, 0x65,
+	0x52, 0x04, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x27, 0x0a, 0x06, 0x64, 0x65, 0x74, 0x61, 0x69, 0x6c,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x73, 0x2e,
+	0x45, 0x72, 0x72, 0x57, 0x72, 0x61, 0x70, 0x52, 0x06, 0x64, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x42,
+	0x2d, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x75,
+	0x62, 0x67, 0x6f, 0x2f, 0x66, 0x75, 0x6e, 0x6b, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x65,
+	0x72, 0x72, 0x6f, 0x72, 0x70, 0x62, 0x3b, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x70, 0x62, 0x62, 0x06,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -470,30 +531,33 @@ func file_errorpb_errors_proto_rawDescGZIP() []byte {
 	return file_errorpb_errors_proto_rawDescData
 }
 
-var file_errorpb_errors_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_errorpb_errors_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_errorpb_errors_proto_goTypes = []interface{}{
 	(*ErrWrap)(nil),     // 0: errors.ErrWrap
 	(*ErrRedirect)(nil), // 1: errors.ErrRedirect
 	(*ErrMsg)(nil),      // 2: errors.ErrMsg
 	(*ErrCode)(nil),     // 3: errors.ErrCode
 	(*ErrTrace)(nil),    // 4: errors.ErrTrace
-	nil,                 // 5: errors.ErrWrap.TagsEntry
-	nil,                 // 6: errors.ErrMsg.TagsEntry
-	(*anypb.Any)(nil),   // 7: google.protobuf.Any
-	(Code)(0),           // 8: errors.Code
+	(*ErrResponse)(nil), // 5: errors.ErrResponse
+	nil,                 // 6: errors.ErrWrap.TagsEntry
+	nil,                 // 7: errors.ErrMsg.TagsEntry
+	(*anypb.Any)(nil),   // 8: google.protobuf.Any
+	(Code)(0),           // 9: errors.Code
 }
 var file_errorpb_errors_proto_depIdxs = []int32{
 	0, // 0: errors.ErrWrap.wrap:type_name -> errors.ErrWrap
-	7, // 1: errors.ErrWrap.err:type_name -> google.protobuf.Any
-	5, // 2: errors.ErrWrap.tags:type_name -> errors.ErrWrap.TagsEntry
-	6, // 3: errors.ErrMsg.tags:type_name -> errors.ErrMsg.TagsEntry
-	8, // 4: errors.ErrCode.code:type_name -> errors.Code
-	7, // 5: errors.ErrCode.details:type_name -> google.protobuf.Any
-	6, // [6:6] is the sub-list for method output_type
-	6, // [6:6] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	8, // 1: errors.ErrWrap.err:type_name -> google.protobuf.Any
+	6, // 2: errors.ErrWrap.tags:type_name -> errors.ErrWrap.TagsEntry
+	7, // 3: errors.ErrMsg.tags:type_name -> errors.ErrMsg.TagsEntry
+	9, // 4: errors.ErrCode.code:type_name -> errors.Code
+	8, // 5: errors.ErrCode.details:type_name -> google.protobuf.Any
+	3, // 6: errors.ErrResponse.code:type_name -> errors.ErrCode
+	0, // 7: errors.ErrResponse.detail:type_name -> errors.ErrWrap
+	8, // [8:8] is the sub-list for method output_type
+	8, // [8:8] is the sub-list for method input_type
+	8, // [8:8] is the sub-list for extension type_name
+	8, // [8:8] is the sub-list for extension extendee
+	0, // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_errorpb_errors_proto_init() }
@@ -563,6 +627,18 @@ func file_errorpb_errors_proto_init() {
 				return nil
 			}
 		}
+		file_errorpb_errors_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ErrResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -570,7 +646,7 @@ func file_errorpb_errors_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_errorpb_errors_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

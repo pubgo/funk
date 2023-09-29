@@ -2,6 +2,7 @@ package try
 
 import (
 	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/errors/errutil"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/stack"
@@ -14,7 +15,7 @@ func WithErr(gErr *error, fn func() error) {
 	}
 
 	defer func() {
-		if err := errors.Parse(recover()); !generic.IsNil(err) {
+		if err := errutil.Parse(recover()); !generic.IsNil(err) {
 			*gErr = errors.WrapStack(err)
 		}
 
@@ -31,7 +32,7 @@ func Try(fn func() error) (gErr error) {
 	}
 
 	defer func() {
-		if err := errors.Parse(recover()); !generic.IsNil(err) {
+		if err := errutil.Parse(recover()); !generic.IsNil(err) {
 			gErr = errors.WrapStack(err)
 		}
 
@@ -49,7 +50,7 @@ func Result[T any](fn func() result.Result[T]) (g result.Result[T]) {
 	}
 
 	defer func() {
-		if err := errors.Parse(recover()); !generic.IsNil(err) {
+		if err := errutil.Parse(recover()); !generic.IsNil(err) {
 			g = g.WithErr(errors.WrapStack(err))
 		}
 

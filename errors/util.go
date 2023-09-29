@@ -2,7 +2,6 @@ package errors
 
 import (
 	"fmt"
-
 	"github.com/samber/lo"
 
 	"github.com/alecthomas/repr"

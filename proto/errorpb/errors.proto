@@ -43,3 +43,8 @@ message ErrTrace {
   string service = 4;
   string version = 5;
 }
+
+message ErrResponse {
+  ErrCode code = 1;
+  ErrWrap detail = 2;
+}
