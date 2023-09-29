@@ -6,8 +6,6 @@ import (
 	"fmt"
 
 	json "github.com/goccy/go-json"
-	"google.golang.org/protobuf/proto"
-
 	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/proto/errorpb"
@@ -51,7 +49,7 @@ type ErrTrace struct {
 func (t *ErrTrace) Unwrap() error                 { return t.err }
 func (t *ErrTrace) Error() string                 { return t.err.Error() }
 func (t *ErrTrace) Kind() string                  { return "err_trace" }
-func (t *ErrTrace) Proto() proto.Message          { return t.pb }
+func (t *ErrTrace) Proto() *errorpb.ErrTrace      { return t.pb }
 func (t *ErrTrace) Format(f fmt.State, verb rune) { strFormat(f, verb, t) }
 
 func (t *ErrTrace) String() string {

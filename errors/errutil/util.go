@@ -191,13 +191,12 @@ func ParseError(err error) *errorpb.Error {
 
 	var ce *errors.ErrCode
 	if errors.As(err, &ce) {
-		pb := ce.Proto()
-		if pb.Reason == "" {
-			pb.Reason = err.Error()
+		if ce.Proto().Reason == "" {
+			ce.Proto().Reason = err.Error()
 		}
 
 		return &errorpb.Error{
-			Code: pb,
+			Code: ce.Proto(),
 			Trace: &errorpb.ErrTrace{
 				Service: version.Project(),
 				Version: version.Version(),

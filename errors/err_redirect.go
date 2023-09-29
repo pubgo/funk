@@ -5,8 +5,6 @@ import (
 	"fmt"
 
 	json "github.com/goccy/go-json"
-	"google.golang.org/protobuf/proto"
-
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
@@ -33,7 +31,7 @@ type ErrRedirect struct {
 
 func (t *ErrRedirect) Unwrap() error                 { return t.err }
 func (t *ErrRedirect) Error() string                 { return t.err.Error() }
-func (t *ErrRedirect) Proto() proto.Message          { return t.pb }
+func (t *ErrRedirect) Proto() *errorpb.ErrRedirect   { return t.pb }
 func (t *ErrRedirect) Kind() string                  { return "err_redirect" }
 func (t *ErrRedirect) Format(f fmt.State, verb rune) { strFormat(f, verb, t) }
 
