@@ -30,9 +30,11 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 	g.Skip()
 	for _, enum := range file.Enums {
 		g.Unskip()
+
 		genFile.
-			Func().Params(jen.Id("x ").Id(enum.GoIdent.GoName)).
-			Id("Values").Params().Id("[]string").
+			Func().Id(enum.GoIdent.GoName + "Values").
+			Params().
+			Index().String().
 			BlockFunc(func(group *jen.Group) {
 				var codes []jen.Code
 				for _, v := range enum.Values {
