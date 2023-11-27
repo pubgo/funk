@@ -48,3 +48,7 @@ func TestFormat(t *testing.T) {
 	t.Log(As(err, &fff))
 	t.Log(fff.Proto())
 }
+
+func TestNew(t *testing.T) {
+	fmt.Printf("%s", New("test error"))
+}

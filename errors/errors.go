@@ -19,7 +19,15 @@ func IfErr(err error, fn func(err error) error) error {
 }
 
 func New(msg string) error {
-	return &Err{Msg: msg}
+	return WrapCaller(&Err{Msg: msg}, 1)
+}
+
+func NewFmt(msg string, args ...interface{}) error {
+	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...)}, 1)
+}
+
+func NewTags(msg string, tags ...Tag) error {
+	return WrapCaller(&Err{Msg: msg, Tags: tags}, 1)
 }
 
 func Parse(val interface{}) error {
