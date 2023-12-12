@@ -42,3 +42,10 @@ message Error {
   ErrMsg msg = 3;
 }
 
+message Status {
+  int32 code = 1;
+  string reason = 2;
+  string message = 3;
+  map<string, string> metadata = 4;
+};
+
