@@ -86,7 +86,10 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 					jen.Id("Name"):    jen.Lit(name),
 					jen.Id("BizCode"): jen.Lit(num),
 					jen.Id("Reason"):  jen.Lit(rr),
-				}).Line()
+				})
+			genFile.Var().Id("_").Op("=").
+				Qual("github.com/pubgo/funk/errors", "RegisterErrCodes").
+				Call(jen.Id("ErrCode" + string(codeName.Desc.Name()))).Line()
 		}
 	}
 
