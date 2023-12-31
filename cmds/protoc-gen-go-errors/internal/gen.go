@@ -45,14 +45,13 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 		g.Unskip()
 
 		for _, codeName := range m.Values {
-			var name = strings.ToLower(fmt.Sprintf("%s.%s.%s",
+			var name = strings.ToLower(fmt.Sprintf("%s.%s",
 				file.Desc.Package(),
-				"err_code",
 				strcase.ToSnake(string(codeName.Desc.Name())),
 			))
 
 			var statusName = "OK"
-			if tag.DefaultCode != 0 {
+			if tag.DefaultCode != 0 && int32(codeName.Desc.Number()) != 0 {
 				statusName = tag.DefaultCode.String()
 			}
 
