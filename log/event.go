@@ -1,6 +1,7 @@
 package log
 
 import (
+	"bytes"
 	"unsafe"
 
 	"github.com/rs/zerolog"
@@ -17,13 +18,14 @@ func putEvent(e *Event)
 func WithEvent(evt *Event) func(e *Event) {
 	return func(e *Event) {
 		evt1 := convertEvent(evt)
-		if evt1.buf[0] == '{' && len(evt1.buf) == 1 {
-			return
+		if len(evt1.buf) > 0 {
+			evt1.buf = bytes.TrimLeft(evt1.buf, "{")
+			evt1.buf = bytes.Trim(evt1.buf, ",")
 		}
 
 		e1 := convertEvent(e)
 		e1.buf = append(e1.buf, ',')
-		e1.buf = append(e1.buf, evt1.buf[1:]...)
+		e1.buf = append(e1.buf, evt1.buf...)
 		putEvent(evt)
 	}
 }
