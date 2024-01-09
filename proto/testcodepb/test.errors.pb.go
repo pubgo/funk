@@ -7,6 +7,7 @@
 package testcodepb
 
 import (
+	errors "github.com/pubgo/funk/errors"
 	errorpb "github.com/pubgo/funk/proto/errorpb"
 	grpc "google.golang.org/grpc"
 )
@@ -18,42 +19,48 @@ const _ = grpc.SupportPackageIsVersion7
 
 var ErrCodeOK = &errorpb.ErrCode{
 	BizCode: int32(0),
-	Code:    errorpb.Code_Internal,
-	Name:    "demo.test.v1.err_code.ok",
+	Code:    errorpb.Code_OK,
+	Name:    "demo.test.v1.ok",
 	Reason:  "ok",
 }
+var _ = errors.RegisterErrCodes(ErrCodeOK)
 
 var ErrCodeNotFound = &errorpb.ErrCode{
 	BizCode: int32(100000),
 	Code:    errorpb.Code_NotFound,
-	Name:    "demo.test.v1.err_code.not_found",
+	Name:    "demo.test.v1.not_found",
 	Reason:  "not found 找不到",
 }
+var _ = errors.RegisterErrCodes(ErrCodeNotFound)
 
 var ErrCodeUnknown = &errorpb.ErrCode{
 	BizCode: int32(100001),
 	Code:    errorpb.Code_NotFound,
-	Name:    "demo.test.v1.err_code.unknown",
+	Name:    "demo.test.v1.unknown",
 	Reason:  "unknown 未知",
 }
+var _ = errors.RegisterErrCodes(ErrCodeUnknown)
 
 var ErrCodeDbConn = &errorpb.ErrCode{
 	BizCode: int32(100003),
 	Code:    errorpb.Code_Internal,
-	Name:    "demo.test.v1.err_code.db_conn",
+	Name:    "demo.test.v1.db_conn",
 	Reason:  "db connect error",
 }
+var _ = errors.RegisterErrCodes(ErrCodeDbConn)
 
 var ErrCodeUnknownCode = &errorpb.ErrCode{
 	BizCode: int32(100004),
 	Code:    errorpb.Code_Internal,
-	Name:    "demo.test.v1.err_code.unknown_code",
+	Name:    "demo.test.v1.unknown_code",
 	Reason:  "default code",
 }
+var _ = errors.RegisterErrCodes(ErrCodeUnknownCode)
 
 var ErrCodeCustomCode = &errorpb.ErrCode{
 	BizCode: int32(100005),
 	Code:    errorpb.Code_OK,
-	Name:    "demo.test.v1.err_code.custom_code",
+	Name:    "demo.test.v1.custom_code",
 	Reason:  "this is custom msg",
 }
+var _ = errors.RegisterErrCodes(ErrCodeCustomCode)

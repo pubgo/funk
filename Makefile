@@ -32,3 +32,7 @@ build:
 	@go build -o main cmd/main.go
 	./main xtest.go
 
+.PHONY: protobuf
+protobuf:
+	protobuild vendor
+	protobuild gen
