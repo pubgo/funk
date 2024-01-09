@@ -28,9 +28,8 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 
 	g := gen.NewGeneratedFile(filename, file.GoImportPath)
 	g.Skip()
-	for _, enum := range file.Enums {
-		g.Unskip()
 
+	var genEnum = func(enum *protogen.Enum) {
 		genFile.
 			Func().Id(enum.GoIdent.GoName + "Values").
 			Params().
@@ -58,6 +57,18 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 					jen.Id(enum.GoIdent.GoName + "_value").Index(jen.Id("name"))))
 			})
 		genFile.Line()
+	}
+
+	for _, enum := range file.Enums {
+		g.Unskip()
+		genEnum(enum)
+	}
+
+	for _, msg := range file.Messages {
+		for _, enum := range msg.Enums {
+			g.Unskip()
+			genEnum(enum)
+		}
 	}
 
 	g.P(genFile.GoString())
