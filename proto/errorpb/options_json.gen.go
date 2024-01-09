@@ -8,27 +8,27 @@ import (
 
 // MarshalJSON is a custom marshaler for Options
 func (this *Options) MarshalJSON() ([]byte, error) {
-	str, err := StatusMarshaler.MarshalToString(this)
+	str, err := OptionsMarshaler.MarshalToString(this)
 	return []byte(str), err
 }
 
 // UnmarshalJSON is a custom unmarshaler for Options
 func (this *Options) UnmarshalJSON(b []byte) error {
-	return StatusUnmarshaler.Unmarshal(bytes.NewReader(b), this)
+	return OptionsUnmarshaler.Unmarshal(bytes.NewReader(b), this)
 }
 
 // MarshalJSON is a custom marshaler for Fields
 func (this *Fields) MarshalJSON() ([]byte, error) {
-	str, err := StatusMarshaler.MarshalToString(this)
+	str, err := OptionsMarshaler.MarshalToString(this)
 	return []byte(str), err
 }
 
 // UnmarshalJSON is a custom unmarshaler for Fields
 func (this *Fields) UnmarshalJSON(b []byte) error {
-	return StatusUnmarshaler.Unmarshal(bytes.NewReader(b), this)
+	return OptionsUnmarshaler.Unmarshal(bytes.NewReader(b), this)
 }
 
 var (
-	StatusMarshaler   = &jsonpb.Marshaler{}
-	StatusUnmarshaler = &jsonpb.Unmarshaler{AllowUnknownFields: true}
+	OptionsMarshaler   = &jsonpb.Marshaler{}
+	OptionsUnmarshaler = &jsonpb.Unmarshaler{AllowUnknownFields: true}
 )

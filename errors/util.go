@@ -12,8 +12,30 @@ import (
 	"github.com/pubgo/funk/convert"
 	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/generic"
+	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
 )
+
+func handleGrpcError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	switch v := err.(type) {
+	case *ErrWrap:
+		return v
+
+	case GRPCStatus:
+		return NewCodeErr(&errorpb.ErrCode{
+			Reason:  v.GRPCStatus().Message(),
+			Code:    errorpb.Code(v.GRPCStatus().Code()),
+			Name:    "lava.grpc.status",
+			Details: v.GRPCStatus().Proto().Details,
+		})
+	default:
+		return err
+	}
+}
 
 func parseError(val interface{}) error {
 	if generic.IsNil(val) {
@@ -33,6 +55,10 @@ func parseError(val interface{}) error {
 }
 
 func errStringify(buf *bytes.Buffer, err error) {
+	if err == nil {
+		return
+	}
+
 	err1, ok := err.(fmt.Stringer)
 	if ok {
 		if _, ok = err.(*ErrWrap); !ok {
@@ -51,6 +77,10 @@ func errStringify(buf *bytes.Buffer, err error) {
 }
 
 func errJsonify(err error) map[string]any {
+	if err == nil {
+		return make(map[string]any)
+	}
+
 	var data = make(map[string]any, 6)
 	if _err, ok := err.(json.Marshaler); ok {
 		data["cause"] = _err

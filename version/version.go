@@ -5,10 +5,14 @@ import (
 )
 
 var mainPath string
+
+// git rev-parse HEAD
 var commitID string
 var buildTime string
+
+// git describe --tags --abbrev=0
 var version = "v0.0.1-dev-99"
-var project string
+var project = "project"
 
 func init() {
 	bi, ok := debug.ReadBuildInfo()

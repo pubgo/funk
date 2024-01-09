@@ -45,14 +45,13 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 		g.Unskip()
 
 		for _, codeName := range m.Values {
-			var name = strings.ToLower(fmt.Sprintf("%s.%s.%s",
+			var name = strings.ToLower(fmt.Sprintf("%s.%s",
 				file.Desc.Package(),
-				"err_code",
 				strcase.ToSnake(string(codeName.Desc.Name())),
 			))
 
 			var statusName = "OK"
-			if tag.DefaultCode != 0 {
+			if tag.DefaultCode != 0 && int32(codeName.Desc.Number()) != 0 {
 				statusName = tag.DefaultCode.String()
 			}
 
@@ -86,7 +85,10 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 					jen.Id("Name"):    jen.Lit(name),
 					jen.Id("BizCode"): jen.Lit(num),
 					jen.Id("Reason"):  jen.Lit(rr),
-				}).Line()
+				})
+			genFile.Var().Id("_").Op("=").
+				Qual("github.com/pubgo/funk/errors", "RegisterErrCodes").
+				Call(jen.Id("ErrCode" + string(codeName.Desc.Name()))).Line()
 		}
 	}
 

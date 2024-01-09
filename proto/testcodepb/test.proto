@@ -3,29 +3,29 @@ syntax = "proto3";
 package demo.test.v1;
 
 import "google/protobuf/descriptor.proto";
-import "errorpb/status.proto";
+import "errorpb/options.proto";
 
 option go_package = "github.com/pubgo/funk/proto/testcodepb;testcodepb";
 
 enum Code {
-  option (status.opts).gen = true;
-  option (status.opts).default_code = Internal;
+  option (errors.opts).gen = true;
+  option (errors.opts).default_code = Internal;
 
   OK = 0;
 
   // NotFound 找不到
   NotFound = 100000 [
-    (status.field).code = NotFound
+    (errors.field).code = NotFound
   ];
 
   // Unknown 未知
   Unknown = 100001 [
-    (status.field).code = NotFound
+    (errors.field).code = NotFound
   ];
 
   // db connect error
   DbConn = 100003 [
-    (status.field).code = Internal
+    (errors.field).code = Internal
   ];
 
   // default code
@@ -33,6 +33,6 @@ enum Code {
 
   // custom msg, 注释可以做其他的操作
   CustomCode = 100005[
-    (status.field).msg = "this is custom msg"
+    (errors.field).msg = "this is custom msg"
   ];
 }

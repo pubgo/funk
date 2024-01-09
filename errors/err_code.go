@@ -2,15 +2,26 @@ package errors
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 
 	json "github.com/goccy/go-json"
-
 	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
 )
+
+func NewCodeErr(code *errorpb.ErrCode) error {
+	if generic.IsNil(code) {
+		return nil
+	}
+
+	return &ErrWrap{
+		caller: stack.Caller(1),
+		err:    &ErrCode{pb: code, err: errors.New(code.Reason)},
+	}
+}
 
 func WrapCode(err error, code *errorpb.ErrCode) error {
 	if generic.IsNil(err) {
@@ -23,7 +34,7 @@ func WrapCode(err error, code *errorpb.ErrCode) error {
 
 	return &ErrWrap{
 		caller: stack.Caller(1),
-		err:    &ErrCode{pb: code, err: err},
+		err:    &ErrCode{pb: code, err: handleGrpcError(err)},
 	}
 }
 

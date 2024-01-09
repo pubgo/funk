@@ -2,15 +2,26 @@ package errors
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 
-	jjson "github.com/goccy/go-json"
-
+	json "github.com/goccy/go-json"
 	"github.com/pubgo/funk/errors/internal"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
 )
+
+func NewTraceErr(trace *errorpb.ErrTrace) error {
+	if generic.IsNil(trace) {
+		return nil
+	}
+
+	return &ErrWrap{
+		caller: stack.Caller(1),
+		err:    &ErrTrace{pb: trace, err: errors.New(trace.String())},
+	}
+}
 
 func WrapTrace(err error, trace *errorpb.ErrTrace) error {
 	if generic.IsNil(err) {
@@ -23,7 +34,7 @@ func WrapTrace(err error, trace *errorpb.ErrTrace) error {
 
 	return &ErrWrap{
 		caller: stack.Caller(1),
-		err:    &ErrTrace{pb: trace, err: err},
+		err:    &ErrTrace{pb: trace, err: handleGrpcError(err)},
 	}
 }
 
@@ -59,5 +70,5 @@ func (t *ErrTrace) MarshalJSON() ([]byte, error) {
 	data["operation"] = t.pb.Operation
 	data["service"] = t.pb.Service
 	data["version"] = t.pb.Version
-	return jjson.Marshal(data)
+	return json.Marshal(data)
 }

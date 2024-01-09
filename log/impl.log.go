@@ -1,6 +1,7 @@
 package log
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/rs/zerolog"
@@ -29,13 +30,14 @@ func (l *loggerImpl) WithEvent(evt *Event) Logger {
 	}
 
 	evt1 := convertEvent(evt)
-	if evt1.buf[0] == '{' && len(evt1.buf) == 1 {
-		return l
+	if len(evt1.buf) > 0 {
+		evt1.buf = bytes.TrimLeft(bytes.TrimSpace(evt1.buf), "{")
+		evt1.buf = bytes.Trim(evt1.buf, ",")
 	}
 
 	var log = l.copy()
 	logContent := make([]byte, 0, len(evt1.buf)+len(l.content))
-	logContent = append(logContent, evt1.buf[1:]...)
+	logContent = append(logContent, evt1.buf...)
 	if len(log.content) > 0 {
 		logContent = append(logContent, ',')
 		logContent = append(logContent, log.content...)
@@ -212,6 +214,10 @@ func (l *loggerImpl) newEvent(fn func(log *zerolog.Logger) *zerolog.Event) *zero
 
 	if len(l.content) > 0 {
 		e1 := convertEvent(e)
+		if len(e1.buf) > 0 {
+			e1.buf = bytes.TrimRight(e1.buf, ",")
+		}
+
 		e1.buf = append(e1.buf, ',')
 		e1.buf = append(e1.buf, l.content...)
 	}

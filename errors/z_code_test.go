@@ -7,17 +7,26 @@ import (
 	"github.com/rs/xid"
 
 	"github.com/pubgo/funk/proto/errorpb"
-	"github.com/pubgo/funk/proto/testcodepb"
 	"github.com/pubgo/funk/version"
 )
 
-func TestFormat(t *testing.T) {
-	var err = WrapCaller(fmt.Errorf("test error, err=%w", New("hello error")))
+func TestCodeErr(t *testing.T) {
+	var err = NewCodeErr(&errorpb.ErrCode{
+		Code:    errorpb.Code_Aborted,
+		BizCode: 100000,
+		Name:    "hello.test.123",
+		Reason:  fmt.Sprintf("test error"),
+	})
+
+	err = WrapMapTag(err, Maps{
+		"event":   "test event",
+		"test123": 123,
+	})
+
 	err = Wrap(err, "next error")
-	err = WrapTag(err, T("event", "test event"), T("test123", 123), T("test", "hello"))
+	err = WrapTag(err, T("test", "hello"))
 	err = Wrapf(err, "next error name=%s", "wrapf")
 
-	err = WrapCode(err, testcodepb.ErrCodeNotFound)
 	err = WrapMsg(err, &errorpb.ErrMsg{
 		Msg: "this is msg",
 	})
@@ -47,8 +56,4 @@ func TestFormat(t *testing.T) {
 	var fff *ErrCode
 	t.Log(As(err, &fff))
 	t.Log(fff.Proto())
-}
-
-func TestNew(t *testing.T) {
-	fmt.Printf("%s", New("test error"))
 }

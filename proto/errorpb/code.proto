@@ -1,27 +1,8 @@
 syntax = "proto3";
 
-package status;
+package errors;
 
 option go_package = "github.com/pubgo/funk/proto/errorpb;errorpb";
-import "google/protobuf/descriptor.proto";
-
-message Options {
-  bool gen = 1;
-  Code default_code = 2;
-}
-
-message Fields {
-  Code code = 1;
-  string msg = 2;
-}
-
-extend google.protobuf.EnumValueOptions {
-  Fields field = 100002;
-}
-
-extend google.protobuf.EnumOptions {
-  Options opts = 100001;
-}
 
 enum Code {
   OK = 0;

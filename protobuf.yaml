@@ -14,4 +14,3 @@ plugins:
   - name: go
   - name: go-errors
   - name: golang-jsonshim
-  - name: golang-deepcopy
