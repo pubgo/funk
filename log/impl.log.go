@@ -36,13 +36,12 @@ func (l *loggerImpl) WithEvent(evt *Event) Logger {
 	}
 
 	var log = l.copy()
-	logContent := make([]byte, 0, len(evt1.buf)+len(l.content))
-	logContent = append(logContent, evt1.buf...)
-	if len(log.content) > 0 {
+	logContent := make([]byte, 0, len(evt1.buf)+len(l.content)+1)
+	logContent = append(logContent, log.content...)
+	if len(logContent) > 0 {
 		logContent = append(logContent, ',')
-		logContent = append(logContent, log.content...)
 	}
-	log.content = logContent
+	log.content = append(logContent, log.content...)
 	putEvent(evt)
 	return log
 }
@@ -212,14 +211,16 @@ func (l *loggerImpl) newEvent(fn func(log *zerolog.Logger) *zerolog.Event) *zero
 		e = e.Fields(l.fields)
 	}
 
-	if len(l.content) > 0 {
-		e1 := convertEvent(e)
-		if len(e1.buf) > 0 {
-			e1.buf = bytes.TrimRight(e1.buf, ",")
-		}
+	e1 := convertEvent(e)
+	e1.buf = bytes.TrimRight(e1.buf, ",")
 
+	if len(l.content) > 0 {
 		e1.buf = append(e1.buf, ',')
 		e1.buf = append(e1.buf, l.content...)
+	}
+
+	if len(e1.buf) > 0 && e1.buf[0] != '{' {
+		e1.buf = append([]byte{'{'}, e1.buf...)
 	}
 	return e
 }
