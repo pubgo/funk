@@ -29,20 +29,21 @@ func (l *loggerImpl) WithEvent(evt *Event) Logger {
 		return l
 	}
 
+	putEvent(evt)
 	evt1 := convertEvent(evt)
 	if len(evt1.buf) > 0 {
 		evt1.buf = bytes.TrimLeft(bytes.TrimSpace(evt1.buf), "{")
-		evt1.buf = bytes.Trim(evt1.buf, ",")
+		evt1.buf = bytes.TrimRight(evt1.buf, ",")
 	}
 
 	var log = l.copy()
 	logContent := make([]byte, 0, len(evt1.buf)+len(l.content)+1)
 	logContent = append(logContent, log.content...)
-	if len(logContent) > 0 {
+	if len(logContent) > 0 && len(evt1.buf) > 0 {
 		logContent = append(logContent, ',')
 	}
-	log.content = append(logContent, log.content...)
-	putEvent(evt)
+	log.content = append(logContent, evt1.buf...)
+
 	return log
 }
 
@@ -212,12 +213,15 @@ func (l *loggerImpl) newEvent(fn func(log *zerolog.Logger) *zerolog.Event) *zero
 	}
 
 	e1 := convertEvent(e)
-	e1.buf = bytes.TrimRight(e1.buf, ",")
-
-	if len(l.content) > 0 {
-		e1.buf = append(e1.buf, ',')
-		e1.buf = append(e1.buf, l.content...)
+	if len(e1.buf) > 0 {
+		e1.buf = bytes.TrimLeft(e1.buf, "{")
+		e1.buf = bytes.TrimRight(e1.buf, ",")
 	}
+
+	if len(l.content) > 0 && len(e1.buf) > 0 {
+		e1.buf = append(e1.buf, ',')
+	}
+	e1.buf = append(e1.buf, l.content...)
 
 	if len(e1.buf) > 0 && e1.buf[0] != '{' {
 		e1.buf = append([]byte{'{'}, e1.buf...)

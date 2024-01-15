@@ -17,16 +17,23 @@ func putEvent(e *Event)
 
 func WithEvent(evt *Event) func(e *Event) {
 	return func(e *Event) {
+		defer putEvent(evt)
 		evt1 := convertEvent(evt)
-		if len(evt1.buf) > 0 {
-			evt1.buf = bytes.TrimLeft(evt1.buf, "{")
-			evt1.buf = bytes.Trim(evt1.buf, ",")
+		if len(evt1.buf) == 0 {
+			return
+		}
+
+		evt1.buf = bytes.TrimLeft(evt1.buf, "{")
+		evt1.buf = bytes.TrimRight(evt1.buf, ",")
+		if len(evt1.buf) == 0 {
+			return
 		}
 
 		e1 := convertEvent(e)
-		e1.buf = append(e1.buf, ',')
+		if len(e1.buf) > 0 && len(evt1.buf) > 0 {
+			e1.buf = append(e1.buf, ',')
+		}
 		e1.buf = append(e1.buf, evt1.buf...)
-		putEvent(evt)
 	}
 }
 

@@ -31,7 +31,7 @@ func TestName(t *testing.T) {
 func TestEvent(t *testing.T) {
 	var evt = log.NewEvent().Str("hello", "world").Int("int", 100).Dict("ddd", log.NewEvent())
 	ctx := log.CreateEventCtx(context.Background(), evt)
-	ee := log.Info(ctx).Str("info", "abcd")
+	ee := log.Info(ctx).Str("info", "abcd").Func(log.WithEvent(evt))
 	ee.Msg("dddd")
 }
 
