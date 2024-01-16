@@ -9,8 +9,10 @@ require (
 	github.com/bradleyjkemp/memviz v0.2.3
 	github.com/dave/jennifer v1.6.0
 	github.com/dustin/go-humanize v1.0.0
+	github.com/gobwas/ws v1.3.2
 	github.com/goccy/go-json v0.10.0
 	github.com/golang/protobuf v1.5.2
+	github.com/google/uuid v1.3.0
 	github.com/gopherjs/gopherjs v1.17.2
 	github.com/hashicorp/go-version v1.6.0
 	github.com/huandu/go-clone v1.5.1
@@ -34,7 +36,7 @@ require (
 	go.uber.org/atomic v1.10.0
 	golang.org/x/crypto v0.4.0
 	golang.org/x/exp v0.0.0-20221114191408-850992195362
-	golang.org/x/sys v0.4.0
+	golang.org/x/sys v0.6.0
 	google.golang.org/grpc v1.51.0
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v3 v3.0.1
@@ -45,9 +47,10 @@ require (
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.3-0.20220203105225-a9a7ef127534 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/gobwas/httphead v0.1.0 // indirect
+	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/iancoleman/orderedmap v0.0.0-20190318233801-ac98e3ecb4b0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
