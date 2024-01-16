@@ -18,49 +18,49 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 var ErrCodeOK = &errorpb.ErrCode{
-	BizCode: int32(0),
-	Code:    errorpb.Code_OK,
-	Name:    "demo.test.v1.ok",
-	Reason:  "ok",
+	Code:       int32(0),
+	Name:       "demo.test.v1.ok",
+	Reason:     "ok",
+	StatusCode: errorpb.Code_OK,
 }
 var _ = errors.RegisterErrCodes(ErrCodeOK)
 
 var ErrCodeNotFound = &errorpb.ErrCode{
-	BizCode: int32(100000),
-	Code:    errorpb.Code_NotFound,
-	Name:    "demo.test.v1.not_found",
-	Reason:  "not found 找不到",
+	Code:       int32(100000),
+	Name:       "demo.test.v1.not_found",
+	Reason:     "not found 找不到",
+	StatusCode: errorpb.Code_NotFound,
 }
 var _ = errors.RegisterErrCodes(ErrCodeNotFound)
 
 var ErrCodeUnknown = &errorpb.ErrCode{
-	BizCode: int32(100001),
-	Code:    errorpb.Code_NotFound,
-	Name:    "demo.test.v1.unknown",
-	Reason:  "unknown 未知",
+	Code:       int32(100001),
+	Name:       "demo.test.v1.unknown",
+	Reason:     "unknown 未知",
+	StatusCode: errorpb.Code_NotFound,
 }
 var _ = errors.RegisterErrCodes(ErrCodeUnknown)
 
 var ErrCodeDbConn = &errorpb.ErrCode{
-	BizCode: int32(100003),
-	Code:    errorpb.Code_Internal,
-	Name:    "demo.test.v1.db_conn",
-	Reason:  "db connect error",
+	Code:       int32(100003),
+	Name:       "demo.test.v1.db_conn",
+	Reason:     "db connect error",
+	StatusCode: errorpb.Code_Internal,
 }
 var _ = errors.RegisterErrCodes(ErrCodeDbConn)
 
 var ErrCodeUnknownCode = &errorpb.ErrCode{
-	BizCode: int32(100004),
-	Code:    errorpb.Code_Internal,
-	Name:    "demo.test.v1.unknown_code",
-	Reason:  "default code",
+	Code:       int32(100004),
+	Name:       "demo.test.v1.unknown_code",
+	Reason:     "default code",
+	StatusCode: errorpb.Code_Internal,
 }
 var _ = errors.RegisterErrCodes(ErrCodeUnknownCode)
 
 var ErrCodeCustomCode = &errorpb.ErrCode{
-	BizCode: int32(100005),
-	Code:    errorpb.Code_OK,
-	Name:    "demo.test.v1.custom_code",
-	Reason:  "this is custom msg",
+	Code:       int32(100005),
+	Name:       "demo.test.v1.custom_code",
+	Reason:     "this is custom msg",
+	StatusCode: errorpb.Code_OK,
 }
 var _ = errors.RegisterErrCodes(ErrCodeCustomCode)
