@@ -9,6 +9,9 @@ import (
 var width = 10
 
 func Get(name string) string {
+	if width-len(name) < 0 {
+		return name
+	}
 	return strings.Repeat(" ", width-len(name)) + name
 }
 
