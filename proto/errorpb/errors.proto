@@ -23,10 +23,10 @@ message ErrMsg {
 
 message ErrCode {
   // 状态码
-  errors.Code code = 1;
+  errors.Code status_code = 1;
 
   // 业务码: example:200001
-  int32 biz_code = 2;
+  int32 code = 2;
 
   // 错误名字: example:lava.v1.err_code.auth_token_not_found
   string name = 3;

@@ -81,10 +81,10 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 				Id("=").
 				Op("&").Qual(errorPbPkg, "ErrCode").
 				Values(jen.Dict{
-					jen.Id("Code"):    jen.Qual(errorPbPkg, "Code_"+statusName),
-					jen.Id("Name"):    jen.Lit(name),
-					jen.Id("BizCode"): jen.Lit(num),
-					jen.Id("Reason"):  jen.Lit(rr),
+					jen.Id("StatusCode"): jen.Qual(errorPbPkg, "Code_"+statusName),
+					jen.Id("Name"):       jen.Lit(name),
+					jen.Id("Code"):       jen.Lit(num),
+					jen.Id("Reason"):     jen.Lit(rr),
 				})
 			genFile.Var().Id("_").Op("=").
 				Qual("github.com/pubgo/funk/errors", "RegisterErrCodes").

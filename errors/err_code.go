@@ -55,10 +55,10 @@ func (t *ErrCode) Format(f fmt.State, verb rune) { strFormat(f, verb, t) }
 func (t *ErrCode) String() string {
 	var buf = bytes.NewBuffer(nil)
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, t.Kind()))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCode, t.pb.Code.String()))
+	buf.WriteString(fmt.Sprintf("%s]: %d\n", internal.ColorCode, t.pb.Code))
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorReason, t.pb.Reason))
 	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorName, t.pb.Name))
-	buf.WriteString(fmt.Sprintf("%s]: %d\n", internal.ColorBiz, t.pb.BizCode))
+	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorStatusCode, t.pb.StatusCode.String()))
 	errStringify(buf, t.err)
 	return buf.String()
 }
@@ -67,8 +67,8 @@ func (t *ErrCode) MarshalJSON() ([]byte, error) {
 	var data = errJsonify(t.err)
 	data["kind"] = t.Kind()
 	data["name"] = t.pb.Name
-	data["biz_code"] = t.pb.BizCode
-	data["code"] = t.pb.Code.String()
+	data["status_code"] = t.pb.StatusCode.String()
+	data["code"] = t.pb.Code
 	data["reason"] = t.pb.Reason
 	return json.Marshal(data)
 }
