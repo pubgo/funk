@@ -1,0 +1,26 @@
+builds:
+  - main: ./cmd/protoc-gen-go-errors/main.go
+    id: protoc-gen-go-errors
+    binary: protoc-gen-go-errors
+    skip: false
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+  - main: ./cmd/protoc-gen-go-enum/main.go
+    id: protoc-gen-go-enum
+    binary: protoc-gen-go-enum
+    skip: false
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+archives:
+  - name_template: "{{ .Binary }}-{{ .Tag }}-{{ .Os }}-{{ .Arch }}"
+    format: binary
