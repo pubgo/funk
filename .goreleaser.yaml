@@ -1,5 +1,5 @@
 builds:
-  - main: ./cmd/protoc-gen-go-errors/main.go
+  - main: ./cmds/protoc-gen-go-errors/main.go
     id: protoc-gen-go-errors
     binary: protoc-gen-go-errors
     skip: false
@@ -9,7 +9,7 @@ builds:
       - windows
     goarch:
       - amd64
-  - main: ./cmd/protoc-gen-go-enum/main.go
+  - main: ./cmds/protoc-gen-go-enum/main.go
     id: protoc-gen-go-enum
     binary: protoc-gen-go-enum
     skip: false
