@@ -60,18 +60,18 @@ func IsMemoryErr(err error) bool {
 // converts a standard Go error into its canonical code. Note that
 // this is only used to translate the error returned by the server applications.
 func Err2GrpcCode(err error) codes.Code {
-	switch err {
-	case nil:
+	switch {
+	case err == nil:
 		return codes.OK
-	case io.EOF:
+	case err == io.EOF:
 		return codes.OutOfRange
-	case io.ErrClosedPipe, io.ErrNoProgress, io.ErrShortBuffer, io.ErrShortWrite, io.ErrUnexpectedEOF:
+	case errors.Is(err, io.ErrClosedPipe), errors.Is(err, io.ErrNoProgress), errors.Is(err, io.ErrShortBuffer), errors.Is(err, io.ErrShortWrite), errors.Is(err, io.ErrUnexpectedEOF):
 		return codes.FailedPrecondition
-	case os.ErrInvalid:
+	case errors.Is(err, os.ErrInvalid):
 		return codes.InvalidArgument
-	case context.Canceled:
+	case errors.Is(err, context.Canceled):
 		return codes.Canceled
-	case context.DeadlineExceeded:
+	case errors.Is(err, context.DeadlineExceeded):
 		return codes.DeadlineExceeded
 	}
 
@@ -174,7 +174,7 @@ func ConvertErr2Status(err *errorpb.Error) *status.Status {
 		return status.New(codes.OK, "OK")
 	}
 
-	var st, err1 = status.New(codes.Code(err.Code.Code), err.Msg.Msg).WithDetails(err)
+	var st, err1 = status.New(codes.Code(err.Code.StatusCode), err.Msg.Msg).WithDetails(err)
 	if err1 != nil {
 		log.Err(err1).Any("lava-error", err).Msg("failed to convert error to grpc status")
 		return status.New(codes.Internal, err1.Error())
@@ -242,8 +242,8 @@ func ParseError(err error) *errorpb.Error {
 	return &errorpb.Error{
 		Code: &errorpb.ErrCode{
 			Message:    err.Error(),
-			StatusCode: errorpb.Code_Unknown,
-			Name:       "lava.unknown",
+			StatusCode: errorpb.Code_Internal,
+			Name:       "lava.internal",
 		},
 		Trace: &errorpb.ErrTrace{
 			Service: version.Project(),
