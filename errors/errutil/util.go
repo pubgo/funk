@@ -242,8 +242,8 @@ func ParseError(err error) *errorpb.Error {
 	return &errorpb.Error{
 		Code: &errorpb.ErrCode{
 			Message:    err.Error(),
-			StatusCode: errorpb.Code_Internal,
-			Name:       "lava.internal",
+			StatusCode: errorpb.Code_Unknown,
+			Name:       "lava.error.unknown",
 		},
 		Trace: &errorpb.ErrTrace{
 			Service: version.Project(),
