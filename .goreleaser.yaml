@@ -9,7 +9,6 @@ builds:
       - windows
     goarch:
       - amd64
-      - arm64
   - main: ./cmd/protoc-gen-go-enum/main.go
     id: protoc-gen-go-enum
     binary: protoc-gen-go-enum
@@ -20,7 +19,6 @@ builds:
       - windows
     goarch:
       - amd64
-      - arm64
 archives:
   - name_template: "{{ .Binary }}-{{ .Tag }}-{{ .Os }}-{{ .Arch }}"
     format: binary
