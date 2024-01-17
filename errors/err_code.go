@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	json "github.com/goccy/go-json"
-	"github.com/pubgo/funk/errors/internal"
+	"github.com/pubgo/funk/errors/errinter"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
@@ -73,11 +73,11 @@ func (t *ErrCode) Format(f fmt.State, verb rune) { strFormat(f, verb, t) }
 
 func (t *ErrCode) String() string {
 	var buf = bytes.NewBuffer(nil)
-	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, t.Kind()))
-	buf.WriteString(fmt.Sprintf("%s]: %d\n", internal.ColorCode, t.pb.Code))
-	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorMessage, t.pb.Message))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorName, t.pb.Name))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorStatusCode, t.pb.StatusCode.String()))
+	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorKind, t.Kind()))
+	buf.WriteString(fmt.Sprintf("%s]: %d\n", errinter.ColorCode, t.pb.Code))
+	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorMessage, t.pb.Message))
+	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorName, t.pb.Name))
+	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorStatusCode, t.pb.StatusCode.String()))
 	errStringify(buf, t.err)
 	return buf.String()
 }

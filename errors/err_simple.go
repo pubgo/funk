@@ -6,7 +6,7 @@ import (
 
 	json "github.com/goccy/go-json"
 
-	"github.com/pubgo/funk/errors/internal"
+	"github.com/pubgo/funk/errors/errinter"
 )
 
 var _ fmt.Formatter = (*Err)(nil)
@@ -33,11 +33,11 @@ func (e Err) MarshalJSON() ([]byte, error) {
 
 func (e Err) String() string {
 	var buf = bytes.NewBuffer(nil)
-	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, e.Kind()))
-	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorMsg, e.Msg))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorDetail, e.Detail))
+	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorKind, e.Kind()))
+	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorMsg, e.Msg))
+	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorDetail, e.Detail))
 	for i := range e.Tags {
-		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorTags, e.Tags[i].String()))
+		buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorTags, e.Tags[i].String()))
 	}
 	return buf.String()
 }

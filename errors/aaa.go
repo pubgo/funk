@@ -2,9 +2,9 @@ package errors
 
 import (
 	"fmt"
-	"google.golang.org/grpc/status"
 
 	json "github.com/goccy/go-json"
+	"google.golang.org/grpc/status"
 )
 
 var _ json.Marshaler = (Tags)(nil)

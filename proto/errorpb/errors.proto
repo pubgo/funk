@@ -7,13 +7,6 @@ option go_package = "github.com/pubgo/funk/proto/errorpb;errorpb";
 import "errorpb/code.proto";
 import "google/protobuf/any.proto";
 
-message ErrRedirect {
-  string reply = 1;
-  bool shouldRedirect = 2;
-  string redirectURL = 3;
-  int32 status_code = 4;
-}
-
 message ErrMsg {
   string msg = 1;
   string detail = 2;

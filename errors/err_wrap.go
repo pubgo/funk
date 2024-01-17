@@ -6,7 +6,7 @@ import (
 
 	jjson "github.com/goccy/go-json"
 
-	"github.com/pubgo/funk/errors/internal"
+	"github.com/pubgo/funk/errors/errinter"
 	"github.com/pubgo/funk/stack"
 )
 
@@ -28,14 +28,14 @@ func (e *ErrWrap) Error() string                 { return e.err.Error() }
 func (e *ErrWrap) String() string {
 	var buf = bytes.NewBuffer(nil)
 	buf.WriteString("===============================================================\n")
-	buf.WriteString(fmt.Sprintf("%s]: %q\n", internal.ColorKind, e.Kind()))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorCaller, e.caller.String()))
+	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorKind, e.Kind()))
+	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorCaller, e.caller.String()))
 	for i := range e.fields {
-		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorTags, e.fields[i].String()))
+		buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorTags, e.fields[i].String()))
 	}
 
 	for i := range e.stack {
-		buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorStack, e.stack[i].String()))
+		buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorStack, e.stack[i].String()))
 	}
 	errStringify(buf, e.err)
 	return buf.String()

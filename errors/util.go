@@ -10,7 +10,7 @@ import (
 	"github.com/alecthomas/repr"
 
 	"github.com/pubgo/funk/convert"
-	"github.com/pubgo/funk/errors/internal"
+	"github.com/pubgo/funk/errors/errinter"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
@@ -68,8 +68,8 @@ func errStringify(buf *bytes.Buffer, err error) {
 		return
 	}
 
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorErrMsg, strings.TrimSpace(err.Error())))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", internal.ColorErrDetail, strings.TrimSpace(fmt.Sprintf("%v", err))))
+	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorErrMsg, strings.TrimSpace(err.Error())))
+	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorErrDetail, strings.TrimSpace(fmt.Sprintf("%v", err))))
 	err = Unwrap(err)
 	if err != nil {
 		errStringify(buf, err)

@@ -6,17 +6,6 @@ import (
 	jsonpb "github.com/golang/protobuf/jsonpb"
 )
 
-// MarshalJSON is a custom marshaler for ErrRedirect
-func (this *ErrRedirect) MarshalJSON() ([]byte, error) {
-	str, err := ErrorsMarshaler.MarshalToString(this)
-	return []byte(str), err
-}
-
-// UnmarshalJSON is a custom unmarshaler for ErrRedirect
-func (this *ErrRedirect) UnmarshalJSON(b []byte) error {
-	return ErrorsUnmarshaler.Unmarshal(bytes.NewReader(b), this)
-}
-
 // MarshalJSON is a custom marshaler for ErrMsg
 func (this *ErrMsg) MarshalJSON() ([]byte, error) {
 	str, err := ErrorsMarshaler.MarshalToString(this)
