@@ -27,7 +27,7 @@ func handleGrpcError(err error) error {
 
 	case GRPCStatus:
 		return NewCodeErr(&errorpb.ErrCode{
-			Reason:     v.GRPCStatus().Message(),
+			Message:    v.GRPCStatus().Message(),
 			StatusCode: errorpb.Code(v.GRPCStatus().Code()),
 			Name:       "lava.grpc.status",
 			Details:    v.GRPCStatus().Proto().Details,

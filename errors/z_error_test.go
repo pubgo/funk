@@ -1,7 +1,8 @@
-package errors
+package errors_test
 
 import (
 	"fmt"
+	"github.com/pubgo/funk/errors"
 	"testing"
 
 	"github.com/rs/xid"
@@ -12,43 +13,43 @@ import (
 )
 
 func TestFormat(t *testing.T) {
-	var err = WrapCaller(fmt.Errorf("test error, err=%w", New("hello error")))
-	err = Wrap(err, "next error")
-	err = WrapTag(err, T("event", "test event"), T("test123", 123), T("test", "hello"))
-	err = Wrapf(err, "next error name=%s", "wrapf")
+	var err = errors.WrapCaller(fmt.Errorf("test error, err=%w", errors.New("hello error")))
+	err = errors.Wrap(err, "next error")
+	err = errors.WrapTag(err, errors.T("event", "test event"), errors.T("test123", 123), errors.T("test", "hello"))
+	err = errors.Wrapf(err, "next error name=%s", "wrapf")
 
-	err = WrapCode(err, testcodepb.ErrCodeNotFound)
-	err = WrapMsg(err, &errorpb.ErrMsg{
+	err = errors.WrapCode(err, testcodepb.ErrCodeNotFound)
+	err = errors.WrapMsg(err, &errorpb.ErrMsg{
 		Msg: "this is msg",
 	})
 
-	err = IfErr(err, func(err error) error {
-		return WrapMsg(err, &errorpb.ErrMsg{
+	err = errors.IfErr(err, func(err error) error {
+		return errors.WrapMsg(err, &errorpb.ErrMsg{
 			Msg: "this is if err msg",
 		})
 	})
 
-	err = WrapFn(err, func() Tags {
-		return Tags{
+	err = errors.WrapFn(err, func() errors.Tags {
+		return errors.Tags{
 			{"key", "map value"},
 		}
 	})
 
-	err = WrapTag(err, T("name", "value"), T("name1", "value"))
-	err = WrapTrace(err, &errorpb.ErrTrace{
+	err = errors.WrapTag(err, errors.T("name", "value"), errors.T("name1", "value"))
+	err = errors.WrapTrace(err, &errorpb.ErrTrace{
 		Version: version.Version(),
 		Service: version.Project(),
 		Id:      xid.New().String(),
 	})
 
-	err = WrapStack(err)
-	Debug(err)
+	err = errors.WrapStack(err)
+	errors.Debug(err)
 
-	var fff *ErrCode
-	t.Log(As(err, &fff))
+	var fff *errors.ErrCode
+	t.Log(errors.As(err, &fff))
 	t.Log(fff.Proto())
 }
 
 func TestNew(t *testing.T) {
-	fmt.Printf("%s", New("test error"))
+	fmt.Printf("%s", errors.New("test error"))
 }

@@ -1,10 +1,11 @@
-package errutil
+package errutil_test
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/errors/errutil"
 )
 
 func TestJson(t *testing.T) {
@@ -17,5 +18,5 @@ func TestJson(t *testing.T) {
 	err = errors.Wrap(err, "this is next msg")
 	fmt.Printf("%s", err)
 
-	fmt.Println(string(JsonPretty(err)))
+	fmt.Println(string(errutil.JsonPretty(err)))
 }

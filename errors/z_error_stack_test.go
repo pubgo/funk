@@ -1,22 +1,23 @@
-package errors
+package errors_test
 
 import (
+	"github.com/pubgo/funk/errors"
 	"testing"
 
 	"github.com/pubgo/funk/stack"
 )
 
 func TestStack(t *testing.T) {
-	var err = WrapCaller(New("hello error"))
-	err = Wrap(err, "next error")
-	err = WrapTag(err,
-		T("event", "test event"),
-		T("test123", 123),
-		T("test", "hello"),
-		T("fn_stack", stack.CallerWithFunc(stack.CallerWithFunc)),
+	var err = errors.WrapCaller(errors.New("hello error"))
+	err = errors.Wrap(err, "next error")
+	err = errors.WrapTag(err,
+		errors.T("event", "test event"),
+		errors.T("test123", 123),
+		errors.T("test", "hello"),
+		errors.T("fn_stack", stack.CallerWithFunc(stack.CallerWithFunc)),
 	)
 
-	err = WrapStack(err)
-	err = Wrapf(err, "next error name=%s", "wrapf")
-	Debug(err)
+	err = errors.WrapStack(err)
+	err = errors.Wrapf(err, "next error name=%s", "wrapf")
+	errors.Debug(err)
 }

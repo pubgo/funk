@@ -32,7 +32,7 @@ message ErrCode {
   string name = 3;
 
   // 错误信息: example:token not found
-  string reason = 4;
+  string message = 4;
 
   // 错误详情
   repeated google.protobuf.Any details = 5;

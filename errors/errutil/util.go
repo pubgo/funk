@@ -191,8 +191,8 @@ func ParseError(err error) *errorpb.Error {
 
 	var ce *errors.ErrCode
 	if errors.As(err, &ce) {
-		if ce.Proto().Reason == "" {
-			ce.Proto().Reason = err.Error()
+		if ce.Proto().Message == "" {
+			ce.Proto().Message = err.Error()
 		}
 
 		return &errorpb.Error{
@@ -224,7 +224,7 @@ func ParseError(err error) *errorpb.Error {
 
 		return &errorpb.Error{
 			Code: &errorpb.ErrCode{
-				Reason:     gs.GRPCStatus().Message(),
+				Message:    gs.GRPCStatus().Message(),
 				StatusCode: errorpb.Code(gs.GRPCStatus().Code()),
 				Name:       "lava.grpc.status",
 			},
@@ -241,7 +241,7 @@ func ParseError(err error) *errorpb.Error {
 
 	return &errorpb.Error{
 		Code: &errorpb.ErrCode{
-			Reason:     err.Error(),
+			Message:    err.Error(),
 			StatusCode: errorpb.Code_Unknown,
 			Name:       "lava.unknown",
 		},

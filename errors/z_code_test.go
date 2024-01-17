@@ -1,4 +1,4 @@
-package errors
+package errors_test
 
 import (
 	"fmt"
@@ -6,54 +6,55 @@ import (
 
 	"github.com/rs/xid"
 
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/version"
 )
 
 func TestCodeErr(t *testing.T) {
-	var err = NewCodeErr(&errorpb.ErrCode{
-		Code:    errorpb.Code_Aborted,
-		BizCode: 100000,
-		Name:    "hello.test.123",
-		Reason:  fmt.Sprintf("test error"),
+	var err = errors.NewCodeErr(&errorpb.ErrCode{
+		StatusCode: errorpb.Code_Aborted,
+		Code:       100000,
+		Name:       "hello.test.123",
+		Message:    fmt.Sprintf("test error"),
 	})
 
-	err = WrapMapTag(err, Maps{
+	err = errors.WrapMapTag(err, errors.Maps{
 		"event":   "test event",
 		"test123": 123,
 	})
 
-	err = Wrap(err, "next error")
-	err = WrapTag(err, T("test", "hello"))
-	err = Wrapf(err, "next error name=%s", "wrapf")
+	err = errors.Wrap(err, "next error")
+	err = errors.WrapTag(err, errors.T("test", "hello"))
+	err = errors.Wrapf(err, "next error name=%s", "wrapf")
 
-	err = WrapMsg(err, &errorpb.ErrMsg{
+	err = errors.WrapMsg(err, &errorpb.ErrMsg{
 		Msg: "this is msg",
 	})
 
-	err = IfErr(err, func(err error) error {
-		return WrapMsg(err, &errorpb.ErrMsg{
+	err = errors.IfErr(err, func(err error) error {
+		return errors.WrapMsg(err, &errorpb.ErrMsg{
 			Msg: "this is if err msg",
 		})
 	})
 
-	err = WrapFn(err, func() Tags {
-		return Tags{
+	err = errors.WrapFn(err, func() errors.Tags {
+		return errors.Tags{
 			{"key", "map value"},
 		}
 	})
 
-	err = WrapTag(err, T("name", "value"), T("name1", "value"))
-	err = WrapTrace(err, &errorpb.ErrTrace{
+	err = errors.WrapTag(err, errors.T("name", "value"), errors.T("name1", "value"))
+	err = errors.WrapTrace(err, &errorpb.ErrTrace{
 		Version: version.Version(),
 		Service: version.Project(),
 		Id:      xid.New().String(),
 	})
 
-	err = WrapStack(err)
-	Debug(err)
+	err = errors.WrapStack(err)
+	errors.Debug(err)
 
-	var fff *ErrCode
-	t.Log(As(err, &fff))
+	var fff *errors.ErrCode
+	t.Log(errors.As(err, &fff))
 	t.Log(fff.Proto())
 }
