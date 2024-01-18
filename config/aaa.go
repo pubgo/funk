@@ -1,16 +1,5 @@
 package config
 
-const (
-	defaultConfigName = "config"
-	defaultConfigType = "yaml"
-	defaultConfigPath = "./configs"
-)
-
-var (
-	configDir  string
-	configPath string
-)
-
 type NamedConfig interface {
 	// ConfigUniqueName unique name
 	ConfigUniqueName() string

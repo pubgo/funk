@@ -1,11 +1,25 @@
 package config
 
 import (
+	"os"
 	"testing"
 
+	"github.com/a8m/envsubst"
 	"github.com/pubgo/funk/pretty"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestEnv(t *testing.T) {
+	os.Setenv("hello", "world")
+	data, err := envsubst.String("${hello}")
+	assert.Nil(t, err)
+	assert.Equal(t, data, "world")
+
+	os.Setenv("hello", "")
+	data, err = envsubst.String("${hello:-abc}")
+	assert.Nil(t, err)
+	assert.Equal(t, data, "abc")
+}
 
 func TestConfigPath(t *testing.T) {
 	t.Log(getConfigPath("", ""))

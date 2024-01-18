@@ -8,14 +8,12 @@ import (
 	"reflect"
 
 	"dario.cat/mergo"
-	"github.com/a8m/envsubst"
 	"gopkg.in/yaml.v3"
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/pathutil"
 	"github.com/pubgo/funk/result"
-	"github.com/pubgo/funk/vars"
 )
 
 func GetConfigDir() string {
@@ -72,60 +70,6 @@ func getPathList() (paths []string) {
 func SetConfigPath(confPath string) {
 	assert.If(configPath == "", "config path is null")
 	configPath = confPath
-}
-
-func Load[T any]() T {
-	if configPath != "" {
-		configDir = filepath.Dir(configPath)
-	} else {
-		configPath, configDir = getConfigPath(defaultConfigName, defaultConfigType)
-	}
-
-	configBytes := assert.Must1(os.ReadFile(configPath))
-	configBytes = assert.Must1(envsubst.Bytes(configBytes))
-
-	var cfg T
-	assert.Must(yaml.Unmarshal(configBytes, &cfg))
-
-	var res Resources
-	assert.Must(yaml.Unmarshal(configBytes, &res))
-
-	var cfgList []T
-	for _, resPath := range res.Resources {
-		var cfg1 T
-		resAbsPath := filepath.Join(configDir, resPath)
-		if pathutil.IsNotExist(resAbsPath) {
-			log.Panicln("resources config path not found:", resAbsPath)
-		}
-		resBytes := assert.Must1(os.ReadFile(resAbsPath))
-		resBytes = assert.Must1(envsubst.Bytes(resBytes))
-		assert.Must(yaml.Unmarshal(resBytes, &cfg1))
-		cfgList = append(cfgList, cfg1)
-	}
-
-	for _, resPath := range res.PatchResources {
-		var cfg1 T
-		resAbsPath := filepath.Join(configDir, resPath)
-		if pathutil.IsNotExist(resAbsPath) {
-			continue
-		}
-		resBytes := assert.Must1(os.ReadFile(resAbsPath))
-		resBytes = assert.Must1(envsubst.Bytes(resBytes))
-		assert.Must(yaml.Unmarshal(resBytes, &cfg1))
-		cfgList = append(cfgList, cfg1)
-	}
-
-	assert.Must(Merge(&cfg, cfgList...))
-
-	vars.RegisterValue("config", map[string]any{
-		"config_type": defaultConfigType,
-		"config_name": defaultConfigName,
-		"config_path": configPath,
-		"config_dir":  configDir,
-		"config_data": cfg,
-	})
-
-	return cfg
 }
 
 func MergeR[A any, B any | *any](dst *A, src ...B) (ret result.Result[*A]) {
@@ -211,11 +155,10 @@ func unmarshalOneOrList[T any](list *[]T, value *yaml.Node) error {
 		}
 		*list = append(*list, t)
 		return nil
-	} else if value.Kind == yaml.SequenceNode {
-		if err := value.Decode(list); err != nil {
-			return err
-		}
-		return nil
 	}
-	return fmt.Errorf("unmarshalable node: %v", value.Value)
+
+	if value.Kind == yaml.SequenceNode {
+		return value.Decode(list)
+	}
+	return errors.Format("unmarshalled node: %v", value.Value)
 }

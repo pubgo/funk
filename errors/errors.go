@@ -25,6 +25,9 @@ func New(msg string) error {
 func NewFmt(msg string, args ...interface{}) error {
 	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...)}, 1)
 }
+func Format(msg string, args ...interface{}) error {
+	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...)}, 1)
+}
 
 func NewTags(msg string, tags ...Tag) error {
 	return WrapCaller(&Err{Msg: msg, Tags: tags}, 1)

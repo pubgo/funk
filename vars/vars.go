@@ -45,7 +45,13 @@ func Map(name string) *expvar.Map {
 	return v.(*expvar.Map)
 }
 
+var _ json.Marshaler = (*Value)(nil)
+
 type Value func() interface{}
+
+func (f Value) MarshalJSON() ([]byte, error) {
+	return json.Marshal(f())
+}
 
 func (f Value) Value() interface{} { return f() }
 
@@ -78,10 +84,10 @@ func (f Value) String() (r string) {
 	}
 }
 
-func Register(name string, data func() interface{}) {
+func Register(name string, value Value) {
 	defer recovery.Exit()
 	assert.If(Has(name), "name:%s already exists", name)
-	expvar.Publish(name, Value(data))
+	expvar.Publish(name, value)
 }
 
 func RegisterValue(name string, data interface{}) {

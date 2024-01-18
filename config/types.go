@@ -14,6 +14,10 @@ type Node struct {
 	value *yaml.Node
 }
 
+func (c *Node) YamlNode() *yaml.Node {
+	return c.value
+}
+
 func (c *Node) MarshalYAML() (interface{}, error) {
 	return c.value, nil
 }
