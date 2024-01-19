@@ -3,6 +3,7 @@ package result
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/pubgo/funk/stack"
 
 	"github.com/pubgo/funk/generic"
@@ -51,15 +52,15 @@ type Result[T any] struct {
 	e error
 }
 
-func (r *Result[T]) WithErr(err error) Result[T] {
+func (r Result[T]) WithErr(err error) Result[T] {
 	return Err[T](err)
 }
 
-func (r *Result[T]) WithVal(v T) Result[T] {
+func (r Result[T]) WithVal(v T) Result[T] {
 	return OK(v)
 }
 
-func (r *Result[T]) Err(check ...func(err error) error) error {
+func (r Result[T]) Err(check ...func(err error) error) error {
 	if !r.IsErr() {
 		return nil
 	}
@@ -71,18 +72,18 @@ func (r *Result[T]) Err(check ...func(err error) error) error {
 	return r.e
 }
 
-func (r *Result[T]) IsErr() bool {
+func (r Result[T]) IsErr() bool {
 	return r.e != nil || !generic.IsNil(r.e)
 }
 
-func (r *Result[T]) OrElse(v T) T {
+func (r Result[T]) OrElse(v T) T {
 	if r.IsErr() {
 		return v
 	}
 	return generic.DePtr(r.v)
 }
 
-func (r *Result[T]) Unwrap(check ...func(err error) error) T {
+func (r Result[T]) Unwrap(check ...func(err error) error) T {
 	if !r.IsErr() {
 		return generic.DePtr(r.v)
 	}
@@ -94,7 +95,7 @@ func (r *Result[T]) Unwrap(check ...func(err error) error) T {
 	}
 }
 
-func (r *Result[T]) Expect(format string, args ...any) T {
+func (r Result[T]) Expect(format string, args ...any) T {
 	if !r.IsErr() {
 		return generic.DePtr(r.v)
 	}
@@ -105,7 +106,7 @@ func (r *Result[T]) Expect(format string, args ...any) T {
 	})
 }
 
-func (r *Result[T]) String() string {
+func (r Result[T]) String() string {
 	if !r.IsErr() {
 		return fmt.Sprintf("%v", *r.v)
 	}
@@ -113,7 +114,7 @@ func (r *Result[T]) String() string {
 	return r.e.Error()
 }
 
-func (r *Result[T]) MarshalJSON() ([]byte, error) {
+func (r Result[T]) MarshalJSON() ([]byte, error) {
 	if r.IsErr() {
 		return nil, r.e
 	}
@@ -121,6 +122,6 @@ func (r *Result[T]) MarshalJSON() ([]byte, error) {
 	return json.Marshal(generic.DePtr(r.v))
 }
 
-func (r *Result[T]) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, &r.v)
+func (r Result[T]) UnmarshalJSON([]byte) error {
+	panic("unimplemented")
 }

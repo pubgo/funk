@@ -8,21 +8,21 @@ import (
 
 type hello struct {
 	Name string `json:"name"`
-	Jj   func()
 }
 
 func TestName(t *testing.T) {
 	var ok = result.OK(&hello{Name: "abc"})
 	okBytes := result.Of(json.Marshal(&ok))
 	data := string(okBytes.Expect("failed to encode json data"))
+	t.Log(data)
 	if data != `{"name":"abc"}` {
 		t.Log(data)
 		t.Fatal("not match")
 	}
 
-	var ok1 result.Result[*hello]
+	var ok1 hello
 	if err := json.Unmarshal([]byte(data), &ok1); err != nil {
 		t.Fatal(err)
 	}
-	t.Log("ok", ok1.Unwrap().Name)
+	t.Log("ok", ok1.Name)
 }
