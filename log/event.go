@@ -44,3 +44,30 @@ func convertEvent(event2 *Event) *event {
 func NewEvent() *Event {
 	return zerolog.Dict()
 }
+
+func mergeEvent(to *Event, from ...*Event) *Event {
+	if len(from) == 0 {
+		return to
+	}
+
+	if to == nil {
+		to = zerolog.Dict()
+	}
+
+	to1 := convertEvent(to)
+	to1.buf = bytes.TrimRight(to1.buf, ",")
+	for i := range from {
+		if from[i] == nil {
+			continue
+		}
+
+		from1 := convertEvent(from[i])
+		from1.buf = bytes.TrimLeft(from1.buf, "{")
+		from1.buf = bytes.Trim(from1.buf, ",")
+		if len(from1.buf) > 0 {
+			to1.buf = append(to1.buf, ',')
+			to1.buf = append(to1.buf, from1.buf...)
+		}
+	}
+	return to
+}

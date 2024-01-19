@@ -1,7 +1,6 @@
 package log
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"github.com/rs/zerolog"
@@ -13,7 +12,7 @@ type loggerImpl struct {
 	name       string
 	log        *zerolog.Logger
 	fields     Map
-	content    []byte
+	content    *Event
 	callerSkip int
 	lvl        Level
 }
@@ -29,20 +28,8 @@ func (l *loggerImpl) WithEvent(evt *Event) Logger {
 		return l
 	}
 
-	putEvent(evt)
-	evt1 := convertEvent(evt)
-	if len(evt1.buf) > 0 {
-		evt1.buf = bytes.TrimLeft(bytes.TrimSpace(evt1.buf), "{")
-		evt1.buf = bytes.TrimRight(evt1.buf, ",")
-	}
-
 	var log = l.copy()
-	logContent := make([]byte, 0, len(evt1.buf)+len(l.content)+1)
-	logContent = append(logContent, log.content...)
-	if len(logContent) > 0 && len(evt1.buf) > 0 {
-		logContent = append(logContent, ',')
-	}
-	log.content = append(logContent, evt1.buf...)
+	log.content = mergeEvent(l.content, evt)
 
 	return log
 }
@@ -95,12 +82,7 @@ func (l *loggerImpl) Debug(ctxL ...context.Context) *zerolog.Event {
 		return nil
 	}
 
-	var ctx = context.Background()
-	if len(ctxL) > 0 {
-		ctx = ctxL[0]
-	}
-
-	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Debug().Func(withEventCtx(ctx)) })
+	return l.newEvent(ctxL, l.getLog().Debug())
 }
 
 func (l *loggerImpl) Info(ctxL ...context.Context) *zerolog.Event {
@@ -108,12 +90,7 @@ func (l *loggerImpl) Info(ctxL ...context.Context) *zerolog.Event {
 		return nil
 	}
 
-	var ctx = context.Background()
-	if len(ctxL) > 0 {
-		ctx = ctxL[0]
-	}
-
-	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Info().Func(withEventCtx(ctx)) })
+	return l.newEvent(ctxL, l.getLog().Info())
 }
 
 func (l *loggerImpl) Warn(ctxL ...context.Context) *zerolog.Event {
@@ -121,12 +98,7 @@ func (l *loggerImpl) Warn(ctxL ...context.Context) *zerolog.Event {
 		return nil
 	}
 
-	var ctx = context.Background()
-	if len(ctxL) > 0 {
-		ctx = ctxL[0]
-	}
-
-	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Warn().Func(withEventCtx(ctx)) })
+	return l.newEvent(ctxL, l.getLog().Warn())
 }
 
 func (l *loggerImpl) Error(ctxL ...context.Context) *zerolog.Event {
@@ -134,12 +106,7 @@ func (l *loggerImpl) Error(ctxL ...context.Context) *zerolog.Event {
 		return nil
 	}
 
-	var ctx = context.Background()
-	if len(ctxL) > 0 {
-		ctx = ctxL[0]
-	}
-
-	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Error().Func(withEventCtx(ctx)) })
+	return l.newEvent(ctxL, l.getLog().Error())
 }
 
 func (l *loggerImpl) Err(err error, ctxL ...context.Context) *zerolog.Event {
@@ -147,12 +114,7 @@ func (l *loggerImpl) Err(err error, ctxL ...context.Context) *zerolog.Event {
 		return nil
 	}
 
-	var ctx = context.Background()
-	if len(ctxL) > 0 {
-		ctx = ctxL[0]
-	}
-
-	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Err(err).Func(withEventCtx(ctx)) })
+	return l.newEvent(ctxL, l.getLog().Err(err))
 }
 
 func (l *loggerImpl) Panic(ctxL ...context.Context) *zerolog.Event {
@@ -160,12 +122,7 @@ func (l *loggerImpl) Panic(ctxL ...context.Context) *zerolog.Event {
 		return nil
 	}
 
-	var ctx = context.Background()
-	if len(ctxL) > 0 {
-		ctx = ctxL[0]
-	}
-
-	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Panic().Func(withEventCtx(ctx)) })
+	return l.newEvent(ctxL, l.getLog().Panic())
 }
 
 func (l *loggerImpl) Fatal(ctxL ...context.Context) *zerolog.Event {
@@ -173,12 +130,7 @@ func (l *loggerImpl) Fatal(ctxL ...context.Context) *zerolog.Event {
 		return nil
 	}
 
-	var ctx = context.Background()
-	if len(ctxL) > 0 {
-		ctx = ctxL[0]
-	}
-
-	return l.newEvent(func(log *zerolog.Logger) *zerolog.Event { return log.Fatal().Func(withEventCtx(ctx)) })
+	return l.newEvent(ctxL, l.getLog().Fatal())
 }
 
 func (l *loggerImpl) enabled(lvl zerolog.Level) bool {
@@ -197,9 +149,12 @@ func (l *loggerImpl) getLog() *zerolog.Logger {
 	return stdZerolog
 }
 
-func (l *loggerImpl) newEvent(fn func(log *zerolog.Logger) *zerolog.Event) *zerolog.Event {
-	var log = l.getLog()
-	e := fn(log)
+func (l *loggerImpl) newEvent(ctxL []context.Context, e *zerolog.Event) *zerolog.Event {
+	var ctx = context.Background()
+	if len(ctxL) > 0 {
+		ctx = ctxL[0]
+	}
+
 	if l.name != "" {
 		e = e.Str("logger", l.name)
 	}
@@ -212,19 +167,5 @@ func (l *loggerImpl) newEvent(fn func(log *zerolog.Logger) *zerolog.Event) *zero
 		e = e.Fields(l.fields)
 	}
 
-	e1 := convertEvent(e)
-	if len(e1.buf) > 0 {
-		e1.buf = bytes.TrimLeft(e1.buf, "{")
-		e1.buf = bytes.TrimRight(e1.buf, ",")
-	}
-
-	if len(l.content) > 0 && len(e1.buf) > 0 {
-		e1.buf = append(e1.buf, ',')
-	}
-	e1.buf = append(e1.buf, l.content...)
-
-	if len(e1.buf) > 0 && e1.buf[0] != '{' {
-		e1.buf = append([]byte{'{'}, e1.buf...)
-	}
-	return e
+	return mergeEvent(e, getEventFromCtx(ctx), l.content)
 }
