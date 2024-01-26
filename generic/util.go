@@ -90,7 +90,6 @@ func ExtractFrom[T, E any](set []T, fn func(T) E) []E {
 	for i := range set {
 		r[i] = fn(set[i])
 	}
-
 	return r
 }
 
@@ -104,7 +103,6 @@ func Filter[T any](set []T, criteria func(T) bool) []T {
 			r = append(r, set[i])
 		}
 	}
-
 	return r
 }
 
@@ -118,7 +116,6 @@ func FilterInPlace[T any](set []T, criteria func(T) bool) []T {
 			i--
 		}
 	}
-
 	return set
 }
 
@@ -130,7 +127,6 @@ func Delete[T comparable](set []T, value T) []T {
 			break
 		}
 	}
-
 	return set
 }
 
@@ -142,7 +138,6 @@ func DeleteAll[T comparable](set []T, value T) []T {
 			i--
 		}
 	}
-
 	return set
 }
 
@@ -188,4 +183,8 @@ func IsNil(err interface{}) bool {
 	}
 
 	return v.IsZero()
+}
+
+func Init[T any](fn func() T) T {
+	return fn()
 }

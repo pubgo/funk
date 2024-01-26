@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/pubgo/funk/stack"
-
 	"github.com/pubgo/funk/generic"
+	"github.com/pubgo/funk/stack"
 )
 
 var _ error = (*Error)(nil)
@@ -124,4 +123,12 @@ func (r Result[T]) MarshalJSON() ([]byte, error) {
 
 func (r Result[T]) UnmarshalJSON([]byte) error {
 	panic("unimplemented")
+}
+
+func Pipe[A, B any](a Result[A], fn func(t A) Result[B]) Result[B] {
+	if a.IsErr() {
+		return Err[B](a.Err())
+	}
+
+	return fn(a.Unwrap())
 }

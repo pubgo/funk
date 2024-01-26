@@ -2,6 +2,7 @@ package log
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/rs/zerolog"
 )
@@ -59,7 +60,7 @@ func (l *loggerImpl) WithName(name string) Logger {
 }
 
 func (l *loggerImpl) WithFields(m Map) Logger {
-	if len(m) == 0 {
+	if m == nil || len(m) == 0 {
 		return l
 	}
 
@@ -112,6 +113,17 @@ func (l *loggerImpl) Error(ctxL ...context.Context) *zerolog.Event {
 func (l *loggerImpl) Err(err error, ctxL ...context.Context) *zerolog.Event {
 	if !l.enabled(zerolog.ErrorLevel) {
 		return nil
+	}
+
+	if err != nil {
+		if errJson, ok := err.(json.Marshaler); ok {
+			var errJsonBytes, _ = errJson.MarshalJSON()
+			if errJsonBytes != nil && len(errJsonBytes) > 0 {
+				return l.newEvent(ctxL, l.getLog().Error().Str("error", err.Error()).RawJSON("error_detail", errJsonBytes))
+			}
+		}
+
+		return l.newEvent(ctxL, l.getLog().Error().Str("error", err.Error()))
 	}
 
 	return l.newEvent(ctxL, l.getLog().Err(err))

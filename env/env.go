@@ -2,20 +2,22 @@ package env
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/a8m/envsubst"
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/result"
 )
 
 var trim = strings.TrimSpace
 
-func Set(key, value string) {
+func Set(key, value string) error {
 	k, v, ok := Normalize(fmt.Sprintf("%s=%s", key, value))
 	assert.If(!ok, "env key is incorrect")
-	assert.Must(os.Setenv(Key(k), v))
+	return os.Setenv(Key(k), v)
 }
 
 func Get(names ...string) string {
@@ -50,6 +52,7 @@ func GetBoolVal(val *bool, names ...string) {
 
 	v, err := strconv.ParseBool(dt)
 	if err != nil {
+		log.Printf("env: failed to parse string to bool, err=%v\n", err)
 		return
 	}
 
@@ -64,6 +67,7 @@ func GetIntVal(val *int, names ...string) {
 
 	v, err := strconv.Atoi(dt)
 	if err != nil {
+		log.Printf("env: failed to parse string to int, err=%v\n", err)
 		return
 	}
 
@@ -78,6 +82,7 @@ func GetFloatVal(val *float64, names ...string) {
 
 	v, err := strconv.ParseFloat(dt, 32)
 	if err != nil {
+		log.Printf("env: failed to parse string to float, err=%v\n", err)
 		return
 	}
 
@@ -88,12 +93,13 @@ func Lookup(key string) (string, bool) {
 	return os.LookupEnv(Key(key))
 }
 
-func Delete(key string) {
-	assert.Must(os.Unsetenv(Key(key)))
+func Delete(key string) error {
+	return os.Unsetenv(Key(key))
 }
 
-func Expand(value string) string {
-	return assert.Must1(envsubst.String(value))
+func Expand(value string) result.Result[string] {
+
+	return result.Of(envsubst.String(value))
 }
 
 func Map() map[string]string {

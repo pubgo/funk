@@ -26,3 +26,7 @@ func TestName(t *testing.T) {
 	}
 	t.Log("ok", ok1.Name)
 }
+
+func TestPipe(t *testing.T) {
+
+}

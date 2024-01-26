@@ -2,7 +2,8 @@ package log_test
 
 import (
 	"context"
-	"errors"
+	"fmt"
+	"github.com/pubgo/funk/errors"
 	"testing"
 
 	"github.com/rs/zerolog"
@@ -17,7 +18,12 @@ func TestName(t *testing.T) {
 	log.Print("world world")
 	log.Info().Str("hello", "world world").Msg("ok ok")
 	log.Warn().Str("hello", "world world").Msg("ok ok")
-	log.Err(errors.New("error")).Str("hello", "world world").Msg("ok ok")
+
+	var err = errors.WrapCaller(fmt.Errorf("test error"))
+	err = errors.Wrap(err, "next error")
+	err = errors.WrapTag(err, errors.T("event", "test event"), errors.T("test123", 123), errors.T("test", "hello"))
+	err = errors.Wrapf(err, "next error name=%s", "wrapf")
+	log.Err(err).Str("hello", "world world").Msg("ok ok")
 	log.GetLogger("test_app").Info().Str("hello", "world world").Msg("ok ok")
 	log.GetLogger("test_app").Info().Str("hello", "world world").Msg("ok ok")
 	log.GetLogger("test_app").
@@ -45,7 +51,7 @@ func TestSetLog(t *testing.T) {
 	//zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 	log.SetLogger(generic.Ptr(zl.Output(zerolog.NewConsoleWriter())))
 	log.Debug().Msg("test")
-	log.Debug().Msg("test")
-	log.Debug().Msg("test")
-	log.Debug().Msg("test")
+	log.Info().Msg("test")
+	log.Warn().Msg("test")
+	log.Error().Msg("test")
 }

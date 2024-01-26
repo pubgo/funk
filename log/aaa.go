@@ -28,6 +28,8 @@ type Logger interface {
 
 type StdLogger interface {
 	Printf(format string, v ...interface{})
+	Logf(format string, v ...interface{})
 	Print(v ...interface{})
+	Log(v ...interface{})
 	Println(v ...interface{})
 }
