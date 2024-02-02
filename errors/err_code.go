@@ -36,10 +36,7 @@ func NewCodeErr(code *errorpb.ErrCode, details ...proto.Message) error {
 		}
 	}
 
-	return &ErrWrap{
-		caller: stack.Caller(1),
-		err:    &ErrCode{pb: code, err: errors.New(code.Message)},
-	}
+	return &ErrCode{pb: code, err: errors.New(code.Message)}
 }
 
 func WrapCode(err error, code *errorpb.ErrCode) error {
@@ -70,6 +67,45 @@ func (t *ErrCode) Error() string                 { return t.err.Error() }
 func (t *ErrCode) Proto() *errorpb.ErrCode       { return t.pb }
 func (t *ErrCode) Kind() string                  { return "err_code" }
 func (t *ErrCode) Format(f fmt.State, verb rune) { strFormat(f, verb, t) }
+
+func (t *ErrCode) Is(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if t.err == err {
+		return true
+	}
+
+	err1, ok := err.(*ErrCode)
+	if ok && err1.pb.Code == t.pb.Code && err1.pb.Name == t.pb.Name {
+		return true
+	}
+
+	return false
+}
+
+func (t *ErrCode) As(err any) bool {
+	if err == nil {
+		return false
+	}
+
+	err1, ok := err.(*ErrCode)
+	if ok && err1.pb != nil && err1.pb.Code == t.pb.Code && err1.pb.Name == t.pb.Name {
+		return true
+	}
+
+	err2, ok := err.(**errorpb.ErrCode)
+	if ok && (*err2).Code == t.pb.Code && (*err2).Name == t.pb.Name {
+		return true
+	}
+
+	if err2, ok := err.(*errorpb.ErrCode); ok && (*err2).Code == t.pb.Code && (*err2).Name == t.pb.Name {
+		return true
+	}
+
+	return false
+}
 
 func (t *ErrCode) String() string {
 	var buf = bytes.NewBuffer(nil)

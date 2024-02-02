@@ -74,8 +74,6 @@ func UnwrapEach(err error, call func(e error) bool) {
 	}
 }
 
-var errorType = reflect.TypeOf((*error)(nil)).Elem()
-
 func As(err error, target any) bool {
 	if target == nil {
 		panic("errors: target cannot be nil")
@@ -88,10 +86,6 @@ func As(err error, target any) bool {
 	}
 
 	targetType := typ.Elem()
-	if targetType.Kind() != reflect.Interface && !targetType.Implements(errorType) {
-		panic("errors: *target must be interface or implement error")
-	}
-
 	for err != nil {
 		if reflect.TypeOf(err).AssignableTo(targetType) {
 			val.Elem().Set(reflect.ValueOf(err))
