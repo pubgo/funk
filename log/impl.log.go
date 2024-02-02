@@ -158,7 +158,7 @@ func (l *loggerImpl) getLog() *zerolog.Logger {
 	if l.log != nil {
 		return l.log
 	}
-	return stdZerolog
+	return stdZeroLog
 }
 
 func (l *loggerImpl) newEvent(ctxL []context.Context, e *zerolog.Event) *zerolog.Event {

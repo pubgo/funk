@@ -7,19 +7,19 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	llog "github.com/rs/zerolog/log"
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/generic"
 )
 
 var (
-	_ = func() interface{} {
+	_ = generic.Init(func() {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-		return nil
-	}()
+	})
 
-	// stdZerolog default zerolog for debug
-	stdZerolog = generic.Ptr(
+	// stdZeroLog default zerolog for debug
+	stdZeroLog = generic.Ptr(
 		zerolog.New(os.Stderr).Level(zerolog.DebugLevel).
 			With().Timestamp().Caller().Logger().
 			Output(zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
@@ -27,6 +27,10 @@ var (
 				w.TimeFormat = time.RFC3339
 			})).Hook(new(hookImpl)),
 	)
+
+	_ = generic.Init(func() {
+		llog.Logger = *stdZeroLog
+	})
 
 	// stdLog is the global logger.
 	stdLog = New(nil)
@@ -40,7 +44,8 @@ func GetLogger(name string) Logger {
 // SetLogger set global log
 func SetLogger(log *zerolog.Logger) {
 	assert.If(log == nil, "[log] should not be nil")
-	stdZerolog = log
+	stdZeroLog = log
+	llog.Logger = *log
 }
 
 // Err starts a new message with error level with err as a field if not nil or

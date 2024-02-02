@@ -185,6 +185,7 @@ func IsNil(err interface{}) bool {
 	return v.IsZero()
 }
 
-func Init[T any](fn func() T) T {
-	return fn()
+func Init(fn func()) error {
+	fn()
+	return nil
 }
