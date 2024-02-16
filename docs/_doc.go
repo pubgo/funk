@@ -19,4 +19,8 @@ package docs
 // https://github.com/esimov/gogu
 // https://github.com/duke-git/lancet
 // https://github.com/tikafog/of
-// "github.com/mcuadros/go-defaults"
+// https://github.com/mcuadros/go-defaults
+// https://github.com/btcsuite/btcd/tree/master/btcutil
+// https://github.com/btcsuite/btcd/tree/master/btcutil/base58
+// https://github.com/btcsuite/btcd/tree/master/btcutil/bech32
+// https://github.com/btcsuite/btcd/tree/master/btcutil/hdkeychain
