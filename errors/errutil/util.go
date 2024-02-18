@@ -226,6 +226,7 @@ func ParseError(err error) *errorpb.Error {
 			Code: &errorpb.ErrCode{
 				Message:    gs.GRPCStatus().Message(),
 				StatusCode: errorpb.Code(gs.GRPCStatus().Code()),
+				Code:       int32(GrpcCodeToHTTP(gs.GRPCStatus().Code())),
 				Name:       "lava.grpc.status",
 			},
 			Trace: &errorpb.ErrTrace{
@@ -243,6 +244,7 @@ func ParseError(err error) *errorpb.Error {
 		Code: &errorpb.ErrCode{
 			Message:    err.Error(),
 			StatusCode: errorpb.Code_Unknown,
+			Code:       500,
 			Name:       "lava.error.unknown",
 		},
 		Trace: &errorpb.ErrTrace{
