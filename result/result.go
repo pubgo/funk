@@ -68,6 +68,15 @@ func (r Result[T]) ValueTo(v *T) error {
 	return nil
 }
 
+func (r Result[T]) OnValue(fn func(t T)) error {
+	if r.IsErr() {
+		return r.e
+	}
+
+	fn(generic.DePtr(r.v))
+	return nil
+}
+
 func (r Result[T]) Err(check ...func(err error) error) error {
 	if !r.IsErr() {
 		return nil
