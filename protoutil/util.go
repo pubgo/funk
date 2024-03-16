@@ -426,7 +426,7 @@ func ParseParameter(args string) {
 	for _, arg := range strings.Split(args, ",") {
 		spec := strings.SplitN(arg, "=", 2)
 		if len(spec) == 1 {
-			assert.Must(flag.CommandLine.Set(spec[0], ""), "Cannot set flag %s", args)
+			assert.MustF(flag.CommandLine.Set(spec[0], ""), "Cannot set flag %s", args)
 			continue
 		}
 
@@ -435,7 +435,7 @@ func ParseParameter(args string) {
 			continue
 		}
 
-		assert.Must(flag.CommandLine.Set(key, value), "Cannot set flag %s", arg)
+		assert.MustF(flag.CommandLine.Set(key, value), "Cannot set flag %s", arg)
 	}
 }
 

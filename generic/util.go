@@ -28,7 +28,8 @@ func Nil[T any]() (t *T) {
 	return
 }
 
-// DePtr deprecated, use FromPtr
+// DePtr
+// Deprecated: use FromPtr
 func DePtr[T any](v *T) (r T) {
 	if v == nil {
 		return

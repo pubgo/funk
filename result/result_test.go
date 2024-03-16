@@ -2,8 +2,9 @@ package result_test
 
 import (
 	"encoding/json"
-	"github.com/pubgo/funk/result"
 	"testing"
+
+	"github.com/pubgo/funk/result"
 )
 
 type hello struct {
@@ -25,8 +26,4 @@ func TestName(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("ok", ok1.Name)
-}
-
-func TestPipe(t *testing.T) {
-
 }

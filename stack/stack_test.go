@@ -1,10 +1,11 @@
-package stack
+package stack_test
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/pubgo/funk/pretty"
+	"github.com/pubgo/funk/stack"
 )
 
 func init1() {
@@ -16,17 +17,17 @@ func init2() {
 }
 
 func init3() {
-	pretty.Println(GetGORoot())
-	pretty.Println(Callers(4))
-	fmt.Println(Caller(0))
-	fmt.Println(Caller(1))
-	fmt.Println(Caller(2))
-	fmt.Println(Caller(3))
-	fmt.Println(Caller(20))
+	pretty.Println(stack.GetGORoot())
+	pretty.Println(stack.Callers(4))
+	fmt.Println(stack.Caller(0))
+	fmt.Println(stack.Caller(1))
+	fmt.Println(stack.Caller(2))
+	fmt.Println(stack.Caller(3))
+	fmt.Println(stack.Caller(20))
 }
 
 func TestCallerWithDepth(t *testing.T) {
-	fmt.Println(Caller(0).String())
+	fmt.Println(stack.Caller(0).String())
 	init1()
 	fmt.Print("\n\n\n")
 	init2()
