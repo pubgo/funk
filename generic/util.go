@@ -28,7 +28,15 @@ func Nil[T any]() (t *T) {
 	return
 }
 
+// DePtr deprecated, use FromPtr
 func DePtr[T any](v *T) (r T) {
+	if v == nil {
+		return
+	}
+	return *v
+}
+
+func FromPtr[T any](v *T) (r T) {
 	if v == nil {
 		return
 	}
@@ -70,17 +78,6 @@ func Map[T any, V any](data []T, handle func(i int) V) []V {
 	return vv
 }
 
-// Contains returns whether `vs` contains the element `e` by comparing vs[i] == e.
-func Contains[T comparable](vs []T, e T) bool {
-	for _, v := range vs {
-		if v == e {
-			return true
-		}
-	}
-
-	return false
-}
-
 // ExtractFrom extracts a nested object of type E from type T.
 //
 // This function is useful if we have a set of type `T` nad we want to
@@ -91,6 +88,17 @@ func ExtractFrom[T, E any](set []T, fn func(T) E) []E {
 		r[i] = fn(set[i])
 	}
 	return r
+}
+
+// Contains returns whether `vs` contains the element `e` by comparing vs[i] == e.
+func Contains[T comparable](vs []T, e T) bool {
+	for _, v := range vs {
+		if v == e {
+			return true
+		}
+	}
+
+	return false
 }
 
 // Filter iterates over `set` and gets the values that match `criteria`.
