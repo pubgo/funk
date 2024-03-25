@@ -174,12 +174,13 @@ func ConvertErr2Status(err *errorpb.Error) *status.Status {
 		return status.New(codes.OK, "OK")
 	}
 
-	var st, err1 = status.New(codes.Code(err.Code.StatusCode), err.Msg.Msg).WithDetails(err)
-	if err1 != nil {
+	st := status.New(codes.Code(err.Code.StatusCode), err.Msg.Msg)
+	if st1, err1 := st.WithDetails(err); err1 != nil {
 		log.Err(err1).Any("lava-error", err).Msg("failed to convert error to grpc status")
-		return status.New(codes.Internal, err1.Error())
+		return st
+	} else {
+		return st1
 	}
-	return st
 }
 
 // ParseError try to convert an error to *Error.
@@ -228,6 +229,7 @@ func ParseError(err error) *errorpb.Error {
 				StatusCode: errorpb.Code(gs.GRPCStatus().Code()),
 				Code:       int32(GrpcCodeToHTTP(gs.GRPCStatus().Code())),
 				Name:       "lava.grpc.status",
+				Details:    gs.GRPCStatus().Proto().Details,
 			},
 			Trace: &errorpb.ErrTrace{
 				Service: version.Project(),

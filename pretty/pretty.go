@@ -37,3 +37,7 @@ func Fatalf(format string, a ...interface{}) {
 func SetWriter(o io.Writer) {
 	pp.SetDefaultOutput(o)
 }
+
+func SetDefaultMaxDepth(v int) {
+	pp.SetDefaultMaxDepth(v)
+}

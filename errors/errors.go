@@ -48,6 +48,7 @@ func Debug(err error) {
 		return
 	}
 
+	pretty.SetDefaultMaxDepth(20)
 	pretty.Println(err)
 }
 

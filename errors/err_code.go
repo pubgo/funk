@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"log"
+
 	json "github.com/goccy/go-json"
 	"github.com/pubgo/funk/errors/errinter"
 	"github.com/pubgo/funk/generic"
@@ -11,7 +13,6 @@ import (
 	"github.com/pubgo/funk/stack"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
-	"log"
 )
 
 func NewCodeErr(code *errorpb.ErrCode, details ...proto.Message) error {
@@ -28,7 +29,7 @@ func NewCodeErr(code *errorpb.ErrCode, details ...proto.Message) error {
 
 			pb, err := anypb.New(p)
 			if err != nil {
-				log.Printf("failed to encode to any")
+				log.Printf("err_code: failed to encode protobuf message to any, data=%v", p)
 				continue
 			}
 

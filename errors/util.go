@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/alecthomas/repr"
-
 	"github.com/pubgo/funk/convert"
 	"github.com/pubgo/funk/errors/errinter"
 	"github.com/pubgo/funk/generic"
