@@ -190,25 +190,6 @@ func ParseError(err error) *errorpb.Error {
 		return nil
 	}
 
-	var ce *errors.ErrCode
-	if errors.As(err, &ce) {
-		if ce.Proto().Message == "" {
-			ce.Proto().Message = err.Error()
-		}
-
-		return &errorpb.Error{
-			Code: ce.Proto(),
-			Trace: &errorpb.ErrTrace{
-				Service: version.Project(),
-				Version: version.Version(),
-			},
-			Msg: &errorpb.ErrMsg{
-				Msg:    err.Error(),
-				Detail: fmt.Sprintf("%#v", err),
-			},
-		}
-	}
-
 	// grpc error
 	gs, ok := err.(errors.GRPCStatus)
 	if ok {
@@ -242,6 +223,25 @@ func ParseError(err error) *errorpb.Error {
 		}
 	}
 
+	var ce *errors.ErrCode
+	if errors.As(err, &ce) {
+		if ce.Proto().Message == "" {
+			ce.Proto().Message = err.Error()
+		}
+
+		return &errorpb.Error{
+			Code: ce.Proto(),
+			Trace: &errorpb.ErrTrace{
+				Service: version.Project(),
+				Version: version.Version(),
+			},
+			Msg: &errorpb.ErrMsg{
+				Msg:    err.Error(),
+				Detail: fmt.Sprintf("%v", err),
+			},
+		}
+	}
+
 	return &errorpb.Error{
 		Code: &errorpb.ErrCode{
 			Message:    err.Error(),
@@ -255,7 +255,7 @@ func ParseError(err error) *errorpb.Error {
 		},
 		Msg: &errorpb.ErrMsg{
 			Msg:    err.Error(),
-			Detail: fmt.Sprintf("%#v", err),
+			Detail: fmt.Sprintf("%v", err),
 		},
 	}
 }
