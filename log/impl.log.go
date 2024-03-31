@@ -4,18 +4,25 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/rs/zerolog"
 )
 
 var _ Logger = (*loggerImpl)(nil)
 
 type loggerImpl struct {
-	name       string
-	log        *zerolog.Logger
-	fields     Map
-	content    *Event
-	callerSkip int
-	lvl        Level
+	name          string
+	log           *zerolog.Logger
+	fields        Map
+	content       *Event
+	callerSkip    int
+	lvl           Level
+	enableChecker func(lvl Level, name string, fields Map) bool
+}
+
+func (l *loggerImpl) SetEnableChecker(cb func(lvl Level, name string, fields Map) bool) Logger {
+	l.enableChecker = cb
+	return l
 }
 
 func (l *loggerImpl) WithLevel(lvl Level) Logger {
@@ -146,7 +153,13 @@ func (l *loggerImpl) Fatal(ctxL ...context.Context) *zerolog.Event {
 }
 
 func (l *loggerImpl) enabled(lvl zerolog.Level) bool {
-	return lvl >= l.lvl && lvl >= zerolog.GlobalLevel()
+	if l.enableChecker != nil {
+		if l.enableChecker(lvl, l.name, l.fields) {
+			return lvl >= l.lvl && lvl >= zerolog.GlobalLevel()
+		}
+	}
+
+	return false
 }
 
 func (l *loggerImpl) copy() *loggerImpl {

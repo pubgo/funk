@@ -3,12 +3,12 @@ package log_test
 import (
 	"context"
 	"fmt"
-	"github.com/pubgo/funk/errors"
 	"testing"
 
 	"github.com/rs/zerolog"
 	zl "github.com/rs/zerolog/log"
 
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/log"
 )
@@ -54,4 +54,18 @@ func TestSetLog(t *testing.T) {
 	log.Info().Msg("test")
 	log.Warn().Msg("test")
 	log.Error().Msg("test")
+}
+
+func TestChecker(t *testing.T) {
+	var l = log.GetLogger("test-checker")
+	l.Info().Msg("hello")
+
+	l.SetEnableChecker(func(lvl log.Level, name string, fields log.Map) bool {
+		fmt.Println(lvl, name, fields)
+		return true
+	})
+	l.Info().Msg("hello1")
+	l.Warn().Msg("hello1")
+	l.Error().Msg("hello1")
+	l.Debug().Msg("hello1")
 }
