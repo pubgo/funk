@@ -17,17 +17,17 @@ type loggerImpl struct {
 	content       *Event
 	callerSkip    int
 	lvl           Level
-	enableChecker func(lvl Level, name string, fields Map) bool
+	enableChecker LogEnableChecker
 }
 
-func (l *loggerImpl) WithEnableChecker(cb func(lvl Level, name string, fields Map) bool) Logger {
-	var log = l.copy()
+func (l *loggerImpl) WithEnableChecker(cb LogEnableChecker) Logger {
+	log := l.copy()
 	log.enableChecker = cb
 	return log
 }
 
 func (l *loggerImpl) WithLevel(lvl Level) Logger {
-	var log = l.copy()
+	log := l.copy()
 	log.lvl = lvl
 	return log
 }
@@ -37,7 +37,7 @@ func (l *loggerImpl) WithEvent(evt *Event) Logger {
 		return l
 	}
 
-	var log = l.copy()
+	log := l.copy()
 	log.content = mergeEvent(l.content, evt)
 
 	return log
@@ -48,7 +48,7 @@ func (l *loggerImpl) WithCallerSkip(skip int) Logger {
 		return l
 	}
 
-	var log = l.copy()
+	log := l.copy()
 	log.callerSkip += skip
 	return log
 }
@@ -58,7 +58,7 @@ func (l *loggerImpl) WithName(name string) Logger {
 		return l
 	}
 
-	var log = l.copy()
+	log := l.copy()
 	if log.name == "" {
 		log.name = name
 	} else {
@@ -72,8 +72,8 @@ func (l *loggerImpl) WithFields(m Map) Logger {
 		return l
 	}
 
-	var log = l.copy()
-	var logFields = make(Map, len(m)+len(log.fields))
+	log := l.copy()
+	logFields := make(Map, len(m)+len(log.fields))
 	for k, v := range m {
 		logFields[k] = v
 	}
@@ -125,7 +125,7 @@ func (l *loggerImpl) Err(err error, ctxL ...context.Context) *zerolog.Event {
 
 	if err != nil {
 		if errJson, ok := err.(json.Marshaler); ok {
-			var errJsonBytes, _ = errJson.MarshalJSON()
+			errJsonBytes, _ := errJson.MarshalJSON()
 			if errJsonBytes != nil && len(errJsonBytes) > 0 {
 				return l.newEvent(ctxL, l.getLog().Error().Str("error", err.Error()).RawJSON("error_detail", errJsonBytes))
 			}
@@ -164,7 +164,7 @@ func (l *loggerImpl) enabled(lvl zerolog.Level) bool {
 }
 
 func (l *loggerImpl) copy() *loggerImpl {
-	var log = *l
+	log := *l
 	return &log
 }
 
@@ -176,7 +176,7 @@ func (l *loggerImpl) getLog() *zerolog.Logger {
 }
 
 func (l *loggerImpl) newEvent(ctxL []context.Context, e *zerolog.Event) *zerolog.Event {
-	var ctx = context.Background()
+	ctx := context.Background()
 	if len(ctxL) > 0 {
 		ctx = ctxL[0]
 	}

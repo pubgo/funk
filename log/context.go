@@ -13,7 +13,7 @@ func CreateEventCtx(ctx context.Context, evt *Event) context.Context {
 }
 
 func getEventFromCtx(ctx context.Context) *Event {
-	var evt, ok = ctx.Value(ctxEventKey{}).(*Event)
+	evt, ok := ctx.Value(ctxEventKey{}).(*Event)
 	if ok {
 		return evt
 	}

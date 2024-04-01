@@ -19,7 +19,7 @@ func TestName(t *testing.T) {
 	log.Info().Str("hello", "world world").Msg("ok ok")
 	log.Warn().Str("hello", "world world").Msg("ok ok")
 
-	var err = errors.WrapCaller(fmt.Errorf("test error"))
+	err := errors.WrapCaller(fmt.Errorf("test error"))
 	err = errors.Wrap(err, "next error")
 	err = errors.WrapTag(err, errors.T("event", "test event"), errors.T("test123", 123), errors.T("test", "hello"))
 	err = errors.Wrapf(err, "next error name=%s", "wrapf")
@@ -35,20 +35,20 @@ func TestName(t *testing.T) {
 }
 
 func TestEvent(t *testing.T) {
-	var evt = log.NewEvent().Str("hello", "world").Int("int", 100).Dict("ddd", log.NewEvent())
+	evt := log.NewEvent().Str("hello", "world").Int("int", 100).Dict("ddd", log.NewEvent())
 	ctx := log.CreateEventCtx(context.Background(), evt)
 	ee := log.Info(ctx).Str("info", "abcd").Func(log.WithEvent(evt))
 	ee.Msg("dddd")
 }
 
 func TestWithEvent(t *testing.T) {
-	var evt = log.NewEvent().Str("hello", "hello world").Int("int", 100)
+	evt := log.NewEvent().Str("hello", "hello world").Int("int", 100)
 	ee := log.GetLogger("with_event").WithEvent(evt).Info().Str("info", "abcd")
 	ee.Msg("dddd")
 }
 
 func TestSetLog(t *testing.T) {
-	//zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	// zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 	log.SetLogger(generic.Ptr(zl.Output(zerolog.NewConsoleWriter())))
 	log.Debug().Msg("test")
 	log.Info().Msg("test")
@@ -57,7 +57,7 @@ func TestSetLog(t *testing.T) {
 }
 
 func TestChecker(t *testing.T) {
-	var l = log.GetLogger("test-checker")
+	l := log.GetLogger("test-checker")
 	l.Info().Msg("hello")
 
 	l = l.WithEnableChecker(func(lvl log.Level, name string, fields log.Map) bool {
