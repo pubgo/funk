@@ -20,9 +20,10 @@ type loggerImpl struct {
 	enableChecker func(lvl Level, name string, fields Map) bool
 }
 
-func (l *loggerImpl) SetEnableChecker(cb func(lvl Level, name string, fields Map) bool) Logger {
-	l.enableChecker = cb
-	return l
+func (l *loggerImpl) WithEnableChecker(cb func(lvl Level, name string, fields Map) bool) Logger {
+	var log = l.copy()
+	log.enableChecker = cb
+	return log
 }
 
 func (l *loggerImpl) WithLevel(lvl Level) Logger {

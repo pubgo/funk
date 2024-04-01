@@ -17,8 +17,7 @@ type Logger interface {
 	WithCallerSkip(skip int) Logger
 	WithEvent(evt *Event) Logger
 	WithLevel(lvl Level) Logger
-
-	SetEnableChecker(cb func(lvl Level, name string, fields Map) bool) Logger
+	WithEnableChecker(cb func(lvl Level, name string, fields Map) bool) Logger
 
 	Debug(ctx ...context.Context) *Event
 	Info(ctx ...context.Context) *Event
