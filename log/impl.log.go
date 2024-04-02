@@ -147,7 +147,7 @@ func (l *loggerImpl) Fatal(ctxL ...context.Context) *zerolog.Event {
 }
 
 func (l *loggerImpl) enabled(lvl zerolog.Level) bool {
-	var enabled = true
+	enabled := true
 	if logEnableChecker != nil {
 		enabled = logEnableChecker(lvl, l.name, l.fields)
 	}

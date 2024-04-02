@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	llog "github.com/rs/zerolog/log"
+	zlog "github.com/rs/zerolog/log"
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/generic"
@@ -29,7 +29,7 @@ var (
 	)
 
 	_ = generic.Init(func() {
-		llog.Logger = *stdZeroLog
+		zlog.Logger = *stdZeroLog
 	})
 
 	// stdLog is the global logger.
@@ -45,7 +45,7 @@ func GetLogger(name string) Logger {
 func SetLogger(log *zerolog.Logger) {
 	assert.If(log == nil, "[log] should not be nil")
 	stdZeroLog = log
-	llog.Logger = *log
+	zlog.Logger = *log
 }
 
 func SetEnableChecker(checker LogEnableChecker) { logEnableChecker = checker }
