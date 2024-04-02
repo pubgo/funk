@@ -11,19 +11,12 @@ import (
 var _ Logger = (*loggerImpl)(nil)
 
 type loggerImpl struct {
-	name          string
-	log           *zerolog.Logger
-	fields        Map
-	content       *Event
-	callerSkip    int
-	lvl           Level
-	enableChecker LogEnableChecker
-}
-
-func (l *loggerImpl) WithEnableChecker(cb LogEnableChecker) Logger {
-	log := l.copy()
-	log.enableChecker = cb
-	return log
+	name       string
+	log        *zerolog.Logger
+	fields     Map
+	content    *Event
+	callerSkip int
+	lvl        Level
 }
 
 func (l *loggerImpl) WithLevel(lvl Level) Logger {
@@ -154,13 +147,11 @@ func (l *loggerImpl) Fatal(ctxL ...context.Context) *zerolog.Event {
 }
 
 func (l *loggerImpl) enabled(lvl zerolog.Level) bool {
-	if l.enableChecker != nil {
-		if l.enableChecker(lvl, l.name, l.fields) {
-			return lvl >= l.lvl && lvl >= zerolog.GlobalLevel()
-		}
+	var enabled = true
+	if logEnableChecker != nil {
+		enabled = logEnableChecker(lvl, l.name, l.fields)
 	}
-
-	return false
+	return enabled && lvl >= l.lvl && lvl >= zerolog.GlobalLevel()
 }
 
 func (l *loggerImpl) copy() *loggerImpl {

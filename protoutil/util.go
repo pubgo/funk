@@ -383,7 +383,7 @@ func httpPathsAdditionalBindings(m *descriptor.MethodDescriptorProto) []string {
 	}
 
 	var httpPaths []string
-	var optsAdditionalBindings = opts.GetAdditionalBindings()
+	optsAdditionalBindings := opts.GetAdditionalBindings()
 	for _, optAdditionalBindings := range optsAdditionalBindings {
 		switch t := optAdditionalBindings.Pattern.(type) {
 		case *options.HttpRule_Get:

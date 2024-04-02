@@ -17,14 +17,14 @@ import (
 func Async[T any](fn func() (T, error)) *Future[T] {
 	assert.If(fn == nil, "[Async] [fn] is nil")
 
-	var f = newFuture[T]()
+	f := newFuture[T]()
 	go func() {
 		defer recovery.Recovery(func(err error) {
 			err = errors.WrapKV(err, "fn_stack", stack.CallerWithFunc(fn).String())
 			f.setErr(err)
 		})
 
-		var t, e = fn()
+		t, e := fn()
 		if e != nil {
 			f.setErr(e)
 		} else {
@@ -87,7 +87,7 @@ func Timeout(dur time.Duration, fn func() error) (gErr error) {
 	assert.If(fn == nil, "[Timeout] [fn] is nil")
 	assert.If(dur <= 0, "[Timeout] [dur] should not be less than zero")
 
-	var done = make(chan struct{})
+	done := make(chan struct{})
 	go func() {
 		defer close(done)
 		gErr = try.Try(fn)

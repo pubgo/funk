@@ -7,7 +7,7 @@ import (
 )
 
 func TestMap(t *testing.T) {
-	var is = assert.New(t)
+	is := assert.New(t)
 	var m Map[string]
 	m.Set("a", "b")
 	is.Equal(m.Get("a"), "b")

@@ -29,7 +29,7 @@ func SecureKey() *[32]byte {
 
 // SecureToken create a new random token
 func SecureToken(lengths ...int) string {
-	var length = 16
+	length := 16
 	if len(lengths) > 0 {
 		length = lengths[0]
 	}
@@ -121,7 +121,7 @@ func Hmac(key, data string) string {
 }
 
 func HmacSha256(key, data string) string {
-	hash := hmac.New(sha256.New, []byte(key)) //创建对应的sha256哈希加密算法
+	hash := hmac.New(sha256.New, []byte(key)) // 创建对应的sha256哈希加密算法
 	hash.Write([]byte(data))
 	return hex.EncodeToString(hash.Sum([]byte("")))
 }

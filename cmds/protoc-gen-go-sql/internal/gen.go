@@ -34,7 +34,7 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 			return
 		}
 
-		//if val==nil{
+		// if val==nil{
 		//		return nil
 		//	}
 		g.Unskip()

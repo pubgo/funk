@@ -55,8 +55,10 @@ func WrapCode(err error, code *errorpb.ErrCode) error {
 	}
 }
 
-var _ Error = (*ErrCode)(nil)
-var _ fmt.Formatter = (*ErrCode)(nil)
+var (
+	_ Error         = (*ErrCode)(nil)
+	_ fmt.Formatter = (*ErrCode)(nil)
+)
 
 type ErrCode struct {
 	err error
@@ -109,7 +111,7 @@ func (t *ErrCode) As(err any) bool {
 }
 
 func (t *ErrCode) String() string {
-	var buf = bytes.NewBuffer(nil)
+	buf := bytes.NewBuffer(nil)
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorKind, t.Kind()))
 	buf.WriteString(fmt.Sprintf("%s]: %d\n", errinter.ColorCode, t.pb.Code))
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorMessage, t.pb.Message))
@@ -120,7 +122,7 @@ func (t *ErrCode) String() string {
 }
 
 func (t *ErrCode) MarshalJSON() ([]byte, error) {
-	var data = errJsonify(t.err)
+	data := errJsonify(t.err)
 	data["kind"] = t.Kind()
 	data["name"] = t.pb.Name
 	data["status_code"] = t.pb.StatusCode.String()

@@ -21,14 +21,14 @@ func panicNoErr() (*errBase, error) {
 }
 
 func TestPanicErr(t *testing.T) {
-	var is = assert.New(t)
+	is := assert.New(t)
 	is.Panics(func() {
-		var ret = Must1(panicErr())
+		ret := Must1(panicErr())
 		fmt.Println(ret == nil)
 	})
 
 	is.NotPanics(func() {
-		var ret = Must1(panicNoErr())
+		ret := Must1(panicNoErr())
 		fmt.Println(ret.msg)
 	})
 }
@@ -45,7 +45,7 @@ func TestRespNext(t *testing.T) {
 }
 
 func testPanic1(t *testing.T) {
-	//xerrImpl.Must(xerrImpl.New("ok"))
+	// xerrImpl.Must(xerrImpl.New("ok"))
 	Must(init1Next())
 }
 

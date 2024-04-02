@@ -5,9 +5,11 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var _ yaml.Unmarshaler = (*Node)(nil)
-var _ yaml.Marshaler = (*Node)(nil)
-var _ json.Marshaler = (*Node)(nil)
+var (
+	_ yaml.Unmarshaler = (*Node)(nil)
+	_ yaml.Marshaler   = (*Node)(nil)
+	_ json.Marshaler   = (*Node)(nil)
+)
 
 type Node struct {
 	maps  map[string]any

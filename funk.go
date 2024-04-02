@@ -65,7 +65,7 @@ func TernaryFn[T any](ok bool, a func() T, b func() T) T {
 }
 
 func Map[T any, V any](data []T, handle func(T) V) []V {
-	var vv = make([]V, 0, len(data))
+	vv := make([]V, 0, len(data))
 	for i := range data {
 		vv = append(vv, handle(data[i]))
 	}
@@ -155,7 +155,7 @@ func IsNil(err interface{}) bool {
 		return true
 	}
 
-	var v = reflect.ValueOf(err)
+	v := reflect.ValueOf(err)
 	if !v.IsValid() {
 		return true
 	}

@@ -60,7 +60,7 @@ func TestChecker(t *testing.T) {
 	l := log.GetLogger("test-checker")
 	l.Info().Msg("hello")
 
-	l = l.WithEnableChecker(func(lvl log.Level, name string, fields log.Map) bool {
+	log.SetEnableChecker(func(lvl log.Level, name string, fields log.Map) bool {
 		fmt.Println(lvl, name, fields)
 		return true
 	})

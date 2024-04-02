@@ -2,7 +2,7 @@ package strutil
 
 func FirstFnNotEmpty(ff ...func() string) string {
 	for i := range ff {
-		var v = ff[i]()
+		v := ff[i]()
 		if v != "" {
 			return v
 		}
@@ -12,7 +12,7 @@ func FirstFnNotEmpty(ff ...func() string) string {
 
 func FirstNotEmpty(ff ...string) string {
 	for i := range ff {
-		var v = ff[i]
+		v := ff[i]
 		if v != "" {
 			return v
 		}
@@ -21,7 +21,7 @@ func FirstNotEmpty(ff ...string) string {
 }
 
 func GetDefault(names ...string) string {
-	var name = "default"
+	name := "default"
 	if len(names) > 0 && names[0] != "" {
 		name = names[0]
 	}

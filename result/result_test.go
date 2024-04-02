@@ -12,7 +12,7 @@ type hello struct {
 }
 
 func TestName(t *testing.T) {
-	var ok = result.OK(&hello{Name: "abc"})
+	ok := result.OK(&hello{Name: "abc"})
 	okBytes := result.Of(json.Marshal(&ok))
 	data := string(okBytes.Expect("failed to encode json data"))
 	t.Log(data)

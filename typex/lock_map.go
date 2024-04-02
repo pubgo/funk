@@ -67,7 +67,7 @@ func (t *Map[T]) Load(key string) (T, bool) {
 func (t *Map[T]) Keys() []string {
 	t.check()
 
-	var keys = make([]string, 0, len(t.data))
+	keys := make([]string, 0, len(t.data))
 	for k := range t.data {
 		keys = append(keys, k)
 	}

@@ -45,7 +45,7 @@ func GetWith(val *string, names ...string) {
 }
 
 func GetBoolVal(val *bool, names ...string) {
-	var dt = trim(Get(names...))
+	dt := trim(Get(names...))
 	if dt == "" {
 		return
 	}
@@ -60,7 +60,7 @@ func GetBoolVal(val *bool, names ...string) {
 }
 
 func GetIntVal(val *int, names ...string) {
-	var dt = trim(Get(names...))
+	dt := trim(Get(names...))
 	if dt == "" {
 		return
 	}
@@ -75,7 +75,7 @@ func GetIntVal(val *int, names ...string) {
 }
 
 func GetFloatVal(val *float64, names ...string) {
-	var dt = trim(Get(names...))
+	dt := trim(Get(names...))
 	if dt == "" {
 		return
 	}
@@ -98,12 +98,11 @@ func Delete(key string) error {
 }
 
 func Expand(value string) result.Result[string] {
-
 	return result.Of(envsubst.String(value))
 }
 
 func Map() map[string]string {
-	var data = make(map[string]string, len(os.Environ()))
+	data := make(map[string]string, len(os.Environ()))
 	for _, env := range os.Environ() {
 		envs := strings.SplitN(env, "=", 2)
 		data[envs[0]] = envs[1]

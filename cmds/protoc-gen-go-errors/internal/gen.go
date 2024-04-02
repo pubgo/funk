@@ -45,12 +45,12 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 		g.Unskip()
 
 		for _, codeName := range m.Values {
-			var name = strings.ToLower(fmt.Sprintf("%s.%s",
+			name := strings.ToLower(fmt.Sprintf("%s.%s",
 				file.Desc.Package(),
 				strcase.ToSnake(string(codeName.Desc.Name())),
 			))
 
-			var statusName = "OK"
+			statusName := "OK"
 			if tag.DefaultCode != 0 && int32(codeName.Desc.Number()) != 0 {
 				statusName = tag.DefaultCode.String()
 			}
@@ -61,7 +61,7 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 			}
 
 			// comment
-			var rr = string(codeName.Desc.Name())
+			rr := string(codeName.Desc.Name())
 			if codeName.Comments.Leading.String() != "" {
 				rr = codeName.Comments.Leading.String()
 				rr = strings.Trim(strings.TrimSpace(rr), "/")
@@ -75,7 +75,7 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 			rr = strings.ReplaceAll(rr, "_", " ")
 			rr = strings.TrimSpace(strings.ReplaceAll(rr, "  ", " "))
 
-			var num = int32(codeName.Desc.Number())
+			num := int32(codeName.Desc.Number())
 			genFile.Var().
 				Id("ErrCode"+string(codeName.Desc.Name())).
 				Id("=").

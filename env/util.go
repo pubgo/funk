@@ -13,7 +13,7 @@ func Normalize(env string) (k, v string, ok bool) {
 	}
 
 	envs := strings.SplitN(env, "=", 2)
-	var key = trim(envs[0])
+	key := trim(envs[0])
 	if len(envs) != 2 || key == "" || strings.HasPrefix(key, "_") {
 		return key, "", false
 	}

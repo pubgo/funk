@@ -5,7 +5,7 @@ import (
 )
 
 func QueueOf(val ...interface{}) *Queue {
-	var q = &Queue{}
+	q := &Queue{}
 	for i := range val {
 		q.Push(val[i])
 	}
@@ -28,7 +28,7 @@ func (t *Queue) Pop() interface{} {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
-	var data = make([]interface{}, len(t.data)-1)
+	data := make([]interface{}, len(t.data)-1)
 	copy(data, t.data[:len(t.data)-2])
 	t.data = data
 	return t.data[len(t.data)-1]
@@ -42,7 +42,7 @@ func (t *Queue) PopFirst() interface{} {
 		return nil
 	}
 
-	var data = make([]interface{}, len(t.data)-1)
+	data := make([]interface{}, len(t.data)-1)
 	copy(data, t.data[1:])
 	t.data = data
 	return t.data[0]
@@ -71,7 +71,7 @@ func (t *Queue) Get(index uint32) interface{} {
 }
 
 func (t *Queue) List() []interface{} {
-	var data = make([]interface{}, len(t.data))
+	data := make([]interface{}, len(t.data))
 	copy(data, t.data)
 	return data
 }

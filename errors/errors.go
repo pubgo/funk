@@ -25,6 +25,7 @@ func New(msg string) error {
 func NewFmt(msg string, args ...interface{}) error {
 	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...)}, 1)
 }
+
 func Format(msg string, args ...interface{}) error {
 	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...)}, 1)
 }
@@ -127,7 +128,7 @@ func WrapCaller(err error, skip ...int) error {
 		return nil
 	}
 
-	var depth = 1
+	depth := 1
 	if len(skip) > 0 {
 		depth += skip[0]
 	}

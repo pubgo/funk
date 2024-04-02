@@ -8,7 +8,7 @@ import (
 
 func importHandle(pkg string) string {
 	if strings.Contains(pkg, "/") {
-		var names = strings.Split(pkg, "/")
+		names := strings.Split(pkg, "/")
 		pkg = names[0]
 		for _, name := range names[1:] {
 			pkg += strings.Title(name)
@@ -16,7 +16,7 @@ func importHandle(pkg string) string {
 	}
 
 	if strings.Contains(pkg, ".") {
-		var names = strings.Split(pkg, ".")
+		names := strings.Split(pkg, ".")
 		pkg = names[0]
 		for _, name := range names[1:] {
 			pkg += strings.Title(name)

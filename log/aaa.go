@@ -20,7 +20,6 @@ type Logger interface {
 	WithCallerSkip(skip int) Logger
 	WithEvent(evt *Event) Logger
 	WithLevel(lvl Level) Logger
-	WithEnableChecker(cb LogEnableChecker) Logger
 
 	Debug(ctx ...context.Context) *Event
 	Info(ctx ...context.Context) *Event
@@ -38,3 +37,5 @@ type StdLogger interface {
 	Log(v ...interface{})
 	Println(v ...interface{})
 }
+
+var logEnableChecker LogEnableChecker = func(Level, string, Map) bool { return true }

@@ -36,7 +36,7 @@ func (pq *PriorityQueue) Push(x interface{}) {
 }
 
 func (pq *PriorityQueue) PopItem() *PriorityQueueItem {
-	var val = pq.Pop()
+	val := pq.Pop()
 	if val == nil {
 		return nil
 	}

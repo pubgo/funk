@@ -12,7 +12,7 @@ func TestPQ(t *testing.T) {
 	heap.Push(&pluginKeys, &PriorityQueueItem{Priority: 1, Value: 1})
 	heap.Push(&pluginKeys, &PriorityQueueItem{Priority: 3, Value: 3})
 	for {
-		var item = pluginKeys.PopItem()
+		item := pluginKeys.PopItem()
 		if item == nil {
 			break
 		}

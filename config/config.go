@@ -1,14 +1,15 @@
 package config
 
 import (
+	"log"
+	"os"
+	"path/filepath"
+
 	"github.com/a8m/envsubst"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/pathutil"
 	"github.com/pubgo/funk/vars"
 	"gopkg.in/yaml.v3"
-	"log"
-	"os"
-	"path/filepath"
 )
 
 const (

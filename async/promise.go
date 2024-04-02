@@ -12,7 +12,7 @@ import (
 func Promise[T any](fn func(resolve func(T), reject func(err error))) *Future[T] {
 	assert.If(fn == nil, "[fn] is nil")
 
-	var f = newFuture[T]()
+	f := newFuture[T]()
 	go func() {
 		defer recovery.Recovery(func(err error) {
 			err = errors.WrapKV(err, "fn", stack.CallerWithFunc(fn).String())
@@ -27,7 +27,7 @@ func Promise[T any](fn func(resolve func(T), reject func(err error))) *Future[T]
 func Group[T any](do func(async func(func() (T, error))) error) *Iterator[T] {
 	assert.If(do == nil, "[Async] [fn] is nil")
 
-	var rr = iteratorOf[T]()
+	rr := iteratorOf[T]()
 	go func() {
 		var wg sync.WaitGroup
 		defer rr.setDone()
@@ -41,7 +41,7 @@ func Group[T any](do func(async func(func() (T, error))) error) *Iterator[T] {
 					rr.setErr(err)
 				})
 
-				var t, e = f()
+				t, e := f()
 				if e == nil {
 					rr.setValue(t)
 				} else {
@@ -55,7 +55,7 @@ func Group[T any](do func(async func(func() (T, error))) error) *Iterator[T] {
 }
 
 func Yield[T any](do func(yield func(T)) error) *Iterator[T] {
-	var dd = iteratorOf[T]()
+	dd := iteratorOf[T]()
 	go func() {
 		defer dd.setDone()
 		defer recovery.Recovery(func(err error) {

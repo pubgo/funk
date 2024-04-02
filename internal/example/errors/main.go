@@ -15,7 +15,7 @@ func Hello() {
 		return errors.Wrap(err, "Hello wrap")
 	})
 
-	var err2 = errors.Wrapf(err1, "处理 wrap")
+	err2 := errors.Wrapf(err1, "处理 wrap")
 	assert.MustF(err2, "处理 panic")
 }
 

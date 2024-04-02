@@ -16,7 +16,7 @@ func state(*sync.WaitGroup) (*uint64, *uint32)
 var defaultConcurrent = uint32(runtime.NumCPU() * 2)
 
 func NewWaitGroup(maxConcurrent ...uint32) *WaitGroup {
-	var c = defaultConcurrent
+	c := defaultConcurrent
 	if len(maxConcurrent) > 0 {
 		c = maxConcurrent[0]
 	}

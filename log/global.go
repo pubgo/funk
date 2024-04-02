@@ -48,6 +48,8 @@ func SetLogger(log *zerolog.Logger) {
 	llog.Logger = *log
 }
 
+func SetEnableChecker(checker LogEnableChecker) { logEnableChecker = checker }
+
 // Err starts a new message with error level with err as a field if not nil or
 // with info level if err is nil.
 //

@@ -9,8 +9,10 @@ import (
 	"github.com/pubgo/funk/errors/errinter"
 )
 
-var _ fmt.Formatter = (*Err)(nil)
-var _ Error = (*Err)(nil)
+var (
+	_ fmt.Formatter = (*Err)(nil)
+	_ Error         = (*Err)(nil)
+)
 
 type Err struct {
 	Msg    string `json:"msg,omitempty"`
@@ -23,7 +25,7 @@ func (e Err) Error() string                 { return e.Msg }
 func (e Err) Format(f fmt.State, verb rune) { strFormat(f, verb, e) }
 
 func (e Err) MarshalJSON() ([]byte, error) {
-	var data = make(map[string]any, 4)
+	data := make(map[string]any, 4)
 	data["kind"] = e.Kind()
 	data["msg"] = e.Msg
 	data["detail"] = e.Detail
@@ -32,7 +34,7 @@ func (e Err) MarshalJSON() ([]byte, error) {
 }
 
 func (e Err) String() string {
-	var buf = bytes.NewBuffer(nil)
+	buf := bytes.NewBuffer(nil)
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorKind, e.Kind()))
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorMsg, e.Msg))
 	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorDetail, e.Detail))

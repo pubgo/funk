@@ -47,7 +47,7 @@ var (
 		func() string { return os.Getenv("NAMESPACE") },
 		func() string { return os.Getenv("POD_NAMESPACE") },
 		func() string {
-			var file = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
+			file := "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
 			if pathutil.IsNotExist(file) {
 				return ""
 			}

@@ -39,7 +39,7 @@ func IsNotExistMkDir(src string) (err error) {
 
 // MkDir create a directory
 func MkDir(src string) error {
-	var err = os.MkdirAll(src, os.ModePerm)
+	err := os.MkdirAll(src, os.ModePerm)
 	return errors.WrapKV(err, "src", src)
 }
 
@@ -154,7 +154,7 @@ func GrepFile(patten string, filename string) (lines []string, err error) {
 
 // CheckFileIsExist 检查目录是否存在
 func CheckFileIsExist(filename string) bool {
-	var exist = true
+	exist := true
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		exist = false
 	}
@@ -163,7 +163,7 @@ func CheckFileIsExist(filename string) bool {
 
 // BuildDir 创建目录
 func BuildDir(absDir string) error {
-	return os.MkdirAll(path.Dir(absDir), os.ModePerm) //生成多级目录
+	return os.MkdirAll(path.Dir(absDir), os.ModePerm) // 生成多级目录
 }
 
 // DeleteFile 删除文件或文件夹
