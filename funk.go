@@ -50,21 +50,21 @@ func Last[T any](args []T) (t T) {
 	return args[len(args)-1]
 }
 
-func Ternary[T any](ok bool, a T, b T) T {
+func Ternary[T any](ok bool, a, b T) T {
 	if ok {
 		return a
 	}
 	return b
 }
 
-func TernaryFn[T any](ok bool, a func() T, b func() T) T {
+func TernaryFn[T any](ok bool, a, b func() T) T {
 	if ok {
 		return a()
 	}
 	return b()
 }
 
-func Map[T any, V any](data []T, handle func(T) V) []V {
+func Map[T, V any](data []T, handle func(T) V) []V {
 	vv := make([]V, 0, len(data))
 	for i := range data {
 		vv = append(vv, handle(data[i]))

@@ -36,3 +36,6 @@ build:
 protobuf:
 	protobuild vendor
 	protobuild gen
+
+vet:
+	go vet ./...

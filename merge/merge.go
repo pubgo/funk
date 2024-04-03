@@ -13,7 +13,7 @@ type Option func(opts *copier.Option)
 // Copy
 // struct<->struct
 // 各种类型结构体之间的field copy
-func Copy[A any, B any](dst *A, src *B, opts ...Option) result.Result[*A] {
+func Copy[A, B any](dst *A, src *B, opts ...Option) result.Result[*A] {
 	opt := copier.Option{DeepCopy: true, IgnoreEmpty: true}
 	for i := range opts {
 		opts[i](&opt)
@@ -35,14 +35,14 @@ func Copy[A any, B any](dst *A, src *B, opts ...Option) result.Result[*A] {
 	return result.OK(dst)
 }
 
-func Struct[A any, B any](dst *A, src *B, opts ...Option) result.Result[*A] {
+func Struct[A, B any](dst *A, src *B, opts ...Option) result.Result[*A] {
 	return Copy(dst, src, opts...)
 }
 
 // MapStruct
 // map<->struct
 // map和结构体相互转化
-func MapStruct[A any, B any](dst A, src B, opts ...func(cfg *mapstructure.DecoderConfig)) (r result.Result[A]) {
+func MapStruct[A, B any](dst A, src B, opts ...func(cfg *mapstructure.DecoderConfig)) (r result.Result[A]) {
 	cfg := &mapstructure.DecoderConfig{
 		TagName:          "json",
 		Metadata:         nil,

@@ -179,7 +179,7 @@ func CamelCase(s string) string {
 //   - method is POST
 //   - path is "<pkg name>/<service name>/<method name>"
 //   - body should contain the serialized request message
-func DefaultAPIOptions(pkg string, srv string, mth string) *options.HttpRule {
+func DefaultAPIOptions(pkg, srv, mth string) *options.HttpRule {
 	return &options.HttpRule{
 		Pattern: &options.HttpRule_Post{
 			Post: "/" + camel2Case(fmt.Sprintf("%s/%s/%s", camel2Case(pkg), camel2Case(srv), camel2Case(mth))),
@@ -216,7 +216,7 @@ func ExtractAPIOptions(mth *descriptor.MethodDescriptorProto) (*options.HttpRule
 	return opts, nil
 }
 
-func ExtractHttpMethod(opts *options.HttpRule) (method string, path string) {
+func ExtractHttpMethod(opts *options.HttpRule) (method, path string) {
 	var (
 		httpMethod   string
 		pathTemplate string

@@ -64,7 +64,7 @@ func IsDir(path string) bool {
 }
 
 // CopyFile copies the source file to the dest file.
-func CopyFile(source string, dest string) (err error) {
+func CopyFile(source, dest string) (err error) {
 	defer recovery.Err(&err)
 
 	sourcefile := assert.Must1(os.Open(source))
@@ -82,7 +82,7 @@ func CopyFile(source string, dest string) (err error) {
 }
 
 // CopyDir copies the source directory to the dest directory.
-func CopyDir(source string, dest string) (err error) {
+func CopyDir(source, dest string) (err error) {
 	defer recovery.Err(&err)
 
 	sourceinfo := assert.Must1(os.Stat(source))
@@ -111,7 +111,7 @@ func CopyDir(source string, dest string) (err error) {
 // GrepFile like command grep -E
 // for example: GrepFile(`^hello`, "hello.txt")
 // \n is striped while read
-func GrepFile(patten string, filename string) (lines []string, err error) {
+func GrepFile(patten, filename string) (lines []string, err error) {
 	re, err := regexp.Compile(patten)
 	if err != nil {
 		return
