@@ -1,6 +1,8 @@
 package log
 
-import "context"
+import (
+	"context"
+)
 
 type ctxEventKey struct{}
 
@@ -18,4 +20,19 @@ func getEventFromCtx(ctx context.Context) *Event {
 		return evt
 	}
 	return nil
+}
+
+type disableLogKey struct{}
+
+func WithDisabled(ctx context.Context) context.Context {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	return context.WithValue(ctx, disableLogKey{}, true)
+}
+
+func isLogDisabled(ctx context.Context) bool {
+	b, ok := ctx.Value(disableLogKey{}).(bool)
+	return b && ok
 }

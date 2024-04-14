@@ -79,40 +79,53 @@ func (l *loggerImpl) WithFields(m Map) Logger {
 	return log
 }
 
+func (l *loggerImpl) getCtx(ctxL ...context.Context) context.Context {
+	ctx := context.Background()
+	if len(ctxL) > 0 {
+		ctx = ctxL[0]
+	}
+	return ctx
+}
+
 func (l *loggerImpl) Debug(ctxL ...context.Context) *zerolog.Event {
-	if !l.enabled(zerolog.DebugLevel) {
+	ctx := l.getCtx(ctxL...)
+	if !l.enabled(ctx, zerolog.DebugLevel) {
 		return nil
 	}
 
-	return l.newEvent(ctxL, l.getLog().Debug())
+	return l.newEvent(ctx, l.getLog().Debug())
 }
 
 func (l *loggerImpl) Info(ctxL ...context.Context) *zerolog.Event {
-	if !l.enabled(zerolog.InfoLevel) {
+	ctx := l.getCtx(ctxL...)
+	if !l.enabled(ctx, zerolog.InfoLevel) {
 		return nil
 	}
 
-	return l.newEvent(ctxL, l.getLog().Info())
+	return l.newEvent(ctx, l.getLog().Info())
 }
 
 func (l *loggerImpl) Warn(ctxL ...context.Context) *zerolog.Event {
-	if !l.enabled(zerolog.WarnLevel) {
+	ctx := l.getCtx(ctxL...)
+	if !l.enabled(ctx, zerolog.WarnLevel) {
 		return nil
 	}
 
-	return l.newEvent(ctxL, l.getLog().Warn())
+	return l.newEvent(ctx, l.getLog().Warn())
 }
 
 func (l *loggerImpl) Error(ctxL ...context.Context) *zerolog.Event {
-	if !l.enabled(zerolog.ErrorLevel) {
+	ctx := l.getCtx(ctxL...)
+	if !l.enabled(ctx, zerolog.ErrorLevel) {
 		return nil
 	}
 
-	return l.newEvent(ctxL, l.getLog().Error())
+	return l.newEvent(ctx, l.getLog().Error())
 }
 
 func (l *loggerImpl) Err(err error, ctxL ...context.Context) *zerolog.Event {
-	if !l.enabled(zerolog.ErrorLevel) {
+	ctx := l.getCtx(ctxL...)
+	if !l.enabled(ctx, zerolog.ErrorLevel) {
 		return nil
 	}
 
@@ -120,33 +133,39 @@ func (l *loggerImpl) Err(err error, ctxL ...context.Context) *zerolog.Event {
 		if errJson, ok := err.(json.Marshaler); ok {
 			errJsonBytes, _ := errJson.MarshalJSON()
 			if errJsonBytes != nil && len(errJsonBytes) > 0 {
-				return l.newEvent(ctxL, l.getLog().Error().Str("error", err.Error()).RawJSON("error_detail", errJsonBytes))
+				return l.newEvent(ctx, l.getLog().Error().Str("error", err.Error()).RawJSON("error_detail", errJsonBytes))
 			}
 		}
 
-		return l.newEvent(ctxL, l.getLog().Error().Str("error", err.Error()))
+		return l.newEvent(ctx, l.getLog().Error().Str("error", err.Error()))
 	}
 
-	return l.newEvent(ctxL, l.getLog().Err(err))
+	return l.newEvent(ctx, l.getLog().Err(err))
 }
 
 func (l *loggerImpl) Panic(ctxL ...context.Context) *zerolog.Event {
-	if !l.enabled(zerolog.PanicLevel) {
+	ctx := l.getCtx(ctxL...)
+	if !l.enabled(ctx, zerolog.PanicLevel) {
 		return nil
 	}
 
-	return l.newEvent(ctxL, l.getLog().Panic())
+	return l.newEvent(ctx, l.getLog().Panic())
 }
 
 func (l *loggerImpl) Fatal(ctxL ...context.Context) *zerolog.Event {
-	if !l.enabled(zerolog.FatalLevel) {
+	ctx := l.getCtx(ctxL...)
+	if !l.enabled(ctx, zerolog.FatalLevel) {
 		return nil
 	}
 
-	return l.newEvent(ctxL, l.getLog().Fatal())
+	return l.newEvent(ctx, l.getLog().Fatal())
 }
 
-func (l *loggerImpl) enabled(lvl zerolog.Level) bool {
+func (l *loggerImpl) enabled(ctx context.Context, lvl zerolog.Level) bool {
+	if isLogDisabled(ctx) {
+		return false
+	}
+
 	enabled := true
 	if logEnableChecker != nil {
 		enabled = logEnableChecker(lvl, l.name, l.fields)
@@ -166,12 +185,7 @@ func (l *loggerImpl) getLog() *zerolog.Logger {
 	return stdZeroLog
 }
 
-func (l *loggerImpl) newEvent(ctxL []context.Context, e *zerolog.Event) *zerolog.Event {
-	ctx := context.Background()
-	if len(ctxL) > 0 {
-		ctx = ctxL[0]
-	}
-
+func (l *loggerImpl) newEvent(ctx context.Context, e *zerolog.Event) *zerolog.Event {
 	if l.name != "" {
 		e = e.Str("logger", l.name)
 	}

@@ -5,13 +5,19 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/rs/zerolog"
-	zl "github.com/rs/zerolog/log"
-
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/log"
+	"github.com/rs/zerolog"
+	zl "github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/assert"
 )
+
+func TestWithDisabled(t *testing.T) {
+	ctx := log.WithDisabled(nil)
+	evt := log.Info(ctx).Str("hello", "world world")
+	assert.Equal(t, string(log.GetEventBuf(evt)), "")
+}
 
 func TestName(t *testing.T) {
 	log.Debug().Str("hello", "world world").Msg("ok ok")

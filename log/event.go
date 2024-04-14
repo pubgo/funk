@@ -45,6 +45,14 @@ func NewEvent() *Event {
 	return zerolog.Dict()
 }
 
+func GetEventBuf(evt *Event) []byte {
+	if evt == nil {
+		return nil
+	}
+
+	return append(convertEvent(evt).buf, '}')
+}
+
 func mergeEvent(to *Event, from ...*Event) *Event {
 	if len(from) == 0 {
 		return to
