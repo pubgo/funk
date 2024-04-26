@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/goccy/go-json"
 	"github.com/rs/zerolog"
 	zlog "github.com/rs/zerolog/log"
 
@@ -14,8 +15,46 @@ import (
 )
 
 var (
-	_ = generic.Init(func() {
+	zErrMarshalFunc       = zerolog.ErrorMarshalFunc
+	zInterfaceMarshalFunc = zerolog.InterfaceMarshalFunc
+	_                     = generic.Init(func() {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		zerolog.ErrorMarshalFunc = func(err error) interface{} {
+			if err == nil {
+				return nil
+			}
+
+			switch e1 := err.(type) {
+			case json.Marshaler:
+				data, err1 := e1.MarshalJSON()
+				if err1 != nil {
+					return err1.Error()
+				} else {
+					return string(data)
+				}
+			}
+
+			if zErrMarshalFunc == nil {
+				return err.Error()
+			}
+
+			return zErrMarshalFunc(err)
+		}
+
+		zerolog.InterfaceMarshalFunc = func(v any) ([]byte, error) {
+			if v == nil {
+				return nil, nil
+			}
+
+			switch e1 := v.(type) {
+			case json.Marshaler:
+				return e1.MarshalJSON()
+			case error:
+				return json.Marshal(e1.Error())
+			}
+
+			return zInterfaceMarshalFunc(v)
+		}
 	})
 
 	// stdZeroLog default zerolog for debug
