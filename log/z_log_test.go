@@ -77,17 +77,17 @@ func TestChecker(t *testing.T) {
 }
 
 func TestErr(t *testing.T) {
-	var err = fmt.Errorf("test error")
+	err := fmt.Errorf("test error")
 	log.Error().Err(err).Msg(err.Error())
 
-	var err1 = errors.NewFmt("test format")
+	err1 := errors.NewFmt("test format")
 	log.Error().Err(err1).Msg(err1.Error())
 }
 
 func TestAny(t *testing.T) {
-	var err = fmt.Errorf("test error")
+	err := fmt.Errorf("test error")
 	log.Error().Err(err).Any("err", err).Msg(err.Error())
 
-	var err1 = errors.NewFmt("test format")
+	err1 := errors.NewFmt("test format")
 	log.Error().Err(err1).Any("err", err1).Msg(err1.Error())
 }
