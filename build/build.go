@@ -11,7 +11,7 @@ import (
 )
 
 func Run(BuildFlags, Packages string) error {
-	var pwd, err = os.Getwd()
+	pwd, err := os.Getwd()
 	if err != nil {
 		return err
 	}

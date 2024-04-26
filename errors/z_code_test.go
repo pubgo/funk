@@ -12,7 +12,7 @@ import (
 )
 
 func TestCodeErr(t *testing.T) {
-	var err = errors.NewCodeErr(&errorpb.ErrCode{
+	err := errors.NewCodeErr(&errorpb.ErrCode{
 		StatusCode: errorpb.Code_Aborted,
 		Code:       100000,
 		Name:       "hello.test.123",

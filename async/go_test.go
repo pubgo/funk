@@ -50,22 +50,22 @@ func httpGetList() *Iterator[*http.Response] {
 }
 
 func TestGoChan(t *testing.T) {
-	var now = time.Now()
+	now := time.Now()
 	defer func() {
 		fmt.Println(time.Since(now))
 	}()
 
-	var val1 = Async(func() (string, error) {
+	val1 := Async(func() (string, error) {
 		time.Sleep(time.Millisecond)
 		fmt.Println("2")
-		//return WithErr(errors.New("error"))
+		// return WithErr(errors.New("error"))
 		return "hello", nil
 	})
 
-	var val2 = Async(func() (string, error) {
+	val2 := Async(func() (string, error) {
 		time.Sleep(time.Millisecond)
 		fmt.Println("3")
-		//return WithErr(errors.New("error"))
+		// return WithErr(errors.New("error"))
 		return "hello", nil
 	})
 

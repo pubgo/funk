@@ -6,7 +6,7 @@ import (
 )
 
 func TestName(t *testing.T) {
-	var ch = make(chan string, 10)
+	ch := make(chan string, 10)
 	ch <- "hello"
 	ch <- "hello"
 	ch <- "hello"

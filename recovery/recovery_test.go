@@ -25,13 +25,13 @@ func TestExit(t *testing.T) {
 }
 
 func TestErr(t *testing.T) {
-	var handler = func() (gErr error) {
+	handler := func() (gErr error) {
 		defer Err(&gErr)
 
 		panic("ok")
 	}
 
-	var err = handler()
+	err := handler()
 	if generic.IsNil(err) {
 		t.Log(err)
 	}
@@ -43,7 +43,7 @@ func TestResult(t *testing.T) {
 		B string
 	}
 
-	var handler = func() (r result.Result[A]) {
+	handler := func() (r result.Result[A]) {
 		defer Result(&r)
 
 		r = r.WithVal(A{A: "hello"})

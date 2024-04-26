@@ -39,7 +39,7 @@ func IsNotExistMkDir(src string) (err error) {
 
 // MkDir create a directory
 func MkDir(src string) error {
-	var err = os.MkdirAll(src, os.ModePerm)
+	err := os.MkdirAll(src, os.ModePerm)
 	return errors.WrapKV(err, "src", src)
 }
 
@@ -64,7 +64,7 @@ func IsDir(path string) bool {
 }
 
 // CopyFile copies the source file to the dest file.
-func CopyFile(source string, dest string) (err error) {
+func CopyFile(source, dest string) (err error) {
 	defer recovery.Err(&err)
 
 	sourcefile := assert.Must1(os.Open(source))
@@ -82,7 +82,7 @@ func CopyFile(source string, dest string) (err error) {
 }
 
 // CopyDir copies the source directory to the dest directory.
-func CopyDir(source string, dest string) (err error) {
+func CopyDir(source, dest string) (err error) {
 	defer recovery.Err(&err)
 
 	sourceinfo := assert.Must1(os.Stat(source))
@@ -111,7 +111,7 @@ func CopyDir(source string, dest string) (err error) {
 // GrepFile like command grep -E
 // for example: GrepFile(`^hello`, "hello.txt")
 // \n is striped while read
-func GrepFile(patten string, filename string) (lines []string, err error) {
+func GrepFile(patten, filename string) (lines []string, err error) {
 	re, err := regexp.Compile(patten)
 	if err != nil {
 		return
@@ -154,7 +154,7 @@ func GrepFile(patten string, filename string) (lines []string, err error) {
 
 // CheckFileIsExist 检查目录是否存在
 func CheckFileIsExist(filename string) bool {
-	var exist = true
+	exist := true
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		exist = false
 	}
@@ -163,7 +163,7 @@ func CheckFileIsExist(filename string) bool {
 
 // BuildDir 创建目录
 func BuildDir(absDir string) error {
-	return os.MkdirAll(path.Dir(absDir), os.ModePerm) //生成多级目录
+	return os.MkdirAll(path.Dir(absDir), os.ModePerm) // 生成多级目录
 }
 
 // DeleteFile 删除文件或文件夹

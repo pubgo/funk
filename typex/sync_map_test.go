@@ -19,7 +19,7 @@ func TestName(t *testing.T) {
 		fmt.Println(key, val)
 	})
 
-	var data = make(map[string]int)
+	data := make(map[string]int)
 	sm.MapTo(data)
 	fmt.Println(data)
 

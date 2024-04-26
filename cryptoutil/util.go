@@ -29,7 +29,7 @@ func SecureKey() *[32]byte {
 
 // SecureToken create a new random token
 func SecureToken(lengths ...int) string {
-	var length = 16
+	length := 16
 	if len(lengths) > 0 {
 		length = lengths[0]
 	}
@@ -44,7 +44,7 @@ func removePadding(token string) string {
 	return strings.TrimRight(token, "=")
 }
 
-func AesCBCEncrypt(orig string, key string) result.Result[string] {
+func AesCBCEncrypt(orig, key string) result.Result[string] {
 	var val result.Result[string]
 
 	// 转成字节数组
@@ -70,7 +70,7 @@ func AesCBCEncrypt(orig string, key string) result.Result[string] {
 	return val.WithVal(base64.StdEncoding.EncodeToString(cryted))
 }
 
-func AesCBCDecrypt(cryted string, key string) result.Result[string] {
+func AesCBCDecrypt(cryted, key string) result.Result[string] {
 	var val result.Result[string]
 
 	// 转成字节数组
@@ -121,7 +121,7 @@ func Hmac(key, data string) string {
 }
 
 func HmacSha256(key, data string) string {
-	hash := hmac.New(sha256.New, []byte(key)) //创建对应的sha256哈希加密算法
+	hash := hmac.New(sha256.New, []byte(key)) // 创建对应的sha256哈希加密算法
 	hash.Write([]byte(data))
 	return hex.EncodeToString(hash.Sum([]byte("")))
 }
@@ -132,7 +132,7 @@ func HashPassword(password string) result.Result[string] {
 }
 
 // CheckPassword checks to see if the password matches the hashed password.
-func CheckPassword(hash string, password string) error {
+func CheckPassword(hash, password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 }
 

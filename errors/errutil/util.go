@@ -174,12 +174,13 @@ func ConvertErr2Status(err *errorpb.Error) *status.Status {
 		return status.New(codes.OK, "OK")
 	}
 
-	var st, err1 = status.New(codes.Code(err.Code.StatusCode), err.Msg.Msg).WithDetails(err)
-	if err1 != nil {
+	st := status.New(codes.Code(err.Code.StatusCode), err.Msg.Msg)
+	if st1, err1 := st.WithDetails(err); err1 != nil {
 		log.Err(err1).Any("lava-error", err).Msg("failed to convert error to grpc status")
-		return status.New(codes.Internal, err1.Error())
+		return st
+	} else {
+		return st1
 	}
-	return st
 }
 
 // ParseError try to convert an error to *Error.
@@ -187,25 +188,6 @@ func ConvertErr2Status(err *errorpb.Error) *status.Status {
 func ParseError(err error) *errorpb.Error {
 	if err == nil {
 		return nil
-	}
-
-	var ce *errors.ErrCode
-	if errors.As(err, &ce) {
-		if ce.Proto().Message == "" {
-			ce.Proto().Message = err.Error()
-		}
-
-		return &errorpb.Error{
-			Code: ce.Proto(),
-			Trace: &errorpb.ErrTrace{
-				Service: version.Project(),
-				Version: version.Version(),
-			},
-			Msg: &errorpb.ErrMsg{
-				Msg:    err.Error(),
-				Detail: fmt.Sprintf("%#v", err),
-			},
-		}
 	}
 
 	// grpc error
@@ -226,7 +208,9 @@ func ParseError(err error) *errorpb.Error {
 			Code: &errorpb.ErrCode{
 				Message:    gs.GRPCStatus().Message(),
 				StatusCode: errorpb.Code(gs.GRPCStatus().Code()),
+				Code:       int32(GrpcCodeToHTTP(gs.GRPCStatus().Code())),
 				Name:       "lava.grpc.status",
+				Details:    gs.GRPCStatus().Proto().Details,
 			},
 			Trace: &errorpb.ErrTrace{
 				Service: version.Project(),
@@ -239,10 +223,30 @@ func ParseError(err error) *errorpb.Error {
 		}
 	}
 
+	var ce *errors.ErrCode
+	if errors.As(err, &ce) {
+		if ce.Proto().Message == "" {
+			ce.Proto().Message = err.Error()
+		}
+
+		return &errorpb.Error{
+			Code: ce.Proto(),
+			Trace: &errorpb.ErrTrace{
+				Service: version.Project(),
+				Version: version.Version(),
+			},
+			Msg: &errorpb.ErrMsg{
+				Msg:    err.Error(),
+				Detail: fmt.Sprintf("%v", err),
+			},
+		}
+	}
+
 	return &errorpb.Error{
 		Code: &errorpb.ErrCode{
 			Message:    err.Error(),
 			StatusCode: errorpb.Code_Unknown,
+			Code:       500,
 			Name:       "lava.error.unknown",
 		},
 		Trace: &errorpb.ErrTrace{
@@ -251,7 +255,7 @@ func ParseError(err error) *errorpb.Error {
 		},
 		Msg: &errorpb.ErrMsg{
 			Msg:    err.Error(),
-			Detail: fmt.Sprintf("%#v", err),
+			Detail: fmt.Sprintf("%v", err),
 		},
 	}
 }

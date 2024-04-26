@@ -59,6 +59,23 @@ func (r Result[T]) WithVal(v T) Result[T] {
 	return OK(v)
 }
 
+func (r Result[T]) ValueTo(v *T) error {
+	if r.IsErr() {
+		return r.e
+	}
+
+	*v = generic.FromPtr(r.v)
+	return nil
+}
+
+func (r Result[T]) OnValue(fn func(t T) error) error {
+	if r.IsErr() {
+		return r.e
+	}
+
+	return fn(generic.FromPtr(r.v))
+}
+
 func (r Result[T]) Err(check ...func(err error) error) error {
 	if !r.IsErr() {
 		return nil
@@ -79,12 +96,12 @@ func (r Result[T]) OrElse(v T) T {
 	if r.IsErr() {
 		return v
 	}
-	return generic.DePtr(r.v)
+	return generic.FromPtr(r.v)
 }
 
 func (r Result[T]) Unwrap(check ...func(err error) error) T {
 	if !r.IsErr() {
-		return generic.DePtr(r.v)
+		return generic.FromPtr(r.v)
 	}
 
 	if len(check) > 0 && check[0] != nil {
@@ -96,7 +113,7 @@ func (r Result[T]) Unwrap(check ...func(err error) error) T {
 
 func (r Result[T]) Expect(format string, args ...any) T {
 	if !r.IsErr() {
-		return generic.DePtr(r.v)
+		return generic.FromPtr(r.v)
 	}
 
 	panic(&Error{
@@ -118,17 +135,9 @@ func (r Result[T]) MarshalJSON() ([]byte, error) {
 		return nil, r.e
 	}
 
-	return json.Marshal(generic.DePtr(r.v))
+	return json.Marshal(generic.FromPtr(r.v))
 }
 
 func (r Result[T]) UnmarshalJSON([]byte) error {
 	panic("unimplemented")
-}
-
-func Pipe[A, B any](a Result[A], fn func(t A) Result[B]) Result[B] {
-	if a.IsErr() {
-		return Err[B](a.Err())
-	}
-
-	return fn(a.Unwrap())
 }

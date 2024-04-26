@@ -19,7 +19,7 @@ func Must(err error, args ...interface{}) {
 }
 
 func MustFn(errFn func() error, args ...interface{}) {
-	var err = try.Try(errFn)
+	err := try.Try(errFn)
 	if generic.IsNil(err) {
 		return
 	}
@@ -54,7 +54,7 @@ func Exit(err error, args ...interface{}) {
 }
 
 func ExitFn(errFn func() error, args ...interface{}) {
-	var err = try.Try(errFn)
+	err := try.Try(errFn)
 	if generic.IsNil(err) {
 		return
 	}

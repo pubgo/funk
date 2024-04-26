@@ -10,8 +10,10 @@ import (
 	"github.com/pubgo/funk/stack"
 )
 
-var _ Error = (*ErrWrap)(nil)
-var _ fmt.Formatter = (*ErrWrap)(nil)
+var (
+	_ Error         = (*ErrWrap)(nil)
+	_ fmt.Formatter = (*ErrWrap)(nil)
+)
 
 type ErrWrap struct {
 	err    error
@@ -26,7 +28,7 @@ func (e *ErrWrap) Kind() string                  { return "err_wrap" }
 func (e *ErrWrap) Error() string                 { return e.err.Error() }
 
 func (e *ErrWrap) String() string {
-	var buf = bytes.NewBuffer(nil)
+	buf := bytes.NewBuffer(nil)
 	buf.WriteString("===============================================================\n")
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorKind, e.Kind()))
 	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorCaller, e.caller.String()))
@@ -42,7 +44,7 @@ func (e *ErrWrap) String() string {
 }
 
 func (e *ErrWrap) MarshalJSON() ([]byte, error) {
-	var data = errJsonify(e.err)
+	data := errJsonify(e.err)
 	data["kind"] = e.Kind()
 	data["fields"] = e.fields
 	data["stacks"] = e.stack

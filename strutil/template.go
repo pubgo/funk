@@ -8,7 +8,7 @@ import (
 )
 
 func Format(template string, data map[string]string) string {
-	var tpl = fasttemplate.New(template, "{", "}")
+	tpl := fasttemplate.New(template, "{", "}")
 	return tpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
 		return w.Write(convert.S2B(data[tag]))
 	})

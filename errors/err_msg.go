@@ -38,8 +38,10 @@ func WrapMsg(err error, msg *errorpb.ErrMsg) error {
 	}
 }
 
-var _ Error = (*ErrMsg)(nil)
-var _ fmt.Formatter = (*ErrMsg)(nil)
+var (
+	_ Error         = (*ErrMsg)(nil)
+	_ fmt.Formatter = (*ErrMsg)(nil)
+)
 
 type ErrMsg struct {
 	err error
@@ -53,7 +55,7 @@ func (t *ErrMsg) Proto() *errorpb.ErrMsg        { return t.pb }
 func (t *ErrMsg) Format(f fmt.State, verb rune) { strFormat(f, verb, t) }
 
 func (t *ErrMsg) String() string {
-	var buf = bytes.NewBuffer(nil)
+	buf := bytes.NewBuffer(nil)
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorKind, t.Kind()))
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorMsg, t.pb.Msg))
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorDetail, t.pb.Detail))
@@ -64,7 +66,7 @@ func (t *ErrMsg) String() string {
 }
 
 func (t *ErrMsg) MarshalJSON() ([]byte, error) {
-	var data = errJsonify(t.err)
+	data := errJsonify(t.err)
 	data["kind"] = t.Kind()
 	data["msg"] = t.pb.Msg
 	data["detail"] = t.pb.Detail

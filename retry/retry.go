@@ -9,12 +9,12 @@ import (
 type Retry func() Backoff
 
 func (d Retry) Do(f func(i int) error) (err error) {
-	var wrap = func(i int) (err error) {
+	wrap := func(i int) (err error) {
 		defer recovery.Err(&err)
 		return f(i)
 	}
 
-	var b = d()
+	b := d()
 	for i := 0; ; i++ {
 		if err = wrap(i); err == nil {
 			return nil
@@ -30,12 +30,12 @@ func (d Retry) Do(f func(i int) error) (err error) {
 }
 
 func (d Retry) DoVal(f func(i int) (interface{}, error)) (val interface{}, err error) {
-	var wrap = func(i int) (val interface{}, err error) {
+	wrap := func(i int) (val interface{}, err error) {
 		defer recovery.Err(&err)
 		return f(i)
 	}
 
-	var b = d()
+	b := d()
 	for i := 0; ; i++ {
 		if val, err = wrap(i); err == nil {
 			return val, nil
@@ -51,7 +51,7 @@ func (d Retry) DoVal(f func(i int) (interface{}, error)) (val interface{}, err e
 }
 
 func New(bs ...Backoff) Retry {
-	var b = WithMaxRetries(3, NewConstant(DefaultConstant))
+	b := WithMaxRetries(3, NewConstant(DefaultConstant))
 	if len(bs) > 0 {
 		b = bs[0]
 	}
@@ -60,6 +60,6 @@ func New(bs ...Backoff) Retry {
 }
 
 func Default() Retry {
-	var b = WithMaxRetries(3, NewConstant(time.Millisecond*10))
+	b := WithMaxRetries(3, NewConstant(time.Millisecond*10))
 	return func() Backoff { return b }
 }

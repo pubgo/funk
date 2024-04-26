@@ -29,7 +29,7 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 	g := gen.NewGeneratedFile(filename, file.GoImportPath)
 	g.Skip()
 
-	var genEnum = func(enum *protogen.Enum) {
+	genEnum := func(enum *protogen.Enum) {
 		genFile.
 			Func().Id(enum.GoIdent.GoName + "Values").
 			Params().

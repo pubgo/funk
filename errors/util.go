@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/alecthomas/repr"
-
 	"github.com/pubgo/funk/convert"
 	"github.com/pubgo/funk/errors/errinter"
 	"github.com/pubgo/funk/generic"
@@ -81,7 +80,7 @@ func errJsonify(err error) map[string]any {
 		return make(map[string]any)
 	}
 
-	var data = make(map[string]any, 6)
+	data := make(map[string]any, 6)
 	if _err, ok := err.(json.Marshaler); ok {
 		data["cause"] = _err
 	} else {
@@ -98,7 +97,7 @@ func errJsonify(err error) map[string]any {
 func strFormat(f fmt.State, verb rune, err Error) {
 	switch verb {
 	case 'v':
-		var data, err = err.MarshalJSON()
+		data, err := err.MarshalJSON()
 		if err != nil {
 			fmt.Fprintln(f, err.Error())
 		} else {
@@ -112,7 +111,7 @@ func strFormat(f fmt.State, verb rune, err Error) {
 func getStack() []*stack.Frame {
 	var ss []*stack.Frame
 	for i := 0; ; i++ {
-		var cc = stack.Caller(1 + i)
+		cc := stack.Caller(1 + i)
 		if cc == nil {
 			break
 		}

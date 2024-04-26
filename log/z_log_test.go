@@ -3,15 +3,21 @@ package log_test
 import (
 	"context"
 	"fmt"
-	"github.com/pubgo/funk/errors"
 	"testing"
 
-	"github.com/rs/zerolog"
-	zl "github.com/rs/zerolog/log"
-
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/log"
+	"github.com/rs/zerolog"
+	zl "github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/assert"
 )
+
+func TestWithDisabled(t *testing.T) {
+	ctx := log.WithDisabled(nil)
+	evt := log.Info(ctx).Str("hello", "world world")
+	assert.Equal(t, string(log.GetEventBuf(evt)), "")
+}
 
 func TestName(t *testing.T) {
 	log.Debug().Str("hello", "world world").Msg("ok ok")
@@ -19,7 +25,7 @@ func TestName(t *testing.T) {
 	log.Info().Str("hello", "world world").Msg("ok ok")
 	log.Warn().Str("hello", "world world").Msg("ok ok")
 
-	var err = errors.WrapCaller(fmt.Errorf("test error"))
+	err := errors.WrapCaller(fmt.Errorf("test error"))
 	err = errors.Wrap(err, "next error")
 	err = errors.WrapTag(err, errors.T("event", "test event"), errors.T("test123", 123), errors.T("test", "hello"))
 	err = errors.Wrapf(err, "next error name=%s", "wrapf")
@@ -35,23 +41,53 @@ func TestName(t *testing.T) {
 }
 
 func TestEvent(t *testing.T) {
-	var evt = log.NewEvent().Str("hello", "world").Int("int", 100).Dict("ddd", log.NewEvent())
+	evt := log.NewEvent().Str("hello", "world").Int("int", 100).Dict("ddd", log.NewEvent())
 	ctx := log.CreateEventCtx(context.Background(), evt)
 	ee := log.Info(ctx).Str("info", "abcd").Func(log.WithEvent(evt))
 	ee.Msg("dddd")
 }
 
 func TestWithEvent(t *testing.T) {
-	var evt = log.NewEvent().Str("hello", "hello world").Int("int", 100)
+	evt := log.NewEvent().Str("hello", "hello world").Int("int", 100)
 	ee := log.GetLogger("with_event").WithEvent(evt).Info().Str("info", "abcd")
 	ee.Msg("dddd")
 }
 
 func TestSetLog(t *testing.T) {
-	//zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	// zerolog.SetGlobalLevel(zerolog.ErrorLevel)
 	log.SetLogger(generic.Ptr(zl.Output(zerolog.NewConsoleWriter())))
 	log.Debug().Msg("test")
 	log.Info().Msg("test")
 	log.Warn().Msg("test")
 	log.Error().Msg("test")
+}
+
+func TestChecker(t *testing.T) {
+	l := log.GetLogger("test-checker")
+	l.Info().Msg("hello")
+
+	log.SetEnableChecker(func(lvl log.Level, name string, fields log.Map) bool {
+		fmt.Println(lvl, name, fields)
+		return true
+	})
+	l.Info().Msg("hello1")
+	l.Warn().Msg("hello1")
+	l.Error().Msg("hello1")
+	l.Debug().Msg("hello1")
+}
+
+func TestErr(t *testing.T) {
+	err := fmt.Errorf("test error")
+	log.Error().Err(err).Msg(err.Error())
+
+	err1 := errors.NewFmt("test format")
+	log.Error().Err(err1).Msg(err1.Error())
+}
+
+func TestAny(t *testing.T) {
+	err := fmt.Errorf("test error")
+	log.Error().Err(err).Any("err", err).Msg(err.Error())
+
+	err1 := errors.NewFmt("test format")
+	log.Error().Err(err1).Any("err", err1).Msg(err1.Error())
 }

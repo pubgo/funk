@@ -6,10 +6,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type Map = map[string]any
-type Hook = zerolog.Hook
-type Event = zerolog.Event
-type Level = zerolog.Level
+type (
+	Map              = map[string]any
+	Hook             = zerolog.Hook
+	Event            = zerolog.Event
+	Level            = zerolog.Level
+	LogEnableChecker = func(lvl Level, name string, fields Map) bool
+)
 
 type Logger interface {
 	WithName(name string) Logger
@@ -17,6 +20,7 @@ type Logger interface {
 	WithCallerSkip(skip int) Logger
 	WithEvent(evt *Event) Logger
 	WithLevel(lvl Level) Logger
+
 	Debug(ctx ...context.Context) *Event
 	Info(ctx ...context.Context) *Event
 	Warn(ctx ...context.Context) *Event
@@ -33,3 +37,5 @@ type StdLogger interface {
 	Log(v ...interface{})
 	Println(v ...interface{})
 }
+
+var logEnableChecker LogEnableChecker = func(Level, string, Map) bool { return true }

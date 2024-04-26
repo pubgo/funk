@@ -8,9 +8,11 @@ import (
 	"sync"
 )
 
-var cache = make(map[uintptr]*Frame)
-var mu sync.Mutex
-var goRoot string
+var (
+	cache  = make(map[uintptr]*Frame)
+	mu     sync.Mutex
+	goRoot string
+)
 
 func init() {
 	tt := Trace()[0]
@@ -25,7 +27,7 @@ type Frame struct {
 }
 
 func (f *Frame) Short() string {
-	var ff = f.File
+	ff := f.File
 	ff1 := ff[:strings.LastIndex(ff, "/")]
 	ff1 = ff1[:strings.LastIndex(ff1, "/")]
 	return fmt.Sprintf("%s:%d %s", strings.TrimPrefix(strings.TrimPrefix(ff, ff1), "/"), f.Line, f.Name)
@@ -52,18 +54,18 @@ func Caller(skip int) *Frame {
 }
 
 func Callers(depth int, skips ...int) []*Frame {
-	var skip = 0
+	skip := 0
 	if len(skips) > 0 {
 		skip = skips[0]
 	}
 
-	var pcs = make([]uintptr, depth)
+	pcs := make([]uintptr, depth)
 	n := runtime.Callers(skip+2, pcs[:])
 	if n == 0 {
 		return nil
 	}
 
-	var stacks = make([]*Frame, 0, depth)
+	stacks := make([]*Frame, 0, depth)
 	for _, p := range pcs[:n] {
 		stacks = append(stacks, stack(p-1))
 	}
@@ -108,7 +110,7 @@ func stack(p uintptr) *Frame {
 		return nil
 	}
 
-	var v, ok = cache[p]
+	v, ok := cache[p]
 	if ok {
 		return v
 	}
@@ -125,12 +127,12 @@ func stack(p uintptr) *Frame {
 		cache[p] = v
 	}()
 
-	var ff = runtime.FuncForPC(p)
+	ff := runtime.FuncForPC(p)
 	if ff == nil {
 		return nil
 	}
 
-	var file, line = ff.FileLine(p)
+	file, line := ff.FileLine(p)
 	ma := strings.Split(ff.Name(), ".")
 	v = &Frame{
 		File: file,

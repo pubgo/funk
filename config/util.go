@@ -37,11 +37,11 @@ func getConfigPath(name, typ string, configDir ...string) (string, string) {
 		typ = defaultConfigType
 	}
 
-	var configName = fmt.Sprintf("%s.%s", name, typ)
+	configName := fmt.Sprintf("%s.%s", name, typ)
 	var notFoundPath []string
 	for _, path := range getPathList() {
 		for _, dir := range configDir {
-			var cfgPath = filepath.Join(path, dir, configName)
+			cfgPath := filepath.Join(path, dir, configName)
 			if pathutil.IsNotExist(cfgPath) {
 				notFoundPath = append(notFoundPath, cfgPath)
 			} else {
@@ -77,7 +77,7 @@ func MergeR[A any, B any | *any](dst *A, src ...B) (ret result.Result[*A]) {
 		return ret.WithVal(dst)
 	}
 
-	var err = Merge(dst, src...)
+	err := Merge(dst, src...)
 	if err != nil {
 		return ret.WithErr(err)
 	}
@@ -115,7 +115,7 @@ func (s *transformer) Transformer(t reflect.Type) func(dst, src reflect.Value) e
 			return nil
 		}
 
-		var dstMap = make(map[string]NamedConfig)
+		dstMap := make(map[string]NamedConfig)
 		for i := 0; i < dst.Len(); i++ {
 			c := dst.Index(i).Interface().(NamedConfig)
 			dstMap[c.ConfigUniqueName()] = c

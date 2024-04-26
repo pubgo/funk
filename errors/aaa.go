@@ -7,13 +7,15 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-var _ json.Marshaler = (Tags)(nil)
-var _ fmt.Formatter = (Tags)(nil)
+var (
+	_ json.Marshaler = (Tags)(nil)
+	_ fmt.Formatter  = (Tags)(nil)
+)
 
 type Maps map[string]any
 
 func (t Maps) Tags() Tags {
-	var tags = make(Tags, 0, len(t))
+	tags := make(Tags, 0, len(t))
 	for k, v := range t {
 		tags = append(tags, Tag{K: k, V: v})
 	}
@@ -23,12 +25,12 @@ func (t Maps) Tags() Tags {
 type Tags []Tag
 
 func (t Tags) Format(f fmt.State, verb rune) {
-	var tags = make(map[string]any, len(t))
+	tags := make(map[string]any, len(t))
 	for i := range t {
 		tags[t[i].K] = t[i].V
 	}
 
-	var data, err = json.Marshal(tags)
+	data, err := json.Marshal(tags)
 	if err != nil {
 		fmt.Fprintf(f, "%v", err)
 	} else {
@@ -37,7 +39,7 @@ func (t Tags) Format(f fmt.State, verb rune) {
 }
 
 func (t Tags) MarshalJSON() ([]byte, error) {
-	var tags = make(map[string]any, len(t))
+	tags := make(map[string]any, len(t))
 	for i := range t {
 		tags[t[i].K] = t[i].V
 	}

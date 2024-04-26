@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"log"
+
 	json "github.com/goccy/go-json"
 	"github.com/pubgo/funk/errors/errinter"
 	"github.com/pubgo/funk/generic"
@@ -11,7 +13,6 @@ import (
 	"github.com/pubgo/funk/stack"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
-	"log"
 )
 
 func NewCodeErr(code *errorpb.ErrCode, details ...proto.Message) error {
@@ -28,7 +29,7 @@ func NewCodeErr(code *errorpb.ErrCode, details ...proto.Message) error {
 
 			pb, err := anypb.New(p)
 			if err != nil {
-				log.Printf("failed to encode to any")
+				log.Printf("err_code: failed to encode protobuf message to any, data=%v", p)
 				continue
 			}
 
@@ -54,8 +55,10 @@ func WrapCode(err error, code *errorpb.ErrCode) error {
 	}
 }
 
-var _ Error = (*ErrCode)(nil)
-var _ fmt.Formatter = (*ErrCode)(nil)
+var (
+	_ Error         = (*ErrCode)(nil)
+	_ fmt.Formatter = (*ErrCode)(nil)
+)
 
 type ErrCode struct {
 	err error
@@ -108,7 +111,7 @@ func (t *ErrCode) As(err any) bool {
 }
 
 func (t *ErrCode) String() string {
-	var buf = bytes.NewBuffer(nil)
+	buf := bytes.NewBuffer(nil)
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorKind, t.Kind()))
 	buf.WriteString(fmt.Sprintf("%s]: %d\n", errinter.ColorCode, t.pb.Code))
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorMessage, t.pb.Message))
@@ -119,7 +122,7 @@ func (t *ErrCode) String() string {
 }
 
 func (t *ErrCode) MarshalJSON() ([]byte, error) {
-	var data = errJsonify(t.err)
+	data := errJsonify(t.err)
 	data["kind"] = t.Kind()
 	data["name"] = t.pb.Name
 	data["status_code"] = t.pb.StatusCode.String()

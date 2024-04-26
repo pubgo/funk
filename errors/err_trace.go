@@ -38,8 +38,10 @@ func WrapTrace(err error, trace *errorpb.ErrTrace) error {
 	}
 }
 
-var _ Error = (*ErrTrace)(nil)
-var _ fmt.Formatter = (*ErrTrace)(nil)
+var (
+	_ Error         = (*ErrTrace)(nil)
+	_ fmt.Formatter = (*ErrTrace)(nil)
+)
 
 type ErrTrace struct {
 	err error
@@ -53,7 +55,7 @@ func (t *ErrTrace) Proto() *errorpb.ErrTrace      { return t.pb }
 func (t *ErrTrace) Format(f fmt.State, verb rune) { strFormat(f, verb, t) }
 
 func (t *ErrTrace) String() string {
-	var buf = bytes.NewBuffer(nil)
+	buf := bytes.NewBuffer(nil)
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorKind, t.Kind()))
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorId, t.pb.Id))
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorOperation, t.pb.Operation))
@@ -64,7 +66,7 @@ func (t *ErrTrace) String() string {
 }
 
 func (t *ErrTrace) MarshalJSON() ([]byte, error) {
-	var data = errJsonify(t.err)
+	data := errJsonify(t.err)
 	data["kind"] = t.Kind()
 	data["id"] = t.pb.Id
 	data["operation"] = t.pb.Operation

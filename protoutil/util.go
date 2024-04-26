@@ -179,7 +179,7 @@ func CamelCase(s string) string {
 //   - method is POST
 //   - path is "<pkg name>/<service name>/<method name>"
 //   - body should contain the serialized request message
-func DefaultAPIOptions(pkg string, srv string, mth string) *options.HttpRule {
+func DefaultAPIOptions(pkg, srv, mth string) *options.HttpRule {
 	return &options.HttpRule{
 		Pattern: &options.HttpRule_Post{
 			Post: "/" + camel2Case(fmt.Sprintf("%s/%s/%s", camel2Case(pkg), camel2Case(srv), camel2Case(mth))),
@@ -216,7 +216,7 @@ func ExtractAPIOptions(mth *descriptor.MethodDescriptorProto) (*options.HttpRule
 	return opts, nil
 }
 
-func ExtractHttpMethod(opts *options.HttpRule) (method string, path string) {
+func ExtractHttpMethod(opts *options.HttpRule) (method, path string) {
 	var (
 		httpMethod   string
 		pathTemplate string
@@ -383,7 +383,7 @@ func httpPathsAdditionalBindings(m *descriptor.MethodDescriptorProto) []string {
 	}
 
 	var httpPaths []string
-	var optsAdditionalBindings = opts.GetAdditionalBindings()
+	optsAdditionalBindings := opts.GetAdditionalBindings()
 	for _, optAdditionalBindings := range optsAdditionalBindings {
 		switch t := optAdditionalBindings.Pattern.(type) {
 		case *options.HttpRule_Get:
@@ -426,7 +426,7 @@ func ParseParameter(args string) {
 	for _, arg := range strings.Split(args, ",") {
 		spec := strings.SplitN(arg, "=", 2)
 		if len(spec) == 1 {
-			assert.Must(flag.CommandLine.Set(spec[0], ""), "Cannot set flag %s", args)
+			assert.MustF(flag.CommandLine.Set(spec[0], ""), "Cannot set flag %s", args)
 			continue
 		}
 
@@ -435,7 +435,7 @@ func ParseParameter(args string) {
 			continue
 		}
 
-		assert.Must(flag.CommandLine.Set(key, value), "Cannot set flag %s", arg)
+		assert.MustF(flag.CommandLine.Set(key, value), "Cannot set flag %s", arg)
 	}
 }
 

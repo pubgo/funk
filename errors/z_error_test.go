@@ -2,8 +2,9 @@ package errors_test
 
 import (
 	"fmt"
-	"github.com/pubgo/funk/errors"
 	"testing"
+
+	"github.com/pubgo/funk/errors"
 
 	"github.com/rs/xid"
 
@@ -13,7 +14,7 @@ import (
 )
 
 func TestFormat(t *testing.T) {
-	var err = errors.WrapCaller(fmt.Errorf("test error, err=%w", errors.New("hello error")))
+	err := errors.WrapCaller(fmt.Errorf("test error, err=%w", errors.New("hello error")))
 	err = errors.Wrap(err, "next error")
 	err = errors.WrapTag(err, errors.T("event", "test event"), errors.T("test123", 123), errors.T("test", "hello"))
 	err = errors.Wrapf(err, "next error name=%s", "wrapf")

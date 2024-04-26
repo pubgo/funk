@@ -17,7 +17,7 @@ func B() string {
 }
 
 func C() string {
-	var a = A()
+	a := A()
 	if a == "" {
 		return B()
 	}

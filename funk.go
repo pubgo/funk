@@ -1,4 +1,4 @@
-package generic
+package funk
 
 import (
 	"reflect"
@@ -28,24 +28,17 @@ func Nil[T any]() (t *T) {
 	return
 }
 
-// DePtr
-// Deprecated: use FromPtr
-func DePtr[T any](v *T) (r T) {
-	if v == nil {
-		return
-	}
-	return *v
-}
-
+//go:inline
 func FromPtr[T any](v *T) (r T) {
 	if v == nil {
 		return
 	}
+
 	return *v
 }
 
 //go:inline
-func Ptr[T any](v T) *T {
+func ToPtr[T any](v T) *T {
 	return &v
 }
 
@@ -71,24 +64,12 @@ func TernaryFn[T any](ok bool, a, b func() T) T {
 	return b()
 }
 
-func Map[T, V any](data []T, handle func(i int) V) []V {
+func Map[T, V any](data []T, handle func(T) V) []V {
 	vv := make([]V, 0, len(data))
 	for i := range data {
-		vv = append(vv, handle(i))
+		vv = append(vv, handle(data[i]))
 	}
 	return vv
-}
-
-// ExtractFrom extracts a nested object of type E from type T.
-//
-// This function is useful if we have a set of type `T` nad we want to
-// extract the type E from any T.
-func ExtractFrom[T, E any](set []T, fn func(T) E) []E {
-	r := make([]E, len(set))
-	for i := range set {
-		r[i] = fn(set[i])
-	}
-	return r
 }
 
 // Contains returns whether `vs` contains the element `e` by comparing vs[i] == e.
@@ -105,27 +86,15 @@ func Contains[T comparable](vs []T, e T) bool {
 // Filter iterates over `set` and gets the values that match `criteria`.
 //
 // Filter will return a new allocated slice.
-func Filter[T any](set []T, criteria func(T) bool) []T {
+func Filter[T any](set []T, checkTrue func(T) bool) []T {
 	r := make([]T, 0)
 	for i := range set {
-		if criteria(set[i]) {
-			r = append(r, set[i])
+		if !checkTrue(set[i]) {
+			continue
 		}
+		r = append(r, set[i])
 	}
 	return r
-}
-
-// FilterInPlace filters the contents of `set` using `criteria`.
-//
-// FilterInPlace returns `set`.
-func FilterInPlace[T any](set []T, criteria func(T) bool) []T {
-	for i := 0; i < len(set); i++ {
-		if !criteria(set[i]) {
-			set = append(set[:i], set[i+1:]...)
-			i--
-		}
-	}
-	return set
 }
 
 // Delete the first occurrence of a type from a set.

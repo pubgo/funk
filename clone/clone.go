@@ -7,9 +7,11 @@ import (
 	"github.com/huandu/go-clone"
 )
 
-type Func = clone.Func
-type Allocator = clone.Allocator
-type AllocatorMethods = clone.AllocatorMethods
+type (
+	Func             = clone.Func
+	Allocator        = clone.Allocator
+	AllocatorMethods = clone.AllocatorMethods
+)
 
 func Clone[T any](t T) T {
 	return clone.Clone(t).(T)

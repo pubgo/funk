@@ -29,12 +29,12 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 	genFile.Id("const _ =").Qual("google.golang.org/grpc", "SupportPackageIsVersion7")
 
 	g.Skip()
-	forEachMessage(nil, file.Messages, func(parent *protogen.Message, child *protogen.Message) {
+	forEachMessage(nil, file.Messages, func(parent, child *protogen.Message) {
 		if child.Desc.IsMapEntry() {
 			return
 		}
 
-		//if val==nil{
+		// if val==nil{
 		//		return nil
 		//	}
 		g.Unskip()
@@ -88,7 +88,7 @@ func protocVersion(gen *protogen.Plugin) string {
 	return fmt.Sprintf("v%d.%d.%d%s", v.GetMajor(), v.GetMinor(), v.GetPatch(), suffix)
 }
 
-func forEachMessage(parent *protogen.Message, children []*protogen.Message, f func(parent *protogen.Message, child *protogen.Message)) {
+func forEachMessage(parent *protogen.Message, children []*protogen.Message, f func(parent, child *protogen.Message)) {
 	for _, child := range children {
 		f(parent, child)
 		forEachMessage(child, child.Messages, f)

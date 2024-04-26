@@ -3,7 +3,6 @@ package pathutil
 import (
 	"errors"
 	"os"
-
 	"path/filepath"
 )
 

@@ -2,8 +2,9 @@ package result_test
 
 import (
 	"encoding/json"
-	"github.com/pubgo/funk/result"
 	"testing"
+
+	"github.com/pubgo/funk/result"
 )
 
 type hello struct {
@@ -11,7 +12,7 @@ type hello struct {
 }
 
 func TestName(t *testing.T) {
-	var ok = result.OK(&hello{Name: "abc"})
+	ok := result.OK(&hello{Name: "abc"})
 	okBytes := result.Of(json.Marshal(&ok))
 	data := string(okBytes.Expect("failed to encode json data"))
 	t.Log(data)
@@ -25,8 +26,4 @@ func TestName(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("ok", ok1.Name)
-}
-
-func TestPipe(t *testing.T) {
-
 }
