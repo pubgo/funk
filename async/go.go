@@ -13,7 +13,7 @@ import (
 	"github.com/pubgo/funk/try"
 )
 
-// Async 通过chan的方式同步执行异步任务
+// Async 异步执行函数并同步等待
 func Async[T any](fn func() (T, error)) *Future[T] {
 	assert.If(fn == nil, "[Async] [fn] is nil")
 
@@ -22,10 +22,14 @@ func Async[T any](fn func() (T, error)) *Future[T] {
 		defer recovery.Recovery(func(err error) {
 			err = errors.WrapKV(err, "fn_stack", stack.CallerWithFunc(fn).String())
 			f.setErr(err)
+
+			// 记录错误日志，以便跟踪
+			logErr(fn, err)
 		})
 
 		t, e := fn()
 		if e != nil {
+			// 直接设置错误，上面的defer已经处理了错误包装
 			f.setErr(e)
 		} else {
 			f.setOK(t)
@@ -57,17 +61,22 @@ func GoSafe(fn func() error, cb ...func(err error)) {
 }
 
 // GoCtx 可取消并发处理
-func GoCtx(fn func(ctx context.Context) error) context.CancelFunc {
+func GoCtx(fn func(ctx context.Context) error, parentCtx ...context.Context) context.CancelFunc {
 	assert.If(fn == nil, "[GoCtx] [fn] is nil")
 
-	ctx, cancel := context.WithCancel(context.Background())
+	pCtx := context.Background()
+	if len(parentCtx) > 0 && parentCtx[0] != nil {
+		pCtx = parentCtx[0]
+	}
+
+	ctx, cancel := context.WithCancel(pCtx)
 	go func() {
 		logErr(fn, try.Try(func() error { return fn(ctx) }))
 	}()
 	return cancel
 }
 
-// GoDelay 异步延迟处理
+// GoDelay 异步延迟处理, 默认10ms
 func GoDelay(fn func() error, durations ...time.Duration) {
 	assert.If(fn == nil, "[GoDelay] [fn] is nil")
 
@@ -83,21 +92,28 @@ func GoDelay(fn func() error, durations ...time.Duration) {
 }
 
 // Timeout 超时处理
-func Timeout(dur time.Duration, fn func() error) (gErr error) {
-	assert.If(fn == nil, "[Timeout] [fn] is nil")
-	assert.If(dur <= 0, "[Timeout] [dur] should not be less than zero")
+func Timeout(dur time.Duration, fn func() error) error {
+	if fn == nil {
+		return errors.New("[Timeout] [fn] is nil")
+	}
 
-	done := make(chan struct{})
+	if dur <= 0 {
+		return errors.New("[Timeout] [dur] should not be less than zero")
+	}
+
+	done := make(chan error)
 	go func() {
 		defer close(done)
-		gErr = try.Try(fn)
+		done <- try.Try(fn)
 	}()
 
+	timer := time.NewTimer(dur)
+	defer timer.Stop()
 	select {
-	case <-time.After(dur):
+	case <-timer.C:
 		return context.DeadlineExceeded
-	case <-done:
-		return
+	case ret := <-done:
+		return ret
 	}
 }
 

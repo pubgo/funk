@@ -1,21 +1,22 @@
 package async
 
-import "github.com/pubgo/funk/result"
+import (
+	"github.com/pubgo/funk/result"
+	"sync/atomic"
+)
 
 func iteratorOf[T any]() *Iterator[T] {
 	return &Iterator[T]{v: make(chan T)}
 }
 
 type Iterator[T any] struct {
-	v   chan T
-	err error
-}
-
-func (cc *Iterator[T]) Err() error {
-	return cc.err
+	v    chan T
+	err  error
+	done atomic.Bool
 }
 
 func (cc *Iterator[T]) setDone() {
+	cc.done.Store(true)
 	close(cc.v)
 }
 
@@ -32,27 +33,16 @@ func (cc *Iterator[T]) Next() (T, bool) {
 	return r, ok
 }
 
-func (cc *Iterator[T]) Range(fn func(r T)) error {
-	for c := range cc.v {
-		if cc.err != nil {
-			return cc.err
-		}
-
-		fn(c)
-	}
-	return nil
-}
-
-func (cc *Iterator[T]) ToList() result.Result[[]T] {
-	var ret result.Result[[]T]
-	if cc.err != nil {
-		return ret.WithErr(cc.err)
-	}
-
+func (cc *Iterator[T]) Await() result.Result[[]T] {
 	var ll []T
-	for c := range cc.v {
-		c1 := c
-		ll = append(ll, c1)
+	var err = cc.err
+
+	if err != nil {
+		return result.Wrap(ll, err)
 	}
-	return ret.WithVal(ll)
+
+	for c := range cc.v {
+		ll = append(ll, c)
+	}
+	return result.Wrap(ll, cc.err)
 }
