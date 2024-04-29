@@ -32,7 +32,7 @@ func Group[T any](do func(async func(func() (T, error))) error) *Iterator[T] {
 		var wg sync.WaitGroup
 		defer rr.setDone()
 		defer wg.Wait()
-		rr.setErr(do(func(f func() (T, error)) {
+		rr.setErr(do(func(async func() (T, error)) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
@@ -41,7 +41,7 @@ func Group[T any](do func(async func(func() (T, error))) error) *Iterator[T] {
 					rr.setErr(err)
 				})
 
-				t, e := f()
+				t, e := async()
 				if e == nil {
 					rr.setValue(t)
 				} else {

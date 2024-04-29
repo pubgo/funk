@@ -1,13 +1,16 @@
 package async
 
-import "github.com/pubgo/funk/result"
+import (
+	"github.com/pubgo/funk/result"
+)
 
 func newFuture[T any]() *Future[T] {
 	return &Future[T]{done: make(chan struct{})}
 }
 
 type Future[T any] struct {
-	v    result.Result[T]
+	v    T
+	e    error
 	done chan struct{}
 }
 
@@ -17,15 +20,15 @@ func (f *Future[T]) close() {
 
 func (f *Future[T]) setOK(v T) {
 	defer f.close()
-	f.v = f.v.WithVal(v)
+	f.v = v
 }
 
 func (f *Future[T]) setErr(err error) {
 	defer f.close()
-	f.v = f.v.WithErr(err)
+	f.e = err
 }
 
 func (f *Future[T]) Await() result.Result[T] {
 	<-f.done
-	return f.v
+	return result.Wrap(f.v, f.e)
 }

@@ -39,3 +39,6 @@ protobuf:
 
 vet:
 	go vet ./...
+
+refactor:
+	gofumpt -l -w -extra .
