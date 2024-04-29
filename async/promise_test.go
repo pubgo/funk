@@ -54,7 +54,7 @@ func TestYield(t *testing.T) {
 }
 
 func TestGroup(t *testing.T) {
-	var now = time.Now()
+	now := time.Now()
 	defer func() {
 		t.Log(time.Since(now))
 	}()

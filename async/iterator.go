@@ -1,8 +1,9 @@
 package async
 
 import (
-	"github.com/pubgo/funk/result"
 	"sync/atomic"
+
+	"github.com/pubgo/funk/result"
 )
 
 func iteratorOf[T any]() *Iterator[T] {
@@ -35,7 +36,7 @@ func (cc *Iterator[T]) Next() (T, bool) {
 
 func (cc *Iterator[T]) Await() result.Result[[]T] {
 	var ll []T
-	var err = cc.err
+	err := cc.err
 
 	if err != nil {
 		return result.Wrap(ll, err)
