@@ -1,8 +1,6 @@
 package async
 
 import (
-	"sync/atomic"
-
 	"github.com/pubgo/funk/result"
 )
 
@@ -11,13 +9,11 @@ func iteratorOf[T any]() *Iterator[T] {
 }
 
 type Iterator[T any] struct {
-	v    chan T
-	err  error
-	done atomic.Bool
+	v   chan T
+	err error
 }
 
 func (cc *Iterator[T]) setDone() {
-	cc.done.Store(true)
 	close(cc.v)
 }
 
@@ -37,7 +33,6 @@ func (cc *Iterator[T]) Next() (T, bool) {
 func (cc *Iterator[T]) Await() result.Result[[]T] {
 	var ll []T
 	err := cc.err
-
 	if err != nil {
 		return result.Wrap(ll, err)
 	}
