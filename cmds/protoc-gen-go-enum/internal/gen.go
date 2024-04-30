@@ -59,13 +59,26 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 		genFile.Line()
 	}
 
+	var getEnums func(msg *protogen.Message) []*protogen.Enum
+	getEnums = func(msg *protogen.Message) []*protogen.Enum {
+		var nn []*protogen.Enum
+		for _, enum := range msg.Enums {
+			nn = append(nn, enum)
+		}
+
+		for _, msg := range msg.Messages {
+			nn = append(nn, getEnums(msg)...)
+		}
+		return nn
+	}
+
 	for _, enum := range file.Enums {
 		g.Unskip()
 		genEnum(enum)
 	}
 
 	for _, msg := range file.Messages {
-		for _, enum := range msg.Enums {
+		for _, enum := range getEnums(msg) {
 			g.Unskip()
 			genEnum(enum)
 		}

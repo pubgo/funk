@@ -36,3 +36,22 @@ enum Code {
     (errors.field).msg = "this is custom msg"
   ];
 }
+
+
+message User {
+  message Role {
+    enum Type {
+      // 租户
+      tenant = 0;
+
+      // 安保
+      guard = 1;
+
+      // 管理者
+      manager = 2;
+
+      // 后台管理员
+      admin = 3;
+    }
+  }
+}
