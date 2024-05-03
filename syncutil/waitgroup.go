@@ -1,11 +1,12 @@
 package syncutil
 
 import (
-	"github.com/pubgo/funk/try"
 	"runtime"
 	"sync"
 	"sync/atomic"
 	_ "unsafe"
+
+	"github.com/pubgo/funk/try"
 
 	"github.com/pubgo/funk/async"
 )
