@@ -16,5 +16,5 @@ func TestName(t *testing.T) {
 			time.Sleep(time.Millisecond * 10)
 		})
 	}
-	t.Log(wg.Wait())
+	wg.Wait()
 }
