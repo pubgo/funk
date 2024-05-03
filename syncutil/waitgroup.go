@@ -1,13 +1,13 @@
 package syncutil
 
 import (
+	"github.com/pubgo/funk/try"
 	"runtime"
 	"sync"
 	"sync/atomic"
 	_ "unsafe"
 
 	"github.com/pubgo/funk/async"
-	"github.com/pubgo/funk/fastrand"
 )
 
 //go:linkname state sync.(*WaitGroup).state
@@ -38,13 +38,13 @@ func (t *WaitGroup) Count() uint32 {
 func (t *WaitGroup) check() {
 	// 阻塞, 等待任务处理完毕
 	// 采样率(1), 打印log
-	for t.Count() >= t.maxConcurrent {
-		if fastrand.Sampling(1) {
-			logs.Warn().
-				Uint32("current", t.Count()).
-				Uint32("maximum", t.maxConcurrent).
-				Msg("WaitGroup current concurrent number exceeds the maximum concurrent number of the system")
-		}
+	for t.Count() > t.maxConcurrent {
+		//if fastrand.Sampling(1) {
+		//	logs.Warn().
+		//		Uint32("current", t.Count()).
+		//		Uint32("maximum", t.maxConcurrent).
+		//		Msg("WaitGroup current concurrent number exceeds the maximum concurrent number of the system")
+		//}
 
 		runtime.Gosched()
 	}
@@ -54,7 +54,13 @@ func (t *WaitGroup) Go(fn func()) {
 	t.wg.Add(1)
 	t.check()
 	async.GoSafe(
-		func() error { fn(); return nil },
+		func() error {
+			defer t.wg.Done()
+			return try.Try(func() error {
+				fn()
+				return nil
+			})
+		},
 		func(err error) {
 			t.err = err
 		},
