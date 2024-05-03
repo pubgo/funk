@@ -29,7 +29,6 @@ type WaitGroup struct {
 }
 
 func (t *WaitGroup) Count() uint32 { return t.count.Load() }
-
 func (t *WaitGroup) checkAndWait() {
 	for {
 		count := t.Count()
