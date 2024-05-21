@@ -167,3 +167,16 @@ func Init(fn func()) error {
 	fn()
 	return nil
 }
+
+func Distinct[T any, V comparable](set []T, fn func(t T) V) []T {
+	dataMap := make(map[V]T, len(set))
+	for i := range set {
+		dataMap[fn(set[i])] = set[i]
+	}
+
+	set = make([]T, 0, len(dataMap))
+	for _, v := range dataMap {
+		set = append(set, v)
+	}
+	return set
+}
