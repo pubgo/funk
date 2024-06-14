@@ -3,6 +3,7 @@ package log
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 )
 
 var (
+	logEnableChecker      = func(Level, string, Map) bool { return true }
 	zErrMarshalFunc       = zerolog.ErrorMarshalFunc
 	zInterfaceMarshalFunc = zerolog.InterfaceMarshalFunc
 	_                     = generic.Init(func() {
@@ -43,7 +45,7 @@ var (
 
 		zerolog.InterfaceMarshalFunc = func(v any) ([]byte, error) {
 			if v == nil {
-				return nil, nil
+				return []byte("null"), nil
 			}
 
 			switch e1 := v.(type) {
@@ -87,7 +89,13 @@ func SetLogger(log *zerolog.Logger) {
 	zlog.Logger = *log
 }
 
-func SetEnableChecker(checker LogEnableChecker) { logEnableChecker = checker }
+func SetEnableChecker(checker EnableChecker) {
+	if checker == nil {
+		return
+	}
+
+	logEnableChecker = checker
+}
 
 // Err starts a new message with error level with err as a field if not nil or
 // with info level if err is nil.
@@ -151,4 +159,8 @@ func Print(v ...interface{}) {
 // Arguments are handled in the manner of fmt.Printf.
 func Printf(format string, v ...interface{}) {
 	stdLog.Debug().CallerSkipFrame(1).Msgf(format, v...)
+}
+
+func Output(w io.Writer) Logger {
+	return New(generic.Ptr(stdZeroLog.Output(w)))
 }

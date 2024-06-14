@@ -7,11 +7,11 @@ import (
 )
 
 type (
-	Map              = map[string]any
-	Hook             = zerolog.Hook
-	Event            = zerolog.Event
-	Level            = zerolog.Level
-	LogEnableChecker = func(lvl Level, name string, fields Map) bool
+	Map           = map[string]any
+	Hook          = zerolog.Hook
+	Event         = zerolog.Event
+	Level         = zerolog.Level
+	EnableChecker = func(lvl Level, name string, fields Map) bool
 )
 
 type Logger interface {
@@ -37,5 +37,3 @@ type StdLogger interface {
 	Log(v ...interface{})
 	Println(v ...interface{})
 }
-
-var logEnableChecker LogEnableChecker = func(Level, string, Map) bool { return true }

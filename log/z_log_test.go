@@ -1,17 +1,24 @@
 package log_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"testing"
 
 	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/log"
 	"github.com/rs/zerolog"
-	zl "github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
+	"github.com/tidwall/gjson"
 )
+
+func TestNilLog(t *testing.T) {
+	var buf bytes.Buffer
+	log.Output(&buf).Debug().Any("key", nil).Send()
+	ret := gjson.ParseBytes(buf.Bytes())
+	assert.Equal(t, ret.Get("key").String(), "")
+}
 
 func TestWithDisabled(t *testing.T) {
 	ctx := log.WithDisabled(nil)
@@ -54,12 +61,11 @@ func TestWithEvent(t *testing.T) {
 }
 
 func TestSetLog(t *testing.T) {
-	// zerolog.SetGlobalLevel(zerolog.ErrorLevel)
-	log.SetLogger(generic.Ptr(zl.Output(zerolog.NewConsoleWriter())))
-	log.Debug().Msg("test")
-	log.Info().Msg("test")
-	log.Warn().Msg("test")
-	log.Error().Msg("test")
+	logger := log.Output(zerolog.NewConsoleWriter())
+	logger.Debug().Msg("test")
+	logger.Info().Msg("test")
+	logger.Warn().Msg("test")
+	logger.Error().Msg("test")
 }
 
 func TestChecker(t *testing.T) {
@@ -84,10 +90,11 @@ func TestErr(t *testing.T) {
 	log.Error().Err(err1).Msg(err1.Error())
 }
 
-func TestAny(t *testing.T) {
+func TestError(t *testing.T) {
 	err := fmt.Errorf("test error")
 	log.Error().Err(err).Any("err", err).Msg(err.Error())
 
 	err1 := errors.NewFmt("test format")
-	log.Error().Err(err1).Any("err", err1).Msg(err1.Error())
+	log.Error().Err(err1).Msg(err1.Error())
+	log.Err(err1).Msg(err1.Error())
 }

@@ -14,6 +14,27 @@ func CreateEventCtx(ctx context.Context, evt *Event) context.Context {
 	return context.WithValue(ctx, ctxEventKey{}, evt)
 }
 
+func UpdateEventCtx(ctx context.Context, fields map[string]any) context.Context {
+	if ctx == nil {
+		panic("ctx is nil")
+	}
+
+	if len(fields) == 0 {
+		return ctx
+	}
+
+	evt := getEventFromCtx(ctx)
+	if evt == nil {
+		evt = NewEvent()
+	}
+
+	for k, v := range fields {
+		evt.Any(k, v)
+	}
+
+	return context.WithValue(ctx, ctxEventKey{}, evt)
+}
+
 func getEventFromCtx(ctx context.Context) *Event {
 	evt, ok := ctx.Value(ctxEventKey{}).(*Event)
 	if ok {
