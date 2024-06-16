@@ -51,8 +51,6 @@ var (
 			switch e1 := v.(type) {
 			case json.Marshaler:
 				return e1.MarshalJSON()
-			case error:
-				return json.Marshal(e1.Error())
 			}
 
 			return zInterfaceMarshalFunc(v)

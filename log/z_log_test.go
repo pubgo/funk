@@ -48,10 +48,25 @@ func TestName(t *testing.T) {
 }
 
 func TestEvent(t *testing.T) {
-	evt := log.NewEvent().Str("hello", "world").Int("int", 100).Dict("ddd", log.NewEvent())
-	ctx := log.CreateEventCtx(context.Background(), evt)
-	ee := log.Info(ctx).Str("info", "abcd").Func(log.WithEvent(evt))
-	ee.Msg("dddd")
+	var getEvt = func() *log.Event {
+		return log.NewEvent().Str("hello", "world").Int("int", 100).Dict("ddd", log.NewEvent())
+	}
+
+	var getCtx = func(evt *log.Event) context.Context {
+		return log.CreateEventCtx(context.Background(), evt)
+	}
+
+	t.Run("event ctx", func(t *testing.T) {
+		log.Info(getCtx(getEvt())).Send()
+	})
+
+	t.Run("event func", func(t *testing.T) {
+		log.Info().Func(log.WithEvent(getEvt())).Send()
+	})
+
+	t.Run("update event ctx", func(t *testing.T) {
+		log.Info(log.UpdateEventCtx(getCtx(getEvt()), log.Map{"add-update-event": "ok"})).Send()
+	})
 }
 
 func TestWithEvent(t *testing.T) {
