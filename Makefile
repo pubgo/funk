@@ -42,3 +42,6 @@ vet:
 
 refactor:
 	gofumpt -l -w -extra .
+
+lint:
+	@golangci-lint run --skip-dirs-use-default --timeout 3m0s

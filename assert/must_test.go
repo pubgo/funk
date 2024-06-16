@@ -67,7 +67,7 @@ func BenchmarkPanic(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		func() {
 			defer func() {
-				recover()
+				_ = recover()
 			}()
 
 			panic("hello")
