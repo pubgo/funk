@@ -92,7 +92,7 @@ func TestErr(t *testing.T) {
 
 func TestError(t *testing.T) {
 	err := fmt.Errorf("test error")
-	log.Error().Err(err).Any("err", err).Msg(err.Error())
+	log.Error().Err(err).Msg(err.Error())
 
 	err1 := errors.NewFmt("test format")
 	log.Error().Err(err1).Msg(err1.Error())
