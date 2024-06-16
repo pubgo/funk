@@ -51,30 +51,29 @@ type Options struct {
 
 // Build contains the build configuration section.
 type Build struct {
-	ID              string          `yaml:"id,omitempty" json:"id,omitempty"`
-	Goos            []string        `yaml:"goos,omitempty" json:"goos,omitempty"`
-	Goarch          []string        `yaml:"goarch,omitempty" json:"goarch,omitempty"`
-	Goarm           []string        `yaml:"goarm,omitempty" json:"goarm,omitempty"`
-	Gomips          []string        `yaml:"gomips,omitempty" json:"gomips,omitempty"`
-	Goamd64         []string        `yaml:"goamd64,omitempty" json:"goamd64,omitempty"`
-	Targets         []string        `yaml:"targets,omitempty" json:"targets,omitempty"`
-	Ignore          []IgnoredBuild  `yaml:"ignore,omitempty" json:"ignore,omitempty"`
-	Dir             string          `yaml:"dir,omitempty" json:"dir,omitempty"`
-	Main            string          `yaml:"main,omitempty" json:"main,omitempty"`
-	Binary          string          `yaml:"binary,omitempty" json:"binary,omitempty"`
-	Hooks           BuildHookConfig `yaml:"hooks,omitempty" json:"hooks,omitempty"`
-	Builder         string          `yaml:"builder,omitempty" json:"builder,omitempty"`
-	ModTimestamp    string          `yaml:"mod_timestamp,omitempty" json:"mod_timestamp,omitempty"`
-	Skip            bool            `yaml:"skip,omitempty" json:"skip,omitempty" jsonschema:"oneof_type=string;boolean"`
-	GoBinary        string          `yaml:"gobinary,omitempty" json:"gobinary,omitempty"`
-	Command         string          `yaml:"command,omitempty" json:"command,omitempty"`
-	NoUniqueDistDir bool            `yaml:"no_unique_dist_dir,omitempty" json:"no_unique_dist_dir,omitempty"`
-	NoMainCheck     bool            `yaml:"no_main_check,omitempty" json:"no_main_check,omitempty"`
-	UnproxiedMain   string          `yaml:"-" json:"-"` // used by gomod.proxy
-	UnproxiedDir    string          `yaml:"-" json:"-"` // used by gomod.proxy
-
-	BuildDetails          `yaml:",inline" json:",inline"` // nolint: tagliatelle
-	BuildDetailsOverrides []BuildDetailsOverride          `yaml:"overrides,omitempty" json:"overrides,omitempty"`
+	BuildDetails          `yaml:",inline" json:",inline"`
+	ID                    string                 `yaml:"id,omitempty" json:"id,omitempty"`
+	Goos                  []string               `yaml:"goos,omitempty" json:"goos,omitempty"`
+	Goarch                []string               `yaml:"goarch,omitempty" json:"goarch,omitempty"`
+	Goarm                 []string               `yaml:"goarm,omitempty" json:"goarm,omitempty"`
+	Gomips                []string               `yaml:"gomips,omitempty" json:"gomips,omitempty"`
+	Goamd64               []string               `yaml:"goamd64,omitempty" json:"goamd64,omitempty"`
+	Targets               []string               `yaml:"targets,omitempty" json:"targets,omitempty"`
+	Ignore                []IgnoredBuild         `yaml:"ignore,omitempty" json:"ignore,omitempty"`
+	Dir                   string                 `yaml:"dir,omitempty" json:"dir,omitempty"`
+	Main                  string                 `yaml:"main,omitempty" json:"main,omitempty"`
+	Binary                string                 `yaml:"binary,omitempty" json:"binary,omitempty"`
+	Hooks                 BuildHookConfig        `yaml:"hooks,omitempty" json:"hooks,omitempty"`
+	Builder               string                 `yaml:"builder,omitempty" json:"builder,omitempty"`
+	ModTimestamp          string                 `yaml:"mod_timestamp,omitempty" json:"mod_timestamp,omitempty"`
+	Skip                  bool                   `yaml:"skip,omitempty" json:"skip,omitempty" jsonschema:"oneof_type=string;boolean"`
+	GoBinary              string                 `yaml:"gobinary,omitempty" json:"gobinary,omitempty"`
+	Command               string                 `yaml:"command,omitempty" json:"command,omitempty"`
+	NoUniqueDistDir       bool                   `yaml:"no_unique_dist_dir,omitempty" json:"no_unique_dist_dir,omitempty"`
+	NoMainCheck           bool                   `yaml:"no_main_check,omitempty" json:"no_main_check,omitempty"`
+	UnproxiedMain         string                 `yaml:"-" json:"-"` // used by gomod.proxy
+	UnproxiedDir          string                 `yaml:"-" json:"-"` // used by gomod.proxy
+	BuildDetailsOverrides []BuildDetailsOverride `yaml:"overrides,omitempty" json:"overrides,omitempty"`
 }
 
 // IgnoredBuild represents a build ignored by the user.

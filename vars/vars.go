@@ -66,15 +66,15 @@ func (f Value) String() (r string) {
 	})
 
 	dt := f()
-	switch dt.(type) {
+	switch dt := dt.(type) {
 	case nil:
 		return "null"
 	case string:
-		return dt.(string)
+		return dt
 	case []byte:
-		return string(dt.([]byte))
+		return string(dt)
 	case fmt.Stringer:
-		return dt.(fmt.Stringer).String()
+		return dt.String()
 	default:
 		ret := result.Wrap(json.Marshal(dt))
 		if ret.IsErr() {

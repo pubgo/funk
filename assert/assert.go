@@ -6,7 +6,7 @@ import (
 	"github.com/pubgo/funk/errors"
 )
 
-func Assert(b bool, format string, a ...interface{}) {
+func Assert(b bool, format string, a ...interface{}) { //nolint: goprintffuncname
 	if b {
 		panic(errors.WrapStack(fmt.Errorf(format, a...)))
 	}
@@ -18,7 +18,7 @@ func If(b bool, format string, a ...interface{}) {
 	}
 }
 
-func T(b bool, format string, a ...interface{}) {
+func T(b bool, format string, a ...interface{}) { //nolint: goprintffuncname
 	if b {
 		panic(errors.WrapStack(fmt.Errorf(format, a...)))
 	}
