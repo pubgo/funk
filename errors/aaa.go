@@ -59,6 +59,10 @@ type ErrUnwrap interface {
 	Unwrap() error
 }
 
+type ErrUnwraps interface {
+	Unwrap() []error
+}
+
 type ErrIs interface {
 	Is(error) bool
 }
