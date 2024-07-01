@@ -174,6 +174,14 @@ func ConvertErr2Status(err *errorpb.Error) *status.Status {
 		return status.New(codes.OK, "OK")
 	}
 
+	if err.Code == nil {
+		return status.New(codes.OK, "OK")
+	}
+
+	if (err.Code.Name != "" || err.Code.Code != 0) && err.Code.StatusCode == 0 {
+		err.Code.StatusCode = errorpb.Code_Internal
+	}
+
 	st := status.New(codes.Code(err.Code.StatusCode), err.Msg.Msg)
 	if st1, err1 := st.WithDetails(err); err1 != nil {
 		log.Err(err1).Any("lava-error", err).Msg("failed to convert error to grpc status")
