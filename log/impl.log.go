@@ -61,7 +61,7 @@ func (l *loggerImpl) WithName(name string) Logger {
 }
 
 func (l *loggerImpl) WithFields(m Map) Logger {
-	if m == nil || len(m) == 0 {
+	if len(m) == 0 {
 		return l
 	}
 
@@ -132,7 +132,7 @@ func (l *loggerImpl) Err(err error, ctxL ...context.Context) *zerolog.Event {
 	if err != nil {
 		if errJson, ok := err.(json.Marshaler); ok {
 			errJsonBytes, _ := errJson.MarshalJSON()
-			if errJsonBytes != nil && len(errJsonBytes) > 0 {
+			if len(errJsonBytes) > 0 {
 				return l.newEvent(ctx, l.getLog().Error().Str("error", err.Error()).RawJSON("error_detail", errJsonBytes))
 			}
 		}
@@ -168,7 +168,7 @@ func (l *loggerImpl) enabled(ctx context.Context, lvl zerolog.Level) bool {
 
 	enabled := true
 	if logEnableChecker != nil {
-		enabled = logEnableChecker(lvl, l.name, l.fields)
+		enabled = logEnableChecker(ctx, lvl, l.name, l.fields)
 	}
 	return enabled && lvl >= l.lvl && lvl >= zerolog.GlobalLevel()
 }
