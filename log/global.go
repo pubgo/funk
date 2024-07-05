@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	logEnableChecker      = func(Level, string, Map) bool { return true }
+	logEnableChecker      = func(context.Context, Level, string, Map) bool { return true }
 	zErrMarshalFunc       = zerolog.ErrorMarshalFunc
 	zInterfaceMarshalFunc = zerolog.InterfaceMarshalFunc
 	_                     = generic.Init(func() {
