@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/stack"
 )
@@ -35,15 +36,15 @@ func OK[T any](v T) Result[T] {
 }
 
 func Err[T any](err error) Result[T] {
-	return Result[T]{e: err}
+	return Result[T]{e: errors.WrapCaller(err, 1)}
 }
 
 func Wrap[T any](v T, err error) Result[T] {
-	return Result[T]{v: &v, e: err}
+	return Result[T]{v: &v, e: errors.WrapCaller(err, 1)}
 }
 
 func Of[T any](v T, err error) Result[T] {
-	return Result[T]{v: &v, e: err}
+	return Result[T]{v: &v, e: errors.WrapCaller(err, 1)}
 }
 
 type Result[T any] struct {
@@ -52,7 +53,7 @@ type Result[T any] struct {
 }
 
 func (r Result[T]) WithErr(err error) Result[T] {
-	return Err[T](err)
+	return Result[T]{e: errors.WrapCaller(err, 1)}
 }
 
 func (r Result[T]) WithVal(v T) Result[T] {
@@ -61,7 +62,7 @@ func (r Result[T]) WithVal(v T) Result[T] {
 
 func (r Result[T]) ValueTo(v *T) error {
 	if r.IsErr() {
-		return r.e
+		return errors.WrapCaller(r.e)
 	}
 
 	*v = generic.FromPtr(r.v)
@@ -73,7 +74,7 @@ func (r Result[T]) OnValue(fn func(t T) error) error {
 		return r.e
 	}
 
-	return fn(generic.FromPtr(r.v))
+	return errors.WrapCaller(fn(generic.FromPtr(r.v)), 1)
 }
 
 func (r Result[T]) Err(check ...func(err error) error) error {
@@ -82,10 +83,10 @@ func (r Result[T]) Err(check ...func(err error) error) error {
 	}
 
 	if len(check) > 0 && check[0] != nil {
-		return check[0](r.e)
+		return errors.WrapCaller(check[0](r.e))
 	}
 
-	return r.e
+	return errors.WrapCaller(r.e)
 }
 
 func (r Result[T]) IsErr() bool {
@@ -124,15 +125,15 @@ func (r Result[T]) Expect(format string, args ...any) T {
 
 func (r Result[T]) String() string {
 	if !r.IsErr() {
-		return fmt.Sprintf("%v", *r.v)
+		return fmt.Sprintf("%v", generic.FromPtr(r.v))
 	}
 
-	return r.e.Error()
+	return fmt.Sprint(errors.WrapCaller(r.e, 1))
 }
 
 func (r Result[T]) MarshalJSON() ([]byte, error) {
 	if r.IsErr() {
-		return nil, r.e
+		return nil, errors.WrapCaller(r.e, 1)
 	}
 
 	return json.Marshal(generic.FromPtr(r.v))

@@ -4,12 +4,21 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/rs/xid"
-
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/version"
+	"github.com/rs/xid"
+	"github.com/stretchr/testify/assert"
 )
+
+func TestWrapCaller(t *testing.T) {
+	err := fmt.Errorf("test")
+	var ff = func() error {
+		return errors.WrapCaller(err, 1)
+	}
+
+	assert.Contains(t, fmt.Sprint(ff()), "z_code_test.go:21 TestWrapCaller")
+}
 
 func TestCodeErr(t *testing.T) {
 	err := errors.NewCodeErr(&errorpb.ErrCode{
