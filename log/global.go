@@ -16,10 +16,21 @@ import (
 )
 
 var (
-	logEnableChecker      = func(context.Context, Level, string, Map) bool { return true }
+	logEnableChecker      = func(ctx context.Context, lvl Level, nameOrMessage string, fields Map) bool { return true }
 	zErrMarshalFunc       = zerolog.ErrorMarshalFunc
 	zInterfaceMarshalFunc = zerolog.InterfaceMarshalFunc
-	_                     = generic.Init(func() {
+	logGlobalHook         = zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, message string) {
+		if logEnableChecker == nil {
+			return
+		}
+
+		if logEnableChecker(e.GetCtx(), level, message, nil) {
+			return
+		}
+
+		e.Discard()
+	})
+	_ = generic.Init(func() {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 		zerolog.ErrorMarshalFunc = func(err error) interface{} {
 			if err == nil {
@@ -59,12 +70,14 @@ var (
 
 	// stdZeroLog default zerolog for debug
 	stdZeroLog = generic.Ptr(
-		zerolog.New(os.Stderr).Level(zerolog.DebugLevel).
-			With().Timestamp().Caller().Logger().
+		zerolog.New(os.Stderr).
+			Level(zerolog.DebugLevel).
+			With().Timestamp().
+			Caller().Logger().
 			Output(zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
 				w.Out = os.Stderr
 				w.TimeFormat = time.RFC3339
-			})).Hook(new(hookImpl)),
+			})).Hook(new(hookImpl), logGlobalHook),
 	)
 
 	_ = generic.Init(func() {
@@ -83,6 +96,9 @@ func GetLogger(name string) Logger {
 // SetLogger set global log
 func SetLogger(log *zerolog.Logger) {
 	assert.If(log == nil, "[log] should not be nil")
+
+	log = generic.Ptr(log.Hook(logGlobalHook))
+
 	stdZeroLog = log
 	zlog.Logger = *log
 }
