@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	logEnableChecker      = func(context.Context, Level, string, Map) bool { return true }
+	logEnableChecker      = func(ctx context.Context, lvl Level, nameOrMessage string, fields Map) bool { return true }
 	zErrMarshalFunc       = zerolog.ErrorMarshalFunc
 	zInterfaceMarshalFunc = zerolog.InterfaceMarshalFunc
 	logGlobalHook         = zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, message string) {
