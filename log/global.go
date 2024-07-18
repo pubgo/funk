@@ -24,7 +24,7 @@ var (
 			return
 		}
 
-		if logEnableChecker(e.GetCtx(), level, message, Map{}) {
+		if logEnableChecker(e.GetCtx(), level, message, nil) {
 			return
 		}
 

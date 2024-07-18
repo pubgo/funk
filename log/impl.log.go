@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
+	"github.com/pubgo/funk/stack"
 	"github.com/rs/zerolog"
 )
 
@@ -47,11 +49,18 @@ func (l *loggerImpl) WithCallerSkip(skip int) Logger {
 }
 
 func (l *loggerImpl) WithName(name string) Logger {
+	name = strings.TrimSpace(name)
 	if name == "" {
 		return l
 	}
 
 	log := l.copy()
+	if log.fields == nil {
+		log.fields = Map{ModuleName: stack.Caller(1).Pkg}
+	} else {
+		log.fields[ModuleName] = stack.Caller(1).Pkg
+	}
+
 	if log.name == "" {
 		log.name = name
 	} else {
