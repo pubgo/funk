@@ -97,7 +97,7 @@ func GetLogger(name string) Logger {
 func SetLogger(log *zerolog.Logger) {
 	assert.If(log == nil, "[log] should not be nil")
 
-	log.Hook(logGlobalHook)
+	log = generic.Ptr(log.Hook(logGlobalHook))
 
 	stdZeroLog = log
 	zlog.Logger = *log
