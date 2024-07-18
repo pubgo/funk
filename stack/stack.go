@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	cache  = make(map[uintptr]*Frame)
+	cache  sync.Map
 	mu     sync.Mutex
 	goRoot string
 )
@@ -110,22 +110,20 @@ func stack(p uintptr) *Frame {
 		return nil
 	}
 
-	v, ok := cache[p]
+	v, ok := cache.Load(p)
 	if ok {
-		return v
+		return v.(*Frame)
 	}
 
 	mu.Lock()
 	defer mu.Unlock()
 
-	v, ok = cache[p]
+	v, ok = cache.Load(p)
 	if ok {
-		return v
+		return v.(*Frame)
 	}
 
-	defer func() {
-		cache[p] = v
-	}()
+	defer func() { cache.Store(p, v) }()
 
 	ff := runtime.FuncForPC(p)
 	if ff == nil {
@@ -140,7 +138,7 @@ func stack(p uintptr) *Frame {
 		Name: ma[len(ma)-1],
 		Pkg:  strings.Join(ma[:len(ma)-1], "."),
 	}
-	return v
+	return v.(*Frame)
 }
 
 func pkgIndex(file, funcName string) int {
