@@ -56,10 +56,9 @@ func (l *loggerImpl) WithName(name string) Logger {
 
 	log := l.copy()
 	if log.fields == nil {
-		log.fields = Map{ModuleName: stack.Caller(1).Pkg}
-	} else {
-		log.fields[ModuleName] = stack.Caller(1).Pkg
+		log.fields = make(Map, 1)
 	}
+	log.fields[ModuleName] = stack.Caller(2).Pkg
 
 	if log.name == "" {
 		log.name = name
