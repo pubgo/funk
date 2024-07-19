@@ -191,7 +191,12 @@ func IsNil(err interface{}) bool {
 		return true
 	}
 
-	return v.IsZero()
+	switch v.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Map, reflect.Pointer, reflect.UnsafePointer, reflect.Slice, reflect.Interface:
+		return v.IsNil()
+	default:
+		return false
+	}
 }
 
 func Init(fn func()) error {
