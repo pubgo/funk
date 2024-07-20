@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/iancoleman/strcase"
 )
 
 func importHandle(pkg string) string {
@@ -11,7 +13,7 @@ func importHandle(pkg string) string {
 		names := strings.Split(pkg, "/")
 		pkg = names[0]
 		for _, name := range names[1:] {
-			pkg += strings.Title(name)
+			pkg += strcase.ToCamel(name)
 		}
 	}
 
@@ -19,7 +21,7 @@ func importHandle(pkg string) string {
 		names := strings.Split(pkg, ".")
 		pkg = names[0]
 		for _, name := range names[1:] {
-			pkg += strings.Title(name)
+			pkg += strcase.ToCamel(name)
 		}
 	}
 

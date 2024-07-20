@@ -53,7 +53,7 @@ func TestNilLog(t *testing.T) {
 }
 
 func TestWithDisabled(t *testing.T) {
-	ctx := log.WithDisabled(nil)
+	ctx := log.WithDisabled(context.Background())
 	evt := log.Info(ctx).Str("hello", "world world")
 	assert.Equal(t, string(log.GetEventBuf(evt)), "")
 }
