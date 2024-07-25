@@ -18,6 +18,7 @@ require (
 	github.com/iancoleman/strcase v0.2.0
 	github.com/invopop/jsonschema v0.7.0
 	github.com/jinzhu/copier v0.3.5
+	github.com/joho/godotenv v1.5.1
 	github.com/k0kubun/pp/v3 v3.2.0
 	github.com/mattn/go-isatty v0.0.19
 	github.com/mattn/go-sqlite3 v1.14.15
