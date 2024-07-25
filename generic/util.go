@@ -199,7 +199,7 @@ func IsNil(err interface{}) bool {
 	}
 }
 
-func Init(fn func()) error {
+func Init(fn func()) any {
 	fn()
 	return nil
 }

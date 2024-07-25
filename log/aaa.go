@@ -32,6 +32,8 @@ type Logger interface {
 	Err(err error, ctx ...context.Context) *Event
 	Panic(ctx ...context.Context) *Event
 	Fatal(ctx ...context.Context) *Event
+
+	nameWithCaller(name string, caller int) Logger
 }
 
 type StdLogger interface {

@@ -48,7 +48,7 @@ func (l *loggerImpl) WithCallerSkip(skip int) Logger {
 	return log
 }
 
-func (l *loggerImpl) WithName(name string) Logger {
+func (l *loggerImpl) nameWithCaller(name string, caller int) Logger {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return l
@@ -58,7 +58,7 @@ func (l *loggerImpl) WithName(name string) Logger {
 	if log.fields == nil {
 		log.fields = make(Map, 1)
 	}
-	log.fields[ModuleName] = stack.Caller(2).Pkg
+	log.fields[ModuleName] = stack.Caller(caller + 1).Pkg
 
 	if log.name == "" {
 		log.name = name
@@ -66,6 +66,10 @@ func (l *loggerImpl) WithName(name string) Logger {
 		log.name = fmt.Sprintf("%s.%s", log.name, name)
 	}
 	return log
+}
+
+func (l *loggerImpl) WithName(name string) Logger {
+	return l.nameWithCaller(name, 1)
 }
 
 func (l *loggerImpl) WithFields(m Map) Logger {

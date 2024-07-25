@@ -19,7 +19,7 @@ type Template struct {
 }
 
 func Build[Data any](t *Template, name string, data *Data) (string, error) {
-	tt, ok := t.templates.Load(name)
+	_, ok := t.templates.Load(name)
 	if !ok {
 		vars := make(native.Declarations)
 		for k := range t.globals {
@@ -35,7 +35,7 @@ func Build[Data any](t *Template, name string, data *Data) (string, error) {
 		t.templates.Store(name, template)
 	}
 
-	tt, _ = t.templates.Load(name)
+	tt, _ := t.templates.Load(name)
 	var buf bytes.Buffer
 	err := tt.(*scriggo.Template).Run(&buf, map[string]interface{}{"data": data}, nil)
 	if err != nil {

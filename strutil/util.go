@@ -1,5 +1,7 @@
 package strutil
 
+import _ "golang.org/x/text/cases"
+
 func FirstFnNotEmpty(ff ...func() string) string {
 	for i := range ff {
 		v := ff[i]()

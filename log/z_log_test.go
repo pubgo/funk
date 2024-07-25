@@ -13,15 +13,47 @@ import (
 	"github.com/tidwall/gjson"
 )
 
+func TestWithName(t *testing.T) {
+	log.GetLogger("log1").
+		Debug().
+		Func(func(e *zerolog.Event) {
+			var buf = gjson.ParseBytes(log.GetEventBuf(e))
+			assert.Equal(t, buf.Get("logger").String(), "log1")
+			assert.Equal(t, buf.Get("module").String(), "github.com/pubgo/funk/log_test")
+		}).Msg("hello")
+
+	log.GetLogger("log1").
+		WithName("log2").
+		Debug().
+		Func(func(e *zerolog.Event) {
+			var buf = gjson.ParseBytes(log.GetEventBuf(e))
+			assert.Equal(t, buf.Get("logger").String(), "log1.log2")
+			assert.Equal(t, buf.Get("module").String(), "github.com/pubgo/funk/log_test")
+		}).Msg("hello")
+
+	log.Debug().
+		Func(func(e *zerolog.Event) {
+			var buf = gjson.ParseBytes(log.GetEventBuf(e))
+			assert.Equal(t, buf.Get("logger").String(), "")
+			assert.Equal(t, buf.Get("module").String(), "")
+		}).Msg("hello")
+}
+
 func TestNilLog(t *testing.T) {
 	var buf bytes.Buffer
 	log.Output(&buf).Debug().Any("key", nil).Send()
 	ret := gjson.ParseBytes(buf.Bytes())
 	assert.Equal(t, ret.Get("key").String(), "")
+
+	log.OutputWriter(func(p []byte) (n int, err error) {
+		parseBytes := gjson.ParseBytes(buf.Bytes())
+		assert.Equal(t, parseBytes.Get("key").String(), "")
+		return len(p), nil
+	}).Debug().Any("key", nil).Send()
 }
 
 func TestWithDisabled(t *testing.T) {
-	ctx := log.WithDisabled(nil)
+	ctx := log.WithDisabled(context.Background())
 	evt := log.Info(ctx).Str("hello", "world world")
 	assert.Equal(t, string(log.GetEventBuf(evt)), "")
 }

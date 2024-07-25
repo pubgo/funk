@@ -10,11 +10,15 @@ import (
 )
 
 func TestAsync(t *testing.T) {
-	ret := Async(func() (*http.Response, error) {
+	ret := Async(func() (*http.Response, error) { //nolint
 		return http.Get("https://httpbin.org")
 	}).Await()
 	assert.NoError(t, ret.Err())
-	assert.Equal(t, ret.Unwrap().StatusCode, 200)
+	rsp := ret.Unwrap()
+	if b := rsp.Body; b != nil {
+		defer b.Close()
+	}
+	assert.Equal(t, rsp.StatusCode, 200)
 }
 
 func TestGoChan(t *testing.T) {
