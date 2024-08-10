@@ -142,3 +142,11 @@ func (r Result[T]) MarshalJSON() ([]byte, error) {
 func (r Result[T]) UnmarshalJSON([]byte) error {
 	panic("unimplemented")
 }
+
+func (r Result[T]) Do(fn func(v T)) {
+	if r.IsErr() {
+		return
+	}
+
+	fn(generic.FromPtr(r.v))
+}
