@@ -32,7 +32,6 @@ func TestName(t *testing.T) {
 func TestResultDo(t *testing.T) {
 	ok := result.OK(&hello{Name: "abc"})
 	ok.Do(func(v *hello) {
-		t.Log(v.Name)
 		assert.If(v.Name != "abc", "not match")
 	})
 	ok.Do(func(v *hello) {
