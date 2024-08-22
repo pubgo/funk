@@ -2,10 +2,13 @@ package stack_test
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/stack"
+	"github.com/stretchr/testify/assert"
 )
 
 func init1() {
@@ -33,4 +36,11 @@ func TestCallerWithDepth(t *testing.T) {
 	init2()
 	fmt.Print("\n\n\n")
 	init3()
+}
+
+func TestCallType(t *testing.T) {
+	assert.Equal(t,
+		"github.com/pubgo/funk/errors",
+		stack.CallerWithType(reflect.TypeOf(errors.ErrMsg{})).Pkg,
+	)
 }

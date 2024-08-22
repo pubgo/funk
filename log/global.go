@@ -37,14 +37,9 @@ var (
 				return nil
 			}
 
-			switch e1 := err.(type) {
+			switch err.(type) {
 			case json.Marshaler:
-				data, err1 := e1.MarshalJSON()
-				if err1 != nil {
-					return err1.Error()
-				} else {
-					return string(data)
-				}
+				return &logLogObjectMarshaler{err: err}
 			}
 
 			if zErrMarshalFunc == nil {

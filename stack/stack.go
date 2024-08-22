@@ -72,6 +72,14 @@ func Callers(depth int, skips ...int) []*Frame {
 	return stacks
 }
 
+func CallerWithType(typ reflect.Type) *Frame {
+	if typ == nil {
+		return nil
+	}
+
+	return &Frame{Pkg: typ.PkgPath(), Name: typ.Name(), File: typ.PkgPath()}
+}
+
 func CallerWithFunc(fn interface{}) *Frame {
 	if fn == nil {
 		panic("[fn] param is nil")
