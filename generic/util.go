@@ -1,74 +1,55 @@
 package generic
 
 import (
-	"reflect"
-	"unsafe"
-
+	"github.com/pubgo/funk"
 	"golang.org/x/exp/constraints"
 )
 
 func AppendOf[T any](v T, vv ...T) []T {
-	return append(append(make([]T, 0, len(vv)+1), v), vv...)
+	return funk.AppendOf(v, vv...)
 }
 
 func ListOf[T any](args ...T) []T {
-	return args
+	return funk.ListOf(args...)
 }
 
 func Zero[T any]() (ret T) {
-	return
+	return funk.Zero[T]()
 }
 
-// Equals wraps the '==' operator for comparable types.
 func Equals[T comparable](a, b T) bool {
-	return a == b
+	return funk.Equals(a, b)
 }
 
 func Nil[T any]() (t *T) {
-	return
+	return funk.Nil[T]()
 }
 
 // DePtr
 // Deprecated: use FromPtr
 func DePtr[T any](v *T) (r T) {
-	if v == nil {
-		return
-	}
-	return *v
+	return funk.FromPtr(v)
 }
 
 func FromPtr[T any](v *T) (r T) {
-	if v == nil {
-		return
-	}
-	return *v
+	return funk.FromPtr(v)
 }
 
 //go:inline
 func Ptr[T any](v T) *T {
-	return &v
+	return funk.ToPtr(v)
 }
 
 func Last[T any](args []T) (t T) {
-	if len(args) == 0 {
-		return
-	}
-
-	return args[len(args)-1]
+	return funk.Last(args)
 }
 
 func Ternary[T any](ok bool, a, b T) T {
-	if ok {
-		return a
-	}
-	return b
+	return funk.Ternary(ok, a, b)
 }
 
 func TernaryFn[T any](ok bool, a, b func() T) T {
-	if ok {
-		return a()
-	}
-	return b()
+	return funk.TernaryFn(ok, a, b)
 }
 
 func Map[T, V any](data []T, handle func(i int) V) []V {
@@ -172,34 +153,11 @@ func Min[T constraints.Ordered](a, b T) (r T) {
 	return
 }
 
-// isNilValue copy from <github.com/rs/zerolog.isNilValue>
-func isNilValue(i interface{}) bool {
-	return (*[2]uintptr)(unsafe.Pointer(&i))[1] == 0
-}
-
 func IsNil(err interface{}) bool {
-	if err == nil {
-		return true
-	}
-
-	if isNilValue(err) {
-		return true
-	}
-
-	v := reflect.ValueOf(err)
-	if !v.IsValid() {
-		return true
-	}
-
-	switch v.Kind() {
-	case reflect.Chan, reflect.Func, reflect.Map, reflect.Pointer, reflect.UnsafePointer, reflect.Slice, reflect.Interface:
-		return v.IsNil()
-	default:
-		return false
-	}
+	return funk.IsNil(err)
 }
 
-func Init(fn func()) error {
+func Init(fn func()) any {
 	fn()
 	return nil
 }

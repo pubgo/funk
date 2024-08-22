@@ -6,18 +6,17 @@ import (
 	"fmt"
 	"go/format"
 	"io"
-	"io/ioutil"
 	"log"
 	"strings"
 	"unicode"
 
 	pongo2 "github.com/flosch/pongo2/v6"
-	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
 	options "google.golang.org/genproto/googleapis/api/annotations"
+	"google.golang.org/protobuf/proto"
 )
 
 func Append(s *string, args ...string) {
@@ -206,8 +205,7 @@ func ExtractAPIOptions(mth *descriptor.MethodDescriptorProto) (*options.HttpRule
 		return nil, nil
 	}
 
-	ext := assert.Must1(proto.GetExtension(mth.GetOptions(), options.E_Http))
-
+	ext := proto.GetExtension(mth.GetOptions(), options.E_Http)
 	opts, ok := ext.(*options.HttpRule)
 	if !ok {
 		return nil, errors.Format("extension is %T; want an HttpRule", ext)
@@ -333,10 +331,7 @@ func goPkg(f *descriptor.FileDescriptorProto) string {
 }
 
 func httpBody(m *descriptor.MethodDescriptorProto) string {
-	ext, err := proto.GetExtension(m.Options, options.E_Http)
-	if err != nil {
-		return err.Error()
-	}
+	ext := proto.GetExtension(m.Options, options.E_Http)
 	opts, ok := ext.(*options.HttpRule)
 	if !ok {
 		return fmt.Sprintf("extension is %T; want an HttpRule", ext)
@@ -345,10 +340,7 @@ func httpBody(m *descriptor.MethodDescriptorProto) string {
 }
 
 func httpVerb(m *descriptor.MethodDescriptorProto) string {
-	ext, err := proto.GetExtension(m.Options, options.E_Http)
-	if err != nil {
-		return err.Error()
-	}
+	ext := proto.GetExtension(m.Options, options.E_Http)
 	opts, ok := ext.(*options.HttpRule)
 	if !ok {
 		return fmt.Sprintf("extension is %T; want an HttpRule", ext)
@@ -373,13 +365,9 @@ func httpVerb(m *descriptor.MethodDescriptorProto) string {
 }
 
 func httpPathsAdditionalBindings(m *descriptor.MethodDescriptorProto) []string {
-	ext, err := proto.GetExtension(m.Options, options.E_Http)
-	if err != nil {
-		panic(err.Error())
-	}
-	opts, ok := ext.(*options.HttpRule)
+	opts, ok := proto.GetExtension(m.Options, options.E_Http).(*options.HttpRule)
 	if !ok {
-		panic(fmt.Sprintf("extension is %T; want an HttpRule", ext))
+		panic(fmt.Sprintf("extension is %T; want an HttpRule", opts))
 	}
 
 	var httpPaths []string
@@ -407,7 +395,7 @@ func httpPathsAdditionalBindings(m *descriptor.MethodDescriptorProto) []string {
 }
 
 func ParseRequest(r io.Reader) (*plugin.CodeGeneratorRequest, error) {
-	input, err := ioutil.ReadAll(r)
+	input, err := io.ReadAll(r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read code generator request: %v", err)
 	}

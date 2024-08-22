@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/a8m/envsubst"
+	"github.com/joho/godotenv"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/result"
 )
@@ -112,4 +113,9 @@ func Map() map[string]string {
 
 func Key(key string) string {
 	return strings.ToUpper(trim(key))
+}
+
+func Load(filenames ...string) {
+	assert.Must(godotenv.Load(filenames...))
+	Init()
 }

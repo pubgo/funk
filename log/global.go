@@ -37,14 +37,9 @@ var (
 				return nil
 			}
 
-			switch e1 := err.(type) {
+			switch err.(type) {
 			case json.Marshaler:
-				data, err1 := e1.MarshalJSON()
-				if err1 != nil {
-					return err1.Error()
-				} else {
-					return string(data)
-				}
+				return &logLogObjectMarshaler{err: err}
 			}
 
 			if zErrMarshalFunc == nil {
@@ -81,7 +76,7 @@ var (
 	)
 
 	_ = generic.Init(func() {
-		zlog.Logger = *stdZeroLog
+		zlog.Logger = generic.FromPtr(stdZeroLog)
 	})
 
 	// stdLog is the global logger.
@@ -90,7 +85,7 @@ var (
 
 // GetLogger get global log
 func GetLogger(name string) Logger {
-	return stdLog.WithName(name)
+	return stdLog.nameWithCaller(name, 1)
 }
 
 // SetLogger set global log
@@ -177,4 +172,14 @@ func Printf(format string, v ...interface{}) {
 
 func Output(w io.Writer) Logger {
 	return New(generic.Ptr(stdZeroLog.Output(w)))
+}
+
+type writerFunc func(p []byte) (n int, err error)
+
+func (w writerFunc) Write(p []byte) (n int, err error) {
+	return w(p)
+}
+
+func OutputWriter(w func(p []byte) (n int, err error)) Logger {
+	return New(generic.Ptr(stdZeroLog.Output(writerFunc(w))))
 }

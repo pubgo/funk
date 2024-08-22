@@ -9,17 +9,31 @@ import (
 
 var skipStackMap sync.Map
 
-func RegStackPkgFilter(fn ...interface{}) {
-	if len(fn) == 0 {
+// RegStackPkgFilter filter fn , pkg
+func RegStackPkgFilter(filter ...interface{}) {
+	if len(filter) == 0 {
 		skipStackMap.Store(stack.Caller(1).Pkg, nil)
 		return
 	}
 
-	for i := range fn {
-		if reflect.TypeOf(fn[i]).Kind() == reflect.String {
-			skipStackMap.Store(fn[i].(string), nil)
-		} else {
-			skipStackMap.Store(stack.CallerWithFunc(fn[0]).Pkg, nil)
+	for _, ff := range filter {
+		if ff == nil {
+			continue
+		}
+
+		switch ff.(type) {
+		case reflect.Type:
+			skipStackMap.Store(stack.CallerWithType(ff.(reflect.Type)).Pkg, nil)
+			continue
+		}
+
+		typ := reflect.TypeOf(ff)
+		switch typ.Kind() {
+		case reflect.String:
+			skipStackMap.Store(ff.(string), nil)
+		case reflect.Func:
+			skipStackMap.Store(stack.CallerWithFunc(ff).Pkg, nil)
+		default:
 		}
 	}
 }

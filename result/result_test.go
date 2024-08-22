@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/result"
 )
 
@@ -26,4 +27,14 @@ func TestName(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("ok", ok1.Name)
+}
+
+func TestResultDo(t *testing.T) {
+	ok := result.OK(&hello{Name: "abc"})
+	ok.Do(func(v *hello) {
+		assert.If(v.Name != "abc", "not match")
+	})
+	ok.Do(func(v *hello) {
+		assert.If(v.Name != "abc", "not match")
+	})
 }

@@ -64,10 +64,10 @@ func TernaryFn[T any](ok bool, a, b func() T) T {
 	return b()
 }
 
-func Map[T, V any](data []T, handle func(T) V) []V {
+func Map[T, V any](data []T, handle func(i int, d T) V) []V {
 	vv := make([]V, 0, len(data))
 	for i := range data {
-		vv = append(vv, handle(data[i]))
+		vv = append(vv, handle(i, data[i]))
 	}
 	return vv
 }
@@ -160,10 +160,19 @@ func IsNil(err interface{}) bool {
 		return true
 	}
 
-	return v.IsZero()
+	switch v.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Map, reflect.Pointer, reflect.UnsafePointer, reflect.Slice, reflect.Interface:
+		return v.IsNil()
+	default:
+		return false
+	}
 }
 
 func Init(fn func()) error {
 	fn()
 	return nil
+}
+
+func DoFunc[T any](fn func() T) T {
+	return fn()
 }

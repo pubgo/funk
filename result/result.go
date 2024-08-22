@@ -62,7 +62,7 @@ func (r Result[T]) WithVal(v T) Result[T] {
 
 func (r Result[T]) ValueTo(v *T) error {
 	if r.IsErr() {
-		return errors.WrapCaller(r.e)
+		return errors.WrapCaller(r.e, 1)
 	}
 
 	*v = generic.FromPtr(r.v)
@@ -83,10 +83,10 @@ func (r Result[T]) Err(check ...func(err error) error) error {
 	}
 
 	if len(check) > 0 && check[0] != nil {
-		return errors.WrapCaller(check[0](r.e))
+		return errors.WrapCaller(check[0](r.e), 1)
 	}
 
-	return errors.WrapCaller(r.e)
+	return errors.WrapCaller(r.e, 1)
 }
 
 func (r Result[T]) IsErr() bool {
@@ -141,4 +141,12 @@ func (r Result[T]) MarshalJSON() ([]byte, error) {
 
 func (r Result[T]) UnmarshalJSON([]byte) error {
 	panic("unimplemented")
+}
+
+func (r Result[T]) Do(fn func(v T)) {
+	if r.IsErr() {
+		return
+	}
+
+	fn(generic.FromPtr(r.v))
 }
