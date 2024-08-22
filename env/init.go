@@ -22,6 +22,7 @@ func initEnv() {
 		k, v, ok := Normalize(env)
 		if k != "" && ok && strings.HasPrefix(k, GetPrefix()) {
 			_ = os.Setenv(k, v)
+			continue
 		}
 
 		if k == "" {
