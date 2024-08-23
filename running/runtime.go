@@ -21,7 +21,7 @@ var (
 	Project  = version.Project()
 
 	Env     = "debug"
-	IsDebug bool
+	IsDebug = true
 
 	// InstanceID service id
 	InstanceID = xid.New().String()
