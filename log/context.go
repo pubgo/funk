@@ -29,7 +29,6 @@ func UpdateEventCtx(ctx context.Context, fields Map) context.Context {
 	}
 
 	if e := getEventFromCtx(ctx); e != nil {
-
 		evt = mergeEvent(evt, e)
 	}
 
