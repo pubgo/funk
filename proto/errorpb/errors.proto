@@ -50,4 +50,3 @@ message Status {
   string message = 3;
   map<string, string> metadata = 4;
 };
-

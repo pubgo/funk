@@ -10,6 +10,7 @@ import (
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
+	"google.golang.org/protobuf/proto"
 )
 
 func NewMsgErr(msg *errorpb.ErrMsg) error {
@@ -51,7 +52,7 @@ type ErrMsg struct {
 func (t *ErrMsg) Unwrap() error                 { return t.err }
 func (t *ErrMsg) Error() string                 { return t.err.Error() }
 func (t *ErrMsg) Kind() string                  { return "err_msg" }
-func (t *ErrMsg) Proto() *errorpb.ErrMsg        { return t.pb }
+func (t *ErrMsg) Proto() proto.Message          { return t.pb }
 func (t *ErrMsg) Format(f fmt.State, verb rune) { strFormat(f, verb, t) }
 
 func (t *ErrMsg) String() string {

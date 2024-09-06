@@ -5,6 +5,7 @@ import (
 
 	json "github.com/goccy/go-json"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -36,6 +37,14 @@ func (t Tags) Format(f fmt.State, verb rune) {
 	} else {
 		fmt.Fprintln(f, string(data))
 	}
+}
+
+func (t Tags) ToMap() map[string]string {
+	var data = make(map[string]string, len(t))
+	for _, tag := range t {
+		data[tag.K] = fmt.Sprintf("%v", tag.V)
+	}
+	return data
 }
 
 func (t Tags) MarshalJSON() ([]byte, error) {
@@ -72,6 +81,7 @@ type Error interface {
 	Error() string
 	String() string
 	MarshalJSON() ([]byte, error)
+	Proto() proto.Message
 }
 
 type GRPCStatus interface {

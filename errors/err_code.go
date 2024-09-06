@@ -67,7 +67,7 @@ type ErrCode struct {
 
 func (t *ErrCode) Unwrap() error                 { return t.err }
 func (t *ErrCode) Error() string                 { return t.err.Error() }
-func (t *ErrCode) Proto() *errorpb.ErrCode       { return t.pb }
+func (t *ErrCode) Proto() proto.Message          { return t.pb }
 func (t *ErrCode) Kind() string                  { return "err_code" }
 func (t *ErrCode) Format(f fmt.State, verb rune) { strFormat(f, verb, t) }
 

@@ -3,6 +3,7 @@ package errors
 import (
 	"bytes"
 	"fmt"
+	"google.golang.org/protobuf/proto"
 
 	jjson "github.com/goccy/go-json"
 
@@ -20,6 +21,11 @@ type ErrWrap struct {
 	caller *stack.Frame
 	stack  []*stack.Frame
 	fields Tags
+}
+
+func (e *ErrWrap) Proto() proto.Message {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (e *ErrWrap) Format(f fmt.State, verb rune) { strFormat(f, verb, e) }

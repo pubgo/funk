@@ -5,8 +5,9 @@ import (
 	"fmt"
 
 	json "github.com/goccy/go-json"
-
 	"github.com/pubgo/funk/errors/errinter"
+	"github.com/pubgo/funk/proto/errorpb"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
@@ -18,6 +19,14 @@ type Err struct {
 	Msg    string `json:"msg,omitempty"`
 	Detail string `json:"detail,omitempty"`
 	Tags   Tags   `json:"tags,omitempty"`
+}
+
+func (e Err) Proto() proto.Message {
+	return &errorpb.ErrMsg{
+		Msg:    e.Msg,
+		Detail: e.Detail,
+		Tags:   e.Tags.ToMap(),
+	}
 }
 
 func (e Err) Kind() string                  { return "simple" }
