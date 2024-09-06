@@ -11,9 +11,9 @@ import (
 	"github.com/pubgo/funk/convert"
 	"github.com/pubgo/funk/errors/errinter"
 	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
