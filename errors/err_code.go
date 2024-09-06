@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log"
 
 	json "github.com/goccy/go-json"
 	"github.com/pubgo/funk/errors/errinter"
@@ -12,7 +11,6 @@ import (
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func NewCodeErr(code *errorpb.ErrCode, details ...proto.Message) error {
@@ -27,12 +25,10 @@ func NewCodeErr(code *errorpb.ErrCode, details ...proto.Message) error {
 				continue
 			}
 
-			pb, err := anypb.New(p)
-			if err != nil {
-				log.Printf("err_code: failed to encode protobuf message to any, data=%v", p)
+			pb := MustProtoToAny(p)
+			if pb == nil {
 				continue
 			}
-
 			code.Details = append(code.Details, pb)
 		}
 	}
@@ -49,6 +45,7 @@ func WrapCode(err error, code *errorpb.ErrCode) error {
 		panic("error code is nil")
 	}
 
+	code.Details = append(code.Details, MustProtoToAny(ParseErrToPb(err)))
 	return &ErrWrap{
 		caller: stack.Caller(1),
 		err:    &ErrCode{pb: code, err: handleGrpcError(err)},
