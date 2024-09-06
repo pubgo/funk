@@ -13,7 +13,12 @@ import (
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
+	"google.golang.org/protobuf/proto"
 )
+
+func ParseErrToPB(err error) proto.Message {
+
+}
 
 func handleGrpcError(err error) error {
 	if err == nil {
