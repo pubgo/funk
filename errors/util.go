@@ -19,9 +19,13 @@ import (
 )
 
 func MustProtoToAny(p proto.Message) *anypb.Any {
+	if p == nil {
+		return nil
+	}
+
 	pb, err := anypb.New(p)
 	if err != nil {
-		log.Error().Any("data", p).Msgf("failed to encode protobuf message to any")
+		log.Err(err).Any("data", p).Msgf("failed to encode protobuf message to any message")
 		return nil
 	} else {
 		return pb
@@ -34,12 +38,12 @@ func ParseErrToPb(err error) proto.Message {
 	}
 
 	switch err1 := err.(type) {
-	case Error:
+	case ErrorProto:
 		return err1.Proto()
-	case proto.Message:
-		return err1
 	case GRPCStatus:
 		return err1.GRPCStatus().Proto()
+	case proto.Message:
+		return err1
 	default:
 		return &errorpb.ErrMsg{Msg: err.Error(), Detail: fmt.Sprintf("%v", err)}
 	}

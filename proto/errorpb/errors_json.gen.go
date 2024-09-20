@@ -50,14 +50,14 @@ func (this *Error) UnmarshalJSON(b []byte) error {
 	return ErrorsUnmarshaler.Unmarshal(bytes.NewReader(b), this)
 }
 
-// MarshalJSON is a custom marshaler for Status
-func (this *Status) MarshalJSON() ([]byte, error) {
+// MarshalJSON is a custom marshaler for ErrWrap
+func (this *ErrWrap) MarshalJSON() ([]byte, error) {
 	str, err := ErrorsMarshaler.MarshalToString(this)
 	return []byte(str), err
 }
 
-// UnmarshalJSON is a custom unmarshaler for Status
-func (this *Status) UnmarshalJSON(b []byte) error {
+// UnmarshalJSON is a custom unmarshaler for ErrWrap
+func (this *ErrWrap) UnmarshalJSON(b []byte) error {
 	return ErrorsUnmarshaler.Unmarshal(bytes.NewReader(b), this)
 }
 

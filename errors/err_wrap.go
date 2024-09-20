@@ -3,11 +3,13 @@ package errors
 import (
 	"bytes"
 	"fmt"
-	"google.golang.org/protobuf/proto"
 
 	jjson "github.com/goccy/go-json"
+	"github.com/samber/lo"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/pubgo/funk/errors/errinter"
+	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
 )
 
@@ -24,8 +26,12 @@ type ErrWrap struct {
 }
 
 func (e *ErrWrap) Proto() proto.Message {
-	//TODO implement me
-	panic("implement me")
+	return &errorpb.ErrWrap{
+		Tags:   e.fields.ToMap(),
+		Caller: lo.IfF(e.caller != nil, func() string { return e.caller.String() }).Else(""),
+		Stacks: lo.Map(e.stack, func(item *stack.Frame, index int) string { return item.String() }),
+		Error:  MustProtoToAny(ParseErrToPb(e.err)),
+	}
 }
 
 func (e *ErrWrap) Format(f fmt.State, verb rune) { strFormat(f, verb, e) }

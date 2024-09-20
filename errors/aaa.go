@@ -81,6 +81,9 @@ type Error interface {
 	Error() string
 	String() string
 	MarshalJSON() ([]byte, error)
+}
+
+type ErrorProto interface {
 	Proto() proto.Message
 }
 
