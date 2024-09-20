@@ -4,17 +4,18 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pubgo/funk/errors"
-
 	"github.com/rs/xid"
+	"google.golang.org/protobuf/encoding/protojson"
 
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/proto/testcodepb"
 	"github.com/pubgo/funk/version"
 )
 
 func TestFormat(t *testing.T) {
-	err := errors.WrapCaller(fmt.Errorf("test error, err=%w", errors.New("hello error")))
+	//err := errors.WrapCaller(fmt.Errorf("test error, err=%w", errors.New("hello error")))
+	err := errors.WrapCaller(errors.New("hello error"))
 	err = errors.Wrap(err, "next error")
 	err = errors.WrapTag(err, errors.T("event", "test event"), errors.T("test123", 123), errors.T("test", "hello"))
 	err = errors.Wrapf(err, "next error name=%s", "wrapf")
@@ -48,7 +49,7 @@ func TestFormat(t *testing.T) {
 
 	var fff *errors.ErrCode
 	t.Log(errors.As(err, &fff))
-	t.Log(fff.Proto())
+	t.Log(protojson.Format(fff.Proto()))
 }
 
 func TestNew(t *testing.T) {

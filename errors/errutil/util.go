@@ -12,6 +12,7 @@ import (
 	jjson "github.com/goccy/go-json"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
@@ -233,12 +234,13 @@ func ParseError(err error) *errorpb.Error {
 
 	var ce *errors.ErrCode
 	if errors.As(err, &ce) {
-		if ce.Proto().Message == "" {
-			ce.Proto().Message = err.Error()
+		pb := ce.Proto().(*errorpb.ErrCode)
+		if pb.Message == "" {
+			pb.Message = err.Error()
 		}
 
 		return &errorpb.Error{
-			Code: ce.Proto(),
+			Code: pb,
 			Trace: &errorpb.ErrTrace{
 				Service: version.Project(),
 				Version: version.Version(),
@@ -256,6 +258,7 @@ func ParseError(err error) *errorpb.Error {
 			StatusCode: errorpb.Code_Unknown,
 			Code:       500,
 			Name:       "lava.error.unknown",
+			Details:    []*anypb.Any{errors.MustProtoToAny(errors.ParseErrToPb(err))},
 		},
 		Trace: &errorpb.ErrTrace{
 			Service: version.Project(),

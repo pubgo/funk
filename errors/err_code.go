@@ -47,8 +47,11 @@ func WrapCode(err error, code *errorpb.ErrCode) error {
 
 	code.Details = append(code.Details, MustProtoToAny(ParseErrToPb(err)))
 	return &ErrWrap{
-		caller: stack.Caller(1),
-		err:    &ErrCode{pb: code, err: handleGrpcError(err)},
+		err: &ErrCode{pb: code, err: errors.New(code.Message)},
+		pb: &errorpb.ErrWrap{
+			Caller: stack.Caller(1).String(),
+			Error:  MustProtoToAny(code),
+		},
 	}
 }
 

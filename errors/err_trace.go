@@ -19,8 +19,11 @@ func NewTraceErr(trace *errorpb.ErrTrace) error {
 	}
 
 	return &ErrWrap{
-		caller: stack.Caller(1),
-		err:    &ErrTrace{pb: trace, err: errors.New(trace.String())},
+		err: &ErrTrace{pb: trace, err: errors.New(trace.String())},
+		pb: &errorpb.ErrWrap{
+			Caller: stack.Caller(1).String(),
+			Error:  MustProtoToAny(trace),
+		},
 	}
 }
 
@@ -34,8 +37,11 @@ func WrapTrace(err error, trace *errorpb.ErrTrace) error {
 	}
 
 	return &ErrWrap{
-		caller: stack.Caller(1),
-		err:    &ErrTrace{pb: trace, err: handleGrpcError(err)},
+		err: &ErrTrace{pb: trace, err: handleGrpcError(err)},
+		pb: &errorpb.ErrWrap{
+			Caller: stack.Caller(1).String(),
+			Error:  MustProtoToAny(trace),
+		},
 	}
 }
 

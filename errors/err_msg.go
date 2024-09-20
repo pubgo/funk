@@ -19,8 +19,11 @@ func NewMsgErr(msg *errorpb.ErrMsg) error {
 	}
 
 	return &ErrWrap{
-		caller: stack.Caller(1),
-		err:    &ErrMsg{pb: msg, err: errors.New(msg.Msg)},
+		err: &ErrMsg{pb: msg, err: errors.New(msg.Msg)},
+		pb: &errorpb.ErrWrap{
+			Caller: stack.Caller(1).String(),
+			Error:  MustProtoToAny(msg),
+		},
 	}
 }
 
@@ -34,8 +37,11 @@ func WrapMsg(err error, msg *errorpb.ErrMsg) error {
 	}
 
 	return &ErrWrap{
-		caller: stack.Caller(1),
-		err:    &ErrMsg{pb: msg, err: handleGrpcError(err)},
+		err: &ErrMsg{pb: msg, err: handleGrpcError(err)},
+		pb: &errorpb.ErrWrap{
+			Caller: stack.Caller(1).String(),
+			Error:  MustProtoToAny(msg),
+		},
 	}
 }
 

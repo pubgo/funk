@@ -5,12 +5,10 @@ import (
 	"fmt"
 
 	jjson "github.com/goccy/go-json"
-	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/pubgo/funk/errors/errinter"
 	"github.com/pubgo/funk/proto/errorpb"
-	"github.com/pubgo/funk/stack"
 )
 
 var (
@@ -19,19 +17,12 @@ var (
 )
 
 type ErrWrap struct {
-	err    error
-	caller *stack.Frame
-	stack  []*stack.Frame
-	fields Tags
+	err error
+	pb  *errorpb.ErrWrap
 }
 
 func (e *ErrWrap) Proto() proto.Message {
-	return &errorpb.ErrWrap{
-		Tags:   e.fields.ToMap(),
-		Caller: lo.IfF(e.caller != nil, func() string { return e.caller.String() }).Else(""),
-		Stacks: lo.Map(e.stack, func(item *stack.Frame, index int) string { return item.String() }),
-		Error:  MustProtoToAny(ParseErrToPb(e.err)),
-	}
+	return e.pb
 }
 
 func (e *ErrWrap) Format(f fmt.State, verb rune) { strFormat(f, verb, e) }
@@ -43,13 +34,13 @@ func (e *ErrWrap) String() string {
 	buf := bytes.NewBuffer(nil)
 	buf.WriteString("===============================================================\n")
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorKind, e.Kind()))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorCaller, e.caller.String()))
-	for i := range e.fields {
-		buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorTags, e.fields[i].String()))
+	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorCaller, e.pb.Caller))
+	for k, v := range e.pb.Tags {
+		buf.WriteString(fmt.Sprintf("%s]: %s=%q\n", errinter.ColorTags, k, v))
 	}
 
-	for i := range e.stack {
-		buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorStack, e.stack[i].String()))
+	for i := range e.pb.Stacks {
+		buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorStack, e.pb.Stacks[i]))
 	}
 	errStringify(buf, e.err)
 	return buf.String()
@@ -58,8 +49,8 @@ func (e *ErrWrap) String() string {
 func (e *ErrWrap) MarshalJSON() ([]byte, error) {
 	data := errJsonify(e.err)
 	data["kind"] = e.Kind()
-	data["fields"] = e.fields
-	data["stacks"] = e.stack
-	data["caller"] = e.caller.String()
+	data["fields"] = e.pb.Tags
+	data["stacks"] = e.pb.Stacks
+	data["caller"] = e.pb.Caller
 	return jjson.Marshal(data)
 }
