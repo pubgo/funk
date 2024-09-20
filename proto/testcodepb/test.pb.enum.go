@@ -21,6 +21,14 @@ func CodeDecode(name string) Code {
 	return Code(Code_value[name])
 }
 
+func GenTypeValues() []string {
+	return []string{"default", "uuid", "snowflake", "bigflake", "shortid"}
+}
+
+func GenTypeDecode(name string) GenType {
+	return GenType(GenType_value[name])
+}
+
 func User_Role_TypeValues() []string {
 	return []string{"tenant", "guard", "manager", "admin"}
 }
