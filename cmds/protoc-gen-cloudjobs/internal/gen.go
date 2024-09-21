@@ -114,12 +114,6 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 		for _, subName := range subjectNames {
 			info := subjects[subName]
 			var keyName = fmt.Sprintf("%s%sKey", jobKeyPrefix, info.mth.GoName)
-			genFile.Var().Id("_").Op("=").
-				Qual(jobPkg, "RegisterSubject").
-				Call(
-					jen.Id(keyName),
-					jen.New(jen.Id(info.mth.Input.GoIdent.GoName)),
-				).Line()
 
 			genFile.
 				Func().
@@ -132,13 +126,22 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 					).Error(),
 					jen.Id("opts").Op("...").Op("*").Qual(jobTypesPkg, "RegisterJobOptions"),
 				).
-				Block(jen.Qual(jobPkg, "RegisterJobHandler").Call(
-					jen.Id("jobCli"),
-					jen.Id(jobKeyName),
-					jen.Id(keyName),
-					jen.Id("handler"),
-					jen.Id("opts").Op("..."),
-				))
+				BlockFunc(func(group *jen.Group) {
+					group.Var().Id("_").Op("=").
+						Qual(jobPkg, "RegisterSubject").
+						Call(
+							jen.Id(keyName),
+							jen.New(jen.Id(info.mth.Input.GoIdent.GoName)),
+						)
+
+					group.Qual(jobPkg, "RegisterJobHandler").Call(
+						jen.Id("jobCli"),
+						jen.Id(jobKeyName),
+						jen.Id(keyName),
+						jen.Id("handler"),
+						jen.Id("opts").Op("..."),
+					)
+				})
 			genFile.Line()
 
 			var prefix = fmt.Sprintf("Push%s", jobKeyPrefix)
