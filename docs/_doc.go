@@ -24,3 +24,4 @@ package docs
 // https://github.com/btcsuite/btcd/tree/master/btcutil/base58
 // https://github.com/btcsuite/btcd/tree/master/btcutil/bech32
 // https://github.com/btcsuite/btcd/tree/master/btcutil/hdkeychain
+// https://github.com/rogpeppe/go-internal
