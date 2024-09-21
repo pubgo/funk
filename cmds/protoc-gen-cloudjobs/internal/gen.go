@@ -3,6 +3,8 @@ package internal
 import (
 	"fmt"
 	"github.com/pubgo/funk/pkg/gen/cloudjobpb"
+	"github.com/samber/lo"
+	"sort"
 	"strings"
 
 	"github.com/dave/jennifer/jen"
@@ -14,8 +16,10 @@ const jobPkg = "github.com/pubgo/funk/component/cloudjobs"
 const jobTypesPkg = "github.com/pubgo/funk/pkg/gen/cloudjobpb"
 
 type eventInfo struct {
-	srv *protogen.Service
-	mth *protogen.Method
+	srv            *protogen.Service
+	mth            *protogen.Method
+	jobName        string
+	jobSubjectName string
 }
 
 // GenerateFile generates a .errors.pb.go file containing service definitions.
@@ -61,7 +65,12 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 				return g
 			}
 
-			events[jobName][jobSubjectName] = &eventInfo{srv: srv, mth: m}
+			events[jobName][jobSubjectName] = &eventInfo{
+				srv:            srv,
+				mth:            m,
+				jobName:        jobName,
+				jobSubjectName: jobSubjectName,
+			}
 		}
 	}
 
@@ -69,14 +78,17 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 		return g
 	}
 
-	for jobName, subjects := range events {
+	jobNames := lo.Keys(events)
+	sort.Strings(jobNames)
+
+	for _, jobName := range jobNames {
+		subjects := events[jobName]
 		if len(subjects) == 0 {
 			continue
 		}
 		g.Unskip()
 
 		srvInfo := getSrv(subjects)
-
 		jobKeyPrefix := strings.ReplaceAll(srvInfo.GoName, "InnerService", "")
 		jobKeyPrefix = strings.ReplaceAll(jobKeyPrefix, "Inner", "") + "Service"
 		jobKeyName := fmt.Sprintf("%sJobKey", jobKeyPrefix)
@@ -84,7 +96,12 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 			Id(jobKeyName).
 			Op("=").
 			Lit(jobName)
-		for subName, info := range subjects {
+
+		subjectNames := lo.Keys(subjects)
+		sort.Strings(subjectNames)
+
+		for _, subName := range subjectNames {
+			info := subjects[subName]
 			var keyName = fmt.Sprintf("%s%sKey", jobKeyPrefix, info.mth.GoName)
 			genFile.Commentf("%s %s/%s", keyName, info.srv.GoName, info.mth.GoName)
 			genFile.Commentf(strings.TrimSpace(info.mth.Comments.Leading.String()))
@@ -94,10 +111,15 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 				Lit(subName)
 		}
 
-		for _, info := range subjects {
+		for _, subName := range subjectNames {
+			info := subjects[subName]
 			var keyName = fmt.Sprintf("%s%sKey", jobKeyPrefix, info.mth.GoName)
-			genFile.Var().Id("_").Op("=").Qual(jobPkg, "RegisterSubject").
-				Call(jen.Id(keyName), jen.New(jen.Id(info.mth.Input.GoIdent.GoName))).Line()
+			genFile.Var().Id("_").Op("=").
+				Qual(jobPkg, "RegisterSubject").
+				Call(
+					jen.Id(keyName),
+					jen.New(jen.Id(info.mth.Input.GoIdent.GoName)),
+				).Line()
 
 			genFile.
 				Func().

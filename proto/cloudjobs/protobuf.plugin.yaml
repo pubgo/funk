@@ -4,4 +4,3 @@ base:
   module: github.com/pubgo/funk/pkg/gen
 plugins:
   - name: go
-  - name: go-enum
