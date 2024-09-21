@@ -13,7 +13,41 @@ import (
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
+	"github.com/rs/zerolog/log"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
+
+func MustProtoToAny(p proto.Message) *anypb.Any {
+	if p == nil {
+		return nil
+	}
+
+	pb, err := anypb.New(p)
+	if err != nil {
+		log.Err(err).Any("data", p).Msgf("failed to encode protobuf message to any message")
+		return nil
+	} else {
+		return pb
+	}
+}
+
+func ParseErrToPb(err error) proto.Message {
+	if err == nil {
+		return nil
+	}
+
+	switch err1 := err.(type) {
+	case ErrorProto:
+		return err1.Proto()
+	case GRPCStatus:
+		return err1.GRPCStatus().Proto()
+	case proto.Message:
+		return err1
+	default:
+		return &errorpb.ErrMsg{Msg: err.Error(), Detail: fmt.Sprintf("%v", err)}
+	}
+}
 
 func handleGrpcError(err error) error {
 	if err == nil {

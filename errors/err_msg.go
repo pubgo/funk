@@ -10,6 +10,7 @@ import (
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
+	"google.golang.org/protobuf/proto"
 )
 
 func NewMsgErr(msg *errorpb.ErrMsg) error {
@@ -18,8 +19,11 @@ func NewMsgErr(msg *errorpb.ErrMsg) error {
 	}
 
 	return &ErrWrap{
-		caller: stack.Caller(1),
-		err:    &ErrMsg{pb: msg, err: errors.New(msg.Msg)},
+		err: &ErrMsg{pb: msg, err: errors.New(msg.Msg)},
+		pb: &errorpb.ErrWrap{
+			Caller: stack.Caller(1).String(),
+			Error:  MustProtoToAny(msg),
+		},
 	}
 }
 
@@ -33,8 +37,11 @@ func WrapMsg(err error, msg *errorpb.ErrMsg) error {
 	}
 
 	return &ErrWrap{
-		caller: stack.Caller(1),
-		err:    &ErrMsg{pb: msg, err: handleGrpcError(err)},
+		err: &ErrMsg{pb: msg, err: handleGrpcError(err)},
+		pb: &errorpb.ErrWrap{
+			Caller: stack.Caller(1).String(),
+			Error:  MustProtoToAny(msg),
+		},
 	}
 }
 
@@ -51,7 +58,7 @@ type ErrMsg struct {
 func (t *ErrMsg) Unwrap() error                 { return t.err }
 func (t *ErrMsg) Error() string                 { return t.err.Error() }
 func (t *ErrMsg) Kind() string                  { return "err_msg" }
-func (t *ErrMsg) Proto() *errorpb.ErrMsg        { return t.pb }
+func (t *ErrMsg) Proto() proto.Message          { return t.pb }
 func (t *ErrMsg) Format(f fmt.State, verb rune) { strFormat(f, verb, t) }
 
 func (t *ErrMsg) String() string {

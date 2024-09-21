@@ -15,19 +15,20 @@ message ErrMsg {
 }
 
 message ErrCode {
-  // 状态码
+  // GRPC code corresponding to HTTP status code, which can be converted to each
+  // other
   errors.Code status_code = 1;
 
-  // 业务码: example:200001
+  // Business Code, e.g. 200001
   int32 code = 2;
 
-  // 错误名字: example:lava.v1.err_code.auth_token_not_found
+  // Error name, e.g. lava.v1.err_code.auth_token_not_found
   string name = 3;
 
-  // 错误信息: example:token not found
+  // Error message, e.g. token not found
   string message = 4;
 
-  // 错误详情
+  // Error detail include request or other user defined information
   repeated google.protobuf.Any details = 5;
 }
 
@@ -44,10 +45,9 @@ message Error {
   ErrMsg msg = 3;
 }
 
-message Status {
-  int32 code = 1;
-  string reason = 2;
-  string message = 3;
-  map<string, string> metadata = 4;
-};
-
+message ErrWrap {
+  map<string, string> tags = 1;
+  string caller = 2;
+  repeated string stacks = 3;
+  google.protobuf.Any error = 4;
+}

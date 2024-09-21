@@ -10,6 +10,7 @@ import (
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
+	"google.golang.org/protobuf/proto"
 )
 
 func NewTraceErr(trace *errorpb.ErrTrace) error {
@@ -18,8 +19,11 @@ func NewTraceErr(trace *errorpb.ErrTrace) error {
 	}
 
 	return &ErrWrap{
-		caller: stack.Caller(1),
-		err:    &ErrTrace{pb: trace, err: errors.New(trace.String())},
+		err: &ErrTrace{pb: trace, err: errors.New(trace.String())},
+		pb: &errorpb.ErrWrap{
+			Caller: stack.Caller(1).String(),
+			Error:  MustProtoToAny(trace),
+		},
 	}
 }
 
@@ -33,8 +37,11 @@ func WrapTrace(err error, trace *errorpb.ErrTrace) error {
 	}
 
 	return &ErrWrap{
-		caller: stack.Caller(1),
-		err:    &ErrTrace{pb: trace, err: handleGrpcError(err)},
+		err: &ErrTrace{pb: trace, err: handleGrpcError(err)},
+		pb: &errorpb.ErrWrap{
+			Caller: stack.Caller(1).String(),
+			Error:  MustProtoToAny(trace),
+		},
 	}
 }
 
@@ -51,7 +58,7 @@ type ErrTrace struct {
 func (t *ErrTrace) Unwrap() error                 { return t.err }
 func (t *ErrTrace) Error() string                 { return t.err.Error() }
 func (t *ErrTrace) Kind() string                  { return "err_trace" }
-func (t *ErrTrace) Proto() *errorpb.ErrTrace      { return t.pb }
+func (t *ErrTrace) Proto() proto.Message          { return t.pb }
 func (t *ErrTrace) Format(f fmt.State, verb rune) { strFormat(f, verb, t) }
 
 func (t *ErrTrace) String() string {

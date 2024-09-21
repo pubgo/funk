@@ -14,14 +14,14 @@ import (
 	"github.com/pubgo/funk/version"
 )
 
-// 默认的全局配置
+// default global variables
 var (
 	HttpPort = 8080
 	GrpcPort = 50051
 	Project  = version.Project()
 
 	Env     = "debug"
-	IsDebug bool
+	IsDebug = true
 
 	// InstanceID service id
 	InstanceID = xid.New().String()
@@ -30,19 +30,18 @@ var (
 
 	CommitID = version.CommitID()
 
-	// Pwd 当前目录
 	Pwd = assert.Exit1(os.Getwd())
 
-	// LocalIP 当前服务的本地IP
+	// LocalIP the local IP address of the current service
 	LocalIP = netutil.GetLocalIP()
 
-	// Hostname 主机名
+	// Hostname
 	Hostname = strutil.FirstFnNotEmpty(
 		func() string { return os.Getenv("HOSTNAME") },
 		func() string { return assert.Exit1(os.Hostname()) },
 	)
 
-	// Namespace K8s命名空间
+	// K8s namespace
 	Namespace = strutil.FirstFnNotEmpty(
 		func() string { return os.Getenv("NAMESPACE") },
 		func() string { return os.Getenv("POD_NAMESPACE") },

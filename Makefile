@@ -42,3 +42,6 @@ vet:
 
 refactor:
 	gofumpt -l -w -extra .
+
+install-protoc:
+	go install -v ./cmds/protoc-gen-cloudjobs
