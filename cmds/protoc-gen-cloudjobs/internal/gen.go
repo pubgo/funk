@@ -2,12 +2,12 @@ package internal
 
 import (
 	"fmt"
-	"github.com/pubgo/funk/pkg/gen/cloudjobpb"
-	"github.com/samber/lo"
 	"sort"
 	"strings"
 
 	"github.com/dave/jennifer/jen"
+	"github.com/pubgo/funk/pkg/gen/cloudjobpb"
+	"github.com/samber/lo"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 )
