@@ -1,0 +1,3 @@
+pyroscope:
+  enabled: ${PYROSCOPE_ENABLED:-false}
+  server_address: ${PYROSCOPE_SERVER_ADDRESS:-"http://host.docker.internal:4040"}
