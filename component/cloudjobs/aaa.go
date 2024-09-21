@@ -3,7 +3,7 @@ package cloudjobs
 import (
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/proto/cloudjobpb"
+	"github.com/pubgo/funk/pkg/gen/cloudjobpb"
 	"google.golang.org/protobuf/proto"
 )
 

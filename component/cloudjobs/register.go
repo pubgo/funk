@@ -5,7 +5,7 @@ import (
 	"reflect"
 
 	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/proto/cloudjobpb"
+	"github.com/pubgo/funk/pkg/gen/cloudjobpb"
 	"github.com/pubgo/funk/stack"
 	"github.com/pubgo/funk/typex"
 	"github.com/pubgo/funk/vars"

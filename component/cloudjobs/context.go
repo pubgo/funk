@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pubgo/funk/proto/cloudjobpb"
+	"github.com/pubgo/funk/pkg/gen/cloudjobpb"
 	"github.com/rs/xid"
 	"google.golang.org/protobuf/proto"
 )

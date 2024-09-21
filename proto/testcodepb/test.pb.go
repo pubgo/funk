@@ -7,7 +7,7 @@
 package testcodepb
 
 import (
-	_ "github.com/pubgo/funk/proto/cloudjobpb"
+	_ "github.com/pubgo/funk/pkg/gen/cloudjobpb"
 	_ "github.com/pubgo/funk/proto/errorpb"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	httpbody "google.golang.org/genproto/googleapis/api/httpbody"

@@ -4,7 +4,7 @@ package lava.cloudjobs;
 
 import "google/protobuf/duration.proto";
 
-option go_package = "github.com/pubgo/funk/proto/cloudjobpb;cloudjobpb";
+option go_package = "github.com/pubgo/funk/pkg/gen/cloudjobpb;cloudjobpb";
 
 message PushEventOptions {
     // The content type for the data (optional).

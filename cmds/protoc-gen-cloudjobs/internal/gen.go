@@ -2,16 +2,16 @@ package internal
 
 import (
 	"fmt"
+	"github.com/pubgo/funk/pkg/gen/cloudjobpb"
 	"strings"
 
 	"github.com/dave/jennifer/jen"
-	"github.com/pubgo/funk/proto/cloudjobpb"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 )
 
 const jobPkg = "github.com/pubgo/funk/component/cloudjobs"
-const jobTypesPkg = "github.com/pubgo/funk/proto/cloudjobpb"
+const jobTypesPkg = "github.com/pubgo/funk/pkg/gen/cloudjobpb"
 
 type eventInfo struct {
 	srv *protogen.Service
