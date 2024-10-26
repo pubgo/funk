@@ -70,4 +70,9 @@ type Event interface {
 	Float32(key string, f float32) Event
 	Uints64(key string, i []uint64) Event
 	Uint64(key string, i uint64) Event
+	Err(err error) Event
+	Ctx(ctx context.Context) Event
+	Func(func(e Event)) Event
+	Str(key string, value string) Event
+	Int(key string, value int) Event
 }
