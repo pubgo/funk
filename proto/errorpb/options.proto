@@ -9,6 +9,7 @@ import "errorpb/code.proto";
 message Options {
   bool gen = 1;
   Code default_code = 2;
+  string name = 3;
 }
 
 message Fields {

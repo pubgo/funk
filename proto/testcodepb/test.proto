@@ -15,6 +15,7 @@ option go_package = "github.com/pubgo/funk/proto/testcodepb;testcodepb";
 enum Code {
   option (errors.opts).gen = true;
   option (errors.opts).default_code = Internal;
+  option (errors.opts).name = "Test";
 
   OK = 0;
 
