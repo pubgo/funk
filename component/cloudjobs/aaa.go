@@ -1,6 +1,7 @@
 package cloudjobs
 
 import (
+	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/pkg/gen/cloudjobpb"
@@ -22,4 +23,10 @@ type PushEventOpt func(opts *Options)
 type Consumer struct {
 	jetstream.Consumer
 	Config *ConsumerConfig
+}
+
+type PubAckInfo struct {
+	AckInfo *jetstream.PubAck
+	Header  nats.Header
+	MsgId   string
 }

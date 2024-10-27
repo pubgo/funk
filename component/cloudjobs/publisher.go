@@ -10,6 +10,7 @@ import (
 	"github.com/pubgo/funk/ctxutil"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/pkg/gen/cloudjobpb"
+	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/running"
 	"github.com/pubgo/funk/stack"
 	"github.com/pubgo/funk/try"
@@ -86,16 +87,16 @@ func pushEventBasic[T any](handler func(context.Context, T) (*emptypb.Empty, err
 	return err
 }
 
-func (c *Client) Publish(ctx context.Context, topic string, args proto.Message, opts ...*cloudjobpb.PushEventOptions) error {
+func (c *Client) Publish(ctx context.Context, topic string, args proto.Message, opts ...*cloudjobpb.PushEventOptions) result.Result[*PubAckInfo] {
 	return c.publish(ctx, topic, args, opts...)
 }
 
-func (c *Client) publish(ctx context.Context, topic string, args proto.Message, opts ...*cloudjobpb.PushEventOptions) (gErr error) {
+func (c *Client) publish(ctx context.Context, topic string, args proto.Message, opts ...*cloudjobpb.PushEventOptions) (r result.Result[*PubAckInfo]) {
 	var timeout = ctxutil.GetTimeout(ctx)
 	var now = time.Now()
 	var msgId = xid.New().String()
 	var pushEventOpt *cloudjobpb.PushEventOptions
-	var pubActInfo any
+	var pubActInfo *jetstream.PubAck
 
 	defer func() {
 		var msgFn = func(e *zerolog.Event) {
@@ -109,10 +110,10 @@ func (c *Client) publish(ctx context.Context, topic string, args proto.Message, 
 				e.Str("timeout", timeout.String())
 			}
 		}
-		if gErr == nil {
+		if r.IsErr() {
 			logger.Info(ctx).Func(msgFn).Msg("succeed to publish cloud job event to stream")
 		} else {
-			logger.Err(gErr, ctx).Func(msgFn).Msg("failed to publish cloud job event to stream")
+			logger.Err(r.Err(), ctx).Func(msgFn).Msg("failed to publish cloud job event to stream")
 		}
 	}()
 
@@ -123,13 +124,13 @@ func (c *Client) publish(ctx context.Context, topic string, args proto.Message, 
 
 	pb, err := anypb.New(args)
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal args to any proto")
+		return r.WithErr(errors.Wrap(err, "failed to marshal args to any proto"))
 	}
 
 	// TODO get parent event info from ctx
 	data, err := proto.Marshal(pb)
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal any proto to bytes")
+		return r.WithErr(errors.Wrap(err, "failed to marshal any proto to bytes"))
 	}
 
 	// subject|topic name
@@ -148,8 +149,12 @@ func (c *Client) publish(ctx context.Context, topic string, args proto.Message, 
 	jetOpts := append([]jetstream.PublishOpt{}, jetstream.WithMsgID(msgId))
 	pubActInfo, err = c.js.PublishMsg(ctx, msg, jetOpts...)
 	if err != nil {
-		return errors.Wrapf(err, "failed to publish msg to stream, topic=%s msg_id=%s", topic, msgId)
+		return r.WithErr(errors.Wrapf(err, "failed to publish msg to stream, topic=%s msg_id=%s", topic, msgId))
 	}
 
-	return nil
+	return r.WithVal(&PubAckInfo{
+		AckInfo: pubActInfo,
+		Header:  header,
+		MsgId:   msgId,
+	})
 }
