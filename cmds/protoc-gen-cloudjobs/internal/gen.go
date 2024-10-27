@@ -14,6 +14,7 @@ import (
 
 const jobPkg = "github.com/pubgo/funk/component/cloudjobs"
 const jobTypesPkg = "github.com/pubgo/funk/pkg/gen/cloudjobpb"
+const resultTypesPkg = "github.com/pubgo/funk/result"
 
 type eventInfo struct {
 	srv            *protogen.Service
@@ -152,7 +153,8 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 					jen.Id("ctx").Qual("context", "Context"),
 					jen.Id("req").Op("*").Id(info.mth.Input.GoIdent.GoName),
 					jen.Id("opts").Op("...").Op("*").Qual(jobTypesPkg, "PushEventOptions"),
-				).Error().
+				).
+				Qual(resultTypesPkg, "Result").Index(jen.Op("*").Qual(jobPkg, "PubAckInfo")).
 				Block(jen.Return().Id("jobCli").Dot("Publish").Call(
 					jen.Id("ctx"),
 					jen.Id(keyName),

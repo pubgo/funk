@@ -10,6 +10,7 @@ import (
 	"context"
 	cloudjobs "github.com/pubgo/funk/component/cloudjobs"
 	cloudjobpb "github.com/pubgo/funk/pkg/gen/cloudjobpb"
+	result "github.com/pubgo/funk/result"
 )
 
 const IdServiceJobKey = "gid"
@@ -20,19 +21,22 @@ const IdServiceEventChangedKey = "gid.event.update"
 // IdServiceProxyExecEventKey Id/ProxyExecEvent
 const IdServiceProxyExecEventKey = "gid.proxy.exec"
 
+var _ = cloudjobs.RegisterSubject(IdServiceEventChangedKey, new(DoProxyEventReq))
+
 func RegisterIdServiceEventChangedCloudJob(jobCli *cloudjobs.Client, handler func(ctx *cloudjobs.Context, req *DoProxyEventReq) error, opts ...*cloudjobpb.RegisterJobOptions) {
-	var _ = cloudjobs.RegisterSubject(IdServiceEventChangedKey, new(DoProxyEventReq))
 	cloudjobs.RegisterJobHandler(jobCli, IdServiceJobKey, IdServiceEventChangedKey, handler, opts...)
 }
 
-func PushIdServiceEventChangedCloudJob(jobCli *cloudjobs.Client, ctx context.Context, req *DoProxyEventReq, opts ...*cloudjobpb.PushEventOptions) error {
+func PushIdServiceEventChangedCloudJob(jobCli *cloudjobs.Client, ctx context.Context, req *DoProxyEventReq, opts ...*cloudjobpb.PushEventOptions) result.Result[*cloudjobs.PubAckInfo] {
 	return jobCli.Publish(ctx, IdServiceEventChangedKey, req, opts...)
 }
+
+var _ = cloudjobs.RegisterSubject(IdServiceProxyExecEventKey, new(DoProxyEventReq))
+
 func RegisterIdServiceProxyExecEventCloudJob(jobCli *cloudjobs.Client, handler func(ctx *cloudjobs.Context, req *DoProxyEventReq) error, opts ...*cloudjobpb.RegisterJobOptions) {
-	var _ = cloudjobs.RegisterSubject(IdServiceProxyExecEventKey, new(DoProxyEventReq))
 	cloudjobs.RegisterJobHandler(jobCli, IdServiceJobKey, IdServiceProxyExecEventKey, handler, opts...)
 }
 
-func PushIdServiceProxyExecEventCloudJob(jobCli *cloudjobs.Client, ctx context.Context, req *DoProxyEventReq, opts ...*cloudjobpb.PushEventOptions) error {
+func PushIdServiceProxyExecEventCloudJob(jobCli *cloudjobs.Client, ctx context.Context, req *DoProxyEventReq, opts ...*cloudjobpb.PushEventOptions) result.Result[*cloudjobs.PubAckInfo] {
 	return jobCli.Publish(ctx, IdServiceProxyExecEventKey, req, opts...)
 }
