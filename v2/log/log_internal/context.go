@@ -51,7 +51,7 @@ func WithDisabled(ctx context.Context) context.Context {
 	return context.WithValue(ctx, disableLogKey{}, true)
 }
 
-func IsLogDisabled(ctx context.Context) bool {
+func isLogDisabled(ctx context.Context) bool {
 	b, ok := ctx.Value(disableLogKey{}).(bool)
 	return b && ok
 }

@@ -2,11 +2,11 @@ package log_internal
 
 import "fmt"
 
-var _ StdLogger = (*stdLogImpl)(nil)
-
 func NewStd(log Logger) StdLogger {
 	return &stdLogImpl{log: log.WithCallerSkip(1)}
 }
+
+var _ StdLogger = (*stdLogImpl)(nil)
 
 type stdLogImpl struct {
 	log Logger

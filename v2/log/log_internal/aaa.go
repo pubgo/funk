@@ -2,6 +2,7 @@ package log_internal
 
 import (
 	"context"
+	"encoding/json"
 	"net"
 	"time"
 )
@@ -11,14 +12,7 @@ type (
 	EnableChecker = func(ctx context.Context, lvl Level, nameOrMessage string, fields Map) bool
 )
 
-type Logger interface {
-	WithName(name string) Logger
-	WithNameCaller(name string, caller int) Logger
-	WithFields(m Map) Logger
-	WithCallerSkip(skip int) Logger
-	WithEvent(evt Event) Logger
-	WithLevel(lvl Level) Logger
-
+type EventLogger interface {
 	Debug(ctx ...context.Context) Event
 	Info(ctx ...context.Context) Event
 	Warn(ctx ...context.Context) Event
@@ -26,6 +20,17 @@ type Logger interface {
 	Err(err error, ctx ...context.Context) Event
 	Panic(ctx ...context.Context) Event
 	Fatal(ctx ...context.Context) Event
+}
+
+type Logger interface {
+	EventLogger
+
+	WithName(name string) Logger
+	WithNameCaller(name string, caller int) Logger
+	WithFields(m Map) Logger
+	WithCallerSkip(skip int) Logger
+	WithEvent(evt Event) Logger
+	WithLevel(lvl Level) Logger
 }
 
 type StdLogger interface {
@@ -67,4 +72,5 @@ type Event interface {
 	Str(key string, value string) Event
 	Int(key string, value int) Event
 	Bool(key string, value bool) Event
+	RawJSON(key string, value json.RawMessage) Event
 }
