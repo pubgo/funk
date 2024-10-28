@@ -29,7 +29,6 @@ type Logger interface {
 	WithNameCaller(name string, caller int) Logger
 	WithFields(m Map) Logger
 	WithCallerSkip(skip int) Logger
-	WithEvent(evt Event) Logger
 	WithLevel(lvl Level) Logger
 }
 

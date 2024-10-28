@@ -51,15 +51,6 @@ func (l *loggerImpl) WithLevel(lvl Level) Logger {
 	return log
 }
 
-func (l *loggerImpl) WithEvent(evt Event) Logger {
-	if evt == nil {
-		return l
-	}
-
-	log := l.copy()
-	return log
-}
-
 func (l *loggerImpl) WithCallerSkip(skip int) Logger {
 	if skip == 0 {
 		return l
@@ -104,7 +95,7 @@ func (l *loggerImpl) getCtx(ctxL ...context.Context) context.Context {
 func (l *loggerImpl) Debug(ctxL ...context.Context) Event {
 	ctx := l.getCtx(ctxL...)
 	if !l.enabled(ctx, DebugLevel) {
-		return nil
+		return new(noopLogger)
 	}
 
 	return l.newEvent(ctx, l.getLog().Debug())
@@ -113,7 +104,7 @@ func (l *loggerImpl) Debug(ctxL ...context.Context) Event {
 func (l *loggerImpl) Info(ctxL ...context.Context) Event {
 	ctx := l.getCtx(ctxL...)
 	if !l.enabled(ctx, InfoLevel) {
-		return nil
+		return new(noopLogger)
 	}
 
 	return l.newEvent(ctx, l.getLog().Info())
@@ -122,7 +113,7 @@ func (l *loggerImpl) Info(ctxL ...context.Context) Event {
 func (l *loggerImpl) Warn(ctxL ...context.Context) Event {
 	ctx := l.getCtx(ctxL...)
 	if !l.enabled(ctx, WarnLevel) {
-		return nil
+		return new(noopLogger)
 	}
 
 	return l.newEvent(ctx, l.getLog().Warn())
@@ -131,7 +122,7 @@ func (l *loggerImpl) Warn(ctxL ...context.Context) Event {
 func (l *loggerImpl) Error(ctxL ...context.Context) Event {
 	ctx := l.getCtx(ctxL...)
 	if !l.enabled(ctx, ErrorLevel) {
-		return nil
+		return new(noopLogger)
 	}
 
 	return l.newEvent(ctx, l.getLog().Error())
@@ -140,7 +131,7 @@ func (l *loggerImpl) Error(ctxL ...context.Context) Event {
 func (l *loggerImpl) Err(err error, ctxL ...context.Context) Event {
 	ctx := l.getCtx(ctxL...)
 	if !l.enabled(ctx, ErrorLevel) {
-		return nil
+		return new(noopLogger)
 	}
 
 	if err != nil {
@@ -160,7 +151,7 @@ func (l *loggerImpl) Err(err error, ctxL ...context.Context) Event {
 func (l *loggerImpl) Panic(ctxL ...context.Context) Event {
 	ctx := l.getCtx(ctxL...)
 	if !l.enabled(ctx, PanicLevel) {
-		return nil
+		return new(noopLogger)
 	}
 
 	return l.newEvent(ctx, l.getLog().Panic())
@@ -169,7 +160,7 @@ func (l *loggerImpl) Panic(ctxL ...context.Context) Event {
 func (l *loggerImpl) Fatal(ctxL ...context.Context) Event {
 	ctx := l.getCtx(ctxL...)
 	if !l.enabled(ctx, FatalLevel) {
-		return nil
+		return new(noopLogger)
 	}
 
 	return l.newEvent(ctx, l.getLog().Fatal())
@@ -216,6 +207,5 @@ func (l *loggerImpl) newEvent(ctx context.Context, e Event) Event {
 		e.Any(k, v)
 	}
 
-	// TODO: add trace id
 	return e
 }
