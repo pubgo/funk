@@ -7,21 +7,20 @@ import (
 	"strings"
 
 	"github.com/pubgo/funk/stack"
-	"github.com/pubgo/funk/v2/log"
 )
 
-func New(log EventLogger) log.Logger {
+func New(log EventLogger) Logger {
 	return &loggerImpl{
 		log: log,
 	}
 }
 
-var _ log.Logger = (*loggerImpl)(nil)
+var _ Logger = (*loggerImpl)(nil)
 
 type loggerImpl struct {
 	name       string
 	log        EventLogger
-	fields     log.Map
+	fields     Map
 	callerSkip int
 	lvl        Level
 }
@@ -185,7 +184,7 @@ func (l *loggerImpl) enabled(ctx context.Context, lvl Level) bool {
 	if logEnableChecker != nil {
 		enabled = logEnableChecker(ctx, lvl, l.name, l.fields)
 	}
-	return enabled && lvl >= l.lvl && lvl >= GlobalLevel()
+	return enabled && lvl >= l.lvl && lvl >= globalLevel
 }
 
 func (l *loggerImpl) copy() *loggerImpl {
@@ -193,7 +192,7 @@ func (l *loggerImpl) copy() *loggerImpl {
 	return &log
 }
 
-func (l *loggerImpl) getLog() Logger {
+func (l *loggerImpl) getLog() EventLogger {
 	if l.log != nil {
 		return l.log
 	}
@@ -212,4 +211,7 @@ func (l *loggerImpl) newEvent(ctx context.Context, e Event) Event {
 	if l.fields != nil && len(l.fields) > 0 {
 		e = e.Fields(l.fields)
 	}
+
+	// TODO: add trace id
+	return e
 }
