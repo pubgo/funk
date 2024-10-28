@@ -6,7 +6,7 @@ import (
 
 type ctxEventKey struct{}
 
-func CreateEventCtx(ctx context.Context, evt Event) context.Context {
+func CreateEventCtx(ctx context.Context, evt Map) context.Context {
 	if evt == nil || ctx == nil {
 		panic("ctx or log event is nil")
 	}
@@ -23,18 +23,15 @@ func UpdateEventCtx(ctx context.Context, fields Map) context.Context {
 		return ctx
 	}
 
-	e := GetEventFromCtx(ctx)
-	if e != nil {
-		for k, v := range fields {
-			e.Any(k, v)
-		}
+	for k, v := range GetEventFromCtx(ctx) {
+		fields[k] = v
 	}
 
-	return context.WithValue(ctx, ctxEventKey{}, e)
+	return context.WithValue(ctx, ctxEventKey{}, fields)
 }
 
-func GetEventFromCtx(ctx context.Context) Event {
-	evt, ok := ctx.Value(ctxEventKey{}).(Event)
+func GetEventFromCtx(ctx context.Context) Map {
+	evt, ok := ctx.Value(ctxEventKey{}).(Map)
 	if ok {
 		return evt
 	}
