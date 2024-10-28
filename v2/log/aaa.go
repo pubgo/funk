@@ -10,8 +10,8 @@ type Map = log_internal.Map
 type EnableChecker = log_internal.EnableChecker
 type StdLogger = log_internal.StdLogger
 
-var CreateEventCtx = log_internal.CreateEventCtx
-var UpdateEventCtx = log_internal.UpdateEventCtx
-var GetEventFromCtx = log_internal.GetEventFromCtx
+var CreateCtx = log_internal.CreateCtx
+var UpdateCtx = log_internal.UpdateCtx
+var GetFromCtx = log_internal.GetFromCtx
 var WithDisabled = log_internal.WithDisabled
 var NewStd = log_internal.NewStd

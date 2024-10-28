@@ -203,7 +203,7 @@ func (l *loggerImpl) newEvent(ctx context.Context, e Event) Event {
 		e = e.Fields(l.fields)
 	}
 
-	for k, v := range GetEventFromCtx(ctx) {
+	for k, v := range GetFromCtx(ctx) {
 		e.Any(k, v)
 	}
 

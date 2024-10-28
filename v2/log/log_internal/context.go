@@ -4,17 +4,17 @@ import (
 	"context"
 )
 
-type ctxEventKey struct{}
+type ctxKey struct{}
 
-func CreateEventCtx(ctx context.Context, evt Map) context.Context {
+func CreateCtx(ctx context.Context, evt Map) context.Context {
 	if evt == nil || ctx == nil {
 		panic("ctx or log event is nil")
 	}
 
-	return context.WithValue(ctx, ctxEventKey{}, evt)
+	return context.WithValue(ctx, ctxKey{}, evt)
 }
 
-func UpdateEventCtx(ctx context.Context, fields Map) context.Context {
+func UpdateCtx(ctx context.Context, fields Map) context.Context {
 	if ctx == nil {
 		panic("ctx is nil")
 	}
@@ -23,15 +23,15 @@ func UpdateEventCtx(ctx context.Context, fields Map) context.Context {
 		return ctx
 	}
 
-	for k, v := range GetEventFromCtx(ctx) {
+	for k, v := range GetFromCtx(ctx) {
 		fields[k] = v
 	}
 
-	return context.WithValue(ctx, ctxEventKey{}, fields)
+	return context.WithValue(ctx, ctxKey{}, fields)
 }
 
-func GetEventFromCtx(ctx context.Context) Map {
-	evt, ok := ctx.Value(ctxEventKey{}).(Map)
+func GetFromCtx(ctx context.Context) Map {
+	evt, ok := ctx.Value(ctxKey{}).(Map)
 	if ok {
 		return evt
 	}
