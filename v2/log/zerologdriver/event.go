@@ -13,10 +13,10 @@ type event struct {
 }
 
 //go:linkname putEvent github.com/rs/zerolog.putEvent
-func putEvent(e *Event)
+func putEvent(e *zerolog.Event)
 
-func WithEvent(evt *Event) func(e *Event) {
-	return func(e *Event) {
+func WithEvent(evt *zerolog.Event) func(e *zerolog.Event) {
+	return func(e *zerolog.Event) {
 		defer putEvent(evt)
 		evt1 := convertEvent(evt)
 		if len(evt1.buf) == 0 {
@@ -37,15 +37,15 @@ func WithEvent(evt *Event) func(e *Event) {
 	}
 }
 
-func convertEvent(event2 *Event) *event {
+func convertEvent(event2 *zerolog.Event) *event {
 	return (*event)(unsafe.Pointer(event2))
 }
 
-func NewEvent() *Event {
+func NewEvent() *zerolog.Event {
 	return zerolog.Dict()
 }
 
-func GetEventBuf(evt *Event) []byte {
+func GetEventBuf(evt *zerolog.Event) []byte {
 	if evt == nil {
 		return nil
 	}
@@ -53,7 +53,7 @@ func GetEventBuf(evt *Event) []byte {
 	return append(convertEvent(evt).buf, '}')
 }
 
-func mergeEvent(to *Event, from ...*Event) *Event {
+func mergeEvent(to *zerolog.Event, from ...*zerolog.Event) *zerolog.Event {
 	if len(from) == 0 {
 		return to
 	}

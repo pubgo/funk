@@ -7,18 +7,19 @@ import (
 	"strings"
 
 	"github.com/pubgo/funk/stack"
+	"github.com/pubgo/funk/v2/log"
 	"github.com/rs/zerolog"
 )
 
-var _ Logger = (*loggerImpl)(nil)
+var _ log.Logger = (*loggerImpl)(nil)
 
 type loggerImpl struct {
 	name       string
 	log        *zerolog.Logger
-	fields     Map
-	content    *Event
+	fields     log.Map
+	content    eventImpl
 	callerSkip int
-	lvl        Level
+	lvl        zerolog.Level
 }
 
 func (l *loggerImpl) WithLevel(lvl Level) Logger {

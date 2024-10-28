@@ -132,7 +132,7 @@ func (c *Client) initConsumer() error {
 				assert.Fn(err != nil, func() error {
 					return errors.Wrapf(err, "stream=%s consumer=%s", streamName, consumerName)
 				})
-				logger.Info().Func(func(e log.Event) {
+				logger.Info().Func(func(e *log.Event) {
 					e.Str("stream", streamName)
 					e.Str("consumer", consumerName)
 					e.Msg("register consumer success")
@@ -165,7 +165,7 @@ func (c *Client) initConsumer() error {
 						cfg:     subCfg,
 					}
 
-					logger.Info().Func(func(e log.Event) {
+					logger.Info().Func(func(e *log.Event) {
 						e.Str("job_name", job.name)
 						e.Str("job_handler", stack.CallerWithFunc(job.handler).String())
 						e.Any("job_config", subCfg)
@@ -185,7 +185,7 @@ func (c *Client) initConsumer() error {
 func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects map[string]*jobHandler, concurrent int) func(msg jetstream.Msg) {
 	var handler = func(msg jetstream.Msg) {
 		var now = time.Now()
-		var addMsgInfo = func(e log.Event) {
+		var addMsgInfo = func(e *log.Event) {
 			e.Str("stream", streamName)
 			e.Str("consumer", consumerName)
 			e.Any("header", msg.Headers())
@@ -195,7 +195,7 @@ func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects m
 			e.Str("job_cost", time.Since(now).String())
 		}
 
-		logger.Debug().Func(func(e log.Event) {
+		logger.Debug().Func(func(e *log.Event) {
 			addMsgInfo(e)
 			e.Msg("received cloud job event")
 		})
@@ -301,7 +301,7 @@ func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects m
 	// pool.Release()
 	return func(msg jetstream.Msg) {
 		if pool.Running() == concurrent {
-			logger.Warn().Func(func(e log.Event) {
+			logger.Warn().Func(func(e *log.Event) {
 				e.Int("concurrent", concurrent)
 				e.Str("stream", streamName)
 				e.Str("consumer", consumerName)
@@ -309,7 +309,7 @@ func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects m
 			})
 		}
 		if err := pool.Submit(func() { handler(msg) }); err != nil {
-			logger.Err(err).Func(func(e log.Event) {
+			logger.Err(err).Func(func(e *log.Event) {
 				e.Str("stream", streamName)
 				e.Str("consumer", consumerName)
 				e.Msg("failed to submit job to pool")
@@ -359,7 +359,7 @@ func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *
 			return
 		}
 
-		logger.Err(gErr).Func(func(e log.Event) {
+		logger.Err(gErr).Func(func(e *log.Event) {
 			e.Any("context", msgCtx)
 			e.Any("args", args)
 			e.Str("timeout", timeout.String())
@@ -412,7 +412,7 @@ func (c *Client) doConsume() error {
 				return fmt.Errorf("concurrent must be in the range of %d-%d", defaultMinConcurrent, defaultMaxConcurrent)
 			}
 
-			logger.Info().Func(func(e log.Event) {
+			logger.Info().Func(func(e *log.Event) {
 				e.Str("stream", streamName)
 				e.Str("consumer", consumerName)
 				e.Any("subjects", lo.MapKeys(jobSubjects, func(_ *jobHandler, key string) string { return key }))

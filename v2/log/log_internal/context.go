@@ -1,4 +1,4 @@
-package log
+package log_internal
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 
 type ctxEventKey struct{}
 
-func CreateEventCtx(ctx context.Context, evt *Event) context.Context {
+func CreateEventCtx(ctx context.Context, evt Event) context.Context {
 	if evt == nil || ctx == nil {
 		panic("ctx or log event is nil")
 	}
@@ -23,21 +23,18 @@ func UpdateEventCtx(ctx context.Context, fields Map) context.Context {
 		return ctx
 	}
 
-	var evt = NewEvent()
-	for k, v := range fields {
-		evt.Any(k, v)
+	e := GetEventFromCtx(ctx)
+	if e != nil {
+		for k, v := range fields {
+			e.Any(k, v)
+		}
 	}
 
-	if e := getEventFromCtx(ctx); e != nil {
-
-		evt = mergeEvent(evt, e)
-	}
-
-	return context.WithValue(ctx, ctxEventKey{}, evt)
+	return context.WithValue(ctx, ctxEventKey{}, e)
 }
 
-func getEventFromCtx(ctx context.Context) *Event {
-	evt, ok := ctx.Value(ctxEventKey{}).(*Event)
+func GetEventFromCtx(ctx context.Context) Event {
+	evt, ok := ctx.Value(ctxEventKey{}).(Event)
 	if ok {
 		return evt
 	}
@@ -54,7 +51,7 @@ func WithDisabled(ctx context.Context) context.Context {
 	return context.WithValue(ctx, disableLogKey{}, true)
 }
 
-func isLogDisabled(ctx context.Context) bool {
+func IsLogDisabled(ctx context.Context) bool {
 	b, ok := ctx.Value(disableLogKey{}).(bool)
 	return b && ok
 }
