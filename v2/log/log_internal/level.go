@@ -105,7 +105,7 @@ func ParseLevel(levelStr string) (Level, error) {
 	}
 	i, err := strconv.Atoi(levelStr)
 	if err != nil {
-		return NoLevel, fmt.Errorf("Unknown Level String: '%s', defaulting to NoLevel", levelStr)
+		return NoLevel, fmt.Errorf("unknown Level String: '%s', defaulting to NoLevel", levelStr)
 	}
 	if i > 127 || i < -128 {
 		return NoLevel, fmt.Errorf("Out-Of-Bounds Level: '%d', defaulting to NoLevel", i)

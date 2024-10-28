@@ -8,8 +8,8 @@ import (
 )
 
 type (
-	Map           = map[string]any
-	EnableChecker = func(ctx context.Context, lvl Level, nameOrMessage string, fields Map) bool
+	Map           map[string]any
+	EnableChecker func(ctx context.Context, lvl Level, nameOrMessage string, fields Map) bool
 )
 
 type EventLogger interface {

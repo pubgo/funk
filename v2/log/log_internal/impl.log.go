@@ -95,7 +95,7 @@ func (l *loggerImpl) getCtx(ctxL ...context.Context) context.Context {
 func (l *loggerImpl) Debug(ctxL ...context.Context) Event {
 	ctx := l.getCtx(ctxL...)
 	if !l.enabled(ctx, DebugLevel) {
-		return new(noopLogger)
+		return new(noopEvent)
 	}
 
 	return l.newEvent(ctx, l.getLog().Debug())
@@ -104,7 +104,7 @@ func (l *loggerImpl) Debug(ctxL ...context.Context) Event {
 func (l *loggerImpl) Info(ctxL ...context.Context) Event {
 	ctx := l.getCtx(ctxL...)
 	if !l.enabled(ctx, InfoLevel) {
-		return new(noopLogger)
+		return new(noopEvent)
 	}
 
 	return l.newEvent(ctx, l.getLog().Info())
@@ -113,7 +113,7 @@ func (l *loggerImpl) Info(ctxL ...context.Context) Event {
 func (l *loggerImpl) Warn(ctxL ...context.Context) Event {
 	ctx := l.getCtx(ctxL...)
 	if !l.enabled(ctx, WarnLevel) {
-		return new(noopLogger)
+		return new(noopEvent)
 	}
 
 	return l.newEvent(ctx, l.getLog().Warn())
@@ -122,7 +122,7 @@ func (l *loggerImpl) Warn(ctxL ...context.Context) Event {
 func (l *loggerImpl) Error(ctxL ...context.Context) Event {
 	ctx := l.getCtx(ctxL...)
 	if !l.enabled(ctx, ErrorLevel) {
-		return new(noopLogger)
+		return new(noopEvent)
 	}
 
 	return l.newEvent(ctx, l.getLog().Error())
@@ -131,7 +131,7 @@ func (l *loggerImpl) Error(ctxL ...context.Context) Event {
 func (l *loggerImpl) Err(err error, ctxL ...context.Context) Event {
 	ctx := l.getCtx(ctxL...)
 	if !l.enabled(ctx, ErrorLevel) {
-		return new(noopLogger)
+		return new(noopEvent)
 	}
 
 	if err != nil {
@@ -151,7 +151,7 @@ func (l *loggerImpl) Err(err error, ctxL ...context.Context) Event {
 func (l *loggerImpl) Panic(ctxL ...context.Context) Event {
 	ctx := l.getCtx(ctxL...)
 	if !l.enabled(ctx, PanicLevel) {
-		return new(noopLogger)
+		return new(noopEvent)
 	}
 
 	return l.newEvent(ctx, l.getLog().Panic())
@@ -160,7 +160,7 @@ func (l *loggerImpl) Panic(ctxL ...context.Context) Event {
 func (l *loggerImpl) Fatal(ctxL ...context.Context) Event {
 	ctx := l.getCtx(ctxL...)
 	if !l.enabled(ctx, FatalLevel) {
-		return new(noopLogger)
+		return new(noopEvent)
 	}
 
 	return l.newEvent(ctx, l.getLog().Fatal())
