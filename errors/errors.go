@@ -32,6 +32,10 @@ func Format(msg string, args ...interface{}) error {
 	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...)}, 1)
 }
 
+func Errorf(msg string, args ...interface{}) error {
+	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...)}, 1)
+}
+
 func NewTags(msg string, tags ...Tag) error {
 	return WrapCaller(&Err{Msg: msg, Tags: tags}, 1)
 }
@@ -226,9 +230,14 @@ func WrapFn(err error, fn func() Tags) error {
 	}
 }
 
-func WrapKV(err error, key string, value any) error {
+func WrapKV(err error, key string, value any, kvs ...any) error {
 	if generic.IsNil(err) {
 		return nil
+	}
+
+	var tags = Tags{T(key, value)}
+	for i := 0; i < len(kvs); i += 2 {
+		tags = append(tags, Tag{K: kvs[i].(string), V: kvs[i+1]})
 	}
 
 	return &ErrWrap{
