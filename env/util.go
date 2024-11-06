@@ -6,6 +6,10 @@ import (
 
 var replacer = strings.NewReplacer("-", "_", ".", "_", "/", "_")
 
+func KeyHandler(key string) string {
+	return strings.ToUpper(trim(strings.ReplaceAll(replacer.Replace(key), "__", "_")))
+}
+
 // Normalize a-b=>a_b, a.b=>a_b, a/b=>a_b
 func Normalize(env string) (k, v string, ok bool) {
 	if env == "" {
@@ -18,7 +22,5 @@ func Normalize(env string) (k, v string, ok bool) {
 		return key, "", false
 	}
 
-	key = replacer.Replace(key)
-	key = strings.ToUpper(strings.ReplaceAll(key, "__", "_"))
-	return key, trim(envs[1]), true
+	return KeyHandler(key), trim(envs[1]), true
 }
