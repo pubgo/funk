@@ -1,7 +1,6 @@
 package env
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -16,9 +15,7 @@ import (
 var trim = strings.TrimSpace
 
 func Set(key, value string) error {
-	k, v, ok := Normalize(fmt.Sprintf("%s=%s", key, value))
-	assert.If(!ok, "env key is incorrect")
-	return os.Setenv(Key(k), v)
+	return os.Setenv(KeyHandler(key), value)
 }
 
 func Get(names ...string) string {
