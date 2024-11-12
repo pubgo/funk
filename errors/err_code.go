@@ -10,6 +10,7 @@ import (
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
+	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -94,16 +95,19 @@ func (t *ErrCode) As(err any) bool {
 	}
 
 	err1, ok := err.(*ErrCode)
-	if ok && err1.pb != nil && err1.pb.Code == t.pb.Code && err1.pb.Name == t.pb.Name {
+	if ok {
+		err1.pb = t.pb
 		return true
 	}
 
 	err2, ok := err.(**errorpb.ErrCode)
-	if ok && (*err2).Code == t.pb.Code && (*err2).Name == t.pb.Name {
+	if ok {
+		*err2 = t.pb
 		return true
 	}
 
-	if err2, ok := err.(*errorpb.ErrCode); ok && (*err2).Code == t.pb.Code && (*err2).Name == t.pb.Name {
+	if err2, ok := err.(*errorpb.ErrCode); ok {
+		*err2 = lo.FromPtr(proto.Clone(t.pb).(*errorpb.ErrCode))
 		return true
 	}
 
