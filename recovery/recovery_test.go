@@ -64,3 +64,10 @@ func TestName(t *testing.T) {
 func hello() {
 	panic("hello")
 }
+
+func TestTesting(t *testing.T) {
+	defer Testing(t)
+
+	log.Print("test panic")
+	hello()
+}
