@@ -21,16 +21,16 @@ func RegStackPkgFilter(filter ...interface{}) {
 			continue
 		}
 
-		switch ff.(type) {
+		switch ff := ff.(type) {
 		case reflect.Type:
-			skipStackMap.Store(stack.CallerWithType(ff.(reflect.Type)).Pkg, nil)
+			skipStackMap.Store(stack.CallerWithType(ff).Pkg, nil)
 			continue
 		}
 
 		typ := reflect.TypeOf(ff)
 		switch typ.Kind() {
 		case reflect.String:
-			skipStackMap.Store(ff.(string), nil)
+			skipStackMap.Store(ff, nil)
 		case reflect.Func:
 			skipStackMap.Store(stack.CallerWithFunc(ff).Pkg, nil)
 		default:

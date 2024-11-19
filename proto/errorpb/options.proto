@@ -15,6 +15,7 @@ message Options {
 message Fields {
   Code code = 1;
   string msg = 2;
+  string name = 3;
 }
 
 extend google.protobuf.EnumValueOptions {

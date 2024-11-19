@@ -25,7 +25,7 @@ func TestCodeErr(t *testing.T) {
 		StatusCode: errorpb.Code_Aborted,
 		Code:       100000,
 		Name:       "hello.test.123",
-		Message:    fmt.Sprintf("test error"),
+		Message:    "test error",
 	})
 
 	err = errors.WrapMapTag(err, errors.Maps{

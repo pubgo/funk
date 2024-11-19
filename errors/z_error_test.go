@@ -20,7 +20,7 @@ func TestFormat(t *testing.T) {
 	err = errors.WrapTag(err, errors.T("event", "test event"), errors.T("test123", 123), errors.T("test", "hello"))
 	err = errors.Wrapf(err, "next error name=%s", "wrapf")
 
-	err = errors.WrapCode(err, testcodepb.ErrCodeNotFound)
+	err = errors.WrapCode(err, testcodepb.TestErrCodeNotFound)
 	err = errors.WrapMsg(err, &errorpb.ErrMsg{
 		Msg: "this is msg",
 	})

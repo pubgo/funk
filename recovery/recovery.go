@@ -3,7 +3,9 @@ package recovery
 import (
 	"os"
 	"runtime/debug"
+	"testing"
 
+	"github.com/pubgo/funk"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
@@ -79,4 +81,16 @@ func DebugPrint() {
 
 	errors.Debug(errors.WrapStack(err))
 	debug.PrintStack()
+}
+
+// testing
+func Testing(t *testing.T) {
+	err := errors.Parse(recover())
+	if funk.IsNil(err) {
+		return
+	}
+
+	errors.Debug(errors.WrapStack(err))
+	debug.PrintStack()
+	t.Fatal(err)
 }

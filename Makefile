@@ -45,3 +45,4 @@ refactor:
 
 install-protoc:
 	go install -v ./cmds/protoc-gen-cloudjobs
+	go install -v ./cmds/protoc-gen-go-errors
