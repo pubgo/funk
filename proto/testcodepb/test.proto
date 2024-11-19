@@ -39,7 +39,8 @@ enum Code {
 
   // custom msg, 注释可以做其他的操作
   CustomCode = 100005[
-    (errors.field).msg = "this is custom msg"
+    (errors.field).msg = "this is custom msg",
+    (errors.field).name = "demo.custom.code"
   ];
 }
 
