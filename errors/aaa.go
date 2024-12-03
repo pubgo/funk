@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"context"
 	"fmt"
 
 	json "github.com/goccy/go-json"
@@ -89,4 +90,16 @@ type ErrorProto interface {
 
 type GRPCStatus interface {
 	GRPCStatus() *status.Status
+}
+
+var _ error = new(ErrF)
+
+type ErrF func(ctx context.Context) error
+
+func (e ErrF) Error() string {
+	if e == nil {
+		return ""
+	}
+
+	return e(context.Background()).Error()
 }
