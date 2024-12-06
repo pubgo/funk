@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"github.com/samber/lo"
 	"io/fs"
 	"log"
 	"os"
@@ -10,6 +9,7 @@ import (
 	"reflect"
 
 	"dario.cat/mergo"
+	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
 
 	"github.com/pubgo/funk/assert"
