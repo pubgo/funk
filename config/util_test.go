@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/a8m/envsubst"
-	"github.com/pubgo/funk/pretty"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -47,14 +46,14 @@ type configA struct {
 func TestMerge(t *testing.T) {
 	cfg := &configA{}
 	assert.Nil(t, Merge(
-		&configA{},
+		cfg,
 		configA{
 			Name1: configL{
 				Name: "a1",
 			},
 		},
 	))
-	t.Logf("%#v", cfg)
+	assert.Equal(t, cfg.Name1.Name, "a1")
 
 	cfg = &configA{}
 	assert.Nil(t, Merge(
@@ -73,7 +72,9 @@ func TestMerge(t *testing.T) {
 			},
 		},
 	))
-	t.Logf("%#v", cfg)
+	assert.Equal(t, cfg.Name1.Name, "a2")
+	assert.Equal(t, len(cfg.Names), 1)
+	assert.Equal(t, cfg.Names[0].Name, "a2")
 
 	cfg = new(configA)
 	assert.Nil(t, Merge(
@@ -103,7 +104,12 @@ func TestMerge(t *testing.T) {
 			},
 		},
 	))
-	pretty.Println(cfg)
+	assert.Equal(t, cfg.Name1.Name, "a3")
+	assert.Equal(t, len(cfg.Names), 2)
+	assert.Equal(t, cfg.Names[0].Name, "a2")
+	assert.Equal(t, cfg.Names[0].Value, "a3")
+	assert.Equal(t, cfg.Names[1].Name, "a3")
+	assert.Equal(t, cfg.Names[1].Value, "")
 
 	cfg = new(configA)
 	assert.Nil(t, Merge(
@@ -124,5 +130,9 @@ func TestMerge(t *testing.T) {
 			},
 		},
 	))
-	pretty.Println(cfg)
+	assert.Equal(t, cfg.Name1.Name, "a1")
+	assert.Equal(t, cfg.Name1.Value, "a1")
+	assert.Equal(t, len(cfg.Names), 1)
+	assert.Equal(t, cfg.Names[0].Name, "a1")
+	assert.Equal(t, cfg.Names[0].Value, "")
 }

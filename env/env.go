@@ -12,8 +12,6 @@ import (
 	"github.com/pubgo/funk/result"
 )
 
-var trim = strings.TrimSpace
-
 func Set(key, value string) error {
 	return os.Setenv(KeyHandler(key), value)
 }
@@ -109,7 +107,7 @@ func Map() map[string]string {
 }
 
 func Key(key string) string {
-	return strings.ToUpper(trim(key))
+	return KeyHandler(key)
 }
 
 func Load(filenames ...string) {

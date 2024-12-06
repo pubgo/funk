@@ -4,6 +4,7 @@ import (
 	"strings"
 )
 
+var trim = strings.TrimSpace
 var replacer = strings.NewReplacer("-", "_", ".", "_", "/", "_")
 
 func KeyHandler(key string) string {
@@ -16,11 +17,11 @@ func Normalize(env string) (k, v string, ok bool) {
 		return "", "", false
 	}
 
-	envs := strings.SplitN(env, "=", 2)
-	key := trim(envs[0])
-	if len(envs) != 2 || key == "" || strings.HasPrefix(key, "_") {
+	kvs := strings.SplitN(env, "=", 2)
+	key := trim(kvs[0])
+	if len(kvs) != 2 || key == "" || strings.HasPrefix(key, "_") {
 		return key, "", false
 	}
 
-	return KeyHandler(key), trim(envs[1]), true
+	return KeyHandler(key), trim(kvs[1]), true
 }
