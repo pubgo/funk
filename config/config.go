@@ -10,6 +10,7 @@ import (
 	"github.com/a8m/envsubst"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/pathutil"
+	"github.com/pubgo/funk/typex"
 	"github.com/pubgo/funk/vars"
 	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
@@ -42,23 +43,16 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 
 	assert.Must(yaml.Unmarshal(configBytes, val))
 
-	var res Resources
-	assert.Must(yaml.Unmarshal(configBytes, &res))
-
-	sort.Strings(res.Resources)
-	sort.Strings(res.PatchResources)
-
-	var getRealPath = func([]string) []string {
+	var getRealPath = func(pp []string) []string {
 		var resPaths []string
-		for _, resPath := range res.Resources {
+		for _, resPath := range pp {
 			pathList := listAllPath(resPath).Expect("failed to list cfgPath: %s", resPath)
 			resPaths = append(resPaths, pathList...)
 		}
 		resPaths = lo.Filter(resPaths, func(item string, index int) bool { return strings.HasSuffix(item, "."+defaultConfigType) })
 		resPaths = lo.Map(resPaths, func(item string, index int) string { return filepath.Join(parentDir, item) })
-		return resPaths
+		return lo.Uniq(resPaths)
 	}
-
 	var getCfg = func(resPath string) T {
 		resBytes := assert.Must1(os.ReadFile(resPath))
 		resBytes = assert.Must1(envsubst.Bytes(resBytes))
@@ -68,22 +62,38 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 		return cfg1
 	}
 
+	var res Resources
+	assert.Must(yaml.Unmarshal(configBytes, &res))
+
 	var cfgList []T
-	for _, resPath := range getRealPath(res.Resources) {
-		if pathutil.IsNotExist(resPath) {
-			log.Panicln("resources config cfgPath not found:", resPath)
+	cfgList = append(cfgList, typex.DoBlock1(func() []T {
+		var resPathList = getRealPath(res.Resources)
+		sort.Strings(resPathList)
+
+		var pathList []T
+		for _, resPath := range resPathList {
+			if pathutil.IsNotExist(resPath) {
+				log.Panicln("resources config cfgPath not found:", resPath)
+			}
+
+			pathList = append(pathList, getCfg(resPath))
 		}
+		return pathList
+	})...)
+	cfgList = append(cfgList, typex.DoBlock1(func() []T {
+		var patchResPathList = getRealPath(res.PatchResources)
+		sort.Strings(patchResPathList)
 
-		cfgList = append(cfgList, getCfg(resPath))
-	}
+		var pathList []T
+		for _, resPath := range patchResPathList {
+			if pathutil.IsNotExist(resPath) {
+				continue
+			}
 
-	for _, resPath := range getRealPath(res.PatchResources) {
-		if pathutil.IsNotExist(resPath) {
-			continue
+			pathList = append(pathList, getCfg(resPath))
 		}
-
-		cfgList = append(cfgList, getCfg(resPath))
-	}
+		return pathList
+	})...)
 
 	assert.Must(Merge(val, cfgList...))
 }
