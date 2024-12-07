@@ -22,3 +22,7 @@ const (
 func (c Color) P(s string, args ...interface{}) string {
 	return fmt.Sprintf("\x1b[%dm%s\x1b[0m", uint8(c), fmt.Sprintf(s, args...))
 }
+
+func (c Color) Str(s string) string {
+	return fmt.Sprintf("\x1b[%dm%s\x1b[0m", uint8(c), s)
+}
