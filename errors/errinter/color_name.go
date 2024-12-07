@@ -6,7 +6,7 @@ import (
 	"github.com/pubgo/funk/internal/color"
 )
 
-var width = 10
+var width = 11
 
 func Get(name string) string {
 	if width-len(name) < 0 {
