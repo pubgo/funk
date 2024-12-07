@@ -46,3 +46,11 @@ refactor:
 install-protoc:
 	go install -v ./cmds/protoc-gen-cloudjobs
 	go install -v ./cmds/protoc-gen-go-errors
+
+lint:
+	golangci-lint run \
+		--out-format=colored-line-number \
+		--timeout=10m --new-from-rev=HEAD~1 \
+		--config=./.golangci.yml \
+		--verbose \
+		--print-issued-lines

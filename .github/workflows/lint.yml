@@ -56,4 +56,3 @@ jobs:
           skip-cache: false
         env:
           GOLANGCI_LINT_CACHE: go-lint-cache-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
-
