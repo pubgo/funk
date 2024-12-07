@@ -2,14 +2,7 @@ package env
 
 import (
 	"os"
-	"strings"
 )
-
-var Prefix = ""
-
-func GetPrefix() string {
-	return Key(Prefix)
-}
 
 func Init() {
 	initEnv()
@@ -20,7 +13,7 @@ func Init() {
 func initEnv() {
 	for _, env := range os.Environ() {
 		k, v, ok := Normalize(env)
-		if k != "" && ok && strings.HasPrefix(k, GetPrefix()) {
+		if k != "" && ok {
 			_ = os.Setenv(k, v)
 			continue
 		}

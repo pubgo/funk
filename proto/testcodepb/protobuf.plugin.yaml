@@ -2,4 +2,3 @@ plugins:
   - name: go
   - name: go-enum
   - name: go-errors
-  - name: cloudjobs

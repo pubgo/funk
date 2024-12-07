@@ -35,13 +35,12 @@ var (
 	// LocalIP the local IP address of the current service
 	LocalIP = netutil.GetLocalIP()
 
-	// Hostname
 	Hostname = strutil.FirstFnNotEmpty(
 		func() string { return os.Getenv("HOSTNAME") },
 		func() string { return assert.Exit1(os.Hostname()) },
 	)
 
-	// K8s namespace
+	// Namespace K8s namespace
 	Namespace = strutil.FirstFnNotEmpty(
 		func() string { return os.Getenv("NAMESPACE") },
 		func() string { return os.Getenv("POD_NAMESPACE") },
