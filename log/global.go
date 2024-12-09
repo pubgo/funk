@@ -24,7 +24,8 @@ var (
 			return
 		}
 
-		if logEnableChecker(e.GetCtx(), level, message, nil) {
+		ctx := e.GetCtx()
+		if logEnableChecker(ctx, level, message, getFieldFromCtx(ctx)) {
 			return
 		}
 
