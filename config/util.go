@@ -70,7 +70,7 @@ func getPathList() (paths []string) {
 }
 
 func SetConfigPath(confPath string) {
-	assert.If(configPath == "", "config path is null")
+	assert.If(confPath == "", "config path is null")
 	configPath = confPath
 }
 
