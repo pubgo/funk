@@ -18,6 +18,10 @@ func TestEnv(t *testing.T) {
 	data, err = envsubst.String("${hello:-abc}")
 	assert.Nil(t, err)
 	assert.Equal(t, data, "abc")
+
+	data, err = envsubst.String("${{hello:-abc}}")
+	assert.Nil(t, err)
+	assert.Equal(t, data, "${{hello:-abc}}")
 }
 
 func TestConfigPath(t *testing.T) {
