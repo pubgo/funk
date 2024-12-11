@@ -1,14 +1,13 @@
 package config
 
 import (
-	"github.com/goccy/go-json"
+	"encoding/json"
 	"gopkg.in/yaml.v3"
 )
 
 var (
 	_ yaml.Unmarshaler = (*Node)(nil)
 	_ yaml.Marshaler   = (*Node)(nil)
-	_ json.Marshaler   = (*Node)(nil)
 )
 
 type Node struct {
