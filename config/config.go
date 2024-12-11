@@ -49,7 +49,7 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 			pathList := listAllPath(resPath).Expect("failed to list cfgPath: %s", resPath)
 			resPaths = append(resPaths, pathList...)
 		}
-		
+
 		// skip .cfg.yaml and cfg.other
 		resPaths = lo.Filter(resPaths, func(item string, index int) bool {
 			return strings.HasSuffix(item, "."+defaultConfigType) && !strings.HasPrefix(item, ".")
@@ -60,6 +60,7 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 	var getCfg = func(resPath string) T {
 		resBytes := assert.Must1(os.ReadFile(resPath))
 		resBytes = assert.Must1(envsubst.Bytes(resBytes))
+		resBytes = []byte(cfgFormat(string(resBytes), &config{workDir: filepath.Dir(resPath)}))
 
 		var cfg1 T
 		assert.Must(yaml.Unmarshal(resBytes, &cfg1))

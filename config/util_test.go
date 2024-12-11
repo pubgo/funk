@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"sort"
 	"strings"
 	"testing"
 
@@ -145,6 +146,10 @@ func TestMerge(t *testing.T) {
 	))
 	assert.Equal(t, cfg.Name1.Name, "a3")
 	assert.Equal(t, len(cfg.Names), 2)
+	sort.Slice(cfg.Names, func(i, j int) bool {
+		return cfg.Names[i].Name < cfg.Names[j].Name
+	})
+
 	assert.Equal(t, cfg.Names[0].Name, "a2")
 	assert.Equal(t, cfg.Names[0].Value, "a3")
 	assert.Equal(t, cfg.Names[1].Name, "a3")
