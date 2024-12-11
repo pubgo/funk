@@ -2,7 +2,6 @@ package config
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -12,15 +11,12 @@ import (
 	"github.com/a8m/envsubst"
 	expr "github.com/expr-lang/expr"
 	"github.com/pubgo/funk/env"
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/valyala/fasttemplate"
 	"gopkg.in/yaml.v3"
 )
-
-func init() {
-	//expr.Function()
-}
 
 type config struct {
 	workDir string
@@ -91,11 +87,11 @@ assets:
 func Format(template string, dir string) string {
 	tpl := fasttemplate.New(template, "${{", "}}")
 	return tpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
-		fmt.Println(tag)
 		var data, err = yaml.Marshal(eval(tag, dir))
 		if err != nil {
-			return -1, err
+			return -1, errors.Wrap(err, tag)
 		}
+
 		return w.Write(bytes.TrimSpace(data))
 	})
 }
