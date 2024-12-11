@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -12,35 +11,10 @@ import (
 	expr "github.com/expr-lang/expr"
 	"github.com/pubgo/funk/env"
 	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/valyala/fasttemplate"
 	"gopkg.in/yaml.v3"
 )
-
-type config struct {
-	workDir string
-}
-
-func getEnvData(cfg *config) map[string]any {
-	return map[string]any{
-		"env": env.Map(),
-		"embed": func(name string) string {
-			if name == "" {
-				return ""
-			}
-
-			var path = filepath.Join(cfg.workDir, name)
-			var d, err = os.ReadFile(path)
-			if err != nil {
-				log.Err(err).Str("path", path).Msg("failed to read file")
-				return ""
-			}
-
-			return strings.TrimSpace(string(d))
-		},
-	}
-}
 
 func eval(code string, dir string) any {
 	envData := getEnvData(&config{workDir: dir})

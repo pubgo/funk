@@ -3,17 +3,19 @@ package config
 import (
 	"fmt"
 	"io/fs"
-	"log"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 
 	"dario.cat/mergo"
 	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
 
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/env"
 	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/pathutil"
 	"github.com/pubgo/funk/result"
 )
@@ -52,7 +54,7 @@ func getConfigPath(name, typ string, configDir ...string) (string, string) {
 		}
 	}
 
-	log.Panicf("config not found in: %v\n", notFoundPath)
+	log.Fatal().Msgf("config not found in: %v", notFoundPath)
 
 	return "", ""
 }
@@ -201,4 +203,28 @@ func listAllPath(dirOrPath string) (ret result.Result[[]string]) {
 func makeList(typ reflect.Type, data []reflect.Value) reflect.Value {
 	val := reflect.MakeSlice(reflect.SliceOf(typ), 0, 0)
 	return reflect.Append(val, data...)
+}
+
+type config struct {
+	workDir string
+}
+
+func getEnvData(cfg *config) map[string]any {
+	return map[string]any{
+		"env": env.Map(),
+		"embed": func(name string) string {
+			if name == "" {
+				return ""
+			}
+
+			var path = filepath.Join(cfg.workDir, name)
+			var d, err = os.ReadFile(path)
+			if err != nil {
+				log.Err(err).Str("path", path).Msg("failed to read file")
+				return ""
+			}
+
+			return strings.TrimSpace(string(d))
+		},
+	}
 }
