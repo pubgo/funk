@@ -1,15 +1,41 @@
 package config
 
 import (
+	"fmt"
+	"io"
 	"os"
 	"testing"
 
 	"github.com/a8m/envsubst"
+	expr "github.com/expr-lang/expr"
+	"github.com/pubgo/funk/convert"
+	"github.com/pubgo/funk/env"
 	"github.com/stretchr/testify/assert"
+	"github.com/valyala/fasttemplate"
 )
 
+func NewVM() {
+	envData := map[string]interface{}{
+		"greet":   "Hello, %v!",
+		"names":   []string{"world", "you"},
+		"sprintf": fmt.Sprintf,
+	}
+
+	program, err := expr.Compile(code, expr.Env(envData))
+	if err != nil {
+		panic(err)
+	}
+}
+
+func Format(template string, data map[string]string) string {
+	tpl := fasttemplate.New(template, "${{", "}}")
+	return tpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
+		return w.Write(convert.S2B(data[tag]))
+	})
+}
+
 func TestEnv(t *testing.T) {
-	os.Setenv("hello", "world")
+	env.Set("hello", "world")
 	data, err := envsubst.String("${hello}")
 	assert.Nil(t, err)
 	assert.Equal(t, data, "world")
