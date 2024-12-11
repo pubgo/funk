@@ -1,7 +1,9 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -9,7 +11,9 @@ import (
 	"strings"
 
 	"dario.cat/mergo"
+	"github.com/expr-lang/expr"
 	"github.com/samber/lo"
+	"github.com/valyala/fasttemplate"
 	"gopkg.in/yaml.v3"
 
 	"github.com/pubgo/funk/assert"
@@ -227,4 +231,25 @@ func getEnvData(cfg *config) map[string]any {
 			return strings.TrimSpace(string(d))
 		},
 	}
+}
+
+func cfgFormat(template string, cfg *config) string {
+	tpl := fasttemplate.New(template, "${{", "}}")
+	return tpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
+		var data, err = yaml.Marshal(eval(tag, cfg))
+		if err != nil {
+			return -1, errors.Wrap(err, tag)
+		}
+
+		return w.Write(bytes.TrimSpace(data))
+	})
+}
+
+func eval(code string, cfg *config) any {
+	envData := getEnvData(cfg)
+	data, err := expr.Eval(strings.TrimSpace(code), envData)
+	if err != nil {
+		panic(err)
+	}
+	return data
 }

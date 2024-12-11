@@ -1,36 +1,21 @@
 package config
 
 import (
-	"bytes"
-	"io"
 	"os"
 	"strings"
 	"testing"
 
 	"github.com/a8m/envsubst"
-	expr "github.com/expr-lang/expr"
 	"github.com/pubgo/funk/env"
-	"github.com/pubgo/funk/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/valyala/fasttemplate"
-	"gopkg.in/yaml.v3"
 )
-
-func eval(code string, dir string) any {
-	envData := getEnvData(&config{workDir: dir})
-	data, err := expr.Eval(strings.TrimSpace(code), envData)
-	if err != nil {
-		panic(err)
-	}
-	return data
-}
 
 func TestExpr(t *testing.T) {
 	os.Setenv("testAbc", "hello")
 	env.Init()
 
-	assert.Equal(t, Format("${{env.TEST_ABC}}", ""), "hello")
-	assert.Equal(t, Format(`${{embed("configs/assets/secret")}}`, ""), strings.TrimSpace(`
+	assert.Equal(t, cfgFormat("${{env.TEST_ABC}}", &config{}), "hello")
+	assert.Equal(t, cfgFormat(`${{embed("configs/assets/secret")}}`, &config{}), strings.TrimSpace(`
 	|-
     123456
     123456
@@ -44,7 +29,7 @@ func TestExpr(t *testing.T) {
 
 	var dd, err = os.ReadFile("configs/assets/assets.yaml")
 	assert.NoError(t, err)
-	assert.Equal(t, Format(string(dd), "configs/assets"), strings.TrimSpace(`
+	assert.Equal(t, cfgFormat(string(dd), &config{workDir: "configs/assets"}), strings.TrimSpace(`
 assets:
   secret: |-
     123456
@@ -56,18 +41,6 @@ assets:
     123456
     123456
 `))
-}
-
-func Format(template string, dir string) string {
-	tpl := fasttemplate.New(template, "${{", "}}")
-	return tpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
-		var data, err = yaml.Marshal(eval(tag, dir))
-		if err != nil {
-			return -1, errors.Wrap(err, tag)
-		}
-
-		return w.Write(bytes.TrimSpace(data))
-	})
 }
 
 func TestEnv(t *testing.T) {
