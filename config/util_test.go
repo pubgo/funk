@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -21,29 +22,32 @@ func init() {
 	//expr.Function()
 }
 
-var envData = map[string]interface{}{
-	"env": env.Map(),
-	"embed": func(name string, dir string) string {
-		if name == "" {
-			return ""
-		}
-
-		var path = filepath.Join(dir, name)
-		var d, err = os.ReadFile(path)
-		if err != nil {
-			log.Err(err).Str("path", path).Msg("failed to read file")
-			return ""
-		}
-
-		return strings.TrimSpace(string(d))
-	},
+type config struct {
+	workDir string
 }
 
-func init() {
-	fmt.Printf("%#v\n", envData)
+func getEnvData(cfg *config) map[string]any {
+	return map[string]any{
+		"env": env.Map(),
+		"embed": func(name string) string {
+			if name == "" {
+				return ""
+			}
+
+			var path = filepath.Join(cfg.workDir, name)
+			var d, err = os.ReadFile(path)
+			if err != nil {
+				log.Err(err).Str("path", path).Msg("failed to read file")
+				return ""
+			}
+
+			return strings.TrimSpace(string(d))
+		},
+	}
 }
 
 func eval(code string, dir string) any {
+	envData := getEnvData(&config{workDir: dir})
 	data, err := expr.Eval(strings.TrimSpace(code), envData)
 	if err != nil {
 		panic(err)
@@ -52,13 +56,36 @@ func eval(code string, dir string) any {
 }
 
 func TestExpr(t *testing.T) {
-	t.Log(Format("${{env.SHELL}}", ""))
-	t.Log(Format(`${{embed("configs/assets/secret","")}}`, ""))
+	os.Setenv("testAbc", "hello")
+	env.Init()
+
+	assert.Equal(t, Format("${{env.TEST_ABC}}", ""), "hello")
+	assert.Equal(t, Format(`${{embed("configs/assets/secret")}}`, ""), strings.TrimSpace(`
+	|-
+    123456
+    123456
+    123456
+    123456
+    123456
+    123456
+    123456
+    123456
+`))
 
 	var dd, err = os.ReadFile("configs/assets/assets.yaml")
 	assert.NoError(t, err)
-	t.Log("\n" + Format(string(dd), "configs/assets"))
-	os.WriteFile("configs/assets/.gen.yaml", []byte(Format(string(dd), "configs/assets")), 0644)
+	assert.Equal(t, Format(string(dd), "configs/assets"), strings.TrimSpace(`
+assets:
+  secret: |-
+    123456
+    123456
+    123456
+    123456
+    123456
+    123456
+    123456
+    123456
+`))
 }
 
 func Format(template string, dir string) string {
@@ -69,7 +96,7 @@ func Format(template string, dir string) string {
 		if err != nil {
 			return -1, err
 		}
-		return w.Write(data)
+		return w.Write(bytes.TrimSpace(data))
 	})
 }
 
