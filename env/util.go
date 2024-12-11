@@ -15,16 +15,11 @@ func KeyHandler(key string) string {
 }
 
 // Normalize a-b=>a_b, a.b=>a_b, a/b=>a_b
-func Normalize(env string) (k, v string, ok bool) {
-	if env == "" {
-		return "", "", false
+func Normalize(key string) (string, bool) {
+	key = trim(key)
+	if key == "" || strings.HasPrefix(key, "_") || strings.HasPrefix(key, "=") {
+		return key, false
 	}
 
-	kvs := strings.SplitN(env, "=", 2)
-	key := trim(kvs[0])
-	if len(kvs) != 2 || key == "" || strings.HasPrefix(key, "_") {
-		return key, "", false
-	}
-
-	return KeyHandler(key), trim(kvs[1]), true
+	return KeyHandler(key), true
 }

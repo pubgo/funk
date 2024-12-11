@@ -4,38 +4,77 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/a8m/envsubst"
 	expr "github.com/expr-lang/expr"
-	"github.com/pubgo/funk/convert"
 	"github.com/pubgo/funk/env"
+	"github.com/pubgo/funk/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/valyala/fasttemplate"
+	"gopkg.in/yaml.v3"
 )
 
-func NewVM() {
-	envData := map[string]interface{}{
-		"greet":   "Hello, %v!",
-		"names":   []string{"world", "you"},
-		"sprintf": fmt.Sprintf,
-	}
+func init() {
+	//expr.Function()
+}
 
-	program, err := expr.Compile(code, expr.Env(envData))
+var envData = map[string]interface{}{
+	"env": env.Map(),
+	"embed": func(name string, dir string) string {
+		if name == "" {
+			return ""
+		}
+
+		var path = filepath.Join(dir, name)
+		var d, err = os.ReadFile(path)
+		if err != nil {
+			log.Err(err).Str("path", path).Msg("failed to read file")
+			return ""
+		}
+
+		return strings.TrimSpace(string(d))
+	},
+}
+
+func init() {
+	fmt.Printf("%#v\n", envData)
+}
+
+func eval(code string, dir string) any {
+	data, err := expr.Eval(strings.TrimSpace(code), envData)
 	if err != nil {
 		panic(err)
 	}
+	return data
 }
 
-func Format(template string, data map[string]string) string {
+func TestExpr(t *testing.T) {
+	t.Log(Format("${{env.SHELL}}", ""))
+	t.Log(Format(`${{embed("configs/assets/secret","")}}`, ""))
+
+	var dd, err = os.ReadFile("configs/assets/assets.yaml")
+	assert.NoError(t, err)
+	t.Log("\n" + Format(string(dd), "configs/assets"))
+	os.WriteFile("configs/assets/.gen.yaml", []byte(Format(string(dd), "configs/assets")), 0644)
+}
+
+func Format(template string, dir string) string {
 	tpl := fasttemplate.New(template, "${{", "}}")
 	return tpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
-		return w.Write(convert.S2B(data[tag]))
+		fmt.Println(tag)
+		var data, err = yaml.Marshal(eval(tag, dir))
+		if err != nil {
+			return -1, err
+		}
+		return w.Write(data)
 	})
 }
 
 func TestEnv(t *testing.T) {
-	env.Set("hello", "world")
+	os.Setenv("hello", "world")
 	data, err := envsubst.String("${hello}")
 	assert.Nil(t, err)
 	assert.Equal(t, data, "world")

@@ -49,7 +49,11 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 			pathList := listAllPath(resPath).Expect("failed to list cfgPath: %s", resPath)
 			resPaths = append(resPaths, pathList...)
 		}
-		resPaths = lo.Filter(resPaths, func(item string, index int) bool { return strings.HasSuffix(item, "."+defaultConfigType) })
+		
+		// skip .cfg.yaml and cfg.other
+		resPaths = lo.Filter(resPaths, func(item string, index int) bool {
+			return strings.HasSuffix(item, "."+defaultConfigType) && !strings.HasPrefix(item, ".")
+		})
 		resPaths = lo.Map(resPaths, func(item string, index int) string { return filepath.Join(parentDir, item) })
 		return lo.Uniq(resPaths)
 	}

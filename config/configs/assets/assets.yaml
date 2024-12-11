@@ -1,0 +1,2 @@
+assets:
+  secret: ${{embed("configs/assets/secret","")}}
