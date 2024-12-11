@@ -216,6 +216,9 @@ type config struct {
 func getEnvData(cfg *config) map[string]any {
 	return map[string]any{
 		"env": env.Map(),
+		"get_path_dir": func() string {
+			return cfg.workDir
+		},
 		"embed": func(name string) string {
 			if name == "" {
 				return ""

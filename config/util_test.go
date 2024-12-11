@@ -1,6 +1,7 @@
 package config
 
 import (
+	_ "embed"
 	"os"
 	"sort"
 	"strings"
@@ -10,6 +11,9 @@ import (
 	"github.com/pubgo/funk/env"
 	"github.com/stretchr/testify/assert"
 )
+
+//go:embed configs/assets/.gen.yaml
+var genYaml string
 
 func TestExpr(t *testing.T) {
 	os.Setenv("testAbc", "hello")
@@ -30,18 +34,7 @@ func TestExpr(t *testing.T) {
 
 	var dd, err = os.ReadFile("configs/assets/assets.yaml")
 	assert.NoError(t, err)
-	assert.Equal(t, cfgFormat(string(dd), &config{workDir: "configs/assets"}), strings.TrimSpace(`
-assets:
-  secret: |-
-    123456
-    123456
-    123456
-    123456
-    123456
-    123456
-    123456
-    123456
-`))
+	assert.Equal(t, strings.TrimSpace(cfgFormat(string(dd), &config{workDir: "configs/assets"})), strings.TrimSpace(genYaml))
 }
 
 func TestEnv(t *testing.T) {

@@ -1,2 +1,3 @@
 assets:
   secret: ${{embed("secret")}}
+  path_dir: ${{get_path_dir()}}

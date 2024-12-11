@@ -60,7 +60,9 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 	var getCfg = func(resPath string) T {
 		resBytes := assert.Must1(os.ReadFile(resPath))
 		resBytes = assert.Must1(envsubst.Bytes(resBytes))
-		resBytes = []byte(cfgFormat(string(resBytes), &config{workDir: filepath.Dir(resPath)}))
+		resBytes = []byte(cfgFormat(string(resBytes), &config{
+			workDir: filepath.Dir(resPath),
+		}))
 
 		var cfg1 T
 		assert.Must(yaml.Unmarshal(resBytes, &cfg1))
