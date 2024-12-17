@@ -16,10 +16,9 @@ import (
 )
 
 var (
-	logEnableChecker      = func(ctx context.Context, lvl Level, nameOrMessage string, fields Map) bool { return true }
-	zErrMarshalFunc       = zerolog.ErrorMarshalFunc
-	zInterfaceMarshalFunc = zerolog.InterfaceMarshalFunc
-	logGlobalHook         = zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, message string) {
+	logEnableChecker = func(ctx context.Context, lvl Level, nameOrMessage string, fields Map) bool { return true }
+	zErrMarshalFunc  = zerolog.ErrorMarshalFunc
+	logGlobalHook    = zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, message string) {
 		if logEnableChecker == nil {
 			return
 		}
@@ -43,23 +42,10 @@ var (
 			}
 
 			if zErrMarshalFunc == nil {
-				return err.Error()
+				return fmt.Sprintf("%v", err)
 			}
 
 			return zErrMarshalFunc(err)
-		}
-
-		zerolog.InterfaceMarshalFunc = func(v any) ([]byte, error) {
-			if v == nil {
-				return []byte("null"), nil
-			}
-
-			switch e1 := v.(type) {
-			case json.Marshaler:
-				return e1.MarshalJSON()
-			}
-
-			return zInterfaceMarshalFunc(v)
 		}
 	})
 
