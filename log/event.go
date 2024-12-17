@@ -2,6 +2,7 @@ package log
 
 import (
 	"bytes"
+	"slices"
 	"unsafe"
 
 	"github.com/rs/zerolog"
@@ -17,23 +18,32 @@ func putEvent(e *Event)
 
 func WithEvent(evt *Event) func(e *Event) {
 	return func(e *Event) {
-		defer putEvent(evt)
-		evt1 := convertEvent(evt)
-		if len(evt1.buf) == 0 {
+		if !e.Enabled() {
 			return
 		}
 
-		evt1.buf = bytes.TrimLeft(evt1.buf, "{")
-		evt1.buf = bytes.TrimRight(evt1.buf, ",")
-		if len(evt1.buf) == 0 {
+		buf := slices.Clone(convertEvent(evt).buf)
+		if len(buf) == 0 {
+			return
+		}
+
+		buf = bytes.TrimLeft(buf, "{")
+		buf = bytes.TrimSpace(bytes.Trim(buf, ","))
+		if len(buf) == 0 {
 			return
 		}
 
 		e1 := convertEvent(e)
-		if len(e1.buf) > 0 && len(evt1.buf) > 0 {
-			e1.buf = append(e1.buf, ',')
+		e1.buf = bytes.TrimSpace(e1.buf)
+		if len(e1.buf) == 0 {
+			e1.buf = append(e1.buf, '{')
+			e1.buf = append(e1.buf, buf...)
+		} else {
+			e1.buf = append(e1.buf, ","...)
+			e1.buf = append(e1.buf, buf...)
 		}
-		e1.buf = append(e1.buf, evt1.buf...)
+
+		e1.buf = bytes.TrimSpace(e1.buf)
 	}
 }
 
@@ -63,19 +73,31 @@ func mergeEvent(to *Event, from ...*Event) *Event {
 	}
 
 	to1 := convertEvent(to)
-	to1.buf = bytes.TrimRight(to1.buf, ",")
+	to1.buf = bytes.TrimSpace(bytes.Trim(to1.buf, ","))
 	for i := range from {
 		if from[i] == nil {
 			continue
 		}
 
-		from1 := convertEvent(from[i])
-		from1.buf = bytes.TrimLeft(from1.buf, "{")
-		from1.buf = bytes.Trim(from1.buf, ",")
-		if len(from1.buf) > 0 {
-			to1.buf = append(to1.buf, ',')
-			to1.buf = append(to1.buf, from1.buf...)
+		buf := slices.Clone(convertEvent(from[i]).buf)
+		if len(buf) == 0 {
+			continue
+		}
+
+		buf = bytes.TrimLeft(buf, "{")
+		buf = bytes.TrimSpace(bytes.Trim(buf, ","))
+		if len(buf) == 0 {
+			continue
+		}
+
+		if len(to1.buf) == 0 {
+			to1.buf = append(to1.buf, '{')
+			to1.buf = append(to1.buf, buf...)
+		} else {
+			to1.buf = append(to1.buf, ","...)
+			to1.buf = append(to1.buf, buf...)
 		}
 	}
+	to1.buf = bytes.TrimSpace(to1.buf)
 	return to
 }
