@@ -2,13 +2,15 @@ package async
 
 import (
 	"context"
+	"fmt"
+	"runtime/debug"
 	"time"
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/recovery"
+	"github.com/pubgo/funk/running"
 	"github.com/pubgo/funk/stack"
 	"github.com/pubgo/funk/try"
 )
@@ -122,8 +124,13 @@ func logErr(fn interface{}, err error) {
 		return
 	}
 
+	if running.IsDebug {
+		debug.PrintStack()
+		errors.Debug(err)
+	}
+
 	logs.Err(err).
 		Str("func", stack.CallerWithFunc(fn).String()).
-		Str("err_stack", pretty.Sprint(err)).
+		Str("err_stack", fmt.Sprintf("%v", err)).
 		Msg(err.Error())
 }
