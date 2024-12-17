@@ -44,13 +44,14 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 	assert.Must(yaml.Unmarshal(configBytes, val))
 
 	var getRealPath = func(pp []string) []string {
+		pp = lo.Map(pp, func(item string, index int) string { return filepath.Join(parentDir, item) })
+
 		var resPaths []string
 		for _, resPath := range pp {
 			pathList := listAllPath(resPath).Expect("failed to list cfgPath: %s", resPath)
 			resPaths = append(resPaths, pathList...)
 		}
 		resPaths = lo.Filter(resPaths, func(item string, index int) bool { return strings.HasSuffix(item, "."+defaultConfigType) })
-		resPaths = lo.Map(resPaths, func(item string, index int) string { return filepath.Join(parentDir, item) })
 		return lo.Uniq(resPaths)
 	}
 	var getCfg = func(resPath string) T {
