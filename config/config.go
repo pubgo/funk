@@ -1,7 +1,6 @@
 package config
 
 import (
-	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -9,7 +8,10 @@ import (
 
 	"github.com/a8m/envsubst"
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/pathutil"
+	"github.com/pubgo/funk/recovery"
+	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/typex"
 	"github.com/pubgo/funk/vars"
 	"github.com/samber/lo"
@@ -37,11 +39,23 @@ func init() {
 }
 
 func LoadFromPath[T any](val *T, cfgPath string) {
-	parentDir := filepath.Dir(cfgPath)
-	configBytes := assert.Must1(os.ReadFile(cfgPath))
-	configBytes = assert.Must1(envsubst.Bytes(configBytes))
+	defer recovery.Exit(func(err error) error {
+		log.Err(err).Str("config_path", cfgPath).Msg("failed to load config")
+		return err
+	})
 
-	assert.Must(yaml.Unmarshal(configBytes, val))
+	parentDir := filepath.Dir(cfgPath)
+	configBytes := result.Of(os.ReadFile(cfgPath)).Expect("failed to read config data: %s", cfgPath)
+	configBytes = result.Of(envsubst.Bytes(configBytes)).Expect("failed to handler config env data: %s", cfgPath)
+
+	if err := yaml.Unmarshal(configBytes, val); err != nil {
+		log.Panic().
+			Err(err).
+			Str("config_data", string(configBytes)).
+			Str("config_path", cfgPath).
+			Msg("failed to unmarshal config")
+		return
+	}
 
 	var getRealPath = func(pp []string) []string {
 		pp = lo.Map(pp, func(item string, index int) string { return filepath.Join(parentDir, item) })
@@ -60,19 +74,19 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 		return lo.Uniq(resPaths)
 	}
 	var getCfg = func(resPath string) T {
-		resBytes := assert.Must1(os.ReadFile(resPath))
-		resBytes = assert.Must1(envsubst.Bytes(resBytes))
+		resBytes := result.Of(os.ReadFile(resPath)).Expect("failed to read config data: %s", resPath)
+		resBytes = result.Of(envsubst.Bytes(resBytes)).Expect("failed to handler config env data: %s", resPath)
 		resBytes = []byte(cfgFormat(string(resBytes), &config{
 			workDir: filepath.Dir(resPath),
 		}))
 
 		var cfg1 T
-		assert.Must(yaml.Unmarshal(resBytes, &cfg1))
+		assert.Must(yaml.Unmarshal(resBytes, &cfg1), "failed to unmarshal config")
 		return cfg1
 	}
 
 	var res Resources
-	assert.Must(yaml.Unmarshal(configBytes, &res))
+	assert.Must(yaml.Unmarshal(configBytes, &res), "failed to unmarshal resource config")
 
 	var cfgList []T
 	cfgList = append(cfgList, typex.DoBlock1(func() []T {
@@ -82,7 +96,8 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 		var pathList []T
 		for _, resPath := range resPathList {
 			if pathutil.IsNotExist(resPath) {
-				log.Panicln("resources config cfgPath not found:", resPath)
+				log.Panic().Str("path", resPath).Msg("resources config cfgPath not found")
+				continue
 			}
 
 			pathList = append(pathList, getCfg(resPath))
@@ -104,7 +119,7 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 		return pathList
 	})...)
 
-	assert.Must(Merge(val, cfgList...))
+	assert.Exit(Merge(val, cfgList...), "failed to merge config")
 }
 
 func Load[T any]() T {
