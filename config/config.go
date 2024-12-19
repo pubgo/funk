@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/a8m/envsubst"
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/pathutil"
 	"github.com/pubgo/funk/recovery"
@@ -90,7 +92,14 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 		}))
 
 		var cfg1 T
-		assert.Must(yaml.Unmarshal(resBytes, &cfg1), "failed to unmarshal config")
+		result.Err[any](yaml.Unmarshal(resBytes, &cfg1)).
+			Unwrap(func(err error) error {
+				fmt.Println("res_path", resPath)
+				fmt.Println("config_data", string(resBytes))
+				assert.Exit(os.WriteFile(resPath+".err.yml", resBytes, 0666))
+				return errors.Wrap(err, "failed to unmarshal config")
+			})
+
 		return cfg1
 	}
 

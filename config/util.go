@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"io/fs"
@@ -231,7 +232,7 @@ func getEnvData(cfg *config) map[string]any {
 				return ""
 			}
 
-			return strings.TrimSpace(string(d))
+			return strings.TrimSpace(base64.StdEncoding.EncodeToString(d))
 		},
 	}
 }
@@ -239,6 +240,7 @@ func getEnvData(cfg *config) map[string]any {
 func cfgFormat(template string, cfg *config) string {
 	tpl := fasttemplate.New(template, "${{", "}}")
 	return tpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
+		tag = strings.TrimSpace(tag)
 		var data, err = yaml.Marshal(eval(tag, cfg))
 		if err != nil {
 			return -1, errors.Wrap(err, tag)

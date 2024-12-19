@@ -1,7 +1,10 @@
 package config
 
 import (
+	"encoding/base64"
 	"encoding/json"
+
+	"github.com/pubgo/funk/log"
 	"gopkg.in/yaml.v3"
 )
 
@@ -75,4 +78,31 @@ func (ts *ListOrMap[T]) MarshalYAML() (any, error) {
 // UnmarshalYAML implements the yaml.Unmarshaler interface.
 func (ts *ListOrMap[T]) UnmarshalYAML(value *yaml.Node) error {
 	return unmarshalOneOrList((*[]T)(ts), value)
+}
+
+var (
+	_ yaml.Unmarshaler = (*Base64File)(nil)
+	_ yaml.Marshaler   = (*Base64File)(nil)
+)
+
+type Base64File string
+
+func (b *Base64File) MarshalYAML() (interface{}, error) {
+	if b == nil || len(*b) == 0 {
+		return nil, nil
+	}
+
+	return base64.StdEncoding.EncodeToString([]byte(*b)), nil
+}
+
+func (b *Base64File) UnmarshalYAML(value *yaml.Node) error {
+	data, err := base64.StdEncoding.DecodeString(value.Value)
+	if err != nil {
+		log.Err(err).
+			Any("data", value.Value).
+			Msg("failed to decode yaml")
+		return err
+	}
+	*b = Base64File(data)
+	return nil
 }

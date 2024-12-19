@@ -2,6 +2,7 @@ package config
 
 import (
 	_ "embed"
+	"gopkg.in/yaml.v3"
 	"os"
 	"sort"
 	"strings"
@@ -12,6 +13,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type testCfg struct {
+	Assets struct {
+		TestMd struct {
+			TestAbc struct {
+				Secret Base64File `yaml:"secret"`
+			} `yaml:"test_abc"`
+		} `yaml:"test_md"`
+	} `yaml:"assets"`
+}
+
 //go:embed configs/assets/.gen.yaml
 var genYaml string
 
@@ -20,21 +31,15 @@ func TestExpr(t *testing.T) {
 	env.Init()
 
 	assert.Equal(t, cfgFormat("${{env.TEST_ABC}}", &config{}), "hello")
-	assert.Equal(t, cfgFormat(`${{embed("configs/assets/secret")}}`, &config{}), strings.TrimSpace(`
-	|-
-    123456
-    123456
-    123456
-    123456
-    123456
-    123456
-    123456
-    123456
-`))
+	assert.Equal(t, cfgFormat(`${{embed("configs/assets/secret")}}`, &config{}), strings.TrimSpace(`MTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1Ng==`))
 
 	var dd, err = os.ReadFile("configs/assets/assets.yaml")
 	assert.NoError(t, err)
-	assert.Equal(t, strings.TrimSpace(cfgFormat(string(dd), &config{workDir: "configs/assets"})), strings.TrimSpace(genYaml))
+	var dd1 = strings.TrimSpace(cfgFormat(string(dd), &config{workDir: "configs/assets"}))
+	var cfg testCfg
+	assert.NoError(t, yaml.Unmarshal([]byte(dd1), &cfg))
+
+	assert.Equal(t, dd1, strings.TrimSpace(genYaml))
 }
 
 func TestEnv(t *testing.T) {
