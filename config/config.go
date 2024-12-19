@@ -48,6 +48,15 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 	configBytes := result.Of(os.ReadFile(cfgPath)).Expect("failed to read config data: %s", cfgPath)
 	configBytes = result.Of(envsubst.Bytes(configBytes)).Expect("failed to handler config env data: %s", cfgPath)
 
+	defer recovery.Exit(func(err error) error {
+		log.Err(err).
+			Str("config_path", cfgPath).
+			Str("config_dir", parentDir).
+			Str("config_data", string(configBytes)).
+			Msg("failed to load config")
+		return err
+	})
+
 	if err := yaml.Unmarshal(configBytes, val); err != nil {
 		log.Panic().
 			Err(err).
