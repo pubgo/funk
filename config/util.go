@@ -243,8 +243,16 @@ func cfgFormat(template string, cfg *config) string {
 	tpl := fasttemplate.New(template, "${{", "}}")
 	return tpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
 		tag = strings.TrimSpace(tag)
-		var data, err = yaml.Marshal(eval(tag, cfg))
+		evalData, err := eval(tag, cfg)
 		if err != nil {
+			return -1, errors.Wrap(err, tag)
+		}
+
+		data, err := yaml.Marshal(evalData)
+		if err != nil {
+			log.Err(err).
+				Str("tag", tag).
+				Msgf("failed to marshal yaml: %v", evalData)
 			return -1, errors.Wrap(err, tag)
 		}
 
@@ -252,11 +260,11 @@ func cfgFormat(template string, cfg *config) string {
 	})
 }
 
-func eval(code string, cfg *config) any {
+func eval(code string, cfg *config) (any, error) {
 	envData := getEnvData(cfg)
 	data, err := expr.Eval(strings.TrimSpace(code), envData)
 	if err != nil {
-		panic(err)
+		return nil, errors.WrapCaller(err)
 	}
-	return data
+	return data, nil
 }
