@@ -228,7 +228,9 @@ func getEnvData(cfg *config) map[string]any {
 			var path = filepath.Join(cfg.workDir, name)
 			var d, err = os.ReadFile(path)
 			if err != nil {
-				log.Err(err).Str("path", path).Msg("failed to read file")
+				log.Panic().Err(err).
+					Str("path", path).
+					Msg("failed to read file")
 				return ""
 			}
 

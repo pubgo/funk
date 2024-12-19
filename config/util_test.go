@@ -2,7 +2,6 @@ package config
 
 import (
 	_ "embed"
-	"gopkg.in/yaml.v3"
 	"os"
 	"sort"
 	"strings"
@@ -11,6 +10,7 @@ import (
 	"github.com/a8m/envsubst"
 	"github.com/pubgo/funk/env"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 )
 
 type testCfg struct {
