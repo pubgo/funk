@@ -58,3 +58,29 @@ func isLogDisabled(ctx context.Context) bool {
 	b, ok := ctx.Value(disableLogKey{}).(bool)
 	return b && ok
 }
+
+type ctxMapFieldKey struct{}
+
+func createFieldCtx(ctx context.Context, mm Map) context.Context {
+	if ctx == nil {
+		panic("ctx is nil")
+	}
+
+	if len(mm) == 0 {
+		return ctx
+	}
+
+	return context.WithValue(ctx, ctxMapFieldKey{}, mm)
+}
+
+func getFieldFromCtx(ctx context.Context) Map {
+	if ctx == nil {
+		return make(Map)
+	}
+
+	field, ok := ctx.Value(ctxMapFieldKey{}).(Map)
+	if ok {
+		return field
+	}
+	return make(Map)
+}

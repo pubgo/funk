@@ -1,12 +1,46 @@
 package config
 
 import (
+	_ "embed"
 	"os"
+	"sort"
+	"strings"
 	"testing"
 
 	"github.com/a8m/envsubst"
+	"github.com/pubgo/funk/env"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 )
+
+type testCfg struct {
+	Assets struct {
+		TestMd struct {
+			TestAbc struct {
+				Secret Base64File `yaml:"secret"`
+			} `yaml:"test_abc"`
+		} `yaml:"test_md"`
+	} `yaml:"assets"`
+}
+
+//go:embed configs/assets/.gen.yaml
+var genYaml string
+
+func TestExpr(t *testing.T) {
+	os.Setenv("testAbc", "hello")
+	env.Init()
+
+	assert.Equal(t, cfgFormat("${{env.TEST_ABC}}", &config{}), "hello")
+	assert.Equal(t, cfgFormat(`${{embed("configs/assets/secret")}}`, &config{}), strings.TrimSpace(`MTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1Ng==`))
+
+	var dd, err = os.ReadFile("configs/assets/assets.yaml")
+	assert.NoError(t, err)
+	var dd1 = strings.TrimSpace(cfgFormat(string(dd), &config{workDir: "configs/assets"}))
+	var cfg testCfg
+	assert.NoError(t, yaml.Unmarshal([]byte(dd1), &cfg))
+
+	assert.Equal(t, dd1, strings.TrimSpace(genYaml))
+}
 
 func TestEnv(t *testing.T) {
 	os.Setenv("hello", "world")
@@ -18,6 +52,10 @@ func TestEnv(t *testing.T) {
 	data, err = envsubst.String("${hello:-abc}")
 	assert.Nil(t, err)
 	assert.Equal(t, data, "abc")
+
+	data, err = envsubst.String("${{hello:-abc}}")
+	assert.Nil(t, err)
+	assert.Equal(t, data, "${{hello:-abc}}")
 }
 
 func TestConfigPath(t *testing.T) {
@@ -106,6 +144,10 @@ func TestMerge(t *testing.T) {
 	))
 	assert.Equal(t, cfg.Name1.Name, "a3")
 	assert.Equal(t, len(cfg.Names), 2)
+	sort.Slice(cfg.Names, func(i, j int) bool {
+		return cfg.Names[i].Name < cfg.Names[j].Name
+	})
+
 	assert.Equal(t, cfg.Names[0].Name, "a2")
 	assert.Equal(t, cfg.Names[0].Value, "a3")
 	assert.Equal(t, cfg.Names[1].Name, "a3")

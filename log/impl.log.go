@@ -210,5 +210,10 @@ func (l *loggerImpl) newEvent(ctx context.Context, e *zerolog.Event) *zerolog.Ev
 		e = e.Fields(l.fields)
 	}
 
+	if ctx != nil {
+		ctx = createFieldCtx(ctx, l.fields)
+		e = e.Ctx(ctx)
+	}
+
 	return mergeEvent(e, getEventFromCtx(ctx), l.content)
 }

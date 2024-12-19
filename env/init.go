@@ -2,6 +2,7 @@ package env
 
 import (
 	"os"
+	"strings"
 )
 
 func Init() {
@@ -12,17 +13,20 @@ func Init() {
 // a-b=>a_b, a.b=>a_b, a/b=>a_b
 func initEnv() {
 	for _, env := range os.Environ() {
-		k, v, ok := Normalize(env)
-		if k != "" && ok {
-			_ = os.Setenv(k, v)
+		kvs := strings.SplitN(env, "=", 2)
+		if len(kvs) != 2 {
 			continue
 		}
 
-		if k == "" {
+		var rawKey = kvs[0]
+		key, ok := Normalize(rawKey)
+		if !ok {
+			_ = os.Unsetenv(rawKey)
 			continue
 		}
 
-		_ = os.Unsetenv(k)
+		_ = os.Unsetenv(rawKey)
+		_ = os.Setenv(key, kvs[1])
 	}
 }
 

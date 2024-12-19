@@ -1,0 +1,5 @@
+assets:
+  test_md:
+    test_abc:
+      secret: ${{embed("test.md")}}
+  path_dir: ${{get_path_dir()}}
