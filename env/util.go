@@ -2,15 +2,12 @@ package env
 
 import (
 	"strings"
-
-	"github.com/iancoleman/strcase"
 )
 
 var trim = strings.TrimSpace
 var replacer = strings.NewReplacer("-", "_", ".", "_", "/", "_")
 
 func KeyHandler(key string) string {
-	key = strcase.ToScreamingSnake(key)
 	return strings.ToUpper(trim(strings.ReplaceAll(replacer.Replace(key), "__", "_")))
 }
 
