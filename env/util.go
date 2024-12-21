@@ -2,13 +2,23 @@ package env
 
 import (
 	"strings"
+
+	strcase "github.com/ettle/strcase"
 )
 
+var replacer = strcase.NewCaser(
+	true,
+	map[string]bool{"SSL": true, "HTML": false},
+	strcase.NewSplitFn(
+		[]rune{'*', '.', ',', '-', '/'},
+		strcase.SplitCase,
+		strcase.SplitAcronym,
+		strcase.PreserveNumberFormatting,
+	))
 var trim = strings.TrimSpace
-var replacer = strings.NewReplacer("-", "_", ".", "_", "/", "_")
 
 func KeyHandler(key string) string {
-	return strings.ToUpper(trim(strings.ReplaceAll(replacer.Replace(key), "__", "_")))
+	return strings.ToUpper(trim(strings.ReplaceAll(replacer.ToSNAKE(key), "__", "_")))
 }
 
 // Normalize a-b=>a_b, a.b=>a_b, a/b=>a_b

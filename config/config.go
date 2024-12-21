@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strings"
 
@@ -45,6 +46,21 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 		log.Err(err).Str("config_path", cfgPath).Msg("failed to load config")
 		return err
 	})
+
+	valType := reflect.TypeOf(val)
+	for {
+		if valType.Kind() != reflect.Ptr {
+			break
+		}
+
+		valType = valType.Elem()
+	}
+	if valType.Kind() != reflect.Struct {
+		log.Panic().
+			Str("config_path", cfgPath).
+			Str("type", fmt.Sprintf("%#v", val)).
+			Msg("config type not correct")
+	}
 
 	parentDir := filepath.Dir(cfgPath)
 	configBytes := result.Of(os.ReadFile(cfgPath)).Expect("failed to read config data: %s", cfgPath)
@@ -140,7 +156,12 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 	assert.Exit(Merge(val, cfgList...), "failed to merge config")
 }
 
-func Load[T any]() T {
+type Cfg[T any] struct {
+	T T
+	P *T
+}
+
+func Load[T any]() Cfg[T] {
 	if configPath != "" {
 		configDir = filepath.Dir(configPath)
 	} else {
@@ -149,5 +170,5 @@ func Load[T any]() T {
 
 	var cfg T
 	LoadFromPath(&cfg, configPath)
-	return cfg
+	return Cfg[T]{T: cfg, P: &cfg}
 }

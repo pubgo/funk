@@ -12,6 +12,7 @@ require (
 	github.com/dave/jennifer v1.7.0
 	github.com/deckarep/golang-set/v2 v2.6.0
 	github.com/dustin/go-humanize v1.0.0
+	github.com/ettle/strcase v0.2.0
 	github.com/expr-lang/expr v1.16.9
 	github.com/flosch/pongo2/v6 v6.0.0
 	github.com/goccy/go-json v0.10.2

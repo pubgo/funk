@@ -59,7 +59,7 @@ func getConfigPath(name, typ string, configDir ...string) (string, string) {
 		}
 	}
 
-	log.Fatal().Msgf("config not found in: %v", notFoundPath)
+	log.Panic().Msgf("config not found in: %v", notFoundPath)
 
 	return "", ""
 }
