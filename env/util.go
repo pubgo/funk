@@ -2,26 +2,31 @@ package env
 
 import (
 	"strings"
+
+	strcase "github.com/ettle/strcase"
 )
 
+var replacer = strcase.NewCaser(
+	true,
+	map[string]bool{"SSL": true, "HTML": false},
+	strcase.NewSplitFn(
+		[]rune{'*', '.', ',', '-', '/'},
+		strcase.SplitCase,
+		strcase.SplitAcronym,
+		strcase.PreserveNumberFormatting,
+	))
 var trim = strings.TrimSpace
-var replacer = strings.NewReplacer("-", "_", ".", "_", "/", "_")
 
 func KeyHandler(key string) string {
-	return strings.ToUpper(trim(strings.ReplaceAll(replacer.Replace(key), "__", "_")))
+	return strings.ToUpper(trim(strings.ReplaceAll(replacer.ToSNAKE(key), "__", "_")))
 }
 
 // Normalize a-b=>a_b, a.b=>a_b, a/b=>a_b
-func Normalize(env string) (k, v string, ok bool) {
-	if env == "" {
-		return "", "", false
+func Normalize(key string) (string, bool) {
+	key = trim(key)
+	if key == "" || strings.HasPrefix(key, "_") || strings.HasPrefix(key, "=") {
+		return key, false
 	}
 
-	kvs := strings.SplitN(env, "=", 2)
-	key := trim(kvs[0])
-	if len(kvs) != 2 || key == "" || strings.HasPrefix(key, "_") {
-		return key, "", false
-	}
-
-	return KeyHandler(key), trim(kvs[1]), true
+	return KeyHandler(key), true
 }

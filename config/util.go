@@ -1,19 +1,26 @@
 package config
 
 import (
+	"bytes"
+	"encoding/base64"
 	"fmt"
+	"io"
 	"io/fs"
-	"log"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 
 	"dario.cat/mergo"
+	"github.com/expr-lang/expr"
 	"github.com/samber/lo"
+	"github.com/valyala/fasttemplate"
 	"gopkg.in/yaml.v3"
 
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/env"
 	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/pathutil"
 	"github.com/pubgo/funk/result"
 )
@@ -52,7 +59,7 @@ func getConfigPath(name, typ string, configDir ...string) (string, string) {
 		}
 	}
 
-	log.Panicf("config not found in: %v\n", notFoundPath)
+	log.Panic().Msgf("config not found in: %v", notFoundPath)
 
 	return "", ""
 }
@@ -201,4 +208,63 @@ func listAllPath(dirOrPath string) (ret result.Result[[]string]) {
 func makeList(typ reflect.Type, data []reflect.Value) reflect.Value {
 	val := reflect.MakeSlice(reflect.SliceOf(typ), 0, 0)
 	return reflect.Append(val, data...)
+}
+
+type config struct {
+	workDir string
+}
+
+func getEnvData(cfg *config) map[string]any {
+	return map[string]any{
+		"env": env.Map(),
+		"get_path_dir": func() string {
+			return cfg.workDir
+		},
+		"embed": func(name string) string {
+			if name == "" {
+				return ""
+			}
+
+			var path = filepath.Join(cfg.workDir, name)
+			var d, err = os.ReadFile(path)
+			if err != nil {
+				log.Panic().Err(err).
+					Str("path", path).
+					Msg("failed to read file")
+				return ""
+			}
+
+			return strings.TrimSpace(base64.StdEncoding.EncodeToString(d))
+		},
+	}
+}
+
+func cfgFormat(template string, cfg *config) string {
+	tpl := fasttemplate.New(template, "${{", "}}")
+	return tpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
+		tag = strings.TrimSpace(tag)
+		evalData, err := eval(tag, cfg)
+		if err != nil {
+			return -1, errors.Wrap(err, tag)
+		}
+
+		data, err := yaml.Marshal(evalData)
+		if err != nil {
+			log.Err(err).
+				Str("tag", tag).
+				Msgf("failed to marshal yaml: %v", evalData)
+			return -1, errors.Wrap(err, tag)
+		}
+
+		return w.Write(bytes.TrimSpace(data))
+	})
+}
+
+func eval(code string, cfg *config) (any, error) {
+	envData := getEnvData(cfg)
+	data, err := expr.Eval(strings.TrimSpace(code), envData)
+	if err != nil {
+		return nil, errors.WrapCaller(err)
+	}
+	return data, nil
 }

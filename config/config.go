@@ -1,15 +1,20 @@
 package config
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strings"
 
 	"github.com/a8m/envsubst"
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/pathutil"
+	"github.com/pubgo/funk/recovery"
+	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/typex"
 	"github.com/pubgo/funk/vars"
 	"github.com/samber/lo"
@@ -37,11 +42,47 @@ func init() {
 }
 
 func LoadFromPath[T any](val *T, cfgPath string) {
-	parentDir := filepath.Dir(cfgPath)
-	configBytes := assert.Must1(os.ReadFile(cfgPath))
-	configBytes = assert.Must1(envsubst.Bytes(configBytes))
+	defer recovery.Exit(func(err error) error {
+		log.Err(err).Str("config_path", cfgPath).Msg("failed to load config")
+		return err
+	})
 
-	assert.Must(yaml.Unmarshal(configBytes, val))
+	valType := reflect.TypeOf(val)
+	for {
+		if valType.Kind() != reflect.Ptr {
+			break
+		}
+
+		valType = valType.Elem()
+	}
+	if valType.Kind() != reflect.Struct {
+		log.Panic().
+			Str("config_path", cfgPath).
+			Str("type", fmt.Sprintf("%#v", val)).
+			Msg("config type not correct")
+	}
+
+	parentDir := filepath.Dir(cfgPath)
+	configBytes := result.Of(os.ReadFile(cfgPath)).Expect("failed to read config data: %s", cfgPath)
+	configBytes = result.Of(envsubst.Bytes(configBytes)).Expect("failed to handler config env data: %s", cfgPath)
+
+	defer recovery.Exit(func(err error) error {
+		log.Err(err).
+			Str("config_path", cfgPath).
+			Str("config_dir", parentDir).
+			Str("config_data", string(configBytes)).
+			Msg("failed to load config")
+		return err
+	})
+
+	if err := yaml.Unmarshal(configBytes, val); err != nil {
+		log.Panic().
+			Err(err).
+			Str("config_data", string(configBytes)).
+			Str("config_path", cfgPath).
+			Msg("failed to unmarshal config")
+		return
+	}
 
 	var getRealPath = func(pp []string) []string {
 		pp = lo.Map(pp, func(item string, index int) string { return filepath.Join(parentDir, item) })
@@ -51,20 +92,35 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 			pathList := listAllPath(resPath).Expect("failed to list cfgPath: %s", resPath)
 			resPaths = append(resPaths, pathList...)
 		}
-		resPaths = lo.Filter(resPaths, func(item string, index int) bool { return strings.HasSuffix(item, "."+defaultConfigType) })
+
+		// skip .*.yaml and cfg.other
+		var cfgFilter = func(item string, index int) bool {
+			return strings.HasSuffix(item, "."+defaultConfigType) && !strings.HasPrefix(item, ".")
+		}
+		resPaths = lo.Filter(resPaths, cfgFilter)
 		return lo.Uniq(resPaths)
 	}
 	var getCfg = func(resPath string) T {
-		resBytes := assert.Must1(os.ReadFile(resPath))
-		resBytes = assert.Must1(envsubst.Bytes(resBytes))
+		resBytes := result.Of(os.ReadFile(resPath)).Expect("failed to read config data: %s", resPath)
+		resBytes = result.Of(envsubst.Bytes(resBytes)).Expect("failed to handler config env data: %s", resPath)
+		resBytes = []byte(cfgFormat(string(resBytes), &config{
+			workDir: filepath.Dir(resPath),
+		}))
 
 		var cfg1 T
-		assert.Must(yaml.Unmarshal(resBytes, &cfg1))
+		result.Err[any](yaml.Unmarshal(resBytes, &cfg1)).
+			Unwrap(func(err error) error {
+				fmt.Println("res_path", resPath)
+				fmt.Println("config_data", string(resBytes))
+				assert.Exit(os.WriteFile(resPath+".err.yml", resBytes, 0666))
+				return errors.Wrap(err, "failed to unmarshal config")
+			})
+
 		return cfg1
 	}
 
 	var res Resources
-	assert.Must(yaml.Unmarshal(configBytes, &res))
+	assert.Must(yaml.Unmarshal(configBytes, &res), "failed to unmarshal resource config")
 
 	var cfgList []T
 	cfgList = append(cfgList, typex.DoBlock1(func() []T {
@@ -74,7 +130,8 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 		var pathList []T
 		for _, resPath := range resPathList {
 			if pathutil.IsNotExist(resPath) {
-				log.Panicln("resources config cfgPath not found:", resPath)
+				log.Panic().Str("path", resPath).Msg("resources config cfgPath not found")
+				continue
 			}
 
 			pathList = append(pathList, getCfg(resPath))
@@ -96,10 +153,15 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 		return pathList
 	})...)
 
-	assert.Must(Merge(val, cfgList...))
+	assert.Exit(Merge(val, cfgList...), "failed to merge config")
 }
 
-func Load[T any]() T {
+type Cfg[T any] struct {
+	T T
+	P *T
+}
+
+func Load[T any]() Cfg[T] {
 	if configPath != "" {
 		configDir = filepath.Dir(configPath)
 	} else {
@@ -108,5 +170,5 @@ func Load[T any]() T {
 
 	var cfg T
 	LoadFromPath(&cfg, configPath)
-	return cfg
+	return Cfg[T]{T: cfg, P: &cfg}
 }

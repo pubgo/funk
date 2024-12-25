@@ -7,8 +7,7 @@ import (
 )
 
 func TestNormalize(t *testing.T) {
-	k, v, ok := Normalize("a-b/c.d=1.ok/234-cc_qq")
+	k, ok := Normalize("aA-bS3_AK/c.d")
 	assert.True(t, ok)
-	assert.Equal(t, k, "A_B_C_D")
-	assert.Equal(t, v, "1.ok/234-cc_qq")
+	assert.Equal(t, k, "A_A_B_S3_AK_C_D")
 }
