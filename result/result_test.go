@@ -3,10 +3,10 @@ package result_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pubgo/funk/errors"
 	"testing"
 
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/result"
 )
 
