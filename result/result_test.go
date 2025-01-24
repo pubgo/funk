@@ -1,12 +1,14 @@
 package result_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"testing"
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/result"
 )
 
@@ -24,11 +26,11 @@ func TestName(t *testing.T) {
 		t.Fatal("not match")
 	}
 
-	var ok1 hello
+	var ok1 result.Result[hello]
 	if err := json.Unmarshal([]byte(data), &ok1); err != nil {
 		t.Fatal(err)
 	}
-	t.Log("ok", ok1.Name)
+	t.Log("ok", ok1.Unwrap().Name)
 }
 
 func TestResultDo(t *testing.T) {
@@ -49,12 +51,13 @@ func TestErrOf(t *testing.T) {
 }
 
 func fn1() (r result.Result[string]) {
-	fn3().ErrTo(&r)
+	var ctx = log.UpdateEventCtx(context.Background(), log.Map{"test": "ok"})
+	fn3().ErrTo(ctx, &r, log.RecordErr())
 	if r.IsErr() {
 		return
 	}
 
-	var vv = fn2().ErrTo(&r)
+	var vv = fn2().ErrTo(nil, &r)
 	if r.IsErr() {
 		return
 	}
@@ -63,7 +66,7 @@ func fn1() (r result.Result[string]) {
 }
 
 func fn2() (r result.Result[string]) {
-	fn3().ErrTo(&r, func(err error) error {
+	fn3().ErrTo(nil, &r, func(ctx context.Context, err error) error {
 		return errors.Wrap(err, "test error")
 	})
 

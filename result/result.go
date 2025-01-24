@@ -1,6 +1,7 @@
 package result
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"runtime/debug"
@@ -9,7 +10,7 @@ import (
 	"github.com/samber/lo"
 )
 
-type errSetter interface {
+type ErrSetter interface {
 	setErr(err error)
 }
 
@@ -76,8 +77,9 @@ func (r Error) OnErr(fn func(err error)) {
 	fn(r.err)
 }
 
-func (r Error) ErrTo(setter errSetter, callback ...func(err error) error) {
+func (r Error) ErrTo(ctx context.Context, setter ErrSetter, callback ...func(ctx context.Context, err error) error) {
 	if setter == nil {
+		debug.PrintStack()
 		panic("setter is nil")
 	}
 
@@ -85,9 +87,13 @@ func (r Error) ErrTo(setter errSetter, callback ...func(err error) error) {
 		return
 	}
 
-	var err = r.err
+	ctx = lo.If(ctx != nil, ctx).ElseF(context.Background)
+	var err = errors.WrapCaller(r.err, 1)
 	for _, fn := range callback {
-		err = fn(err)
+		err = fn(ctx, err)
+		if err == nil {
+			return
+		}
 	}
 	setter.setErr(err)
 }
@@ -139,12 +145,17 @@ func (r Result[T]) OnValue(fn func(t T) error) error {
 	return errors.WrapCaller(fn(lo.FromPtr(r.v)), 1)
 }
 
-func (r Result[T]) OrElse(v T) T {
-	if r.e.IsErr() {
-		return v
+func (r Result[T]) OrElse(v T, callback ...func(err error)) T {
+	var isErr = r.e.IsErr()
+	if isErr {
+		for _, fn := range callback {
+			fn(r.e.Err())
+		}
 	}
 
-	return lo.FromPtr(r.v)
+	return lo.If(isErr, v).ElseF(func() T {
+		return lo.FromPtr(r.v)
+	})
 }
 
 func (r Result[T]) Unwrap(check ...func(err error) error) T {
@@ -152,19 +163,16 @@ func (r Result[T]) Unwrap(check ...func(err error) error) T {
 		return lo.FromPtr(r.v)
 	}
 
-	if len(check) > 0 && check[0] != nil {
-		panic(check[0](r.Err()))
-	} else {
-		panic(r.Err())
-	}
-}
-
-func (r Result[T]) UnwrapOr(t T) T {
-	if !r.e.IsErr() {
-		return lo.FromPtr(r.v)
+	var err = r.e.err
+	for _, fn := range check {
+		err = fn(err)
+		if err == nil {
+			return lo.FromPtr(r.v)
+		}
 	}
 
-	return t
+	debug.PrintStack()
+	panic(err)
 }
 
 func (r Result[T]) Expect(format string, args ...any) T {
@@ -172,10 +180,8 @@ func (r Result[T]) Expect(format string, args ...any) T {
 		return lo.FromPtr(r.v)
 	}
 
-	panic(&errors.Err{
-		Msg:    fmt.Sprintf(format, args...),
-		Detail: string(debug.Stack()),
-	})
+	debug.PrintStack()
+	panic(errors.Wrapf(r.e.Err(), format, args...))
 }
 
 func (r Result[T]) String() string {
@@ -194,8 +200,18 @@ func (r Result[T]) MarshalJSON() ([]byte, error) {
 	return json.Marshal(lo.FromPtr(r.v))
 }
 
-func (r Result[T]) UnmarshalJSON([]byte) error {
-	panic("unimplemented")
+func (r *Result[T]) UnmarshalJSON(data []byte) error {
+	if r.IsErr() {
+		return errors.WrapCaller(r.Err(), 1)
+	}
+
+	var v T
+	var err = json.Unmarshal(data, &v)
+	if err != nil {
+		return errors.WrapCaller(err, 1)
+	}
+	r.v = &v
+	return nil
 }
 
 func (r Result[T]) Do(fn func(v T)) {
@@ -206,36 +222,45 @@ func (r Result[T]) Do(fn func(v T)) {
 	fn(lo.FromPtr(r.v))
 }
 
-func (r Result[T]) ErrTo(setter errSetter, callback ...func(err error) error) T {
+func (r Result[T]) ErrTo(ctx context.Context, setter ErrSetter, callback ...func(ctx context.Context, err error) error) T {
 	if setter == nil {
+		debug.PrintStack()
 		panic("setter is nil")
 	}
 
+	ctx = lo.If(ctx != nil, ctx).ElseF(context.Background)
+	var ret = lo.FromPtr(r.v)
 	if r.IsErr() {
-		var err = r.e.Err()
+		var err = errors.WrapCaller(r.e.Err(), 1)
 		for _, fn := range callback {
-			err = fn(err)
+			err = fn(ctx, err)
+			if err == nil {
+				return ret
+			}
 		}
 		setter.setErr(err)
 	}
-
-	return lo.FromPtr(r.v)
+	return ret
 }
 
 func (r Result[T]) IsErr() bool {
 	return r.e.IsErr()
 }
 
-func (r Result[T]) Err(check ...func(err error) error) error {
+func (r Result[T]) Err(callback ...func(err error) error) error {
 	if !r.IsErr() {
 		return nil
 	}
 
-	if len(check) > 0 && check[0] != nil {
-		return errors.WrapCaller(check[0](r.e.Err()), 1)
+	var err = r.e.Err()
+	for _, cc := range callback {
+		err = cc(err)
+		if err == nil {
+			return nil
+		}
 	}
 
-	return errors.WrapCaller(r.e.Err(), 1)
+	return errors.WrapCaller(err, 1)
 }
 
 func (r *Result[T]) setErr(err error) {
