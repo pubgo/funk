@@ -44,7 +44,23 @@ func ErrOf(err error) Error {
 	return newError(err)
 }
 
+func ErrOfFn(fn func() error) Error {
+	var err = fn()
+	err = errors.WrapCaller(err, 1)
+	return newError(err)
+}
+
 func Wrap[T any](v T, err error) Result[T] {
+	if err == nil {
+		return Result[T]{v: &v, e: newError(nil)}
+	}
+
+	err = errors.WrapCaller(err, 1)
+	return Result[T]{e: newError(err)}
+}
+
+func WrapFn[T any](fn func() (T, error)) Result[T] {
+	v, err := fn()
 	if err == nil {
 		return Result[T]{v: &v, e: newError(nil)}
 	}
