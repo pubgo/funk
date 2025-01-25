@@ -1,7 +1,6 @@
 package result
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"runtime/debug"
@@ -77,7 +76,7 @@ func (r Error) OnErr(fn func(err error)) {
 	fn(r.err)
 }
 
-func (r Error) ErrTo(ctx context.Context, setter ErrSetter, callback ...func(ctx context.Context, err error) error) {
+func (r Error) ErrTo(setter ErrSetter, callback ...func(err error) error) {
 	if setter == nil {
 		debug.PrintStack()
 		panic("setter is nil")
@@ -87,10 +86,9 @@ func (r Error) ErrTo(ctx context.Context, setter ErrSetter, callback ...func(ctx
 		return
 	}
 
-	ctx = lo.If(ctx != nil, ctx).ElseF(context.Background)
 	var err = errors.WrapCaller(r.err, 1)
 	for _, fn := range callback {
-		err = fn(ctx, err)
+		err = fn(err)
 		if err == nil {
 			return
 		}
@@ -222,18 +220,17 @@ func (r Result[T]) Do(fn func(v T)) {
 	fn(lo.FromPtr(r.v))
 }
 
-func (r Result[T]) ErrTo(ctx context.Context, setter ErrSetter, callback ...func(ctx context.Context, err error) error) T {
+func (r Result[T]) ErrTo(setter ErrSetter, callback ...func(err error) error) T {
 	if setter == nil {
 		debug.PrintStack()
 		panic("setter is nil")
 	}
 
-	ctx = lo.If(ctx != nil, ctx).ElseF(context.Background)
 	var ret = lo.FromPtr(r.v)
 	if r.IsErr() {
 		var err = errors.WrapCaller(r.e.Err(), 1)
 		for _, fn := range callback {
-			err = fn(ctx, err)
+			err = fn(err)
 			if err == nil {
 				return ret
 			}

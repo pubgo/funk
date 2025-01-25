@@ -2,6 +2,8 @@ package log
 
 import (
 	"context"
+	
+	"github.com/samber/lo"
 )
 
 func WithNotice() func(e *Event) {
@@ -10,8 +12,10 @@ func WithNotice() func(e *Event) {
 	}
 }
 
-func RecordErr(logs ...Logger) func(ctx context.Context, err error) error {
-	return func(ctx context.Context, err error) error {
+func RecordErr(ctx context.Context, logs ...Logger) func(err error) error {
+	return func(err error) error {
+		ctx = lo.If(ctx != nil, ctx).ElseF(context.Background)
+
 		var logger = stdLog
 		if len(logs) > 0 {
 			logger = logs[0]

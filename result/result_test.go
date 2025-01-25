@@ -52,12 +52,12 @@ func TestErrOf(t *testing.T) {
 
 func fn1() (r result.Result[string]) {
 	var ctx = log.UpdateEventCtx(context.Background(), log.Map{"test": "ok"})
-	fn3().ErrTo(ctx, &r, log.RecordErr())
+	fn3().ErrTo(&r, log.RecordErr(ctx))
 	if r.IsErr() {
 		return
 	}
 
-	var vv = fn2().ErrTo(nil, &r)
+	var vv = fn2().ErrTo(&r)
 	if r.IsErr() {
 		return
 	}
@@ -66,7 +66,7 @@ func fn1() (r result.Result[string]) {
 }
 
 func fn2() (r result.Result[string]) {
-	fn3().ErrTo(nil, &r, func(ctx context.Context, err error) error {
+	fn3().ErrTo(&r, func(err error) error {
 		return errors.Wrap(err, "test error")
 	})
 
