@@ -13,6 +13,12 @@ type ErrSetter interface {
 	setErr(err error)
 }
 
+type ErrGetter[T any] interface {
+	IsErr() bool
+	Err() error
+	Unwrap() T
+}
+
 type R[T any] interface {
 	Unwrap() T
 	IsErr() bool
@@ -246,19 +252,12 @@ func (r Result[T]) IsErr() bool {
 	return r.e.IsErr()
 }
 
-func (r Result[T]) Err(callback ...func(err error) error) error {
+func (r Result[T]) Err() error {
 	if !r.IsErr() {
 		return nil
 	}
 
 	var err = r.e.Err()
-	for _, cc := range callback {
-		err = cc(err)
-		if err == nil {
-			return nil
-		}
-	}
-
 	return errors.WrapCaller(err, 1)
 }
 
