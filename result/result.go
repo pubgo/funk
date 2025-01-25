@@ -86,6 +86,7 @@ func (r Error) ErrTo(setter ErrSetter, callback ...func(err error) error) {
 		return
 	}
 
+	callback = append(callback, errChecks...)
 	var err = errors.WrapCaller(r.err, 1)
 	for _, fn := range callback {
 		err = fn(err)
@@ -228,6 +229,7 @@ func (r Result[T]) ErrTo(setter ErrSetter, callback ...func(err error) error) T 
 
 	var ret = lo.FromPtr(r.v)
 	if r.IsErr() {
+		callback = append(callback, errChecks...)
 		var err = errors.WrapCaller(r.e.Err(), 1)
 		for _, fn := range callback {
 			err = fn(err)

@@ -44,6 +44,10 @@ func TestResultDo(t *testing.T) {
 }
 
 func TestErrOf(t *testing.T) {
+	result.RegisterErrCheck(func(err error) error {
+		return errors.Wrap(err, "global err check")
+	})
+
 	errors.Debug(fn1().OnValue(func(tt string) error {
 		t.Log(tt)
 		return nil
