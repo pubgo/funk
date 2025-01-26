@@ -37,8 +37,7 @@ func TestResultDo(t *testing.T) {
 	ok := result.OK(&hello{Name: "abc"})
 	ok.Do(func(v *hello) {
 		assert.If(v.Name != "abc", "not match")
-	})
-	ok.Do(func(v *hello) {
+	}).Do(func(v *hello) {
 		assert.If(v.Name != "abc", "not match")
 	})
 }

@@ -13,19 +13,6 @@ type ErrSetter interface {
 	setErr(err error)
 }
 
-type ErrGetter[T any] interface {
-	IsErr() bool
-	Err() error
-	Unwrap() T
-}
-
-type R[T any] interface {
-	Unwrap() T
-	IsErr() bool
-	Err() error
-	Expect(format string, args ...any) T
-}
-
 func OK[T any](v T) Result[T] {
 	return Result[T]{v: &v, e: newError(nil)}
 }
@@ -83,6 +70,11 @@ type Error struct {
 }
 
 func (r *Error) setErr(err error) {
+	if r == nil {
+		debug.PrintStack()
+		panic("Error is nil")
+	}
+
 	if err == nil {
 		return
 	}
@@ -146,12 +138,21 @@ func (r Result[T]) WithErr(err error) Result[T] {
 }
 
 func (r Result[T]) WithVal(v T) Result[T] {
+	if r.e.IsErr() {
+		return Err[T](errors.WrapCaller(r.e.Err(), 1))
+	}
+
 	return OK(v)
 }
 
 func (r Result[T]) ValueTo(v *T) error {
 	if r.e.IsErr() {
 		return errors.WrapCaller(r.e.Err(), 1)
+	}
+
+	if v == nil {
+		debug.PrintStack()
+		panic("v params is nil")
 	}
 
 	*v = lo.FromPtr(r.v)
@@ -179,13 +180,13 @@ func (r Result[T]) OrElse(v T, callback ...func(err error)) T {
 	})
 }
 
-func (r Result[T]) Unwrap(check ...func(err error) error) T {
+func (r Result[T]) Unwrap(callback ...func(err error) error) T {
 	if !r.e.IsErr() {
 		return lo.FromPtr(r.v)
 	}
 
-	var err = r.e.err
-	for _, fn := range check {
+	var err = errors.WrapCaller(r.e.Err(), 1)
+	for _, fn := range callback {
 		err = fn(err)
 		if err == nil {
 			return lo.FromPtr(r.v)
@@ -197,12 +198,13 @@ func (r Result[T]) Unwrap(check ...func(err error) error) T {
 }
 
 func (r Result[T]) Expect(format string, args ...any) T {
-	if !r.IsErr() {
+	if !r.e.IsErr() {
 		return lo.FromPtr(r.v)
 	}
 
 	debug.PrintStack()
-	panic(errors.Wrapf(r.e.Err(), format, args...))
+	err := errors.WrapCaller(r.e.Err(), 1)
+	panic(errors.Wrapf(err, format, args...))
 }
 
 func (r Result[T]) String() string {
@@ -214,16 +216,25 @@ func (r Result[T]) String() string {
 }
 
 func (r Result[T]) MarshalJSON() ([]byte, error) {
-	if r.IsErr() {
-		return nil, errors.WrapCaller(r.Err(), 1)
+	if r.e.IsErr() {
+		return nil, errors.WrapCaller(r.e.Err(), 1)
 	}
 
-	return json.Marshal(lo.FromPtr(r.v))
+	var data, err = json.Marshal(lo.FromPtr(r.v))
+	if err != nil {
+		return nil, errors.WrapCaller(err, 1)
+	}
+	return data, nil
 }
 
 func (r *Result[T]) UnmarshalJSON(data []byte) error {
-	if r.IsErr() {
-		return errors.WrapCaller(r.Err(), 1)
+	if r == nil {
+		debug.PrintStack()
+		panic("UnmarshalJSON: result is nil")
+	}
+
+	if r.e.IsErr() {
+		return errors.WrapCaller(r.e.Err(), 1)
 	}
 
 	var v T
@@ -235,32 +246,35 @@ func (r *Result[T]) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (r Result[T]) Do(fn func(v T)) {
-	if r.IsErr() {
-		return
+func (r Result[T]) Do(fn func(v T)) Result[T] {
+	if r.e.IsErr() {
+		return r
 	}
 
 	fn(lo.FromPtr(r.v))
+	return r
 }
 
 func (r Result[T]) ErrTo(setter ErrSetter, callback ...func(err error) error) T {
 	if setter == nil {
 		debug.PrintStack()
-		panic("setter is nil")
+		panic("ErrTo: setter is nil")
 	}
 
 	var ret = lo.FromPtr(r.v)
-	if r.IsErr() {
-		callback = append(callback, errChecks...)
-		var err = errors.WrapCaller(r.e.Err(), 1)
-		for _, fn := range callback {
-			err = fn(err)
-			if err == nil {
-				return ret
-			}
-		}
-		setter.setErr(err)
+	if !r.e.IsErr() {
+		return ret
 	}
+
+	callback = append(callback, errChecks...)
+	var err = errors.WrapCaller(r.e.Err(), 1)
+	for _, fn := range callback {
+		err = fn(err)
+		if err == nil {
+			return ret
+		}
+	}
+	setter.setErr(err)
 	return ret
 }
 
@@ -269,7 +283,7 @@ func (r Result[T]) IsErr() bool {
 }
 
 func (r Result[T]) Err() error {
-	if !r.IsErr() {
+	if !r.e.IsErr() {
 		return nil
 	}
 
@@ -278,6 +292,11 @@ func (r Result[T]) Err() error {
 }
 
 func (r *Result[T]) setErr(err error) {
+	if r == nil {
+		debug.PrintStack()
+		panic("setErr: result is nil")
+	}
+
 	if err == nil {
 		return
 	}
