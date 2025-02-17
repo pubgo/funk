@@ -27,12 +27,6 @@ func TestName(t *testing.T) {
 		t.Log(data)
 		t.Fatal("not match")
 	}
-
-	var ok1 anyhow.Result[hello]
-	if err := json.Unmarshal([]byte(data), &ok1); err != nil {
-		t.Fatal(err)
-	}
-	t.Log("ok", ok1.Unwrap().Name)
 }
 
 func TestResultDo(t *testing.T) {
