@@ -5,8 +5,34 @@ import (
 
 	"github.com/pubgo/funk/anyhow/aherrcheck"
 	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/generic"
 )
+
+func RecoveryErr(setter *error, callbacks ...func(err error) error) {
+	if setter == nil {
+		debug.PrintStack()
+		panic("setter is nil")
+	}
+
+	err := errors.Parse(recover())
+	if err == nil && *setter == nil {
+		return
+	}
+
+	if err == nil {
+		err = *setter
+	}
+
+	callbacks = append(callbacks, aherrcheck.GetErrChecks()...)
+	for _, fn := range callbacks {
+		err = fn(err)
+		if err == nil {
+			return
+		}
+	}
+
+	err = errors.WrapCaller(err, 1)
+	*setter = err
+}
 
 func Recovery(setter *Error, callbacks ...func(err error) error) {
 	if setter == nil {
@@ -15,8 +41,12 @@ func Recovery(setter *Error, callbacks ...func(err error) error) {
 	}
 
 	err := errors.Parse(recover())
-	if generic.IsNil(err) {
+	if err == nil && !setter.IsErr() {
 		return
+	}
+
+	if err == nil {
+		err = setter.GetErr()
 	}
 
 	callbacks = append(callbacks, aherrcheck.GetErrChecks()...)
