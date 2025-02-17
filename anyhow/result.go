@@ -9,10 +9,14 @@ import (
 )
 
 func OK[T any](v T) Result[T] {
-	return Result[T]{v: &v, Err: newError(nil)}
+	return Result[T]{v: &v}
 }
 
 func Err[T any](err error) Result[T] {
+	if err == nil {
+		return Result[T]{v: nil}
+	}
+
 	err = errors.WrapCaller(err, 1)
 	return Result[T]{Err: newError(err)}
 }
@@ -22,6 +26,10 @@ func newError(err error) Error {
 }
 
 func ErrOf(err error) Error {
+	if err == nil {
+		return Error{}
+	}
+
 	err = errors.WrapCaller(err, 1)
 	return newError(err)
 }
@@ -44,7 +52,7 @@ func Wrap[T any](v T, err error) Result[T] {
 func WrapFn[T any](fn func() (T, error)) Result[T] {
 	v, err := tryResult(fn)
 	if err == nil {
-		return Result[T]{v: &v, Err: newError(nil)}
+		return Result[T]{v: &v}
 	}
 
 	err = errors.WrapCaller(err, 1)
