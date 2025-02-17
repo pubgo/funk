@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pubgo/funk/recovery"
 	"testing"
 
 	"github.com/pubgo/funk/anyhow"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/log"
+	"github.com/pubgo/funk/recovery"
 )
 
 type hello struct {
@@ -41,9 +41,7 @@ func TestResultDo(t *testing.T) {
 		assert.If(v.Name != "abc", "not match")
 	}).OnValue(func(v *hello) {
 		assert.If(v.Name != "abc", "not match")
-	}).OnErr(func(err error) {
-
-	})
+	}).OnErr(func(err error) {})
 }
 
 func TestErrOf(t *testing.T) {
