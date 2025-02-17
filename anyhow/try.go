@@ -6,9 +6,11 @@ import (
 	"github.com/pubgo/funk/stack"
 )
 
+var errFnIsNil = errors.New("[fn] is nil")
+
 func try(fn func() error) (gErr error) {
 	if fn == nil {
-		gErr = errors.WrapStack(errors.New("[fn] is nil"))
+		gErr = errors.WrapStack(errFnIsNil)
 		return
 	}
 
@@ -26,7 +28,7 @@ func try(fn func() error) (gErr error) {
 
 func tryResult[T any](fn func() (T, error)) (t T, gErr error) {
 	if fn == nil {
-		return t, errors.WrapStack(errors.New("[fn] is nil"))
+		return t, errors.WrapStack(errFnIsNil)
 	}
 
 	defer func() {

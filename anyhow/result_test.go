@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/pubgo/funk/anyhow"
+	"github.com/pubgo/funk/anyhow/aherrcheck"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/log"
@@ -39,7 +40,7 @@ func TestResultDo(t *testing.T) {
 }
 
 func TestErrOf(t *testing.T) {
-	anyhow.RegisterErrCheck(func(err error) error {
+	aherrcheck.RegisterErrCheck(func(err error) error {
 		return errors.Wrap(err, "global err check")
 	})
 

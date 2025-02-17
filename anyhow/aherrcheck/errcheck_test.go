@@ -1,4 +1,4 @@
-package anyhow
+package aherrcheck
 
 import (
 	"testing"
@@ -11,12 +11,12 @@ func errCheck1(err error) error {
 }
 
 func TestErrCheck(t *testing.T) {
-	assert.Equal(t, len(FindErrCheckList()), 0)
+	assert.Equal(t, len(GetErrCheckFrames()), 0)
 
 	RegisterErrCheck(errCheck1)
 
-	assert.Equal(t, len(FindErrCheckList()), 1)
+	assert.Equal(t, len(GetErrCheckFrames()), 1)
 
 	RemoveErrCheck(errCheck1)
-	assert.Equal(t, len(FindErrCheckList()), 0)
+	assert.Equal(t, len(GetErrCheckFrames()), 0)
 }

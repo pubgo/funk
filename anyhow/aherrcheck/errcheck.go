@@ -1,4 +1,4 @@
-package anyhow
+package aherrcheck
 
 import (
 	"reflect"
@@ -12,7 +12,9 @@ func RegisterErrCheck(f func(error) error) {
 	errChecks = append(errChecks, f)
 }
 
-func FindErrCheckList() []*stack.Frame {
+func GetErrChecks() []func(error) error { return errChecks }
+
+func GetErrCheckFrames() []*stack.Frame {
 	var frames []*stack.Frame
 	for _, err := range errChecks {
 		frames = append(frames, stack.CallerWithFunc(err))
