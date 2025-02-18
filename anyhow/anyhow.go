@@ -8,45 +8,38 @@ import (
 )
 
 func RecoveryErr(setter *error, callbacks ...func(err error) error) {
-	if setter == nil {
-		debug.PrintStack()
-		panic("setter is nil")
-	}
-
-	err := errors.Parse(recover())
-	if err == nil && *setter == nil {
-		return
-	}
-
-	if err == nil {
-		err = *setter
-	}
-
-	callbacks = append(callbacks, aherrcheck.GetErrChecks()...)
-	for _, fn := range callbacks {
-		err = fn(err)
-		if err == nil {
-			return
-		}
-	}
-
-	err = errors.WrapCaller(err, 1)
-	*setter = err
+	recovery(
+		setter,
+		func() bool { return *setter != nil },
+		func() error { return *setter },
+		func(err error) error { return err },
+		callbacks...,
+	)
 }
 
 func Recovery(setter *Error, callbacks ...func(err error) error) {
+	recovery(
+		setter,
+		func() bool { return setter.IsErr() },
+		func() error { return setter.GetErr() },
+		func(err error) Error { return newError(err) },
+		callbacks...,
+	)
+}
+
+func recovery[T any](setter *T, isErr func() bool, getErr func() error, newErr func(err error) T, callbacks ...func(err error) error) {
 	if setter == nil {
 		debug.PrintStack()
 		panic("setter is nil")
 	}
 
 	err := errors.Parse(recover())
-	if err == nil && !setter.IsErr() {
+	if err == nil && !isErr() {
 		return
 	}
 
 	if err == nil {
-		err = setter.GetErr()
+		err = getErr()
 	}
 
 	callbacks = append(callbacks, aherrcheck.GetErrChecks()...)
@@ -58,7 +51,7 @@ func Recovery(setter *Error, callbacks ...func(err error) error) {
 	}
 
 	err = errors.WrapCaller(err, 1)
-	*setter = newError(err)
+	*setter = newErr(err)
 }
 
 func ErrOf(err error) Error {
