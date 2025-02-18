@@ -22,18 +22,19 @@ func TestName(t *testing.T) {
 		t.Fatal("not match")
 	}
 
-	var ok1 result.Result[hello]
+	var ok1 hello
 	if err := json.Unmarshal([]byte(data), &ok1); err != nil {
 		t.Fatal(err)
 	}
-	t.Log("ok", ok1.Unwrap().Name)
+	t.Log("ok", ok1.Name)
 }
 
 func TestResultDo(t *testing.T) {
 	ok := result.OK(&hello{Name: "abc"})
 	ok.Do(func(v *hello) {
 		assert.If(v.Name != "abc", "not match")
-	}).Do(func(v *hello) {
+	})
+	ok.Do(func(v *hello) {
 		assert.If(v.Name != "abc", "not match")
 	})
 }
