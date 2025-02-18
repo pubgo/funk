@@ -1,131 +1,44 @@
 package result
 
 import (
-	"encoding/json"
-	"fmt"
 	"runtime/debug"
 
+	"github.com/pubgo/funk/anyhow"
 	"github.com/pubgo/funk/errors"
-	"github.com/samber/lo"
 )
 
-type ErrSetter interface {
-	setErr(err error)
-}
-
 func OK[T any](v T) Result[T] {
-	return Result[T]{v: &v, e: newError(nil)}
+	return Result[T]{Result: anyhow.OK(v)}
 }
 
 func Err[T any](err error) Result[T] {
 	err = errors.WrapCaller(err, 1)
-	return Result[T]{e: newError(err)}
+	return Result[T]{Result: anyhow.Err[T](err)}
 }
 
-func newError(err error) Error {
-	return Error{err: err}
-}
-
-func ErrOf(err error) Error {
+func ErrOf(err error) anyhow.Error {
 	err = errors.WrapCaller(err, 1)
-	return newError(err)
+	return anyhow.ErrOf(err)
 }
 
-func ErrOfFn(fn func() error) Error {
-	var err = fn()
-	err = errors.WrapCaller(err, 1)
-	return newError(err)
+func ErrOfFn(fn func() error) anyhow.Error {
+	return anyhow.ErrOfFn(fn)
 }
 
 func Wrap[T any](v T, err error) Result[T] {
-	if err == nil {
-		return Result[T]{v: &v, e: newError(nil)}
-	}
-
-	err = errors.WrapCaller(err, 1)
-	return Result[T]{e: newError(err)}
+	return Result[T]{Result: anyhow.Wrap(v, err)}
 }
 
 func WrapFn[T any](fn func() (T, error)) Result[T] {
-	v, err := fn()
-	if err == nil {
-		return Result[T]{v: &v, e: newError(nil)}
-	}
-
-	err = errors.WrapCaller(err, 1)
-	return Result[T]{e: newError(err)}
+	return Result[T]{Result: anyhow.WrapFn(fn)}
 }
 
 func Of[T any](v T, err error) Result[T] {
-	if err == nil {
-		return Result[T]{v: &v, e: newError(nil)}
-	}
-
-	err = errors.WrapCaller(err, 1)
-	return Result[T]{e: newError(err)}
-}
-
-type Error struct {
-	err error
-}
-
-func (r *Error) setErr(err error) {
-	if r == nil {
-		debug.PrintStack()
-		panic("Error is nil")
-	}
-
-	if err == nil {
-		return
-	}
-
-	r.err = err
-}
-
-func (r Error) OnErr(fn func(err error)) {
-	if r.err == nil {
-		return
-	}
-
-	fn(r.err)
-}
-
-func (r Error) ErrTo(setter ErrSetter, callback ...func(err error) error) {
-	if setter == nil {
-		debug.PrintStack()
-		panic("setter is nil")
-	}
-
-	if r.err == nil {
-		return
-	}
-
-	callback = append(callback, errChecks...)
-	var err = errors.WrapCaller(r.err, 1)
-	for _, fn := range callback {
-		err = fn(err)
-		if err == nil {
-			return
-		}
-	}
-	setter.setErr(err)
-}
-
-func (r Error) IsErr() bool {
-	return r.err != nil
-}
-
-func (r Error) Err() error {
-	if !r.IsErr() {
-		return nil
-	}
-
-	return errors.WrapCaller(r.err, 1)
+	return Result[T]{Result: anyhow.Wrap(v, err)}
 }
 
 type Result[T any] struct {
-	e Error
-	v *T
+	anyhow.Result[T]
 }
 
 func (r Result[T]) WithErr(err error) Result[T] {
@@ -134,20 +47,20 @@ func (r Result[T]) WithErr(err error) Result[T] {
 	}
 
 	err = errors.WrapCaller(err, 1)
-	return Result[T]{e: newError(err)}
+	return Err[T](err)
 }
 
 func (r Result[T]) WithVal(v T) Result[T] {
-	if r.e.IsErr() {
-		return Err[T](errors.WrapCaller(r.e.Err(), 1))
+	if r.IsErr() {
+		return Err[T](errors.WrapCaller(r.Err(), 1))
 	}
 
 	return OK(v)
 }
 
 func (r Result[T]) ValueTo(v *T) error {
-	if r.e.IsErr() {
-		return errors.WrapCaller(r.e.Err(), 1)
+	if r.IsErr() {
+		return errors.WrapCaller(r.Result.GetErr(), 1)
 	}
 
 	if v == nil {
@@ -155,41 +68,45 @@ func (r Result[T]) ValueTo(v *T) error {
 		panic("v params is nil")
 	}
 
-	*v = lo.FromPtr(r.v)
+	*v = r.Result.GetValue()
 	return nil
 }
 
 func (r Result[T]) OnValue(fn func(t T) error) error {
-	if r.e.IsErr() {
-		return errors.WrapCaller(r.e.Err(), 1)
+	if r.IsErr() {
+		return errors.WrapCaller(r.Result.GetErr(), 1)
 	}
 
-	return errors.WrapCaller(fn(lo.FromPtr(r.v)), 1)
+	return errors.WrapCaller(fn(r.Result.GetValue()), 1)
 }
 
-func (r Result[T]) OrElse(v T, callback ...func(err error)) T {
-	var isErr = r.e.IsErr()
-	if isErr {
-		for _, fn := range callback {
-			fn(r.e.Err())
-		}
+func (r Result[T]) ErrTo(gErr *anyhow.Error, callback ...func(err error) error) T {
+	if !r.Result.IsErr() {
+		return r.Result.GetValue()
 	}
 
-	return lo.If(isErr, v).ElseF(func() T {
-		return lo.FromPtr(r.v)
-	})
-}
-
-func (r Result[T]) Unwrap(callback ...func(err error) error) T {
-	if !r.e.IsErr() {
-		return lo.FromPtr(r.v)
-	}
-
-	var err = errors.WrapCaller(r.e.Err(), 1)
+	var err = errors.WrapCaller(r.Result.GetErr(), 1)
 	for _, fn := range callback {
 		err = fn(err)
 		if err == nil {
-			return lo.FromPtr(r.v)
+			return r.Result.GetValue()
+		}
+	}
+
+	*gErr = anyhow.ErrOf(err)
+	return r.Result.GetValue()
+}
+
+func (r Result[T]) Unwrap(callback ...func(err error) error) T {
+	if !r.Result.IsErr() {
+		return r.Result.GetValue()
+	}
+
+	var err = errors.WrapCaller(r.Result.GetErr(), 1)
+	for _, fn := range callback {
+		err = fn(err)
+		if err == nil {
+			return r.Result.GetValue()
 		}
 	}
 
@@ -198,108 +115,21 @@ func (r Result[T]) Unwrap(callback ...func(err error) error) T {
 }
 
 func (r Result[T]) Expect(format string, args ...any) T {
-	if !r.e.IsErr() {
-		return lo.FromPtr(r.v)
-	}
-
-	debug.PrintStack()
-	err := errors.WrapCaller(r.e.Err(), 1)
-	panic(errors.Wrapf(err, format, args...))
+	return r.Result.Expect(format, args...)
 }
 
 func (r Result[T]) String() string {
-	if !r.IsErr() {
-		return fmt.Sprintf("%v", lo.FromPtr(r.v))
-	}
-
-	return fmt.Sprint(errors.WrapCaller(r.Err(), 1))
-}
-
-func (r Result[T]) MarshalJSON() ([]byte, error) {
-	if r.e.IsErr() {
-		return nil, errors.WrapCaller(r.e.Err(), 1)
-	}
-
-	var data, err = json.Marshal(lo.FromPtr(r.v))
-	if err != nil {
-		return nil, errors.WrapCaller(err, 1)
-	}
-	return data, nil
-}
-
-func (r *Result[T]) UnmarshalJSON(data []byte) error {
-	if r == nil {
-		debug.PrintStack()
-		panic("UnmarshalJSON: result is nil")
-	}
-
-	if r.e.IsErr() {
-		return errors.WrapCaller(r.e.Err(), 1)
-	}
-
-	var v T
-	var err = json.Unmarshal(data, &v)
-	if err != nil {
-		return errors.WrapCaller(err, 1)
-	}
-	r.v = &v
-	return nil
+	return r.Result.String()
 }
 
 func (r Result[T]) Do(fn func(v T)) Result[T] {
-	if r.e.IsErr() {
-		return r
-	}
-
-	fn(lo.FromPtr(r.v))
-	return r
-}
-
-func (r Result[T]) ErrTo(setter ErrSetter, callback ...func(err error) error) T {
-	if setter == nil {
-		debug.PrintStack()
-		panic("ErrTo: setter is nil")
-	}
-
-	var ret = lo.FromPtr(r.v)
-	if !r.e.IsErr() {
-		return ret
-	}
-
-	callback = append(callback, errChecks...)
-	var err = errors.WrapCaller(r.e.Err(), 1)
-	for _, fn := range callback {
-		err = fn(err)
-		if err == nil {
-			return ret
-		}
-	}
-	setter.setErr(err)
-	return ret
+	return Result[T]{Result: r.Result.OnValue(fn)}
 }
 
 func (r Result[T]) IsErr() bool {
-	return r.e.IsErr()
+	return r.Result.IsErr()
 }
 
 func (r Result[T]) Err() error {
-	if !r.e.IsErr() {
-		return nil
-	}
-
-	var err = r.e.Err()
-	return errors.WrapCaller(err, 1)
-}
-
-func (r *Result[T]) setErr(err error) {
-	if r == nil {
-		debug.PrintStack()
-		panic("setErr: result is nil")
-	}
-
-	if err == nil {
-		return
-	}
-
-	r.e = newError(err)
+	return r.Result.GetErr()
 }

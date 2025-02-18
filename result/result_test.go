@@ -1,14 +1,10 @@
 package result_test
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/result"
 )
 
@@ -40,46 +36,4 @@ func TestResultDo(t *testing.T) {
 	}).Do(func(v *hello) {
 		assert.If(v.Name != "abc", "not match")
 	})
-}
-
-func TestErrOf(t *testing.T) {
-	result.RegisterErrCheck(func(err error) error {
-		return errors.Wrap(err, "global err check")
-	})
-
-	errors.Debug(fn1().OnValue(func(tt string) error {
-		t.Log(tt)
-		return nil
-	}))
-}
-
-func fn1() (r result.Result[string]) {
-	var ctx = log.UpdateEventCtx(context.Background(), log.Map{"test": "ok"})
-	fn3().ErrTo(&r, log.RecordErr(ctx))
-	if r.IsErr() {
-		return
-	}
-
-	var vv = fn2().ErrTo(&r)
-	if r.IsErr() {
-		return
-	}
-
-	return r.WithVal(vv)
-}
-
-func fn2() (r result.Result[string]) {
-	fn3().ErrTo(&r, func(err error) error {
-		return errors.Wrap(err, "test error")
-	})
-
-	if r.IsErr() {
-		return
-	}
-
-	return r.WithVal("ok")
-}
-
-func fn3() result.Error {
-	return result.ErrOf(fmt.Errorf("error"))
 }

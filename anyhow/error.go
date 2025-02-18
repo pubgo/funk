@@ -26,7 +26,7 @@ func (r Error) OnErr(callbacks ...func(err error)) Error {
 	return r
 }
 
-func (r Error) ErrTo(setter *Error, callbacks ...func(err error) error) {
+func (r Error) Unwrap(setter *Error, callbacks ...func(err error) error) {
 	if setter == nil {
 		debug.PrintStack()
 		panic("setter is nil")
@@ -63,23 +63,6 @@ func (r Error) GetErr() error {
 
 func (r Error) getErr() error {
 	return r.err
-}
-
-func (r Error) Unwrap(callback ...func(err error) error) {
-	if !r.IsErr() {
-		return
-	}
-
-	var err = errors.WrapCaller(r.getErr(), 1)
-	for _, fn := range callback {
-		err = fn(err)
-		if err == nil {
-			return
-		}
-	}
-
-	debug.PrintStack()
-	panic(err)
 }
 
 func (r Error) Expect(format string, args ...any) {

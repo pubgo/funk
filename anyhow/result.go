@@ -58,23 +58,6 @@ func (r Result[T]) ValueTo(v *T) Error {
 	return Error{}
 }
 
-func (r Result[T]) Unwrap(callback ...func(err error) error) T {
-	if !r.IsErr() {
-		return r.getValue()
-	}
-
-	var err = errors.WrapCaller(r.getErr(), 1)
-	for _, fn := range callback {
-		err = fn(err)
-		if err == nil {
-			return r.getValue()
-		}
-	}
-
-	debug.PrintStack()
-	panic(err)
-}
-
 func (r Result[T]) Expect(format string, args ...any) T {
 	if !r.IsErr() {
 		return r.getValue()
@@ -93,7 +76,7 @@ func (r Result[T]) String() string {
 	return fmt.Sprint(errors.WrapCaller(r.getErr(), 1))
 }
 
-func (r Result[T]) ErrTo(setter *Error, callbacks ...func(err error) error) T {
+func (r Result[T]) Unwrap(setter *Error, callbacks ...func(err error) error) T {
 	if setter == nil {
 		debug.PrintStack()
 		panic("ErrTo: setter is nil")
