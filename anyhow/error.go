@@ -5,6 +5,7 @@ import (
 
 	"github.com/pubgo/funk/anyhow/aherrcheck"
 	"github.com/pubgo/funk/errors"
+	"github.com/rs/zerolog/log"
 )
 
 func newError(err error) Error {
@@ -29,11 +30,16 @@ func (r Error) OnErr(callbacks ...func(err error)) Error {
 func (r Error) Unwrap(setter *Error, callbacks ...func(err error) error) {
 	if setter == nil {
 		debug.PrintStack()
-		panic("setter is nil")
+		panic("Unwrap: setter is nil")
 	}
 
 	if !r.IsErr() {
 		return
+	}
+
+	// err No checking, repeat setting
+	if (*setter).IsErr() {
+		log.Warn().Msgf("Unwrap: setter is not nil, err=%v", (*setter).getErr())
 	}
 
 	callbacks = append(callbacks, aherrcheck.GetErrChecks()...)
@@ -72,5 +78,7 @@ func (r Error) Expect(format string, args ...any) {
 
 	debug.PrintStack()
 	err := errors.WrapCaller(r.getErr(), 1)
-	panic(errors.Wrapf(err, format, args...))
+	err = errors.Wrapf(err, format, args...)
+	errors.Debug(err)
+	panic(err)
 }

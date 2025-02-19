@@ -6,6 +6,7 @@ import (
 
 	"github.com/pubgo/funk/anyhow/aherrcheck"
 	"github.com/pubgo/funk/errors"
+	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
 )
 
@@ -43,10 +44,10 @@ func (r Result[T]) WithVal(v T) Result[T] {
 	return OK(v)
 }
 
-func (r Result[T]) ValueTo(v *T) Error {
+func (r Result[T]) ValueTo(v *T) error {
 	if r.IsErr() {
 		var err = errors.WrapCaller(r.getErr(), 1)
-		return newError(err)
+		return err
 	}
 
 	if v == nil {
@@ -55,7 +56,7 @@ func (r Result[T]) ValueTo(v *T) Error {
 	}
 
 	*v = r.getValue()
-	return Error{}
+	return nil
 }
 
 func (r Result[T]) Expect(format string, args ...any) T {
@@ -65,7 +66,9 @@ func (r Result[T]) Expect(format string, args ...any) T {
 
 	debug.PrintStack()
 	err := errors.WrapCaller(r.getErr(), 1)
-	panic(errors.Wrapf(err, format, args...))
+	err = errors.Wrapf(err, format, args...)
+	errors.Debug(err)
+	panic(err)
 }
 
 func (r Result[T]) String() string {
@@ -79,12 +82,17 @@ func (r Result[T]) String() string {
 func (r Result[T]) Unwrap(setter *Error, callbacks ...func(err error) error) T {
 	if setter == nil {
 		debug.PrintStack()
-		panic("ErrTo: setter is nil")
+		panic("Unwrap: setter is nil")
 	}
 
 	var ret = r.getValue()
 	if !r.IsErr() {
 		return ret
+	}
+
+	// err No checking, repeat setting
+	if (*setter).IsErr() {
+		log.Warn().Msgf("Unwrap: setter is not nil, err=%v", (*setter).getErr())
 	}
 
 	callbacks = append(callbacks, aherrcheck.GetErrChecks()...)
@@ -95,6 +103,7 @@ func (r Result[T]) Unwrap(setter *Error, callbacks ...func(err error) error) T {
 			return ret
 		}
 	}
+
 	err = errors.WrapCaller(err, 1)
 	*setter = newError(err)
 	return ret
@@ -105,6 +114,10 @@ func (r Result[T]) IsErr() bool {
 }
 
 func (r Result[T]) GetErr() error {
+	if !r.IsErr() {
+		return nil
+	}
+	
 	var err = r.getErr()
 	return errors.WrapCaller(err, 1)
 }
