@@ -3,14 +3,14 @@ package result
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/pubgo/funk/anyhow/aherrcheck"
-	"github.com/pubgo/funk/log"
-	"github.com/samber/lo"
 	"runtime/debug"
 
+	"github.com/pubgo/funk/anyhow/aherrcheck"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/stack"
+	"github.com/rs/zerolog/log"
+	"github.com/samber/lo"
 )
 
 var _ error = (*Error)(nil)
