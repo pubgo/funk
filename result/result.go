@@ -3,6 +3,10 @@ package result
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/pubgo/funk/anyhow/aherrcheck"
+	"github.com/pubgo/funk/log"
+	"github.com/samber/lo"
+	"runtime/debug"
 
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
@@ -149,4 +153,33 @@ func (r Result[T]) Do(fn func(v T)) {
 	}
 
 	fn(generic.FromPtr(r.v))
+}
+
+func (r Result[T]) ErrTo(setter *Result[T], callbacks ...func(err error) error) T {
+	if setter == nil {
+		debug.PrintStack()
+		panic("Unwrap: setter is nil")
+	}
+
+	var ret = lo.FromPtr(r.v)
+	if !r.IsErr() {
+		return ret
+	}
+
+	// err No checking, repeat setting
+	if (*setter).IsErr() {
+		log.Warn().Err((*setter).Err()).Msgf("ErrTo: setter is not nil")
+	}
+
+	callbacks = append(callbacks, aherrcheck.GetErrChecks()...)
+	var err = r.e
+	for _, fn := range callbacks {
+		err = fn(err)
+		if err == nil {
+			return ret
+		}
+	}
+
+	*setter = Result[T]{e: errors.WrapCaller(err, 1)}
+	return ret
 }
