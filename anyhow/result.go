@@ -11,6 +11,8 @@ import (
 )
 
 type Result[T any] struct {
+	_ [0]func() // disallow ==
+	
 	v   *T
 	Err Error
 }
