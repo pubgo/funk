@@ -109,6 +109,14 @@ func (r Result[T]) Unwrap(setter *Error, callbacks ...func(err error) error) T {
 	return ret
 }
 
+func (r Result[T]) OrElse(t T) T {
+	if r.IsErr() {
+		return t
+	}
+
+	return r.getValue()
+}
+
 func (r Result[T]) IsErr() bool {
 	return r.getErr() != nil
 }
@@ -117,7 +125,7 @@ func (r Result[T]) GetErr() error {
 	if !r.IsErr() {
 		return nil
 	}
-	
+
 	var err = r.getErr()
 	return errors.WrapCaller(err, 1)
 }
