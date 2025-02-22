@@ -10,7 +10,6 @@ import (
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/stack"
 	"github.com/rs/zerolog/log"
-	"github.com/samber/lo"
 )
 
 var _ error = (*Error)(nil)
@@ -155,15 +154,14 @@ func (r Result[T]) Do(fn func(v T)) {
 	fn(generic.FromPtr(r.v))
 }
 
-func (r Result[T]) ErrTo(setter *Result[T], callbacks ...func(err error) error) T {
+func (r Result[T]) ErrTo(setter *Result[T], callbacks ...func(err error) error) bool {
 	if setter == nil {
 		debug.PrintStack()
 		panic("Unwrap: setter is nil")
 	}
 
-	var ret = lo.FromPtr(r.v)
 	if !r.IsErr() {
-		return ret
+		return false
 	}
 
 	// err No checking, repeat setting
@@ -176,10 +174,10 @@ func (r Result[T]) ErrTo(setter *Result[T], callbacks ...func(err error) error) 
 	for _, fn := range callbacks {
 		err = fn(err)
 		if err == nil {
-			return ret
+			return false
 		}
 	}
 
 	*setter = Result[T]{e: errors.WrapCaller(err, 1)}
-	return ret
+	return true
 }
