@@ -79,6 +79,26 @@ func (r Result[T]) String() string {
 	return fmt.Sprint(errors.WrapCaller(r.getErr(), 1))
 }
 
+func (r Result[T]) ErrTo(setter *Error) bool {
+	if setter == nil {
+		debug.PrintStack()
+		panic("ErrTo: setter is nil")
+	}
+
+	if !r.IsErr() {
+		return false
+	}
+
+	// err No checking, repeat setting
+	if (*setter).IsErr() {
+		log.Warn().Msgf("ErrTo: setter is not nil, err=%v", (*setter).getErr())
+	}
+
+	err := errors.WrapCaller(r.getErr(), 1)
+	*setter = newError(err)
+	return true
+}
+
 func (r Result[T]) Unwrap(setter *Error, callbacks ...func(err error) error) T {
 	if setter == nil {
 		debug.PrintStack()

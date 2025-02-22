@@ -30,6 +30,25 @@ func (r Error) OnErr(callbacks ...func(err error) error) Error {
 
 	return r
 }
+func (r Error) ErrTo(setter *Error) bool {
+	if setter == nil {
+		debug.PrintStack()
+		panic("ErrTo: setter is nil")
+	}
+
+	if !r.IsErr() {
+		return false
+	}
+
+	// err No checking, repeat setting
+	if (*setter).IsErr() {
+		log.Warn().Msgf("ErrTo: setter is not nil, err=%v", (*setter).getErr())
+	}
+
+	err := errors.WrapCaller(r.getErr(), 1)
+	*setter = newError(err)
+	return true
+}
 
 func (r Error) Unwrap(setter *Error, callbacks ...func(err error) error) {
 	if setter == nil {
