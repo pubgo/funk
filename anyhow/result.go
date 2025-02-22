@@ -130,12 +130,16 @@ func (r Result[T]) GetErr() error {
 	return errors.WrapCaller(err, 1)
 }
 
-func (r Result[T]) OnErr(callbacks ...func(err error)) Result[T] {
+func (r Result[T]) OnErr(callbacks ...func(err error) error) Result[T] {
 	if r.IsErr() {
 		var err = r.getErr()
 		for _, fn := range callbacks {
-			fn(err)
+			err = fn(err)
+			if err == nil {
+				return OK(r.getValue())
+			}
 		}
+		return Wrap(r.getValue(), errors.WrapCaller(err, 1))
 	}
 
 	return r

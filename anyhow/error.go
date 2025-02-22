@@ -16,12 +16,16 @@ type Error struct {
 	err error
 }
 
-func (r Error) OnErr(callbacks ...func(err error)) Error {
+func (r Error) OnErr(callbacks ...func(err error) error) Error {
 	if r.IsErr() {
 		var err = r.getErr()
 		for _, fn := range callbacks {
-			fn(err)
+			err = fn(err)
+			if err == nil {
+				return Error{}
+			}
 		}
+		return Error{err: errors.WrapCaller(err, 1)}
 	}
 
 	return r

@@ -36,7 +36,9 @@ func TestResultDo(t *testing.T) {
 		assert.If(v.Name != "abc", "not match")
 	}).OnValue(func(v *hello) {
 		assert.If(v.Name != "abc", "not match")
-	}).OnErr(func(err error) {})
+	}).OnErr(func(err error) error {
+		return err
+	})
 }
 
 func TestErrOf(t *testing.T) {
