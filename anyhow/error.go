@@ -13,7 +13,7 @@ func newError(err error) Error {
 
 type Error struct {
 	_ [0]func() // disallow ==
-	
+
 	err error
 }
 
@@ -82,6 +82,7 @@ func (r Error) Unwrap(setter *Error, callbacks ...func(err error) error) {
 func (r Error) IsErr() bool {
 	return r.getErr() != nil
 }
+func (r Error) IsErrNil() bool { return r.getErr() == nil }
 
 func (r Error) GetErr() error {
 	if !r.IsErr() {
