@@ -12,12 +12,18 @@ import (
 
 type Result[T any] struct {
 	_ [0]func() // disallow ==
-	
+
 	v   *T
 	Err Error
 }
 
 func (r Result[T]) GetValue() T {
+	if r.IsErr() {
+		debug.PrintStack()
+		err := errors.WrapCaller(r.getErr(), 1)
+		errors.Debug(err)
+		panic(err)
+	}
 	return r.getValue()
 }
 
@@ -26,15 +32,6 @@ func (r Result[T]) OnValue(fn func(v T)) Result[T] {
 		fn(r.getValue())
 	}
 	return r
-}
-
-func (r Result[T]) WithErr(err error) Result[T] {
-	if err == nil {
-		return r
-	}
-
-	err = errors.WrapCaller(err, 1)
-	return Result[T]{Err: newError(err)}
 }
 
 func (r Result[T]) WithVal(v T) Result[T] {
@@ -139,6 +136,10 @@ func (r Result[T]) OrElse(t T) T {
 	return r.getValue()
 }
 
+func (r Result[T]) IsErrNil() bool {
+	return r.getErr() == nil
+}
+
 func (r Result[T]) IsErr() bool {
 	return r.getErr() != nil
 }
@@ -150,6 +151,15 @@ func (r Result[T]) GetErr() error {
 
 	var err = r.getErr()
 	return errors.WrapCaller(err, 1)
+}
+
+func (r Result[T]) WithErr(err error) Result[T] {
+	if err == nil {
+		return r
+	}
+
+	err = errors.WrapCaller(err, 1)
+	return Result[T]{Err: newError(err)}
 }
 
 func (r Result[T]) OnErr(callbacks ...func(err error) error) Result[T] {
