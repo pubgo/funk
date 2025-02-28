@@ -112,8 +112,3 @@ func DoResult[T any](fn func() (r Result[T])) (t T, gErr error) {
 func DoError(fn func() (r Error)) error {
 	return try(func() error { return fn().GetErr() })
 }
-
-func MapTo[A any, B any](ret Result[A], fn func(d A) B) B {
-	d := ret.Expect("check error")
-	return fn(d)
-}
