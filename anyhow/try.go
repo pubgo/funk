@@ -1,6 +1,8 @@
 package anyhow
 
 import (
+	"runtime/debug"
+
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/stack"
@@ -17,6 +19,8 @@ func try(fn func() error) (gErr error) {
 	defer func() {
 		if err := errors.Parse(recover()); !generic.IsNil(err) {
 			gErr = errors.WrapStack(err)
+			debug.PrintStack()
+			errors.Debug(gErr)
 		}
 
 		gErr = errors.WrapKV(gErr, "fn_stack", stack.CallerWithFunc(fn).String())
@@ -34,6 +38,8 @@ func tryResult[T any](fn func() (T, error)) (t T, gErr error) {
 	defer func() {
 		if err := errors.Parse(recover()); !generic.IsNil(err) {
 			gErr = errors.WrapStack(err)
+			debug.PrintStack()
+			errors.Debug(gErr)
 		}
 
 		if gErr != nil {

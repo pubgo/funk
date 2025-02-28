@@ -104,3 +104,11 @@ func WrapFn[T any](fn func() (T, error)) Result[T] {
 	err = errors.WrapCaller(err, 1)
 	return Result[T]{Err: newError(err)}
 }
+
+func DoResult[T any](fn func() (r Result[T])) (t T, gErr error) {
+	return t, try(func() error { return fn().ValueTo(&t) })
+}
+
+func DoError(fn func() (r Error)) error {
+	return try(func() error { return fn().GetErr() })
+}

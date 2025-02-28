@@ -1,10 +1,11 @@
 package anyhow
 
 import (
+	"runtime/debug"
+
 	"github.com/pubgo/funk/anyhow/aherrcheck"
 	"github.com/pubgo/funk/errors"
 	"github.com/rs/zerolog/log"
-	"runtime/debug"
 )
 
 func newError(err error) Error {
