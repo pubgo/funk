@@ -72,6 +72,38 @@ func (r Error) Expect(format string, args ...any) {
 	panic(err)
 }
 
+func (r Error) Unwrap(setter *Error, contexts ...context.Context) {
+	if setter == nil {
+		debug.PrintStack()
+		panic("Unwrap: setter is nil")
+	}
+
+	if r.IsErrNil() {
+		return
+	}
+
+	// err No checking, repeat setting
+	if (*setter).IsErr() {
+		log.Warn().Msgf("Unwrap: setter is not nil, err=%v", (*setter).getErr())
+	}
+
+	var ctx = context.Background()
+	if len(contexts) > 0 {
+		ctx = contexts[0]
+	}
+
+	var err = r.getErr()
+	for _, fn := range aherrcheck.GetErrChecks() {
+		err = fn(ctx, err)
+		if err == nil {
+			return
+		}
+	}
+
+	err = errors.WrapCaller(err, 1)
+	*setter = newError(err)
+}
+
 func errTo(r Error, setter *Error, rawSetter *error, contexts ...context.Context) bool {
 	if setter == nil {
 		debug.PrintStack()
