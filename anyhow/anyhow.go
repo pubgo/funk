@@ -112,6 +112,10 @@ func DoError(fn func() (r Error)) error {
 	return try(func() error { return fn().GetErr() })
 }
 
-func ErrTo(r Error, rawSetter *error, contexts ...context.Context) bool {
+func ErrTo(r Error, setter *Error, contexts ...context.Context) bool {
+	return errTo(r, setter, nil, contexts...)
+}
+
+func RawErrTo(r Error, rawSetter *error, contexts ...context.Context) bool {
 	return errTo(r, nil, rawSetter, contexts...)
 }
