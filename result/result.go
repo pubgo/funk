@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"runtime/debug"
 
-	"github.com/pubgo/funk/anyhow/aherrcheck"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/stack"
@@ -169,7 +168,6 @@ func (r Result[T]) ErrTo(setter *Result[T], callbacks ...func(err error) error) 
 		log.Warn().Err((*setter).Err()).Msgf("ErrTo: setter is not nil")
 	}
 
-	callbacks = append(callbacks, aherrcheck.GetErrChecks()...)
 	var err = r.e
 	for _, fn := range callbacks {
 		err = fn(err)

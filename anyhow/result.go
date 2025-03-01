@@ -1,12 +1,11 @@
 package anyhow
 
 import (
+	"context"
 	"fmt"
 	"runtime/debug"
 
-	"github.com/pubgo/funk/anyhow/aherrcheck"
 	"github.com/pubgo/funk/errors"
-	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
 )
 
@@ -78,31 +77,12 @@ func (r Result[T]) String() string {
 	return fmt.Sprint(errors.WrapCaller(r.getErr(), 1))
 }
 
-func (r Result[T]) ErrTo(setter *Error) bool {
-	if setter == nil {
-		debug.PrintStack()
-		panic("ErrTo: setter is nil")
-	}
+func (r Result[T]) RawErrTo(setter *error, ctx ...context.Context) bool {
+	return errTo(r.Err, nil, setter, ctx...)
+}
 
-	if !r.IsErr() {
-		return false
-	}
-
-	// err No checking, repeat setting
-	if (*setter).IsErr() {
-		log.Warn().Msgf("ErrTo: setter is not nil, err=%v", (*setter).getErr())
-	}
-
-	var err = r.getErr()
-	for _, fn := range aherrcheck.GetErrChecks() {
-		err = fn(err)
-		if err == nil {
-			return false
-		}
-	}
-
-	*setter = newError(errors.WrapCaller(err, 1))
-	return true
+func (r Result[T]) ErrTo(setter *Error, ctx ...context.Context) bool {
+	return errTo(r.Err, setter, nil, ctx...)
 }
 
 func (r Result[T]) OrElse(t T) T {

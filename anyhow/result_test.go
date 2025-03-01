@@ -43,17 +43,16 @@ func TestResultDo(t *testing.T) {
 
 func TestErrOf(t *testing.T) {
 	var ctx = log.UpdateEventCtx(context.Background(), log.Map{"test": "ok"})
-	aherrcheck.RegisterErrCheck(log.RecordErr(ctx))
+	aherrcheck.RegisterErrCheck(log.RecordErr())
 
 	var err anyhow.Error
-	if fn1().ErrTo(&err) {
+	if fn1().ErrTo(&err, ctx) {
 		errors.Debug(err.GetErr())
 	}
 }
 
 func fn1() (r anyhow.Result[string]) {
-	fn3().Unwrap(&r.Err)
-	if r.IsErr() {
+	if fn3().ErrTo(&r.Err) {
 		return
 	}
 
@@ -66,11 +65,9 @@ func fn1() (r anyhow.Result[string]) {
 }
 
 func fn2() (r anyhow.Result[string]) {
-	fn3().Unwrap(&r.Err, func(err error) error {
+	if fn3().OnErr(func(err error) error {
 		return errors.Wrap(err, "test error")
-	})
-
-	if r.IsErr() {
+	}).ErrTo(&r.Err) {
 		return
 	}
 

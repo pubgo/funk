@@ -1,18 +1,26 @@
 package aherrcheck
 
 import (
+	"context"
 	"reflect"
 
 	"github.com/pubgo/funk/stack"
 )
 
-var errChecks []func(error) error
+var errChecks []func(context.Context, error) error
 
-func RegisterErrCheck(f func(error) error) {
+func RegisterErrCheck(f func(context.Context, error) error) {
+	var checkFrame = stack.CallerWithFunc(f)
+	for _, errFunc := range errChecks {
+		if reflect.DeepEqual(checkFrame, stack.CallerWithFunc(errFunc)) {
+			return
+		}
+	}
+
 	errChecks = append(errChecks, f)
 }
 
-func GetErrChecks() []func(error) error { return errChecks }
+func GetErrChecks() []func(context.Context, error) error { return errChecks }
 
 func GetErrCheckFrames() []*stack.Frame {
 	var frames []*stack.Frame
@@ -22,7 +30,7 @@ func GetErrCheckFrames() []*stack.Frame {
 	return frames
 }
 
-func RemoveErrCheck(f func(error) error) {
+func RemoveErrCheck(f func(context.Context, error) error) {
 	var checkFrame = stack.CallerWithFunc(f)
 	var index = -1
 	for idx, errFunc := range errChecks {

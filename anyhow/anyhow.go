@@ -3,7 +3,6 @@ package anyhow
 import (
 	"runtime/debug"
 
-	"github.com/pubgo/funk/anyhow/aherrcheck"
 	"github.com/pubgo/funk/errors"
 )
 
@@ -42,7 +41,6 @@ func recovery[T any](setter *T, isErr func() bool, getErr func() error, newErr f
 		err = getErr()
 	}
 
-	callbacks = append(callbacks, aherrcheck.GetErrChecks()...)
 	for _, fn := range callbacks {
 		err = fn(err)
 		if err == nil {

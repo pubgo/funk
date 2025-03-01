@@ -1,6 +1,7 @@
 package anyhow
 
 import (
+	"context"
 	"runtime/debug"
 
 	"github.com/pubgo/funk/anyhow/aherrcheck"
@@ -32,64 +33,19 @@ func (r Error) OnErr(callbacks ...func(err error) error) Error {
 
 	return r
 }
-func (r Error) ErrTo(setter *Error) bool {
-	if setter == nil {
-		debug.PrintStack()
-		panic("ErrTo: setter is nil")
-	}
 
-	if !r.IsErr() {
-		return false
-	}
-
-	// err No checking, repeat setting
-	if (*setter).IsErr() {
-		log.Warn().Msgf("ErrTo: setter is not nil, err=%v", (*setter).getErr())
-	}
-
-	var err = r.getErr()
-	for _, fn := range aherrcheck.GetErrChecks() {
-		err = fn(err)
-		if err == nil {
-			return false
-		}
-	}
-
-	*setter = newError(errors.WrapCaller(err, 1))
-	return true
+func (r Error) RawErrTo(setter *error, ctx ...context.Context) bool {
+	return errTo(r, nil, setter, ctx...)
 }
 
-func (r Error) Unwrap(setter *Error, callbacks ...func(err error) error) {
-	if setter == nil {
-		debug.PrintStack()
-		panic("Unwrap: setter is nil")
-	}
-
-	if !r.IsErr() {
-		return
-	}
-
-	// err No checking, repeat setting
-	if (*setter).IsErr() {
-		log.Warn().Msgf("Unwrap: setter is not nil, err=%v", (*setter).getErr())
-	}
-
-	callbacks = append(callbacks, aherrcheck.GetErrChecks()...)
-	var err = r.getErr()
-	for _, fn := range callbacks {
-		err = fn(err)
-		if err == nil {
-			return
-		}
-	}
-
-	err = errors.WrapCaller(err, 1)
-	*setter = newError(err)
+func (r Error) ErrTo(setter *Error, ctx ...context.Context) bool {
+	return errTo(r, setter, nil, ctx...)
 }
 
 func (r Error) IsErr() bool {
 	return r.getErr() != nil
 }
+
 func (r Error) IsErrNil() bool { return r.getErr() == nil }
 
 func (r Error) GetErr() error {
@@ -114,4 +70,67 @@ func (r Error) Expect(format string, args ...any) {
 	err = errors.Wrapf(err, format, args...)
 	errors.Debug(err)
 	panic(err)
+}
+
+func errTo(r Error, setter *Error, rawSetter *error, contexts ...context.Context) bool {
+	if setter == nil {
+		debug.PrintStack()
+		panic("setter is nil")
+	}
+
+	if !r.IsErr() {
+		return false
+	}
+
+	var setterIsErr = func() bool {
+		if setter != nil {
+			return (*setter).IsErr()
+		}
+
+		if rawSetter != nil {
+			return (*rawSetter) != nil
+		}
+
+		return false
+	}
+
+	var setterGetErr = func() error {
+		if setter != nil {
+			return (*setter).getErr()
+		}
+
+		if rawSetter != nil {
+			return *rawSetter
+		}
+
+		return nil
+
+	}
+
+	// err No checking, repeat setting
+	if setterIsErr() {
+		log.Warn().Msgf("setter is not nil, err=%v", setterGetErr())
+	}
+
+	var ctx = context.Background()
+	if len(contexts) > 0 {
+		ctx = contexts[0]
+	}
+
+	var err = r.getErr()
+	for _, fn := range aherrcheck.GetErrChecks() {
+		err = fn(ctx, err)
+		if err == nil {
+			return false
+		}
+	}
+
+	err = errors.WrapCaller(err, 2)
+	if setter != nil {
+		*setter = newError(err)
+	} else if rawSetter != nil {
+		*rawSetter = err
+	}
+
+	return true
 }
