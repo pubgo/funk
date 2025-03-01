@@ -47,8 +47,15 @@ func (r Error) ErrTo(setter *Error) bool {
 		log.Warn().Msgf("ErrTo: setter is not nil, err=%v", (*setter).getErr())
 	}
 
-	err := errors.WrapCaller(r.getErr(), 1)
-	*setter = newError(err)
+	var err = r.getErr()
+	for _, fn := range aherrcheck.GetErrChecks() {
+		err = fn(err)
+		if err == nil {
+			return false
+		}
+	}
+
+	*setter = newError(errors.WrapCaller(err, 1))
 	return true
 }
 

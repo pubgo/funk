@@ -93,39 +93,16 @@ func (r Result[T]) ErrTo(setter *Error) bool {
 		log.Warn().Msgf("ErrTo: setter is not nil, err=%v", (*setter).getErr())
 	}
 
-	err := errors.WrapCaller(r.getErr(), 1)
-	*setter = newError(err)
-	return true
-}
-
-func (r Result[T]) Unwrap(setter *Error, callbacks ...func(err error) error) T {
-	if setter == nil {
-		debug.PrintStack()
-		panic("Unwrap: setter is nil")
-	}
-
-	var ret = r.getValue()
-	if !r.IsErr() {
-		return ret
-	}
-
-	// err No checking, repeat setting
-	if (*setter).IsErr() {
-		log.Warn().Msgf("Unwrap: setter is not nil, err=%v", (*setter).getErr())
-	}
-
-	callbacks = append(callbacks, aherrcheck.GetErrChecks()...)
 	var err = r.getErr()
-	for _, fn := range callbacks {
+	for _, fn := range aherrcheck.GetErrChecks() {
 		err = fn(err)
 		if err == nil {
-			return ret
+			return false
 		}
 	}
 
-	err = errors.WrapCaller(err, 1)
-	*setter = newError(err)
-	return ret
+	*setter = newError(errors.WrapCaller(err, 1))
+	return true
 }
 
 func (r Result[T]) OrElse(t T) T {

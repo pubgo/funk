@@ -42,28 +42,27 @@ func TestResultDo(t *testing.T) {
 }
 
 func TestErrOf(t *testing.T) {
-	aherrcheck.RegisterErrCheck(func(err error) error {
-		return errors.Wrap(err, "global err check")
-	})
+	var ctx = log.UpdateEventCtx(context.Background(), log.Map{"test": "ok"})
+	aherrcheck.RegisterErrCheck(log.RecordErr(ctx))
 
-	errors.Debug(fn1().OnValue(func(tt string) {
-		t.Log(tt)
-	}).GetErr())
+	var err anyhow.Error
+	if fn1().ErrTo(&err) {
+		errors.Debug(err.GetErr())
+	}
 }
 
 func fn1() (r anyhow.Result[string]) {
-	var ctx = log.UpdateEventCtx(context.Background(), log.Map{"test": "ok"})
-	fn3().Unwrap(&r.Err, log.RecordErr(ctx))
+	fn3().Unwrap(&r.Err)
 	if r.IsErr() {
 		return
 	}
 
-	var vv = fn2().Unwrap(&r.Err)
-	if r.IsErr() {
+	var vv = fn2()
+	if vv.ErrTo(&r.Err) {
 		return
 	}
 
-	return r.WithVal(vv)
+	return vv
 }
 
 func fn2() (r anyhow.Result[string]) {
