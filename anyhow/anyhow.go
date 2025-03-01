@@ -1,6 +1,7 @@
 package anyhow
 
 import (
+	"context"
 	"runtime/debug"
 
 	"github.com/pubgo/funk/errors"
@@ -109,4 +110,8 @@ func DoResult[T any](fn func() (r Result[T])) (t T, gErr error) {
 
 func DoError(fn func() (r Error)) error {
 	return try(func() error { return fn().GetErr() })
+}
+
+func ErrTo(r Error, rawSetter *error, contexts ...context.Context) bool {
+	return errTo(r, nil, rawSetter, contexts...)
 }
