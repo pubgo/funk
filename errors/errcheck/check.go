@@ -14,8 +14,12 @@ func Recovery(setter *error, callbacks ...func(err error) error) {
 		panic("setter is nil")
 	}
 
-	gErr := *setter
 	err := errors.Parse(recover())
+	if err == nil {
+		debug.PrintStack()
+	}
+
+	gErr := *setter
 	if err == nil && gErr == nil {
 		return
 	}
