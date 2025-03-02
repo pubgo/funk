@@ -4,42 +4,25 @@ import (
 	"context"
 	"runtime/debug"
 
+	"github.com/pubgo/funk/anyhow/aherrcheck"
 	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/log"
 )
 
-func RecoveryErr(setter *error, callbacks ...func(err error) error) {
-	recovery(
-		setter,
-		func() bool { return *setter != nil },
-		func() error { return *setter },
-		func(err error) error { return err },
-		callbacks...,
-	)
-}
-
-func Recovery(setter *Error, callbacks ...func(err error) error) {
-	recovery(
-		setter,
-		func() bool { return setter.IsErr() },
-		func() error { return setter.GetErr() },
-		func(err error) Error { return newError(err) },
-		callbacks...,
-	)
-}
-
-func recovery[T any](setter *T, isErr func() bool, getErr func() error, newErr func(err error) T, callbacks ...func(err error) error) {
+func Recovery(setter *error, callbacks ...func(err error) error) {
 	if setter == nil {
 		debug.PrintStack()
 		panic("setter is nil")
 	}
 
+	gErr := *setter
 	err := errors.Parse(recover())
-	if err == nil && !isErr() {
+	if err == nil && gErr == nil {
 		return
 	}
 
 	if err == nil {
-		err = getErr()
+		err = gErr
 	}
 
 	for _, fn := range callbacks {
@@ -49,73 +32,36 @@ func recovery[T any](setter *T, isErr func() bool, getErr func() error, newErr f
 		}
 	}
 
-	err = errors.WrapCaller(err, 1)
-	*setter = newErr(err)
+	*setter = errors.WrapCaller(err, 1)
 }
 
-func ErrOf(err error) Error {
-	if err == nil {
-		return Error{}
+func ErrTo(errSetter *error, err error, contexts ...context.Context) bool {
+	if errSetter == nil {
+		debug.PrintStack()
+		panic("errSetter is nil")
 	}
 
-	err = errors.WrapCaller(err, 1)
-	return newError(err)
-}
-
-func ErrOfFn(fn func() error) Error {
-	var err = try(fn)
 	if err == nil {
-		return Error{}
+		return false
 	}
 
-	err = errors.WrapCaller(err, 1)
-	return newError(err)
-}
-
-func OK[T any](v T) Result[T] {
-	return Result[T]{v: &v}
-}
-
-func Err[T any](err error) Result[T] {
-	if err == nil {
-		return Result[T]{}
+	// err No checking, repeat setting
+	if (*errSetter) != nil {
+		log.Warn().Msgf("setter is not nil, err=%v", *errSetter)
 	}
 
-	err = errors.WrapCaller(err, 1)
-	return Result[T]{Err: newError(err)}
-}
-
-func Wrap[T any](v T, err error) Result[T] {
-	if err == nil {
-		return Result[T]{v: &v}
+	var ctx = context.Background()
+	if len(contexts) > 0 {
+		ctx = contexts[0]
 	}
 
-	err = errors.WrapCaller(err, 1)
-	return Result[T]{Err: newError(err)}
-}
-
-func WrapFn[T any](fn func() (T, error)) Result[T] {
-	v, err := tryResult(fn)
-	if err == nil {
-		return Result[T]{v: &v}
+	for _, fn := range aherrcheck.GetErrChecks() {
+		err = fn(ctx, err)
+		if err == nil {
+			return false
+		}
 	}
 
-	err = errors.WrapCaller(err, 1)
-	return Result[T]{Err: newError(err)}
-}
-
-func DoResult[T any](fn func() (r Result[T])) (t T, gErr error) {
-	return t, try(func() error { return fn().ValueTo(&t) })
-}
-
-func DoError(fn func() (r Error)) error {
-	return try(func() error { return fn().GetErr() })
-}
-
-func ErrTo(err error, setter *Error, contexts ...context.Context) bool {
-	return errTo(newError(err), setter, nil, contexts...)
-}
-
-func RawErrTo(err error, rawSetter *error, contexts ...context.Context) bool {
-	return errTo(newError(err), nil, rawSetter, contexts...)
+	*errSetter = errors.WrapCaller(err, 1)
+	return true
 }
