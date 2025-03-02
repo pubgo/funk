@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pubgo/funk/anyhow"
-	"github.com/pubgo/funk/anyhow/aherrcheck"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
+	anyhow "github.com/pubgo/funk/internal/anyhow1"
+	"github.com/pubgo/funk/internal/anyhow1/aherrcheck"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/recovery"
 )

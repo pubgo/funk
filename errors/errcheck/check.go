@@ -1,10 +1,9 @@
-package anyhow
+package errcheck
 
 import (
 	"context"
 	"runtime/debug"
 
-	"github.com/pubgo/funk/anyhow/aherrcheck"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/log"
 )
@@ -35,7 +34,7 @@ func Recovery(setter *error, callbacks ...func(err error) error) {
 	*setter = errors.WrapCaller(err, 1)
 }
 
-func ErrTo(errSetter *error, err error, contexts ...context.Context) bool {
+func Check(errSetter *error, err error, contexts ...context.Context) bool {
 	if errSetter == nil {
 		debug.PrintStack()
 		panic("errSetter is nil")
@@ -55,7 +54,7 @@ func ErrTo(errSetter *error, err error, contexts ...context.Context) bool {
 		ctx = contexts[0]
 	}
 
-	for _, fn := range aherrcheck.GetErrChecks() {
+	for _, fn := range GetErrChecks() {
 		err = fn(ctx, err)
 		if err == nil {
 			return false

@@ -1,4 +1,4 @@
-package aherrcheck
+package errcheck
 
 import (
 	"context"
