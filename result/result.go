@@ -79,6 +79,14 @@ func (r Result[T]) OnValue(fn func(t T) error) error {
 	return errors.WrapCaller(fn(generic.FromPtr(r.v)), 1)
 }
 
+func (r Result[T]) OnErr(check func(err error)) {
+	if !r.IsErr() {
+		return
+	}
+
+	check(r.e)
+}
+
 func (r Result[T]) Err(check ...func(err error) error) error {
 	if !r.IsErr() {
 		return nil
