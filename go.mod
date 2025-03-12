@@ -18,6 +18,7 @@ require (
 	github.com/goccy/go-json v0.10.2
 	github.com/golang/protobuf v1.5.4
 	github.com/gopherjs/gopherjs v1.17.2
+	github.com/gorilla/websocket v1.5.0
 	github.com/hashicorp/go-version v1.6.0
 	github.com/huandu/go-clone v1.5.1
 	github.com/iancoleman/strcase v0.2.0
@@ -38,6 +39,7 @@ require (
 	github.com/rs/xid v1.5.0
 	github.com/rs/zerolog v1.33.0
 	github.com/samber/lo v1.47.0
+	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
 	github.com/testcontainers/testcontainers-go v0.30.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.30.0
@@ -126,7 +128,6 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/shirou/gopsutil/v3 v3.23.12 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
-	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
