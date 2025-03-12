@@ -12,7 +12,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/gorilla/websocket"
+	_ "github.com/coder/websocket"
+	_ "github.com/gorilla/websocket"
+	websocket "github.com/gorilla/websocket"
+	"github.com/prometheus/client_golang/api"
+	"github.com/pubgo/funk/log"
+	"github.com/samber/lo"
 	"github.com/sirupsen/logrus"
 )
 
@@ -119,7 +124,7 @@ type wsClient struct {
 	totalReconnectAttempts atomic.Int32
 
 	// Logging
-	log *logrus.Entry
+	log log.Logger
 }
 
 func (c *wsClient) RegisterAction(act string, handler func(ctx context.Context, payload Message) Message) error {
@@ -132,7 +137,7 @@ func (c *wsClient) RegisterAction(act string, handler func(ctx context.Context, 
 
 // FormatWSURL formats a websocket URL with session information
 func FormatWSURL(wsServer string, boxID string) string {
-	return fmt.Sprintf("%s?session_id=%s:%s", wsServer, boxID, utils.GenerateRandomString(32))
+	return fmt.Sprintf("%s?session_id=%s:%s", wsServer, boxID, lo.RandomString(32, lo.LowerCaseLettersCharset))
 }
 
 // newClient creates a new websocket client
@@ -158,7 +163,7 @@ func newClient(ctx context.Context, wsURL string, cloudClient api.Client, option
 	}
 
 	logs := log.GetLogger("websocket")
-	logs.Debugf("config: %+v", config)
+	logs.Debug().Msg(.Msgf("config: %+v", config)
 
 	// Create client context with cancellation
 	clientCtx, cancel := context.WithCancel(ctx)
@@ -186,7 +191,7 @@ func newClient(ctx context.Context, wsURL string, cloudClient api.Client, option
 
 func (c *wsClient) Start() {
 	// Start the client
-	c.log.Info("Starting client")
+	c.log.Info().Msg("Starting client")
 
 	// Initial connection
 	c.connect()
@@ -200,7 +205,7 @@ func (c *wsClient) Start() {
 
 // start begins the client operation
 func (c *wsClient) start() {
-	c.log.Info("Starting client")
+	c.log.Info().Msg("Starting client")
 
 	// Initial connection
 	c.connect()
@@ -214,12 +219,12 @@ func (c *wsClient) healthCheckLoop() {
 	ticker := time.NewTicker(c.config.HealthCheckInterval)
 	defer ticker.Stop()
 
-	c.log.Info("Starting connection health check loop")
+	c.log.Info().Msg(.Msg("Starting connection health check loop")
 
 	for {
 		select {
 		case <-c.ctx.Done():
-			c.log.Info("Client shutdown, stopping health check loop")
+			c.log.Info().Msg(.Msg("Client shutdown, stopping health check loop")
 			return
 
 		case <-ticker.C:
@@ -227,7 +232,7 @@ func (c *wsClient) healthCheckLoop() {
 				c.log.Warn("Health check detected disconnected state, triggering reconnect")
 				c.triggerReconnect()
 			} else {
-				c.log.Debug("Health check: connection is active")
+				c.log.Debug().Msg("Health check: connection is active")
 			}
 		}
 	}
@@ -235,20 +240,20 @@ func (c *wsClient) healthCheckLoop() {
 
 // reconnectLoop manages reconnection attempts
 func (c *wsClient) reconnectLoop() {
-	c.log.Info("Starting reconnect loop")
+	c.log.Info().Msg("Starting reconnect loop")
 
 	for {
 		select {
 		case <-c.ctx.Done():
-			c.log.Info("Client shutdown, stopping reconnect loop")
+			c.log.Info().Msg("Client shutdown, stopping reconnect loop")
 			return
 
 		case <-c.reconnectCh:
-			c.log.Info("Reconnect signal received")
+			c.log.Info().Msg("Reconnect signal received")
 
 			// If already connecting, don't start another attempt
 			if !c.compareAndSetState(StateDisconnected, StateConnecting) {
-				c.log.Info("Already connecting, skipping")
+				c.log.Info().Msg("Already connecting, skipping")
 				continue
 			}
 
@@ -259,7 +264,7 @@ func (c *wsClient) reconnectLoop() {
 
 			// Check if maximum reconnect attempts reached
 			if c.config.MaxReconnectAttempts > 0 && int(currentAttempts) > c.config.MaxReconnectAttempts {
-				c.log.Warnf("Maximum reconnection attempts reached (%d), but connection is essential - continuing to retry", currentAttempts)
+				c.log.Warn().Msgf("Maximum reconnection attempts reached (%d), but connection is essential - continuing to retry", currentAttempts)
 				// Reset counter to avoid integer overflow during long-running operations
 				c.reconnectAttempts.Store(1)
 				// Don't cancel, keep trying
@@ -267,14 +272,14 @@ func (c *wsClient) reconnectLoop() {
 
 			// Wait before reconnecting
 			reconnectDelay := c.config.ReconnectInterval
-			c.log.Info("Reconnecting to WebSocket server after delay")
+			c.log.Info().Msg("Reconnecting to WebSocket server after delay")
 
 			select {
 			case <-time.After(reconnectDelay):
-				c.log.Info("Reconnecting to WebSocket server")
+				c.log.Info().Msg("Reconnecting to WebSocket server")
 				c.connect()
 			case <-c.ctx.Done():
-				c.log.Info("Reconnect loop context done, exiting")
+				c.log.Info().Msg("Reconnect loop context done, exiting")
 				return
 			}
 		}
@@ -307,11 +312,11 @@ func (c *wsClient) connect() {
 	if resp != nil {
 		defer resp.Body.Close()
 		respBody, _ := io.ReadAll(resp.Body)
-		c.log.Debugf("Connection response: %s", string(respBody))
+		c.log.Debug().Msgf("Connection response: %s", string(respBody))
 	}
 
 	if err != nil {
-		c.log.Errorf("Failed to connect to %s: %v (attempt: %d, total: %d)",
+		c.log.Error().Msgf("Failed to connect to %s: %v (attempt: %d, total: %d)",
 			c.wsURL, err, reconnectCount, totalReconnects)
 		c.triggerReconnect()
 		return
@@ -327,13 +332,13 @@ func (c *wsClient) connect() {
 
 	// Set up handlers
 	conn.SetPingHandler(func(data string) error {
-		c.log.Debug("Received PING message")
+		c.log.Debug().Msg("Received PING message")
 		deadline := time.Now().Add(c.config.WriteTimeout)
 		return c.writeControlMessage(websocket.PongMessage, []byte(data), deadline)
 	})
 
 	conn.SetPongHandler(func(data string) error {
-		c.log.Debug("Received PONG message")
+		c.log.Debug().Msg("Received PONG message")
 		c.lastPong.Store(time.Now())
 		return nil
 	})
@@ -357,32 +362,32 @@ func (c *wsClient) connect() {
 
 // readLoop handles incoming messages
 func (c *wsClient) readLoop() {
-	c.log.Info("Starting read loop")
+	c.log.Info().Msg("Starting read loop")
 
 	defer func() {
 		if r := recover(); r != nil {
-			c.log.Errorf("Panic in read loop: %v", r)
+			c.log.Error().Msgf("Panic in read loop: %v", r)
 			c.triggerReconnect()
 		}
 	}()
 
 	for {
 		if c.getState() != StateConnected {
-			c.log.Info("Not connected, skipping read loop")
+			c.log.Info().Msg("Not connected, skipping read loop")
 			return
 		}
 
 		// Get connection (with mutex protection)
 		conn := c.getConnection()
 		if conn == nil {
-			c.log.Info("Connection is nil, skipping read loop")
+			c.log.Info().Msg("Connection is nil, skipping read loop")
 			return
 		}
 
 		// Read message
 		messageType, message, err := conn.ReadMessage()
 		if err != nil {
-			c.log.Errorf("Error reading message: %v", err)
+			c.log.Error().Msgf("Error reading message: %v", err)
 			c.triggerReconnect()
 			return
 		}
@@ -391,7 +396,7 @@ func (c *wsClient) readLoop() {
 		switch messageType {
 		case websocket.TextMessage:
 			if c.log.Level == logrus.DebugLevel {
-				c.log.Debugf("Received message: %s", string(message))
+				c.log.Debug().Msgf("Received message: %s", string(message))
 			}
 
 			// Process message in a separate goroutine
@@ -399,17 +404,17 @@ func (c *wsClient) readLoop() {
 				// Try to send with retries
 				reqMsg, err := ToResultMessage(msg)
 				if err != nil || reqMsg.GetAction() == "" {
-					c.log.Errorf("failed to parse websocket request message: %s, %v", msg, err)
+					c.log.Error().Msgf("failed to parse websocket request message: %s, %v", msg, err)
 				} else {
 					c.sendWithRetry(c.invoke(c.ctx, reqMsg))
 				}
 			}(message)
 
 		case websocket.BinaryMessage:
-			c.log.Errorf("Received binary message of length %d", len(message))
+			c.log.Error().Msgf("Received binary message of length %d", len(message))
 
 		case websocket.CloseMessage:
-			c.log.Info("Received close message")
+			c.log.Info().Msg("Received close message")
 			c.triggerReconnect()
 			return
 		}
@@ -462,18 +467,18 @@ func (c *wsClient) sendWithRetry(payload Message) {
 		if err == nil {
 			// Send successful
 			if attempt > 0 {
-				c.log.Debugf("Successfully sent reply after %d retries", attempt)
+				c.log.Debug().Msgf("Successfully sent reply after %d retries", attempt)
 			}
 			return
 		}
 
 		// Log the failure and prepare to retry
-		c.log.Debugf("Failed to send reply (attempt %d): %v, retrying in %v", attempt+1, err, backoff)
+		c.log.Debug().Msgf("Failed to send reply (attempt %d): %v, retrying in %v", attempt+1, err, backoff)
 
 		// Wait before retrying, but respect client context
 		select {
 		case <-c.ctx.Done():
-			c.log.Info("Client context cancelled during send retry")
+			c.log.Info().Msg("Client context cancelled during send retry")
 			return
 		case <-time.After(backoff):
 			// Continue with retry
@@ -491,14 +496,14 @@ func (c *wsClient) sendWithRetry(payload Message) {
 
 // writeLoop handles outgoing messages and ping maintenance
 func (c *wsClient) writeLoop() {
-	c.log.Info("Starting write loop")
+	c.log.Info().Msg("Starting write loop")
 
 	pingTicker := time.NewTicker(c.config.PingInterval)
 	defer pingTicker.Stop()
 
 	defer func() {
 		if r := recover(); r != nil {
-			c.log.Errorf("Panic in write loop: %v", r)
+			c.log.Error().Msgf("Panic in write loop: %v", r)
 			c.triggerReconnect()
 		}
 	}()
@@ -506,7 +511,7 @@ func (c *wsClient) writeLoop() {
 	for {
 		select {
 		case <-c.ctx.Done():
-			c.log.Info("Write loop context done, exiting")
+			c.log.Info().Msg("Write loop context done, exiting")
 			return
 
 		case message := <-c.sendChan:
@@ -519,7 +524,7 @@ func (c *wsClient) writeLoop() {
 
 			err := c.writeMessage(websocket.TextMessage, message.Marshal())
 			if err != nil {
-				c.log.Errorf("Error sending message: %v", err)
+				c.log.Error().Msgf("Error sending message: %v", err)
 				// Use sendWithRetry to handle the failed message
 				go c.sendWithRetry(message)
 				c.triggerReconnect()
@@ -530,17 +535,17 @@ func (c *wsClient) writeLoop() {
 			// Check if we've received a pong recently
 			lastPong, ok := c.lastPong.Load().(time.Time)
 			if !ok || time.Since(lastPong) > c.config.PongTimeout {
-				c.log.Warnf("Pong timeout detected, reconnecting, duration=%s", time.Since(lastPong))
+				c.log.Warn().Msgf("Pong timeout detected, reconnecting, duration=%s", time.Since(lastPong))
 				c.triggerReconnect()
 				return
 			}
 
 			// Send ping
-			c.log.Debug("Sending PING message")
+			c.log.Debug().Msg("Sending PING message")
 			deadline := time.Now().Add(c.config.WriteTimeout)
 			err := c.writeControlMessage(websocket.PingMessage, []byte{}, deadline)
 			if err != nil {
-				c.log.Errorf("Error sending ping: %v", err)
+				c.log.Error().Msgf("Error sending ping: %v", err)
 				c.triggerReconnect()
 				return
 			}
@@ -568,7 +573,7 @@ func (c *wsClient) Send(ctx context.Context, payload Message) error {
 
 // Close implements the Client interface
 func (c *wsClient) Close() {
-	c.log.Info("Closing WebSocket client")
+	c.log.Info().Msg("Closing WebSocket client")
 	c.cancel()
 	c.closeConnection()
 }
@@ -590,11 +595,11 @@ func (c *wsClient) closeConnection() {
 
 	conn := c.conn
 	if conn == nil {
-		c.log.Debug("Connection is nil, skipping close")
+		c.log.Debug().Msg("Connection is nil, skipping close")
 		return
 	}
 
-	c.log.Debugf("Closing connection: local:%s remote:%s", c.conn.LocalAddr(), c.conn.RemoteAddr())
+	c.log.Debug().Msgf("Closing connection: local:%s remote:%s", c.conn.LocalAddr(), c.conn.RemoteAddr())
 	// Send close message
 	deadline := time.Now().Add(c.config.WriteTimeout)
 	_ = conn.WriteControl(
@@ -603,11 +608,11 @@ func (c *wsClient) closeConnection() {
 		deadline,
 	)
 
-	c.log.Debug("Closed connection")
+	c.log.Debug().Msg("Closed connection")
 	// Close connection
 	_ = conn.Close()
 	c.conn = nil
-	c.log.Debug("Connection closed")
+	c.log.Debug().Msg("Connection closed")
 }
 
 // writeMessage safely writes a message to the connection
@@ -617,11 +622,11 @@ func (c *wsClient) writeMessage(messageType int, data []byte) error {
 
 	conn := c.conn
 	if conn == nil {
-		c.log.Info("Connection is nil, skipping write")
+		c.log.Info().Msg("Connection is nil, skipping write")
 		return errors.New("connection is nil")
 	}
 
-	c.log.Debugf("Writing message: %s", string(data))
+	c.log.Debug().Msgf("Writing message: %s", string(data))
 	return conn.WriteMessage(messageType, data)
 }
 
@@ -632,11 +637,11 @@ func (c *wsClient) writeControlMessage(messageType int, data []byte, deadline ti
 
 	conn := c.conn
 	if conn == nil {
-		c.log.Info("Connection is nil, skipping write")
+		c.log.Info().Msg("Connection is nil, skipping write")
 		return errors.New("connection is nil")
 	}
 
-	c.log.Debugf("Writing control message: %s", string(data))
+	c.log.Debug().Msgf("Writing control message: %s", string(data))
 	return conn.WriteControl(messageType, data, deadline)
 }
 
@@ -652,27 +657,27 @@ func (c *wsClient) setState(state ConnectionState) {
 
 // compareAndSetState atomically updates the state if the current value matches the expected value
 func (c *wsClient) compareAndSetState(expected, new ConnectionState) bool {
-	c.log.Debugf("Comparing and setting state: %d -> %d", expected, new)
+	c.log.Debug().Msgf("Comparing and setting state: %d -> %d", expected, new)
 	return c.state.CompareAndSwap(int32(expected), int32(new))
 }
 
 // triggerReconnect safely triggers a reconnection attempt
 func (c *wsClient) triggerReconnect() {
 	c.totalReconnectAttempts.Add(1)
-	c.log.Debug("Triggering reconnect")
+	c.log.Debug().Msg("Triggering reconnect")
 	if c.getState() == StateDisconnected {
-		c.log.Debug("Already disconnected, skipping reconnect")
+		c.log.Debug().Msg("Already disconnected, skipping reconnect")
 		return
 	}
 
-	c.log.Debug("Setting state to disconnected")
+	c.log.Debug().Msg("Setting state to disconnected")
 	c.setState(StateDisconnected)
 
-	c.log.Debug("Sending reconnect signal")
+	c.log.Debug().Msg("Sending reconnect signal")
 	select {
 	case c.reconnectCh <- struct{}{}:
-		c.log.Info("Reconnect signal sent")
+		c.log.Info().Msg("Reconnect signal sent")
 	default:
-		c.log.Info("Channel already has a pending signal")
+		c.log.Info().Msg("Channel already has a pending signal")
 	}
 }
