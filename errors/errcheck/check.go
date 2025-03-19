@@ -8,17 +8,13 @@ import (
 	"github.com/pubgo/funk/log"
 )
 
-func Recovery(setter *error, callbacks ...func(err error) error) {
+func RecoveryAndCheck(setter *error, callbacks ...func(err error) error) {
 	if setter == nil {
 		debug.PrintStack()
 		panic("setter is nil")
 	}
 
 	err := errors.Parse(recover())
-	if err == nil {
-		debug.PrintStack()
-	}
-
 	gErr := *setter
 	if err == nil && gErr == nil {
 		return
