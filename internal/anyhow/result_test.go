@@ -8,8 +8,8 @@ import (
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
-	anyhow "github.com/pubgo/funk/internal/anyhow1"
-	"github.com/pubgo/funk/internal/anyhow1/aherrcheck"
+	anyhow "github.com/pubgo/funk/internal/anyhow"
+	"github.com/pubgo/funk/internal/anyhow/aherrcheck"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/recovery"
 )
