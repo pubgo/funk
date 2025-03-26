@@ -6,6 +6,7 @@ import (
 
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/log"
+	"github.com/samber/lo"
 )
 
 func Recovery(setter *error, callbacks ...func(err error) error) {
@@ -51,14 +52,38 @@ func Check(errSetter *error, err error, contexts ...context.Context) bool {
 	// err No checking, repeat setting
 	if (*errSetter) != nil {
 		log.Warn().Msgf("setter is not nil, err=%v", *errSetter)
+		return true
 	}
 
-	var ctx = context.Background()
-	if len(contexts) > 0 {
-		ctx = contexts[0]
+	var ctx = lo.FirstOr(contexts, context.Background())
+	for _, fn := range GetCheckersFromCtx(ctx) {
+		err = fn(ctx, err)
+		if err == nil {
+			return false
+		}
 	}
 
-	for _, fn := range GetErrChecks() {
+	*errSetter = errors.WrapCaller(err, 1)
+	return true
+}
+
+func CheckCtx(ctx context.Context, errSetter *error, err error, errCheckers ...ErrChecker) bool {
+	if errSetter == nil {
+		debug.PrintStack()
+		panic("errSetter is nil")
+	}
+
+	if err == nil {
+		return false
+	}
+
+	// err No checking, repeat setting
+	if (*errSetter) != nil {
+		log.Warn().Msgf("setter is not nil, err=%v", *errSetter)
+		return true
+	}
+
+	for _, fn := range append(GetCheckersFromCtx(ctx), errCheckers...) {
 		err = fn(ctx, err)
 		if err == nil {
 			return false
