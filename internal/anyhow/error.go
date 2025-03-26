@@ -5,7 +5,7 @@ import (
 	"runtime/debug"
 
 	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/internal/anyhow1/aherrcheck"
+	"github.com/pubgo/funk/internal/anyhow/aherrcheck"
 	"github.com/rs/zerolog/log"
 )
 

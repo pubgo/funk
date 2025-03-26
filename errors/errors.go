@@ -13,7 +13,7 @@ import (
 )
 
 func IfErr(err error, fn func(err error) error) error {
-	if generic.IsNil(err) {
+	if err == nil {
 		return nil
 	}
 

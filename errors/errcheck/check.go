@@ -9,17 +9,13 @@ import (
 	"github.com/samber/lo"
 )
 
-func Recovery(setter *error, callbacks ...func(err error) error) {
+func RecoveryAndCheck(setter *error, callbacks ...func(err error) error) {
 	if setter == nil {
 		debug.PrintStack()
 		panic("setter is nil")
 	}
 
 	err := errors.Parse(recover())
-	if err == nil {
-		debug.PrintStack()
-	}
-
 	gErr := *setter
 	if err == nil && gErr == nil {
 		return
@@ -51,7 +47,7 @@ func Check(errSetter *error, err error, contexts ...context.Context) bool {
 
 	// err No checking, repeat setting
 	if (*errSetter) != nil {
-		log.Warn().Msgf("setter is not nil, err=%v", *errSetter)
+		log.Warn().Msgf("errcheck: setter is not nil, err=%v", *errSetter)
 		return true
 	}
 
