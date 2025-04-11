@@ -3,15 +3,15 @@ package internal
 import (
 	"context"
 	"fmt"
-	"github.com/pubgo/funk/component/cloudevent"
-	cloudeventpb "github.com/pubgo/funk/proto/cloudevent"
 	"reflect"
 	"sort"
 	"strings"
 
 	"github.com/dave/jennifer/jen"
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/component/cloudevent"
 	"github.com/pubgo/funk/errors/errcheck"
+	cloudeventpb "github.com/pubgo/funk/proto/cloudevent"
 	"github.com/pubgo/funk/stack"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/compiler/protogen"
