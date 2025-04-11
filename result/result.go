@@ -164,7 +164,7 @@ func (r Result[T]) Do(fn func(v T)) {
 func (r Result[T]) ErrTo(setter *Result[T], callbacks ...func(err error) error) bool {
 	if setter == nil {
 		debug.PrintStack()
-		panic("Unwrap: setter is nil")
+		panic("ErrTo: setter is nil")
 	}
 
 	if !r.IsErr() {
@@ -173,7 +173,8 @@ func (r Result[T]) ErrTo(setter *Result[T], callbacks ...func(err error) error) 
 
 	// err No checking, repeat setting
 	if (*setter).IsErr() {
-		log.Warn().Err((*setter).Err()).Msgf("ErrTo: setter is not nil")
+		log.Err((*setter).Err()).Msgf("ErrTo: setter error is not nil")
+		return false
 	}
 
 	var err = r.e
