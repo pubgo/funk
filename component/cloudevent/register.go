@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/pubgo/catdogs/pkg/gen/proto/cloudeventpb"
 	"github.com/pubgo/funk/assert"
+	cloudeventpb "github.com/pubgo/funk/proto/cloudevent"
 	"github.com/pubgo/funk/stack"
 	"github.com/pubgo/funk/vars"
 	"github.com/rs/zerolog"

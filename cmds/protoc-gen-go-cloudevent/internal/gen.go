@@ -8,15 +8,16 @@ import (
 	"strings"
 
 	"github.com/dave/jennifer/jen"
+	"github.com/samber/lo"
+	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
+
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/component/cloudevent"
 	"github.com/pubgo/funk/errors/errcheck"
 	cloudeventpb "github.com/pubgo/funk/proto/cloudevent"
 	"github.com/pubgo/funk/stack"
-	"github.com/samber/lo"
-	"google.golang.org/protobuf/compiler/protogen"
-	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
 )
 
 var cloudeventPkg = reflect.TypeOf(cloudevent.Client{}).PkgPath()
@@ -57,7 +58,7 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 
 	var events = make(map[string]map[string]*eventInfo)
 	for _, srv := range file.Services {
-		job, ok := proto.GetExtension(srv.Desc.Options(), cloudeventoptionpb.E_Job).(*cloudeventpb.CloudEventServiceOptions)
+		job, ok := proto.GetExtension(srv.Desc.Options(), cloudeventpb.E_Job).(*cloudeventpb.CloudEventServiceOptions)
 		if !ok || job == nil {
 			continue
 		}
@@ -69,7 +70,7 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 		}
 
 		for _, m := range srv.Methods {
-			jobSubject, ok := proto.GetExtension(m.Desc.Options(), cloudeventoptionpb.E_Subject).(*cloudeventpb.CloudEventMethodOptions)
+			jobSubject, ok := proto.GetExtension(m.Desc.Options(), cloudeventpb.E_Subject).(*cloudeventpb.CloudEventMethodOptions)
 			if !ok || jobSubject == nil {
 				continue
 			}

@@ -10,12 +10,12 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/nats-io/nats.go/jetstream"
 	ants "github.com/panjf2000/ants/v2"
-	"github.com/pubgo/catdogs/pkg/components/natsclient"
-	"github.com/pubgo/catdogs/pkg/gen/proto/cloudeventpb"
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/component/natsclient"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/errors/errcheck"
 	"github.com/pubgo/funk/log"
+	cloudeventpb "github.com/pubgo/funk/proto/cloudevent"
 	"github.com/pubgo/funk/running"
 	"github.com/pubgo/funk/stack"
 	"github.com/pubgo/funk/try"
@@ -72,7 +72,7 @@ type Client struct {
 }
 
 func (c *Client) initStream() (r error) {
-	defer errcheck.Recovery(&r)
+	defer errcheck.RecoveryAndCheck(&r)
 
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancel()
@@ -91,8 +91,12 @@ func (c *Client) initStream() (r error) {
 			Metadata: metadata,
 			Storage:  storageType,
 			//Retention: jetstream.InterestPolicy,
-		}
 
+			// Duplicates is the window within which to track duplicate messages.
+			// If not set, server default is 2 minutes.
+			Duplicates: time.Minute * 5,
+		}
+		
 		stream, err := c.js.CreateOrUpdateStream(ctx, streamCfg)
 		err = errors.IfErr(err, func(err error) error {
 			return errors.Wrapf(err, "failed to create stream:%s", streamName)
@@ -106,7 +110,7 @@ func (c *Client) initStream() (r error) {
 }
 
 func (c *Client) initConsumer() (r error) {
-	defer errcheck.Recovery(&r)
+	defer errcheck.RecoveryAndCheck(&r)
 
 	allEventKeysSet := mapset.NewSet(lo.MapToSlice(c.subjects, func(key string, value *cloudeventpb.CloudEventMethodOptions) string { return c.subjectName(key) })...)
 
@@ -418,7 +422,7 @@ func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *
 }
 
 func (c *Client) doConsume() (r error) {
-	defer errcheck.Recovery(&r)
+	defer errcheck.RecoveryAndCheck(&r)
 	for streamName, consumers := range c.consumers {
 		for consumerName, consumer := range consumers {
 			assert.If(c.jobs[streamName] == nil, "stream not found, stream=%s", streamName)

@@ -7,12 +7,11 @@ import (
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/pubgo/catdogs/pkg/gen/proto/cloudeventoptionpb"
-	"github.com/pubgo/catdogs/pkg/gen/proto/cloudeventpb"
-	"github.com/pubgo/catdogs/pkg/protoutils"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/errors/errcheck"
+	cloudeventpb "github.com/pubgo/funk/proto/cloudevent"
+	"github.com/pubgo/funk/protoutils"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -133,21 +132,21 @@ func getAllSubject() map[string]*cloudeventpb.CloudEventMethodOptions {
 func getAllSubjectOptions() []subjectOpt {
 	var opts []subjectOpt
 	protoutils.EachService(func(desc protoreflect.FileDescriptor, srv protoreflect.ServiceDescriptor) {
-		if !protoutils.HasExtension(srv.Options(), cloudeventoptionpb.E_Job) {
+		if !protoutils.HasExtension(srv.Options(), cloudeventpb.E_Job) {
 			return
 		}
 
-		jobOpt := protoutils.GetExtension[cloudeventpb.CloudEventServiceOptions](srv.Options(), cloudeventoptionpb.E_Job)
+		jobOpt := protoutils.GetExtension[cloudeventpb.CloudEventServiceOptions](srv.Options(), cloudeventpb.E_Job)
 		if jobOpt == nil {
 			return
 		}
 
 		protoutils.EachServiceMethod(srv, func(mth protoreflect.MethodDescriptor) {
-			if !protoutils.HasExtension(mth.Options(), cloudeventoptionpb.E_Subject) {
+			if !protoutils.HasExtension(mth.Options(), cloudeventpb.E_Subject) {
 				return
 			}
 
-			subOpt := protoutils.GetExtension[cloudeventpb.CloudEventMethodOptions](mth.Options(), cloudeventoptionpb.E_Subject)
+			subOpt := protoutils.GetExtension[cloudeventpb.CloudEventMethodOptions](mth.Options(), cloudeventpb.E_Subject)
 			if subOpt == nil {
 				return
 			}

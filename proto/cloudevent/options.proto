@@ -5,7 +5,7 @@ package lava.cloudevent;
 import "google/protobuf/descriptor.proto";
 import "cloudevent/types.proto";
 
-option go_package = "github.com/pubgo/catdogs/pkg/gen/proto/cloudeventoptionpb;cloudeventoptionpb";
+option go_package = "github.com/pubgo/funk/pkg/gen/proto/cloudeventpb;cloudeventpb";
 
 extend google.protobuf.ServiceOptions {
     CloudEventServiceOptions job = 10010;

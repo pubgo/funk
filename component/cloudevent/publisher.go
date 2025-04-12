@@ -6,10 +6,10 @@ import (
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/pubgo/catdogs/pkg/ctxutil"
-	"github.com/pubgo/catdogs/pkg/gen/proto/cloudeventpb"
+	"github.com/pubgo/funk/ctxutil"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/errors/errcheck"
+	cloudeventpb "github.com/pubgo/funk/proto/cloudevent"
 	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/stack"
 	"github.com/pubgo/funk/try"

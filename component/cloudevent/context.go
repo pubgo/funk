@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pubgo/catdogs/pkg/gen/proto/cloudeventpb"
+	cloudeventpb "github.com/pubgo/funk/proto/cloudevent"
 	"github.com/rs/xid"
 	"google.golang.org/protobuf/proto"
 )

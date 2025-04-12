@@ -3,11 +3,11 @@ package cloudevent
 import (
 	"context"
 	"fmt"
-	"github.com/pubgo/funk/running"
 	"time"
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/running"
 	"github.com/pubgo/funk/typex"
 	"google.golang.org/protobuf/proto"
 	yaml "gopkg.in/yaml.v3"
