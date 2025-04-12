@@ -56,14 +56,16 @@ func (f Value) MarshalJSON() ([]byte, error) {
 func (f Value) Value() interface{} { return f() }
 
 func (f Value) String() (r string) {
-	defer recovery.Recovery(func(err error) {
+	var errStr = func(err any) string {
 		ret := result.Wrap(json.Marshal(err))
 		if ret.IsErr() {
-			r = pretty.Sprint(ret.Err())
+			return pretty.Sprint(ret.Err())
 		} else {
-			r = convert.B2S(ret.Unwrap())
+			return convert.B2S(ret.Unwrap())
 		}
-	})
+	}
+
+	defer recovery.Recovery(func(err error) { r = errStr(err) })
 
 	dt := f()
 	switch dt.(type) {
@@ -76,11 +78,7 @@ func (f Value) String() (r string) {
 	case fmt.Stringer:
 		return dt.(fmt.Stringer).String()
 	default:
-		ret := result.Wrap(json.Marshal(dt))
-		if ret.IsErr() {
-			return pretty.Sprint(ret.Err())
-		}
-		return convert.B2S(ret.Unwrap())
+		return errStr(dt)
 	}
 }
 

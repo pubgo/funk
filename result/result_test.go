@@ -2,6 +2,7 @@ package result_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/pubgo/funk/assert"
@@ -37,4 +38,15 @@ func TestResultDo(t *testing.T) {
 	ok.Do(func(v *hello) {
 		assert.If(v.Name != "abc", "not match")
 	})
+
+	assert.Assert(err1().Err() == nil, "failed to check ErrTo")
+	assert.Assert(err1().Err().Error() != "test error", "error not match")
+}
+
+func err1() (gErr result.Result[any]) {
+	ret := result.Err[any](fmt.Errorf("test error"))
+	if ret.ErrTo(&gErr.E) {
+		return
+	}
+	return
 }

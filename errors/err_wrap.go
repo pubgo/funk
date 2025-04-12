@@ -49,8 +49,14 @@ func (e *ErrWrap) String() string {
 func (e *ErrWrap) MarshalJSON() ([]byte, error) {
 	data := errJsonify(e.err)
 	data["kind"] = e.Kind()
-	data["fields"] = e.pb.Tags
-	data["stacks"] = e.pb.Stacks
+	if len(e.pb.Tags) > 0 {
+		data["fields"] = e.pb.Tags
+	}
+
+	if len(e.pb.Stacks) > 0 {
+		data["stacks"] = e.pb.Stacks
+	}
+
 	data["caller"] = e.pb.Caller
 	return jjson.Marshal(data)
 }
