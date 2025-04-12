@@ -96,7 +96,7 @@ func (c *Client) initStream() (r error) {
 			// If not set, server default is 2 minutes.
 			Duplicates: time.Minute * 5,
 		}
-		
+
 		stream, err := c.js.CreateOrUpdateStream(ctx, streamCfg)
 		err = errors.IfErr(err, func(err error) error {
 			return errors.Wrapf(err, "failed to create stream:%s", streamName)
