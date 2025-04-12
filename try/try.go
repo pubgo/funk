@@ -54,9 +54,7 @@ func Result[T any](fn func() result.Result[T]) (g result.Result[T]) {
 		}
 
 		if g.IsErr() {
-			g = g.WithErr(g.Err(func(err error) error {
-				return errors.WrapKV(err, "fn_stack", stack.CallerWithFunc(fn))
-			}))
+			g = g.WithErr(errors.WrapKV(g.Err(), "fn_stack", stack.CallerWithFunc(fn)))
 		}
 	}()
 

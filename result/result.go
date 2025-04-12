@@ -3,10 +3,12 @@ package result
 import (
 	"encoding/json"
 	"fmt"
+	"runtime/debug"
 
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/stack"
+	"github.com/rs/zerolog/log"
 )
 
 var _ error = (*Error)(nil)
@@ -36,24 +38,24 @@ func OK[T any](v T) Result[T] {
 }
 
 func Err[T any](err error) Result[T] {
-	return Result[T]{e: errors.WrapCaller(err, 1)}
+	return Result[T]{E: errors.WrapCaller(err, 1)}
 }
 
 func Wrap[T any](v T, err error) Result[T] {
-	return Result[T]{v: &v, e: errors.WrapCaller(err, 1)}
+	return Result[T]{v: &v, E: errors.WrapCaller(err, 1)}
 }
 
 func Of[T any](v T, err error) Result[T] {
-	return Result[T]{v: &v, e: errors.WrapCaller(err, 1)}
+	return Result[T]{v: &v, E: errors.WrapCaller(err, 1)}
 }
 
 type Result[T any] struct {
 	v *T
-	e error
+	E error
 }
 
 func (r Result[T]) WithErr(err error) Result[T] {
-	return Result[T]{e: errors.WrapCaller(err, 1)}
+	return Result[T]{E: errors.WrapCaller(err, 1)}
 }
 
 func (r Result[T]) WithVal(v T) Result[T] {
@@ -62,7 +64,7 @@ func (r Result[T]) WithVal(v T) Result[T] {
 
 func (r Result[T]) ValueTo(v *T) error {
 	if r.IsErr() {
-		return errors.WrapCaller(r.e, 1)
+		return errors.WrapCaller(r.E, 1)
 	}
 
 	*v = generic.FromPtr(r.v)
@@ -71,10 +73,18 @@ func (r Result[T]) ValueTo(v *T) error {
 
 func (r Result[T]) OnValue(fn func(t T) error) error {
 	if r.IsErr() {
-		return r.e
+		return r.E
 	}
 
 	return errors.WrapCaller(fn(generic.FromPtr(r.v)), 1)
+}
+
+func (r Result[T]) OnErr(check func(err error)) {
+	if !r.IsErr() {
+		return
+	}
+
+	check(r.E)
 }
 
 func (r Result[T]) Err(check ...func(err error) error) error {
@@ -83,14 +93,14 @@ func (r Result[T]) Err(check ...func(err error) error) error {
 	}
 
 	if len(check) > 0 && check[0] != nil {
-		return errors.WrapCaller(check[0](r.e), 1)
+		return errors.WrapCaller(check[0](r.E), 1)
 	}
 
-	return errors.WrapCaller(r.e, 1)
+	return errors.WrapCaller(r.E, 1)
 }
 
 func (r Result[T]) IsErr() bool {
-	return r.e != nil || !generic.IsNil(r.e)
+	return r.E != nil || !generic.IsNil(r.E)
 }
 
 func (r Result[T]) OrElse(v T) T {
@@ -106,9 +116,9 @@ func (r Result[T]) Unwrap(check ...func(err error) error) T {
 	}
 
 	if len(check) > 0 && check[0] != nil {
-		panic(check[0](r.e))
+		panic(check[0](r.E))
 	} else {
-		panic(r.e)
+		panic(r.E)
 	}
 }
 
@@ -128,12 +138,12 @@ func (r Result[T]) String() string {
 		return fmt.Sprintf("%v", generic.FromPtr(r.v))
 	}
 
-	return fmt.Sprint(errors.WrapCaller(r.e, 1))
+	return fmt.Sprint(errors.WrapCaller(r.E, 1))
 }
 
 func (r Result[T]) MarshalJSON() ([]byte, error) {
 	if r.IsErr() {
-		return nil, errors.WrapCaller(r.e, 1)
+		return nil, errors.WrapCaller(r.E, 1)
 	}
 
 	return json.Marshal(generic.FromPtr(r.v))
@@ -149,4 +159,64 @@ func (r Result[T]) Do(fn func(v T)) {
 	}
 
 	fn(generic.FromPtr(r.v))
+}
+
+func (r Result[T]) ErrTo(setter *error, callbacks ...func(err error) error) bool {
+	if setter == nil {
+		debug.PrintStack()
+		panic("ErrTo: setter is nil")
+	}
+
+	if !r.IsErr() {
+		return false
+	}
+
+	// setter err is not nil
+	if *setter != nil {
+		log.Err(*setter).Msgf("ErrTo: setter error is not nil")
+		return true
+	}
+
+	var err = r.E
+	for _, fn := range callbacks {
+		err = fn(err)
+		if err == nil {
+			return false
+		}
+	}
+
+	*setter = errors.WrapCaller(err, 1)
+	return true
+}
+
+func Map[Src any, To any](s Result[Src], do func(s Src) (r Result[To])) Result[To] {
+	if s.IsErr() {
+		return Err[To](errors.WrapCaller(s.Err(), 1))
+	}
+
+	return do(s.Unwrap())
+}
+
+func Unwrap[T any](ret Result[T], gErr *error, callback ...func(err error) error) T {
+	if gErr == nil {
+		debug.PrintStack()
+		panic("Unwrap: gErr is nil")
+	}
+
+	if !ret.IsErr() {
+		return ret.Unwrap()
+	}
+
+	var t T
+	err := ret.Err()
+	for _, fn := range callback {
+		if err == nil {
+			return t
+		}
+
+		err = fn(err)
+	}
+
+	*gErr = errors.WrapCaller(err, 1)
+	return t
 }

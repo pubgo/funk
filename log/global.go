@@ -71,8 +71,11 @@ var (
 )
 
 // GetLogger get global log
-func GetLogger(name string) Logger {
-	return stdLog.nameWithCaller(name, 1)
+func GetLogger(names ...string) Logger {
+	if len(names) == 0 || names[0] == "" {
+		return stdLog
+	}
+	return stdLog.nameWithCaller(names[0], 1)
 }
 
 // SetLogger set global log

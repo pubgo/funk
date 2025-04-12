@@ -83,7 +83,6 @@ func DebugPrint() {
 	debug.PrintStack()
 }
 
-// testing
 func Testing(t *testing.T) {
 	err := errors.Parse(recover())
 	if funk.IsNil(err) {
