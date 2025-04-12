@@ -45,9 +45,8 @@ func Check(errSetter *error, err error, contexts ...context.Context) bool {
 		return false
 	}
 
-	// err No checking, repeat setting
 	if (*errSetter) != nil {
-		log.Warn().Msgf("errcheck: setter is not nil, err=%v", *errSetter)
+		log.Err(*errSetter).Msgf("errcheck: setter is not nil, err=%v", *errSetter)
 		return true
 	}
 
@@ -75,7 +74,7 @@ func CheckCtx(ctx context.Context, errSetter *error, err error, errCheckers ...E
 
 	// err No checking, repeat setting
 	if (*errSetter) != nil {
-		log.Warn().Msgf("setter is not nil, err=%v", *errSetter)
+		log.Err(*errSetter, ctx).Msgf("setter is not nil, err=%v", *errSetter)
 		return true
 	}
 
@@ -116,7 +115,7 @@ func (c *Checker) Check(err error, errCheckers ...ErrChecker) bool {
 
 	// err No checking, repeat setting
 	if (*c.errSetter) != nil {
-		log.Error(c.ctx).Msgf("setter is not nil, err=%v", *c.errSetter)
+		log.Err(*c.errSetter, c.ctx).Msgf("setter is not nil, err=%v", *c.errSetter)
 		return true
 	}
 
