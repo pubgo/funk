@@ -5,6 +5,7 @@ jobs:
       storage: "file"
       subjects: ["gid.>"]
   consumers:
+#    job name: job config
     gid:
       - consumer: "test:gid"
         stream: "gid"

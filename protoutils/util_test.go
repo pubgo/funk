@@ -1,4 +1,4 @@
-package gen
+package protoutils
 
 import (
 	"fmt"

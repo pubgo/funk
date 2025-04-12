@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package lava.cloudevent;
+
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/pubgo/funk/pkg/gen/proto/cloudeventpb;cloudeventpb";
+
+message RegisterJobOptions {
+    optional string job_name = 1;
+}
+
+message PushEventOptions {
+
+    // The content type for the data (optional).
+    optional string content_type = 1;
+
+    // The metadata passing to pub components
+
+    // metadata property:
+    // - key : the key of the message.
+    map<string, string> metadata = 2;
+
+    // The delay duration of the message.
+    optional google.protobuf.Duration delay_dur = 3;
+
+    // The message id
+    optional string msg_id = 4;
+}
+
+message CloudEventServiceOptions {
+
+    // job event name is same with config jobs consumers job name
+    string name = 1;
+}
+
+// cloud event subject or topic
+message CloudEventMethodOptions {
+
+    // subject name is same with config jobs consumers
+    // subject name sametime is topic name
+    string name = 1;
+
+    // event or api operation
+    optional string operation = 4;
+}
+

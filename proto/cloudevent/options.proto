@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package lava.cloudevent;
+
+import "google/protobuf/descriptor.proto";
+import "cloudevent/types.proto";
+
+option go_package = "github.com/pubgo/funk/pkg/gen/proto/cloudeventpb;cloudeventpb";
+
+extend google.protobuf.ServiceOptions {
+    CloudEventServiceOptions job = 10010;
+}
+
+extend google.protobuf.MethodOptions {
+    CloudEventMethodOptions subject = 10011;
+}

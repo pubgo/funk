@@ -1,4 +1,4 @@
-package cloudjobs
+package cloudevent
 
 import (
 	"fmt"
@@ -7,7 +7,8 @@ import (
 	"github.com/pubgo/funk/errors"
 )
 
-var errReject = errors.New("cloudjobs: reject retry and discard msg")
+var errReject = errors.New("cloudevent: reject retry and discard msg")
+var errRedeliveryStr = "cloudevent: redelivery message with custom delay duration"
 
 func Reject(errs ...error) error {
 	var reason = "reject"
@@ -30,7 +31,7 @@ type errRedelivery struct {
 }
 
 func (err errRedelivery) Error() string {
-	return fmt.Sprintf("cloudjob: redelivery message with custom delay duration:%s", err.delay)
+	return errRedeliveryStr + fmt.Sprintf(":%s", err.delay)
 }
 
 func Redelivery(delay time.Duration, errs ...error) error {

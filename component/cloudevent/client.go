@@ -1,4 +1,4 @@
-package cloudjobs
+package cloudevent
 
 import (
 	"context"
@@ -13,8 +13,9 @@ import (
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/component/natsclient"
 	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/errors/errcheck"
 	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/result"
+	cloudeventpb "github.com/pubgo/funk/proto/cloudevent"
 	"github.com/pubgo/funk/running"
 	"github.com/pubgo/funk/stack"
 	"github.com/pubgo/funk/try"
@@ -39,10 +40,11 @@ func New(p Params) *Client {
 		p:         p,
 		js:        js,
 		prefix:    DefaultPrefix,
-		handlers:  make(map[string]map[string]JobHandler[proto.Message]),
+		handlers:  make(map[string]map[string]EventHandler[proto.Message]),
 		streams:   make(map[string]jetstream.Stream),
 		consumers: make(map[string]map[string]*Consumer),
-		jobs:      make(map[string]map[string]map[string]*jobHandler),
+		jobs:      make(map[string]map[string]map[string]*jobEventHandler),
+		subjects:  getAllSubject(),
 	}
 }
 
@@ -57,16 +59,21 @@ type Client struct {
 	consumers map[string]map[string]*Consumer
 
 	// handlers: job name -> subject -> job handler
-	handlers map[string]map[string]JobHandler[proto.Message]
+	handlers map[string]map[string]EventHandler[proto.Message]
 
-	// jobs: stream->consumer->subject->jobHandler
-	jobs map[string]map[string]map[string]*jobHandler
+	// jobs: stream->consumer->subject->jobEventHandler
+	jobs map[string]map[string]map[string]*jobEventHandler
 
 	// stream, consumer, subject prefix, default: DefaultPrefix
 	prefix string
+
+	// subjects operation => subject info
+	subjects map[string]*cloudeventpb.CloudEventMethodOptions
 }
 
-func (c *Client) initStream() error {
+func (c *Client) initStream() (r error) {
+	defer errcheck.RecoveryAndCheck(&r)
+
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancel()
 	for streamName, cfg := range c.p.Cfg.Streams {
@@ -83,19 +90,29 @@ func (c *Client) initStream() error {
 			Subjects: streamSubjects,
 			Metadata: metadata,
 			Storage:  storageType,
+			//Retention: jetstream.InterestPolicy,
+
+			// Duplicates is the window within which to track duplicate messages.
+			// If not set, server default is 2 minutes.
+			Duplicates: time.Minute * 5,
 		}
 
 		stream, err := c.js.CreateOrUpdateStream(ctx, streamCfg)
-		if err != nil {
+		err = errors.IfErr(err, func(err error) error {
 			return errors.Wrapf(err, "failed to create stream:%s", streamName)
+		})
+		if errcheck.Check(&r, err) {
+			return
 		}
 		c.streams[streamName] = stream
 	}
-	return nil
+	return
 }
 
-func (c *Client) initConsumer() error {
-	allEventKeysSet := mapset.NewSet(lo.MapToSlice(subjects, func(key string, value proto.Message) string { return c.subjectName(key) })...)
+func (c *Client) initConsumer() (r error) {
+	defer errcheck.RecoveryAndCheck(&r)
+
+	allEventKeysSet := mapset.NewSet(lo.MapToSlice(c.subjects, func(key string, value *cloudeventpb.CloudEventMethodOptions) string { return c.subjectName(key) })...)
 
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancel()
@@ -144,23 +161,23 @@ func (c *Client) initConsumer() error {
 
 			typex.DoBlock(func() {
 				if c.jobs[streamName] == nil {
-					c.jobs[streamName] = make(map[string]map[string]*jobHandler)
+					c.jobs[streamName] = make(map[string]map[string]*jobEventHandler)
 				}
 
 				if c.jobs[streamName][consumerName] == nil {
-					c.jobs[streamName][consumerName] = map[string]*jobHandler{}
+					c.jobs[streamName][consumerName] = map[string]*jobEventHandler{}
 				}
 
 				baseJobConfig := handleDefaultJobConfig(cfg.Job)
-				subjectMap := lo.SliceToMap(cfg.Subjects, func(item1 *strOrJobConfig) (string, *JobConfig) {
-					item := lo.ToPtr(JobConfig(lo.FromPtr(item1)))
+				subjectMap := lo.SliceToMap(cfg.Subjects, func(item1 *strOrJobConfig) (string, *JobEventConfig) {
+					item := lo.ToPtr(JobEventConfig(lo.FromPtr(item1)))
 					return c.subjectName(*item.Name), mergeJobConfig(item, baseJobConfig)
 				})
 
 				for subName, subCfg := range subjectMap {
 					assert.If(c.handlers[jobName][subName] == nil, "job handler not found, job_name=%s sub_name=%s", jobName, subName)
 
-					job := &jobHandler{
+					job := &jobEventHandler{
 						name:    jobName,
 						handler: c.handlers[jobName][subName],
 						cfg:     subCfg,
@@ -180,10 +197,10 @@ func (c *Client) initConsumer() error {
 			})
 		}
 	}
-	return nil
+	return
 }
 
-func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects map[string]*jobHandler, concurrent int) func(msg jetstream.Msg) {
+func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects map[string]*jobEventHandler, concurrent int) func(msg jetstream.Msg) {
 	var handler = func(msg jetstream.Msg) {
 		var now = time.Now()
 		var addMsgInfo = func(e *zerolog.Event) {
@@ -201,29 +218,32 @@ func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects m
 			e.Msg("received cloud job event")
 		})
 
-		var handlerDelayJob = func() (r result.Result[bool]) {
-			delayDur := strings.TrimSpace(msg.Headers().Get(cloudJobDelayKey))
+		var handlerDelayJob = func() (_ bool, gErr error) {
+			delayDur := strings.TrimSpace(msg.Headers().Get(DefaultCloudEventDelayKey))
 			if delayDur == "" {
-				return r.WithVal(false)
+				return false, nil
 			}
 
 			dur, err := decodeDelayTime(delayDur)
-			if err != nil {
-				return r.WithErr(errors.Wrap(err, "failed to parse cloud job delay time"))
+			err = errors.IfErr(err, func(err error) error {
+				return errors.Wrap(err, "failed to parse cloud job delay time")
+			})
+			if errcheck.Check(&gErr, err) {
+				return
 			}
 
 			// ignore negative delay
 			if dur < 0 {
-				return r.WithVal(false)
+				return false, nil
 			}
 
-			return r.WithErr(msg.NakWithDelay(dur))
+			return true, msg.NakWithDelay(dur)
 		}
 
-		if err := handlerDelayJob(); err.Err() != nil {
-			logger.Err(err.Err()).Func(addMsgInfo).Msg("failed to handle cloud delay job and no ack")
+		if ok, err := handlerDelayJob(); err != nil {
+			logger.Err(err).Func(addMsgInfo).Msg("failed to handle cloud delay job and no ack")
 			return
-		} else if err.Unwrap() {
+		} else if ok {
 			logger.Info().Func(addMsgInfo).Msg("redeliver the message after the given delay")
 			return
 		}
@@ -326,21 +346,20 @@ func (c *Client) doErrHandler(streamName, consumerName string) jetstream.PullCon
 	})
 }
 
-func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *jobHandler, cfg *JobConfig) (gErr error) {
+func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *jobEventHandler, cfg *JobEventConfig) (r error) {
 	var timeout = lo.FromPtr(cfg.Timeout)
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
 	ctx = log.UpdateEventCtx(ctx, log.Map{
-		"sub_subject":          msg.Subject(),
-		"sub_stream":           meta.Stream,
-		"sub_consumer":         meta.Consumer,
-		"sub_msg_id":           msg.Headers().Get(jetstream.MsgIDHeader),
-		"sub_msg_" + senderKey: msg.Headers().Get(senderKey),
+		"sub_subject":                 msg.Subject(),
+		"sub_stream":                  meta.Stream,
+		"sub_consumer":                meta.Consumer,
+		"sub_msg_id":                  msg.Headers().Get(jetstream.MsgIDHeader),
+		"sub_msg_" + DefaultSenderKey: msg.Headers().Get(DefaultSenderKey),
 	})
 
 	msgCtx := &Context{
-		Context:      ctx,
 		Header:       http.Header(msg.Headers()),
 		NumDelivered: meta.NumDelivered,
 		NumPending:   meta.NumPending,
@@ -354,48 +373,56 @@ func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *
 	var now = time.Now()
 	var args any
 	defer func() {
-		if gErr == nil {
-			return
+		if r != nil {
+			logger.Err(r).Func(func(e *zerolog.Event) {
+				e.Any("context", msgCtx)
+				e.Any("args", args)
+				e.Str("timeout", timeout.String())
+				e.Str("start_time", now.String())
+				e.Str("job_cost", time.Since(now).String())
+				e.Msg("failed to do cloud job handler")
+			})
 		}
-
-		logger.Err(gErr).Func(func(e *zerolog.Event) {
-			e.Any("context", msgCtx)
-			e.Any("args", args)
-			e.Str("timeout", timeout.String())
-			e.Str("start_time", now.String())
-			e.Str("job_cost", time.Since(now).String())
-			e.Msg("failed to do cloud job handler")
-		})
 	}()
 
 	var pb anypb.Any
-	if err := proto.Unmarshal(msg.Data(), &pb); err != nil {
+	err := proto.Unmarshal(msg.Data(), &pb)
+	err = errors.IfErr(err, func(err error) error {
 		return errors.WrapTag(err,
 			errors.T("msg", "failed to unmarshal stream msg data to any proto"),
 			errors.T("args", string(msg.Data())),
 		)
+	})
+	if errcheck.Check(&r, err) {
+		return
 	}
 	args = &pb
 
-	dst, err := anypb.UnmarshalNew(&pb, proto.UnmarshalOptions{})
-	if err != nil {
+	dst, err := anypb.UnmarshalNew(args.(*anypb.Any), proto.UnmarshalOptions{})
+	err = errors.IfErr(err, func(err error) error {
 		return errors.WrapTag(err,
 			errors.T("msg", "failed to unmarshal any proto to proto msg"),
-			errors.T("args", pb.String()),
+			errors.T("args", args),
 		)
+	})
+	if errcheck.Check(&r, err) {
+		return
 	}
-	args = &dst
 
-	return errors.WrapFn(job.handler(msgCtx, dst), func() errors.Tags {
-		return errors.Tags{
+	ctx = createCtxWithContext(ctx, msgCtx)
+	err = job.handler(ctx, dst)
+	err = errors.IfErr(err, func(err error) error {
+		return errors.WrapTag(err,
 			errors.T("msg", "failed to do cloud job handler"),
 			errors.T("args", dst),
-			errors.T("any_pb", pb.String()),
-		}
+			errors.T("any_pb", dst),
+		)
 	})
+	return err
 }
 
-func (c *Client) doConsume() error {
+func (c *Client) doConsume() (r error) {
+	defer errcheck.RecoveryAndCheck(&r)
 	for streamName, consumers := range c.consumers {
 		for consumerName, consumer := range consumers {
 			assert.If(c.jobs[streamName] == nil, "stream not found, stream=%s", streamName)
@@ -403,18 +430,18 @@ func (c *Client) doConsume() error {
 
 			jobSubjects := c.jobs[streamName][consumerName]
 
-			concurrent := defaultConcurrent
+			concurrent := DefaultConcurrent
 			if consumer.Config.Concurrent != nil {
 				concurrent = lo.FromPtr(consumer.Config.Concurrent)
 			}
-			if concurrent < defaultMinConcurrent || concurrent > defaultMaxConcurrent {
-				return fmt.Errorf("concurrent must be in the range of %d-%d", defaultMinConcurrent, defaultMaxConcurrent)
+			if concurrent < DefaultMinConcurrent || concurrent > DefaultMaxConcurrent {
+				return errors.NewFmt("concurrent must be in the range of %d-%d", DefaultMinConcurrent, DefaultMaxConcurrent)
 			}
 
 			logger.Info().Func(func(e *zerolog.Event) {
 				e.Str("stream", streamName)
 				e.Str("consumer", consumerName)
-				e.Any("subjects", lo.MapKeys(jobSubjects, func(_ *jobHandler, key string) string { return key }))
+				e.Any("subjects", lo.MapKeys(jobSubjects, func(_ *jobEventHandler, key string) string { return key }))
 				e.Msg("cloud job do consumer")
 			})
 
@@ -425,7 +452,7 @@ func (c *Client) doConsume() error {
 			c.p.Lc.BeforeStop(func() { con.Stop() })
 		}
 	}
-	return nil
+	return
 }
 
 func (c *Client) Start() error {
@@ -455,4 +482,8 @@ func (c *Client) consumerName(name string) string {
 
 func (c *Client) subjectName(name string) string {
 	return handleSubjectName(name, c.prefix)
+}
+
+func (c *Client) GetSubject(name string) *cloudeventpb.CloudEventMethodOptions {
+	return c.subjects[name]
 }

@@ -1,10 +1,13 @@
-package cloudjobs
+package cloudevent
 
 import (
+	"context"
+	"fmt"
 	"time"
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/running"
 	"github.com/pubgo/funk/typex"
 	"google.golang.org/protobuf/proto"
 	yaml "gopkg.in/yaml.v3"
@@ -14,12 +17,14 @@ const DefaultPrefix = "acj"
 const DefaultTimeout = 15 * time.Second
 const DefaultMaxRetry = 3
 const DefaultRetryBackoff = time.Second
-const senderKey = "sender"
-const cloudJobDelayKey = "__cloudjobs_delay_run_at"
-const defaultJobName = "default"
-const defaultConcurrent = 100
-const defaultMaxConcurrent = 1000
-const defaultMinConcurrent = 1
+const DefaultSenderKey = "sender"
+const DefaultCloudEventDelayKey = "__cloudevent_delay_run_at"
+const DefaultJobName = "default"
+const DefaultConcurrent = 100
+const DefaultMaxConcurrent = 1000
+const DefaultMinConcurrent = 1
+
+var senderValue = fmt.Sprintf("%s/%s", running.Project, running.Version)
 
 type Config struct {
 	// Streams: nats stream config
@@ -50,11 +55,11 @@ type ConsumerConfig struct {
 	// Subjects config
 	Subjects typex.YamlListType[*strOrJobConfig] `yaml:"subjects"`
 
-	// Job config
-	Job *JobConfig `yaml:"job"`
+	// Job event config
+	Job *JobEventConfig `yaml:"job"`
 }
 
-type JobConfig struct {
+type JobEventConfig struct {
 	// Name subject name
 	Name *string `yaml:"name"`
 
@@ -68,18 +73,18 @@ type JobConfig struct {
 	RetryBackoff *time.Duration `yaml:"retry_backoff"`
 }
 
-type jobHandler struct {
+type jobEventHandler struct {
 	// job name
 	name string
 
 	// job handler
-	handler func(ctx *Context, args proto.Message) error
+	handler func(ctx context.Context, args proto.Message) error
 
 	// job config
-	cfg *JobConfig
+	cfg *JobEventConfig
 }
 
-type strOrJobConfig JobConfig
+type strOrJobConfig JobEventConfig
 
 func (p *strOrJobConfig) UnmarshalYAML(value *yaml.Node) error {
 	if value.IsZero() {
@@ -93,10 +98,10 @@ func (p *strOrJobConfig) UnmarshalYAML(value *yaml.Node) error {
 			return errors.WrapCaller(err)
 		}
 
-		*p = strOrJobConfig(JobConfig{Name: &data})
+		*p = strOrJobConfig(JobEventConfig{Name: &data})
 		return nil
 	case yaml.MappingNode:
-		var data JobConfig
+		var data JobEventConfig
 		if err := value.Decode(&data); err != nil {
 			return errors.WrapCaller(err)
 		}

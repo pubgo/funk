@@ -1,4 +1,4 @@
-package cloudjobs
+package cloudevent
 
 import (
 	"context"

@@ -3,10 +3,12 @@ package main
 import (
 	"flag"
 
-	"github.com/pubgo/funk/cmds/protoc-gen-cloudjobs/internal"
+	"github.com/pubgo/funk/cmds/protoc-gen-go-cloudevent/internal"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/types/pluginpb"
 )
+
+var _ = flag.String("version", internal.Version, "version")
 
 func main() {
 	flag.Parse()
