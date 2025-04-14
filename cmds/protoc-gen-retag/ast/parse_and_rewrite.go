@@ -82,16 +82,19 @@ func WalkDescriptorProto(g *protogen.Plugin, dp *descriptorpb.DescriptorProto, t
 			continue
 		}
 
-		v, ok := proto.GetExtension(decl.GetOptions(), retagpb.E_OneofTags).([]*retagpb.Tag)
-		if !ok || len(v) == 0 {
+		oneOfTags, ok := proto.GetExtension(decl.GetOptions(), retagpb.E_OneofTags).([]*retagpb.Tag)
+		if !ok || len(oneOfTags) == 0 {
 			continue
 		}
 
-		info := FieldInfo{FieldNameInProto: decl.GetName(), FieldNameInGo: CamelCase(decl.GetName())}
-		for i := range v {
-			tag := reflect.StructTag{}
-			tag.SetName(v[i].Name, v[i].Value)
-			info.FieldTag = append(info.FieldTag, tag)
+		info := FieldInfo{
+			FieldNameInProto: decl.GetName(),
+			FieldNameInGo:    CamelCase(decl.GetName()),
+			FieldTag: lo.Map(oneOfTags, func(_ *retagpb.Tag, i int) reflect.StructTag {
+				tag := reflect.StructTag{}
+				tag.SetName(oneOfTags[i].Name, oneOfTags[i].Value)
+				return tag
+			}),
 		}
 		s.FieldInfos = append(s.FieldInfos, info)
 
@@ -129,11 +132,14 @@ func HandleFieldDescriptorProto(field *descriptorpb.FieldDescriptorProto) *Field
 		return nil
 	}
 
-	info := &FieldInfo{FieldNameInProto: field.GetName(), FieldNameInGo: CamelCase(field.GetName())}
-	for _, v := range tags {
-		tag := reflect.StructTag{}
-		tag.SetName(v.Name, v.Value)
-		info.FieldTag = append(info.FieldTag, tag)
+	info := &FieldInfo{
+		FieldNameInProto: field.GetName(),
+		FieldNameInGo:    CamelCase(field.GetName()),
+		FieldTag: lo.Map(tags, func(v *retagpb.Tag, _ int) reflect.StructTag {
+			tag := reflect.StructTag{}
+			tag.SetName(v.Name, v.Value)
+			return tag
+		}),
 	}
 
 	return info
