@@ -5,8 +5,6 @@
 package ast
 
 import (
-	"flag"
-
 	retagpb "github.com/pubgo/funk/proto/retag"
 	"github.com/samber/lo"
 	"github.com/searKing/golang/go/reflect"
@@ -14,8 +12,6 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
 )
-
-var OutputPkg = flag.String("__out", "", "output pkg")
 
 type FieldInfo struct {
 	FieldNameInProto string
