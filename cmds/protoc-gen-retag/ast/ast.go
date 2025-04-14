@@ -6,10 +6,10 @@ import (
 	"go/token"
 	"unicode"
 
+	"github.com/samber/lo"
 	"google.golang.org/protobuf/types/pluginpb"
 
 	"github.com/searKing/golang/go/reflect"
-	strings_ "github.com/searKing/golang/go/strings"
 )
 
 func isPublicName(name string) bool {
@@ -138,8 +138,8 @@ func (g *GoFile) genDecl(node ast.Node) bool {
 
 				// struct tags: protobuf, json, other tags ordered by ascii
 				keys := []string{"protobuf", "json"}
-				keys = append(keys, strings_.SliceTrim(goTags.OrderKeys(), "protobuf", "json")...)
-				newGoTag := goTags.SelectAstString(keys...)
+				filterKeys := lo.Filter(goTags.OrderKeys(), func(item string, index int) bool { return item != "protobuf" && item != "json" })
+				newGoTag := goTags.SelectAstString(append(keys, filterKeys...)...)
 				if newGoTag != goTagFieldValue {
 					g.fileChanged = true
 					field.Tag.Value = newGoTag

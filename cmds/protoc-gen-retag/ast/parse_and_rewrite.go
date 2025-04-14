@@ -8,8 +8,8 @@ import (
 	"flag"
 
 	retagpb "github.com/pubgo/funk/proto/retag"
+	"github.com/samber/lo"
 	"github.com/searKing/golang/go/reflect"
-	strings_ "github.com/searKing/golang/go/strings"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
@@ -147,7 +147,7 @@ func Rewrite(g *protogen.Plugin) {
 	var protoFiles []FileInfo
 
 	for _, protoFile := range g.Request.GetProtoFile() {
-		if !strings_.SliceContains(g.Request.GetFileToGenerate(), protoFile.GetName()) {
+		if !lo.Contains(g.Request.GetFileToGenerate(), protoFile.GetName()) {
 			continue
 		}
 
