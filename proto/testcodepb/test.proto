@@ -8,7 +8,7 @@ import "google/api/annotations.proto";
 import "google/api/client.proto";
 import "google/api/httpbody.proto";
 import "google/protobuf/empty.proto";
-import "cloudjobs/options.proto";
+import "cloudevent/options.proto";
 
 option go_package = "github.com/pubgo/funk/proto/testcodepb;testcodepb";
 
@@ -65,7 +65,7 @@ message User {
 
 service Id {
   option (google.api.default_host) = "localhost:8080";
-  option (lava.cloudjobs.job_name) = "gid";
+  option (cloudevent.job).name = "gid";
 
   // Generate 生成ID
   rpc Generate (GenerateRequest) returns (GenerateResponse) {
@@ -116,11 +116,11 @@ service Id {
   }
 
   rpc ProxyExecEvent (DoProxyEventReq) returns (google.protobuf.Empty) {
-    option (lava.cloudjobs.subject_name) = "gid.proxy.exec";
+    option (cloudevent.subject).name = "gid.proxy.exec";
   }
 
   rpc EventChanged (DoProxyEventReq) returns (google.protobuf.Empty) {
-    option (lava.cloudjobs.subject_name) = "gid.event.update";
+    option (cloudevent.subject).name = "gid.event.update";
   }
 }
 

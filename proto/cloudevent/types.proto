@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package lava.cloudevent;
+package cloudevent;
 
 import "google/protobuf/duration.proto";
 
-option go_package = "github.com/pubgo/funk/pkg/gen/proto/cloudeventpb;cloudeventpb";
+option go_package = "github.com/pubgo/funk/proto/cloudevent;cloudeventpb";
 
 message RegisterJobOptions {
     optional string job_name = 1;

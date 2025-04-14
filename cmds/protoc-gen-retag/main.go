@@ -5,8 +5,8 @@ package main
 
 import (
 	"flag"
-	
-	"github.com/pubgo/protobuild/cmd/protoc-gen-retag/ast"
+
+	"github.com/pubgo/funk/cmds/protoc-gen-retag/ast"
 	gengo "google.golang.org/protobuf/cmd/protoc-gen-go/internal_gengo"
 	"google.golang.org/protobuf/compiler/protogen"
 )

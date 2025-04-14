@@ -2,9 +2,7 @@ module github.com/pubgo/funk
 
 go 1.22
 
-replace (
-	github.com/ugorji/go/codec => github.com/ugorji/go/codec v1.2.7
-)
+replace github.com/ugorji/go/codec => github.com/ugorji/go/codec v1.2.7
 
 require (
 	dario.cat/mergo v1.0.0
@@ -42,6 +40,7 @@ require (
 	github.com/rs/xid v1.5.0
 	github.com/rs/zerolog v1.33.0
 	github.com/samber/lo v1.47.0
+	github.com/searKing/golang/go v1.2.120
 	github.com/stretchr/testify v1.9.0
 	github.com/testcontainers/testcontainers-go v0.30.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.30.0
@@ -54,7 +53,7 @@ require (
 	go.etcd.io/etcd/client/v3 v3.5.9
 	go.uber.org/atomic v1.10.0
 	golang.org/x/crypto v0.24.0
-	golang.org/x/exp v0.0.0-20230811145659-89c5cff77bcb
+	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
 	golang.org/x/sys v0.21.0
 	golang.org/x/text v0.16.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240604185151-ef581f913117

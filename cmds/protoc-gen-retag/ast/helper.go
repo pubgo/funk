@@ -3,6 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // This code is borrowed from https://github.com/golang/protobuf/blob/master/protoc-gen-go/generator/generator.go
+
 package ast
 
 import "strings"

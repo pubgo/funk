@@ -7,7 +7,7 @@ package ast
 import (
 	"flag"
 
-	retagpb "github.com/pubgo/protobuild/pkg/retag"
+	retagpb "github.com/pubgo/funk/proto/retag"
 	"github.com/searKing/golang/go/reflect"
 	strings_ "github.com/searKing/golang/go/strings"
 	"google.golang.org/protobuf/compiler/protogen"

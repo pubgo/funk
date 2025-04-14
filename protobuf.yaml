@@ -5,6 +5,7 @@ base:
   paths: source_relative
 root:
   - proto
+  - cmds/protoc-gen-retag/example
 includes:
   - proto
 deps:

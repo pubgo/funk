@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package example;
 
-import "proto/retag/retag.proto";
+import "retag/retag.proto";
 
 option go_package = "github.com/pubgo/protobuild/pkg/protoc-gen-retag/example;example";
 

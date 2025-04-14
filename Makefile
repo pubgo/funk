@@ -44,7 +44,7 @@ refactor:
 	gofumpt -l -w -extra .
 
 install-protoc:
-	go install -v ./cmds/protoc-gen-cloudjobs
+	go install -v ./cmds/protoc-gen-go-cloudevent
 	go install -v ./cmds/protoc-gen-go-errors
 
 lint:
