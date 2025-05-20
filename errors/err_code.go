@@ -15,6 +15,7 @@ import (
 )
 
 func NewCodeErr(code *errorpb.ErrCode, details ...proto.Message) error {
+	code = cloneAndCheck(code)
 	if generic.IsNil(code) {
 		return nil
 	}
@@ -81,8 +82,11 @@ func (t *ErrCode) Is(err error) bool {
 		return true
 	}
 
-	err1, ok := err.(*ErrCode)
-	if ok && err1.pb.Code == t.pb.Code && err1.pb.Name == t.pb.Name {
+	var check = func(err2 *ErrCode) bool {
+		return err2.pb.Code == t.pb.Code && err2.pb.Name == t.pb.Name
+	}
+
+	if err1, ok := err.(*ErrCode); ok && check(err1) {
 		return true
 	}
 

@@ -16,7 +16,52 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/structpb"
 )
+
+func NewCodeErrWithMap(code *errorpb.ErrCode, details ...map[string]any) error {
+	code = cloneAndCheck(code)
+	if code == nil {
+		return nil
+	}
+
+	var detailMaps = make(map[string]any)
+	for _, detail := range details {
+		for k, v := range detail {
+			detailMaps[k] = v
+		}
+	}
+
+	pnData, err := structpb.NewStruct(detailMaps)
+	if err != nil {
+		log.Err(err).Msg("failed to create detail struct")
+	}
+
+	return NewCodeErr(code, pnData)
+}
+
+func NewCodeErrWithMsg(code *errorpb.ErrCode, msg string, details ...proto.Message) error {
+	code = cloneAndCheck(code)
+	if code == nil {
+		return nil
+	}
+
+	code.Message = strings.ToTitle(strings.TrimSpace(msg))
+	return NewCodeErr(code, details...)
+}
+
+func cloneAndCheck(code *errorpb.ErrCode) *errorpb.ErrCode {
+	if code == nil {
+		return nil
+	}
+
+	code = proto.Clone(code).(*errorpb.ErrCode)
+	if code.Name != "" && code.StatusCode == 0 {
+		code.StatusCode = errorpb.Code_Internal
+	}
+
+	return code
+}
 
 func MustProtoToAny(p proto.Message) *anypb.Any {
 	if p == nil {
