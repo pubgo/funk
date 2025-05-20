@@ -2,9 +2,7 @@ module github.com/pubgo/funk
 
 go 1.22
 
-replace (
-	github.com/ugorji/go/codec => github.com/ugorji/go/codec v1.2.7
-)
+replace github.com/ugorji/go/codec => github.com/ugorji/go/codec v1.2.7
 
 require (
 	dario.cat/mergo v1.0.0
