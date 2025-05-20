@@ -94,20 +94,18 @@ func (t *ErrCode) As(err any) bool {
 		return false
 	}
 
-	err1, ok := err.(*ErrCode)
-	if ok {
+	if err1, ok := err.(*ErrCode); ok { //nolint
 		err1.pb = t.pb
 		return true
 	}
 
-	err2, ok := err.(**errorpb.ErrCode)
-	if ok {
-		*err2 = t.pb
+	if err1, ok := err.(**errorpb.ErrCode); ok {
+		*err1 = t.pb
 		return true
 	}
 
-	if err2, ok := err.(*errorpb.ErrCode); ok {
-		*err2 = lo.FromPtr(proto.Clone(t.pb).(*errorpb.ErrCode))
+	if err1, ok := err.(*errorpb.ErrCode); ok {
+		*err1 = lo.FromPtr(proto.Clone(t.pb).(*errorpb.ErrCode))
 		return true
 	}
 
