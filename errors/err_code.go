@@ -15,6 +15,7 @@ import (
 )
 
 func NewCodeErr(code *errorpb.ErrCode, details ...proto.Message) error {
+	code = cloneAndCheck(code)
 	if generic.IsNil(code) {
 		return nil
 	}
@@ -81,8 +82,11 @@ func (t *ErrCode) Is(err error) bool {
 		return true
 	}
 
-	err1, ok := err.(*ErrCode)
-	if ok && err1.pb.Code == t.pb.Code && err1.pb.Name == t.pb.Name {
+	var check = func(err2 *ErrCode) bool {
+		return err2.pb.Code == t.pb.Code && err2.pb.Name == t.pb.Name
+	}
+
+	if err1, ok := err.(*ErrCode); ok && check(err1) {
 		return true
 	}
 
@@ -94,20 +98,18 @@ func (t *ErrCode) As(err any) bool {
 		return false
 	}
 
-	err1, ok := err.(*ErrCode)
-	if ok {
+	if err1, ok := err.(*ErrCode); ok { //nolint
 		err1.pb = t.pb
 		return true
 	}
 
-	err2, ok := err.(**errorpb.ErrCode)
-	if ok {
-		*err2 = t.pb
+	if err1, ok := err.(**errorpb.ErrCode); ok {
+		*err1 = t.pb
 		return true
 	}
 
-	if err2, ok := err.(*errorpb.ErrCode); ok {
-		*err2 = lo.FromPtr(proto.Clone(t.pb).(*errorpb.ErrCode))
+	if err1, ok := err.(*errorpb.ErrCode); ok {
+		*err1 = lo.FromPtr(proto.Clone(t.pb).(*errorpb.ErrCode))
 		return true
 	}
 

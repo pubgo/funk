@@ -14,7 +14,7 @@ type hookImpl struct {
 }
 
 func (h *hookImpl) Run(e *zerolog.Event, level zerolog.Level, message string) {
-	if zerolog.GlobalLevel() >= zerolog.WarnLevel {
+	if zerolog.GlobalLevel() != zerolog.TraceLevel {
 		return
 	}
 

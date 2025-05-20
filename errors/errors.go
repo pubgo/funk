@@ -62,6 +62,7 @@ func Debug(err error) {
 func Is(err, target error) bool {
 	return errors.Is(err, target)
 }
+func Join(errs ...error) error { return errors.Join(errs...) }
 
 func UnwrapEach(err error, call func(e error) bool) {
 	if err == nil {
@@ -100,7 +101,7 @@ func As(err error, target any) bool {
 			return true
 		}
 
-		if x, ok := err.(interface{ As(any) bool }); ok && x.As(target) {
+		if x, ok := err.(ErrAs); ok && x.As(target) {
 			return true
 		}
 
