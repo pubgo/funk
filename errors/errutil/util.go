@@ -127,19 +127,20 @@ func IsGrpcAcceptable(err error) bool {
 	return isGrpcAcceptableCode[status.Code(err)]
 }
 
-// GrpcCodeToHTTP gRPC转HTTP Code
-func GrpcCodeToHTTP(statusCode codes.Code) int {
-	switch statusCode {
+// GrpcCodeToHTTP converts a gRPC error code into the corresponding HTTP response status.
+// See: https://github.com/googleapis/googleapis/blob/master/google/rpc/code.proto
+func GrpcCodeToHTTP(code codes.Code) int {
+	switch code {
 	case codes.OK:
 		return http.StatusOK
 	case codes.Canceled:
-		return http.StatusRequestTimeout
+		return 499
 	case codes.Unknown:
 		return http.StatusInternalServerError
 	case codes.InvalidArgument:
 		return http.StatusBadRequest
 	case codes.DeadlineExceeded:
-		return http.StatusRequestTimeout
+		return http.StatusGatewayTimeout
 	case codes.NotFound:
 		return http.StatusNotFound
 	case codes.AlreadyExists:
@@ -149,9 +150,10 @@ func GrpcCodeToHTTP(statusCode codes.Code) int {
 	case codes.Unauthenticated:
 		return http.StatusUnauthorized
 	case codes.ResourceExhausted:
-		return http.StatusServiceUnavailable
+		return http.StatusTooManyRequests
 	case codes.FailedPrecondition:
-		return http.StatusPreconditionFailed
+		// Note, this deliberately doesn't translate to the similarly named '412 Precondition Failed' HTTP response status.
+		return http.StatusBadRequest
 	case codes.Aborted:
 		return http.StatusConflict
 	case codes.OutOfRange:
@@ -165,6 +167,7 @@ func GrpcCodeToHTTP(statusCode codes.Code) int {
 	case codes.DataLoss:
 		return http.StatusInternalServerError
 	default:
+		log.Warn().Msgf("Unknown gRPC error code: %v", code)
 		return http.StatusInternalServerError
 	}
 }
