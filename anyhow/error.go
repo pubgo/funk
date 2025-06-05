@@ -2,11 +2,11 @@ package anyhow
 
 import (
 	"context"
-	"github.com/pubgo/funk/anyhow/aherrcheck"
-	"github.com/pubgo/funk/log"
 	"runtime/debug"
 
+	"github.com/pubgo/funk/anyhow/aherrcheck"
 	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/log"
 )
 
 func newError(err error) Error {
@@ -95,14 +95,14 @@ func (r Error) Unwrap(setter *Error, contexts ...context.Context) {
 		return
 	}
 
-	// err No checking, repeat setting
-	if (*setter).IsErr() {
-		log.Error().Msgf("Unwrap: setter is not nil, err=%v", (*setter).getErr())
-	}
-
 	var ctx = context.Background()
 	if len(contexts) > 0 {
 		ctx = contexts[0]
+	}
+
+	// err No checking, repeat setting
+	if (*setter).IsErr() {
+		log.Error(ctx).Msgf("Unwrap: setter is not nil, err=%v", (*setter).getErr())
 	}
 
 	var err = r.getErr()
