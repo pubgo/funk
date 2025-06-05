@@ -2,11 +2,8 @@ package anyhow
 
 import (
 	"context"
-	"runtime/debug"
 
-	"github.com/pubgo/funk/anyhow/aherrcheck"
 	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/log"
 )
 
 func newError(err error) Error {
@@ -83,36 +80,4 @@ func (r Error) Expect(format string, args ...any) {
 	err := errors.WrapCaller(r.getErr(), 1)
 	err = errors.Wrapf(err, format, args...)
 	errMust(err)
-}
-
-func (r Error) Unwrap(setter *Error, contexts ...context.Context) {
-	if setter == nil {
-		debug.PrintStack()
-		panic("Unwrap: setter is nil")
-	}
-
-	if r.IsOK() {
-		return
-	}
-
-	var ctx = context.Background()
-	if len(contexts) > 0 {
-		ctx = contexts[0]
-	}
-
-	// err No checking, repeat setting
-	if (*setter).IsErr() {
-		log.Error(ctx).Msgf("Unwrap: setter is not nil, err=%v", (*setter).getErr())
-	}
-
-	var err = r.getErr()
-	for _, fn := range aherrcheck.GetErrChecks() {
-		err = fn(ctx, err)
-		if err == nil {
-			return
-		}
-	}
-
-	err = errors.WrapCaller(err, 1)
-	*setter = newError(err)
 }
