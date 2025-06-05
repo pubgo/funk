@@ -140,7 +140,7 @@ func errTo(r Error, setter *Error, rawSetter *error, contexts ...context.Context
 	return true
 }
 
-func recovery[T any](setter *T, isErr func() bool, getErr func() error, newErr func(err error) T, callbacks ...func(err error) error) {
+func errRecovery[T any](setter *T, isErr func() bool, getErr func() error, newErr func(err error) T, callbacks ...func(err error) error) {
 	if setter == nil {
 		must(errors.Errorf("setter is nil"))
 	}

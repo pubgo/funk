@@ -2,25 +2,27 @@ package anyhow
 
 import (
 	"context"
+	"os"
+	"runtime/debug"
 
 	"github.com/pubgo/funk/errors"
-	"github.com/samber/lo"
+	"github.com/pubgo/funk/generic"
 )
 
 func ErrChecker(setter *Error, contexts ...context.Context) *Checker {
 	if setter == nil {
-		must(errors.Errorf("errSetter is nil"))
+		must(errors.Errorf("error setter is nil"))
 	}
 
-	return &Checker{setter: setter, ctx: lo.FirstOr(contexts, nil)}
+	return &Checker{setter: setter, contexts: contexts}
 }
 
 func RawErrChecker(errSetter *error, contexts ...context.Context) *Checker {
 	if errSetter == nil {
-		must(errors.Errorf("errSetter is nil"))
+		must(errors.Errorf("raw error setter is nil"))
 	}
 
-	return &Checker{errSetter: errSetter, ctx: lo.FirstOr(contexts, nil)}
+	return &Checker{errSetter: errSetter, contexts: contexts}
 }
 
 type Checker struct {
@@ -28,7 +30,7 @@ type Checker struct {
 
 	errSetter *error
 	setter    *Error
-	ctx       context.Context
+	contexts  []context.Context
 	args      any
 }
 
@@ -38,28 +40,41 @@ func (c *Checker) SetArgs(args any) *Checker {
 }
 
 func (c *Checker) Recovery(callbacks ...func(err error) error) {
-
 	if c.errSetter != nil {
-		recovery(
+		errRecovery(
 			c.errSetter,
 			func() bool { return c.errSetter != nil },
 			func() error { return *c.errSetter },
 			func(err error) error { return err },
 			callbacks...,
 		)
-	}
-
-	if c.setter != nil {
-		recovery(
+	} else if c.setter != nil {
+		errRecovery(
 			c.setter,
 			func() bool { return c.setter.IsErr() },
 			func() error { return c.setter.GetErr() },
 			func(err error) Error { return newError(err) },
 			callbacks...,
 		)
+	} else {
+		err := errors.Parse(recover())
+		if generic.IsNil(err) {
+			return
+		}
+
+		for i := range callbacks {
+			err = callbacks[i](err)
+			if err == nil {
+				return
+			}
+		}
+
+		debug.PrintStack()
+		errors.Debug(errors.WrapStack(err))
+		os.Exit(1)
 	}
 }
 
 func (c *Checker) Check(err error) bool {
-	return errTo(newError(err), c.setter, c.errSetter, c.ctx)
+	return errTo(newError(err), c.setter, c.errSetter, c.contexts...)
 }

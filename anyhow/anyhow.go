@@ -7,7 +7,7 @@ import (
 )
 
 func RecoveryErr(setter *error, callbacks ...func(err error) error) {
-	recovery(
+	errRecovery(
 		setter,
 		func() bool { return *setter != nil },
 		func() error { return *setter },
@@ -17,7 +17,7 @@ func RecoveryErr(setter *error, callbacks ...func(err error) error) {
 }
 
 func Recovery(setter *Error, callbacks ...func(err error) error) {
-	recovery(
+	errRecovery(
 		setter,
 		func() bool { return setter.IsErr() },
 		func() error { return setter.GetErr() },
