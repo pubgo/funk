@@ -5,18 +5,16 @@ import (
 	"flag"
 	"fmt"
 	"go/format"
-	"io"
 	"log"
 	"strings"
 	"unicode"
 
 	pongo2 "github.com/flosch/pongo2/v6"
-	"github.com/golang/protobuf/protoc-gen-go/descriptor"
-	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
 	options "google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/descriptorpb"
 )
 
 func Append(s *string, args ...string) {
@@ -42,7 +40,7 @@ func baseName(name string) string {
 // getGoPackage
 // returns the file's go_package option.
 // If it contains a semicolon, only the part before it is returned.
-func getGoPackage(fd *descriptor.FileDescriptorProto) string {
+func getGoPackage(fd *descriptorpb.FileDescriptorProto) string {
 	pkg := fd.GetOptions().GetGoPackage()
 	if strings.Contains(pkg, ";") {
 		parts := strings.Split(pkg, ";")
@@ -60,7 +58,7 @@ func getGoPackage(fd *descriptor.FileDescriptorProto) string {
 // If there is no go_package, it returns ("", "", false).
 // If there's a simple name, it returns ("", Pkg, true).
 // If the option implies an import path, it returns (impPath, Pkg, true).
-func goPackageOption(d *descriptor.FileDescriptorProto) (impPath, pkg string, ok bool) {
+func goPackageOption(d *descriptorpb.FileDescriptorProto) (impPath, pkg string, ok bool) {
 	pkg = getGoPackage(d)
 	if pkg == "" {
 		return
@@ -90,7 +88,7 @@ func goPackageOption(d *descriptor.FileDescriptorProto) (impPath, pkg string, ok
 // came from an option go_package statement.  If explicit is false,
 // the name was derived from the protocol buffer's package statement
 // or the input file name.
-func goPackageName(d *descriptor.FileDescriptorProto) (name string, explicit bool) {
+func goPackageName(d *descriptorpb.FileDescriptorProto) (name string, explicit bool) {
 	// Does the file have a "go_package" option?
 	//if _, pkg, ok := goPackageOption(d); ok {
 	//	return pkg, true
@@ -196,7 +194,7 @@ func DefaultHttpRule(name string) *options.HttpRule {
 	}
 }
 
-func ExtractAPIOptions(mth *descriptor.MethodDescriptorProto) (*options.HttpRule, error) {
+func ExtractAPIOptions(mth *descriptorpb.MethodDescriptorProto) (*options.HttpRule, error) {
 	if mth.GetOptions() == nil {
 		return nil, nil
 	}
@@ -293,44 +291,44 @@ func Template(tpl string, m pongo2.Context) string {
 	return w.String()
 }
 
-func goZeroValue(f *descriptor.FieldDescriptorProto) string {
+func goZeroValue(f *descriptorpb.FieldDescriptorProto) string {
 	const nilString = "nil"
-	if *f.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+	if *f.Label == descriptorpb.FieldDescriptorProto_LABEL_REPEATED {
 		return nilString
 	}
 	switch *f.Type {
-	case descriptor.FieldDescriptorProto_TYPE_DOUBLE:
+	case descriptorpb.FieldDescriptorProto_TYPE_DOUBLE:
 		return "0.0"
-	case descriptor.FieldDescriptorProto_TYPE_FLOAT:
+	case descriptorpb.FieldDescriptorProto_TYPE_FLOAT:
 		return "0.0"
-	case descriptor.FieldDescriptorProto_TYPE_INT64:
+	case descriptorpb.FieldDescriptorProto_TYPE_INT64:
 		return "0"
-	case descriptor.FieldDescriptorProto_TYPE_UINT64:
+	case descriptorpb.FieldDescriptorProto_TYPE_UINT64:
 		return "0"
-	case descriptor.FieldDescriptorProto_TYPE_INT32:
+	case descriptorpb.FieldDescriptorProto_TYPE_INT32:
 		return "0"
-	case descriptor.FieldDescriptorProto_TYPE_UINT32:
+	case descriptorpb.FieldDescriptorProto_TYPE_UINT32:
 		return "0"
-	case descriptor.FieldDescriptorProto_TYPE_BOOL:
+	case descriptorpb.FieldDescriptorProto_TYPE_BOOL:
 		return "false"
-	case descriptor.FieldDescriptorProto_TYPE_STRING:
+	case descriptorpb.FieldDescriptorProto_TYPE_STRING:
 		return "\"\""
-	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+	case descriptorpb.FieldDescriptorProto_TYPE_MESSAGE:
 		return nilString
-	case descriptor.FieldDescriptorProto_TYPE_BYTES:
+	case descriptorpb.FieldDescriptorProto_TYPE_BYTES:
 		return "0"
-	case descriptor.FieldDescriptorProto_TYPE_ENUM:
+	case descriptorpb.FieldDescriptorProto_TYPE_ENUM:
 		return nilString
 	default:
 		return nilString
 	}
 }
 
-func goPkg(f *descriptor.FileDescriptorProto) string {
+func goPkg(f *descriptorpb.FileDescriptorProto) string {
 	return f.Options.GetGoPackage()
 }
 
-func httpBody(m *descriptor.MethodDescriptorProto) string {
+func httpBody(m *descriptorpb.MethodDescriptorProto) string {
 	ext := proto.GetExtension(m.Options, options.E_Http)
 	opts, ok := ext.(*options.HttpRule)
 	if !ok {
@@ -339,7 +337,7 @@ func httpBody(m *descriptor.MethodDescriptorProto) string {
 	return opts.Body
 }
 
-func httpVerb(m *descriptor.MethodDescriptorProto) string {
+func httpVerb(m *descriptorpb.MethodDescriptorProto) string {
 	ext := proto.GetExtension(m.Options, options.E_Http)
 	opts, ok := ext.(*options.HttpRule)
 	if !ok {
@@ -364,7 +362,7 @@ func httpVerb(m *descriptor.MethodDescriptorProto) string {
 	}
 }
 
-func httpPathsAdditionalBindings(m *descriptor.MethodDescriptorProto) []string {
+func httpPathsAdditionalBindings(m *descriptorpb.MethodDescriptorProto) []string {
 	opts, ok := proto.GetExtension(m.Options, options.E_Http).(*options.HttpRule)
 	if !ok {
 		panic(fmt.Sprintf("extension is %T; want an HttpRule", opts))
@@ -392,18 +390,6 @@ func httpPathsAdditionalBindings(m *descriptor.MethodDescriptorProto) []string {
 	}
 
 	return httpPaths
-}
-
-func ParseRequest(r io.Reader) (*plugin.CodeGeneratorRequest, error) {
-	input, err := io.ReadAll(r)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read code generator request: %v", err)
-	}
-	req := new(plugin.CodeGeneratorRequest)
-	if err = proto.Unmarshal(input, req); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal code generator request: %v", err)
-	}
-	return req, nil
 }
 
 func ParseParameter(args string) {
