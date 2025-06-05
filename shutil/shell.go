@@ -6,13 +6,12 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/pubgo/funk/anyhow"
 	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/recovery"
-	"github.com/pubgo/funk/result"
 )
 
-func Run(args ...string) (r result.Result[string]) {
-	defer recovery.Result(&r)
+func Run(args ...string) (r anyhow.Result[string]) {
+	defer anyhow.Recovery(&r.Err)
 
 	b := bytes.NewBufferString("")
 
@@ -20,24 +19,24 @@ func Run(args ...string) (r result.Result[string]) {
 	cmd.Stdout = b
 
 	assert.Must(cmd.Run(), strings.Join(args, " "))
-	return r.WithVal(strings.TrimSpace(b.String()))
+	return r.SetWithValue(strings.TrimSpace(b.String()))
 }
 
-func GoModGraph() result.Result[string] {
+func GoModGraph() anyhow.Result[string] {
 	return Run("go", "mod", "graph")
 }
 
-func GoList() result.Result[string] {
+func GoList() anyhow.Result[string] {
 	return Run("go", "list", "./...")
 }
 
 func GraphViz(in, out string) (err error) {
 	ret := Run("dot", "-Tsvg", in)
 	if ret.IsErr() {
-		return ret.Err()
+		return ret.GetErr()
 	}
 
-	return os.WriteFile(out, []byte(ret.Unwrap()), 0o600)
+	return os.WriteFile(out, []byte(ret.GetValue()), 0o600)
 }
 
 func Shell(args ...string) *exec.Cmd {

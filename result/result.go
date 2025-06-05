@@ -79,7 +79,7 @@ func (r Result[T]) OnValue(fn func(t T) error) error {
 }
 
 func (r Result[T]) OnErr(check func(err error)) {
-	if !r.IsErr() {
+	if r.IsOK() {
 		return
 	}
 
@@ -87,7 +87,7 @@ func (r Result[T]) OnErr(check func(err error)) {
 }
 
 func (r Result[T]) GetErr() error {
-	if !r.IsErr() {
+	if r.IsOK() {
 		return nil
 	}
 
@@ -95,7 +95,7 @@ func (r Result[T]) GetErr() error {
 }
 
 func (r Result[T]) Err(check ...func(err error) error) error {
-	if !r.IsErr() {
+	if r.IsOK() {
 		return nil
 	}
 
@@ -122,7 +122,7 @@ func (r Result[T]) OrElse(v T) T {
 }
 
 func (r Result[T]) Unwrap(check ...func(err error) error) T {
-	if !r.IsErr() {
+	if r.IsOK() {
 		return generic.FromPtr(r.v)
 	}
 
@@ -150,7 +150,7 @@ func (r Result[T]) Expect(format string, args ...any) T {
 }
 
 func (r Result[T]) String() string {
-	if !r.IsErr() {
+	if r.IsOK() {
 		return fmt.Sprintf("%v", generic.FromPtr(r.v))
 	}
 

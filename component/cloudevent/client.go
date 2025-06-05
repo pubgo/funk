@@ -435,7 +435,7 @@ func (c *Client) doConsume() (r error) {
 				concurrent = lo.FromPtr(consumer.Config.Concurrent)
 			}
 			if concurrent < DefaultMinConcurrent || concurrent > DefaultMaxConcurrent {
-				return errors.NewFmt("concurrent must be in the range of %d-%d", DefaultMinConcurrent, DefaultMaxConcurrent)
+				return errors.Errorf("concurrent must be in the range of %d-%d", DefaultMinConcurrent, DefaultMaxConcurrent)
 			}
 
 			logger.Info().Func(func(e *zerolog.Event) {
