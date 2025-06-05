@@ -7,7 +7,6 @@ import (
 
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/stack"
 	"github.com/rs/zerolog/log"
 )
 
@@ -87,6 +86,14 @@ func (r Result[T]) OnErr(check func(err error)) {
 	check(r.E)
 }
 
+func (r Result[T]) GetErr() error {
+	if !r.IsErr() {
+		return nil
+	}
+
+	return errors.WrapCaller(r.E, 1)
+}
+
 func (r Result[T]) Err(check ...func(err error) error) error {
 	if !r.IsErr() {
 		return nil
@@ -100,7 +107,11 @@ func (r Result[T]) Err(check ...func(err error) error) error {
 }
 
 func (r Result[T]) IsErr() bool {
-	return r.E != nil || !generic.IsNil(r.E)
+	return r.E != nil && !generic.IsNil(r.E)
+}
+
+func (r Result[T]) IsOK() bool {
+	return r.E == nil || generic.IsNil(r.E)
 }
 
 func (r Result[T]) OrElse(v T) T {
@@ -122,15 +133,20 @@ func (r Result[T]) Unwrap(check ...func(err error) error) T {
 	}
 }
 
-func (r Result[T]) Expect(format string, args ...any) T {
-	if !r.IsErr() {
+func (r Result[T]) GetValue() T {
+	if r.IsOK() {
 		return generic.FromPtr(r.v)
 	}
 
-	panic(&Error{
-		Msg:   fmt.Sprintf(format, args...),
-		Stack: stack.Caller(1).String(),
-	})
+	panic(errors.WrapStack(r.E))
+}
+
+func (r Result[T]) Expect(format string, args ...any) T {
+	if r.IsOK() {
+		return generic.FromPtr(r.v)
+	}
+
+	panic(errors.WrapStack(errors.Wrapf(r.E, format, args...)))
 }
 
 func (r Result[T]) String() string {
@@ -167,7 +183,7 @@ func (r Result[T]) ErrTo(setter *error, callbacks ...func(err error) error) bool
 		panic("ErrTo: setter is nil")
 	}
 
-	if !r.IsErr() {
+	if r.IsOK() {
 		return false
 	}
 
@@ -203,8 +219,8 @@ func Unwrap[T any](ret Result[T], gErr *error, callback ...func(err error) error
 		panic("Unwrap: gErr is nil")
 	}
 
-	if !ret.IsErr() {
-		return ret.Unwrap()
+	if ret.IsOK() {
+		return ret.GetValue()
 	}
 
 	var t T
