@@ -11,7 +11,7 @@ import (
 
 func ErrChecker(setter *Error, contexts ...context.Context) *Checker {
 	if setter == nil {
-		must(errors.Errorf("error setter is nil"))
+		errMust(errors.Errorf("error setter is nil"))
 	}
 
 	return &Checker{setter: setter, contexts: contexts}
@@ -19,7 +19,7 @@ func ErrChecker(setter *Error, contexts ...context.Context) *Checker {
 
 func RawErrChecker(errSetter *error, contexts ...context.Context) *Checker {
 	if errSetter == nil {
-		must(errors.Errorf("raw error setter is nil"))
+		errMust(errors.Errorf("raw error setter is nil"))
 	}
 
 	return &Checker{errSetter: errSetter, contexts: contexts}

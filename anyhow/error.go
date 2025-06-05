@@ -69,7 +69,7 @@ func (r Error) Must() {
 		return
 	}
 
-	must(errors.WrapCaller(r.getErr(), 1))
+	errMust(errors.WrapCaller(r.getErr(), 1))
 }
 
 func (r Error) Expect(format string, args ...any) {
@@ -79,5 +79,5 @@ func (r Error) Expect(format string, args ...any) {
 
 	err := errors.WrapCaller(r.getErr(), 1)
 	err = errors.Wrapf(err, format, args...)
-	must(err)
+	errMust(err)
 }

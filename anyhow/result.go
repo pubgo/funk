@@ -17,7 +17,7 @@ type Result[T any] struct {
 
 func (r Result[T]) GetValue() T {
 	if r.IsErr() {
-		must(r.getErr())
+		errMust(r.getErr())
 	}
 
 	return r.getValue()
@@ -57,7 +57,7 @@ func (r Result[T]) Expect(format string, args ...any) T {
 	if r.IsErr() {
 		err := errors.WrapCaller(r.getErr(), 1)
 		err = errors.Wrapf(err, format, args...)
-		must(err)
+		errMust(err)
 	}
 
 	return r.getValue()
@@ -65,7 +65,7 @@ func (r Result[T]) Expect(format string, args ...any) T {
 
 func (r Result[T]) Must() T {
 	if r.IsErr() {
-		must(errors.WrapCaller(r.getErr(), 1))
+		errMust(errors.WrapCaller(r.getErr(), 1))
 	}
 
 	return r.getValue()

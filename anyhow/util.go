@@ -55,7 +55,7 @@ func try1[T any](fn func() (T, error)) (t T, gErr error) {
 	return
 }
 
-func must(err error, args ...interface{}) {
+func errMust(err error, args ...interface{}) {
 	if generic.IsNil(err) {
 		return
 	}
@@ -71,7 +71,7 @@ func must(err error, args ...interface{}) {
 
 func errTo(r Error, setter *Error, rawSetter *error, contexts ...context.Context) bool {
 	if setter == nil {
-		must(errors.Errorf("error setter is nil"))
+		errMust(errors.Errorf("error setter is nil"))
 	}
 
 	if r.IsOK() {
@@ -142,7 +142,7 @@ func errTo(r Error, setter *Error, rawSetter *error, contexts ...context.Context
 
 func errRecovery[T any](setter *T, isErr func() bool, getErr func() error, newErr func(err error) T, callbacks ...func(err error) error) {
 	if setter == nil {
-		must(errors.Errorf("setter is nil"))
+		errMust(errors.Errorf("setter is nil"))
 	}
 
 	err := errors.Parse(recover())
