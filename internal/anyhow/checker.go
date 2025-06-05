@@ -19,7 +19,7 @@ func NewChecker(errSetter *error) *Checker {
 }
 
 type Checker struct {
-	_ [0]func()
+	_ [0]func() // disallow ==
 
 	errSetter *error
 	ctx       context.Context
