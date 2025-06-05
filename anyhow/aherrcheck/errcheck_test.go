@@ -19,6 +19,7 @@ func TestErrCheck(t *testing.T) {
 
 	RegisterErrCheck(errCheck1)
 	assert.Equal(t, len(GetErrCheckFrames()), 1)
+	assert.Equal(t, GetErrCheckFrames()[0].Short(), "aherrcheck/errcheck_test.go:10 errCheck1")
 
 	RemoveErrCheck(errCheck1)
 	assert.Equal(t, len(GetErrCheckFrames()), 0)

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"runtime/debug"
 
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/pretty"
@@ -22,10 +23,6 @@ func IfErr(err error, fn func(err error) error) error {
 
 func New(msg string) error {
 	return WrapCaller(&Err{Msg: msg}, 1)
-}
-
-func NewFmt(msg string, args ...interface{}) error {
-	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...)}, 1)
 }
 
 func Format(msg string, args ...interface{}) error {
@@ -123,6 +120,7 @@ func WrapStack(err error) error {
 		return nil
 	}
 
+	debug.PrintStack()
 	return &ErrWrap{
 		err: handleGrpcError(err),
 		pb: &errorpb.ErrWrap{

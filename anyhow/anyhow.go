@@ -2,7 +2,6 @@ package anyhow
 
 import (
 	"context"
-	"runtime/debug"
 
 	"github.com/pubgo/funk/errors"
 )
@@ -25,32 +24,6 @@ func Recovery(setter *Error, callbacks ...func(err error) error) {
 		func(err error) Error { return newError(err) },
 		callbacks...,
 	)
-}
-
-func recovery[T any](setter *T, isErr func() bool, getErr func() error, newErr func(err error) T, callbacks ...func(err error) error) {
-	if setter == nil {
-		debug.PrintStack()
-		panic("setter is nil")
-	}
-
-	err := errors.Parse(recover())
-	if err == nil && !isErr() {
-		return
-	}
-
-	if err == nil {
-		err = getErr()
-	}
-
-	for _, fn := range callbacks {
-		err = fn(err)
-		if err == nil {
-			return
-		}
-	}
-
-	err = errors.WrapCaller(err, 1)
-	*setter = newErr(err)
 }
 
 func ErrOf(err error) Error {
@@ -95,7 +68,7 @@ func Wrap[T any](v T, err error) Result[T] {
 }
 
 func WrapFn[T any](fn func() (T, error)) Result[T] {
-	v, err := tryResult(fn)
+	v, err := try1(fn)
 	if err == nil {
 		return Result[T]{v: &v}
 	}
@@ -105,7 +78,7 @@ func WrapFn[T any](fn func() (T, error)) Result[T] {
 }
 
 func DoResult[T any](fn func() (r Result[T])) (t T, gErr error) {
-	return t, try(func() error { return fn().ValueTo(&t) })
+	return t, try(func() error { return fn().ValueTo(&t).GetErr() })
 }
 
 func DoError(fn func() (r Error)) error {

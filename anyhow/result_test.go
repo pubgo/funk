@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/pubgo/funk/anyhow"
+	"github.com/pubgo/funk/anyhow/aherrcheck"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
-	anyhow "github.com/pubgo/funk/internal/anyhow"
-	"github.com/pubgo/funk/internal/anyhow/aherrcheck"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/recovery"
 )
@@ -34,10 +34,12 @@ func TestResultDo(t *testing.T) {
 	ok := anyhow.OK(&hello{Name: "abc"})
 	ok.OnValue(func(v *hello) {
 		assert.If(v.Name != "abc", "not match")
-	}).OnValue(func(v *hello) {
+	})
+	ok.OnValue(func(v *hello) {
 		assert.If(v.Name != "abc", "not match")
-	}).OnErr(func(err error) error {
-		return err
+	})
+	ok.OnErr(func(err error) {
+		t.Log(err)
 	})
 }
 
@@ -65,15 +67,15 @@ func fn1() (r anyhow.Result[string]) {
 }
 
 func fn2() (r anyhow.Result[string]) {
-	if fn3().OnErr(func(err error) error {
+	if fn3().WithErr(func(err error) error {
 		return errors.Wrap(err, "test error")
 	}).ErrTo(&r.Err) {
 		return
 	}
 
-	return r.WithVal("ok")
+	return r.SetWithValue("ok")
 }
 
 func fn3() anyhow.Error {
-	return anyhow.ErrOf(fmt.Errorf("error"))
+	return anyhow.ErrOf(fmt.Errorf("error test, this is error"))
 }
