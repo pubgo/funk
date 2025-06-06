@@ -3,7 +3,6 @@ package anyhow
 import (
 	"context"
 	"os"
-	"runtime/debug"
 
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
@@ -31,12 +30,6 @@ type Checker struct {
 	errSetter *error
 	setter    *Error
 	contexts  []context.Context
-	args      any
-}
-
-func (c *Checker) SetArgs(args any) *Checker {
-	c.args = args
-	return c
 }
 
 func (c *Checker) Recovery(callbacks ...func(err error) error) {
@@ -69,7 +62,6 @@ func (c *Checker) Recovery(callbacks ...func(err error) error) {
 			}
 		}
 
-		debug.PrintStack()
 		errors.Debug(errors.WrapStack(err))
 		os.Exit(1)
 	}
