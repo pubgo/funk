@@ -164,3 +164,30 @@ func errRecovery[T any](setter *T, isErr func() bool, getErr func() error, newEr
 	err = errors.WrapCaller(err, 1)
 	*setter = newErr(err)
 }
+
+func unwrapErr[T any, Setter any](r Result[T], setter *Setter, contexts ...context.Context) (T, error) {
+	var ret = r.getValue()
+	if r.IsOK() {
+		return ret, nil
+	}
+
+	var ctx = context.Background()
+	if len(contexts) > 0 {
+		ctx = contexts[0]
+	}
+
+	// err No checking, repeat setting
+	if setter.IsErr() {
+		log.Error(ctx).Msgf("Unwrap: error setter has value, err=%v", setter.GetErr())
+	}
+
+	var err = r.getErr()
+	for _, fn := range aherrcheck.GetErrChecks() {
+		err = fn(ctx, err)
+		if err == nil {
+			return ret, nil
+		}
+	}
+
+	return ret, err
+}

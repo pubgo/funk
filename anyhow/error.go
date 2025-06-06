@@ -62,8 +62,6 @@ func (r Error) GetErr() error {
 	return errors.WrapCaller(r.getErr(), 1)
 }
 
-func (r Error) getErr() error { return r.err }
-
 func (r Error) Must() {
 	if r.IsOK() {
 		return
@@ -81,3 +79,5 @@ func (r Error) Expect(format string, args ...any) {
 	err = errors.Wrapf(err, format, args...)
 	errMust(err)
 }
+
+func (r Error) getErr() error { return r.err }

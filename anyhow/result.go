@@ -3,12 +3,10 @@ package anyhow
 import (
 	"context"
 	"fmt"
-	"runtime/debug"
 
-	"github.com/pubgo/funk/anyhow/aherrcheck"
 	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/log"
 	"github.com/samber/lo"
+	"runtime/debug"
 )
 
 type Result[T any] struct {
@@ -103,7 +101,7 @@ func (r Result[T]) IsErr() bool { return r.getErr() != nil }
 func (r Result[T]) IsOK() bool { return r.getErr() == nil }
 
 func (r Result[T]) GetErr() error {
-	if !r.IsErr() {
+	if r.IsOK() {
 		return nil
 	}
 
@@ -121,18 +119,18 @@ func (r Result[T]) SetWithErr(err error) Result[T] {
 }
 
 func (r Result[T]) WithErr(callbacks ...func(err error) error) Result[T] {
-	if r.IsErr() {
-		var err = r.getErr()
-		for _, fn := range callbacks {
-			err = fn(err)
-			if err == nil {
-				return OK(r.getValue())
-			}
-		}
-		return Wrap(r.getValue(), errors.WrapCaller(err, 1))
+	if r.IsOK() {
+		return r
 	}
 
-	return r
+	var err = r.getErr()
+	for _, fn := range callbacks {
+		err = fn(err)
+		if err == nil {
+			return OK(r.getValue())
+		}
+	}
+	return Wrap(r.getValue(), errors.WrapCaller(err, 1))
 }
 
 func (r Result[T]) OnErr(callbacks ...func(err error)) {
@@ -146,9 +144,18 @@ func (r Result[T]) OnErr(callbacks ...func(err error)) {
 	}
 }
 
-func (r Result[T]) getValue() T { return lo.FromPtr(r.v) }
+func (r Result[T]) UnwrapErr(setter *error, contexts ...context.Context) T {
+	if setter == nil {
+		debug.PrintStack()
+		panic("Unwrap: setter is nil")
+	}
 
-func (r Result[T]) getErr() error { return r.Err.getErr() }
+	ret, err := unwrapErr(r, newError(lo.FromPtr(setter)), contexts...)
+	if err != nil {
+		*setter = errors.WrapCaller(err, 1)
+	}
+	return ret
+}
 
 func (r Result[T]) Unwrap(setter *Error, contexts ...context.Context) T {
 	if setter == nil {
@@ -156,30 +163,13 @@ func (r Result[T]) Unwrap(setter *Error, contexts ...context.Context) T {
 		panic("Unwrap: setter is nil")
 	}
 
-	var ret = r.getValue()
-	if !r.IsErr() {
-		return ret
+	ret, err := unwrapErr(r, lo.FromPtr(setter), contexts...)
+	if err != nil {
+		*setter = newError(errors.WrapCaller(err, 1))
 	}
-
-	var ctx = context.Background()
-	if len(contexts) > 0 {
-		ctx = contexts[0]
-	}
-
-	// err No checking, repeat setting
-	if (*setter).IsErr() {
-		log.Error(ctx).Msgf("Unwrap: setter is not nil, err=%v", (*setter).getErr())
-	}
-
-	var err = r.getErr()
-	for _, fn := range aherrcheck.GetErrChecks() {
-		err = fn(ctx, err)
-		if err == nil {
-			return ret
-		}
-	}
-
-	err = errors.WrapCaller(err, 1)
-	*setter = newError(err)
 	return ret
 }
+
+func (r Result[T]) getValue() T { return lo.FromPtr(r.v) }
+
+func (r Result[T]) getErr() error { return r.Err.getErr() }

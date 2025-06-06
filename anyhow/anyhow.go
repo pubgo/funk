@@ -2,8 +2,6 @@ package anyhow
 
 import (
 	"context"
-	"runtime/debug"
-
 	"github.com/pubgo/funk/errors"
 )
 
@@ -92,28 +90,4 @@ func ErrTo(err error, setter *Error, contexts ...context.Context) bool {
 
 func RawErrTo(err error, rawSetter *error, contexts ...context.Context) bool {
 	return errTo(newError(err), nil, rawSetter, contexts...)
-}
-
-func Unwrap[T any](ret Result[T], gErr *error, callback ...func(err error) error) T {
-	if gErr == nil {
-		debug.PrintStack()
-		panic("Unwrap: gErr is nil")
-	}
-
-	if ret.IsOK() {
-		return ret.GetValue()
-	}
-
-	var t T
-	err := ret.Err()
-	for _, fn := range callback {
-		if err == nil {
-			return t
-		}
-
-		err = fn(err)
-	}
-
-	*gErr = errors.WrapCaller(err, 1)
-	return t
 }
