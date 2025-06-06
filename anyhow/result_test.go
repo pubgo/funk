@@ -48,18 +48,18 @@ func TestErrOf(t *testing.T) {
 	aherrcheck.RegisterErrCheck(log.RecordErr())
 
 	var err anyhow.Error
-	if fn1().ErrTo(&err, ctx) {
+	if fn1().Catch(&err, ctx) {
 		errors.Debug(err.GetErr())
 	}
 }
 
 func fn1() (r anyhow.Result[string]) {
-	if fn3().ErrTo(&r.Err) {
+	if fn3().Catch(&r.Err) {
 		return
 	}
 
 	var vv = fn2()
-	if vv.ErrTo(&r.Err) {
+	if vv.Catch(&r.Err) {
 		return
 	}
 
@@ -69,7 +69,7 @@ func fn1() (r anyhow.Result[string]) {
 func fn2() (r anyhow.Result[string]) {
 	if fn3().WithErr(func(err error) error {
 		return errors.Wrap(err, "test error")
-	}).ErrTo(&r.Err) {
+	}).Catch(&r.Err) {
 		return
 	}
 

@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
+	"github.com/pubgo/funk/anyhow"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/errors/errcheck"
 	cloudeventpb "github.com/pubgo/funk/proto/cloudevent"
 	"github.com/pubgo/funk/protoutils"
 	"github.com/rs/zerolog"
@@ -85,16 +85,15 @@ func encodeDelayTime(duration time.Duration) string {
 	return strconv.Itoa(int(time.Now().Add(duration).UnixMilli()))
 }
 
-func decodeDelayTime(delayTime string) (_ time.Duration, gErr error) {
-	tt, err := strconv.Atoi(delayTime)
-	err = errors.IfErr(err, func(err error) error {
+func decodeDelayTime(delayTime string) (r anyhow.Result[time.Duration]) {
+	tt := anyhow.Wrap(strconv.Atoi(delayTime)).WithErr(func(err error) error {
 		return errors.Wrapf(err, "failed to parse cloud event job delay time, time=%s", delayTime)
 	})
-	if errcheck.Check(&gErr, err) {
+	if tt.Catch(&r.Err) {
 		return
 	}
 
-	return time.Until(time.UnixMilli(int64(tt))), nil
+	return r.SetWithValue(time.Until(time.UnixMilli(int64(tt.GetValue()))))
 }
 
 type subjectOpt struct {

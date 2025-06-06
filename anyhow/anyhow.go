@@ -85,10 +85,10 @@ func DoError(fn func() (r Error)) error {
 	return try(func() error { return fn().GetErr() })
 }
 
-func ErrTo(err error, setter *Error, contexts ...context.Context) bool {
-	return errTo(newError(err), setter, nil, contexts...)
+func ErrTo(setter *Error, err error, contexts ...context.Context) bool {
+	return catchErr(newError(err), setter, nil, contexts...)
 }
 
-func RawErrTo(err error, rawSetter *error, contexts ...context.Context) bool {
-	return errTo(newError(err), nil, rawSetter, contexts...)
+func RawErrTo(rawSetter *error, err error, contexts ...context.Context) bool {
+	return catchErr(newError(err), nil, rawSetter, contexts...)
 }

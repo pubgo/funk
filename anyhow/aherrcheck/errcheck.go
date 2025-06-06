@@ -7,20 +7,21 @@ import (
 	"github.com/pubgo/funk/stack"
 )
 
-var errChecks []func(context.Context, error) error
+var errChecks []ErrChecker
 
-func RegisterErrCheck(f func(context.Context, error) error) {
+func RegisterErrCheck(f ErrChecker) bool {
 	var checkFrame = stack.CallerWithFunc(f)
 	for _, errFunc := range errChecks {
 		if reflect.DeepEqual(checkFrame, stack.CallerWithFunc(errFunc)) {
-			return
+			return false
 		}
 	}
 
 	errChecks = append(errChecks, f)
+	return true
 }
 
-func GetErrChecks() []func(context.Context, error) error { return errChecks }
+func GetErrChecks() []ErrChecker { return errChecks }
 
 func GetErrCheckFrames() []*stack.Frame {
 	var frames []*stack.Frame

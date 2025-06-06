@@ -42,12 +42,12 @@ func (r Error) OnErr(callbacks ...func(err error)) {
 	}
 }
 
-func (r Error) RawErrTo(setter *error, ctx ...context.Context) bool {
-	return errTo(r, nil, setter, ctx...)
+func (r Error) CatchErr(setter *error, ctx ...context.Context) bool {
+	return catchErr(r, nil, setter, ctx...)
 }
 
-func (r Error) ErrTo(setter *Error, ctx ...context.Context) bool {
-	return errTo(r, setter, nil, ctx...)
+func (r Error) Catch(setter *Error, ctx ...context.Context) bool {
+	return catchErr(r, setter, nil, ctx...)
 }
 
 func (r Error) IsErr() bool { return r.getErr() != nil }

@@ -70,7 +70,7 @@ func errMust(err error, args ...interface{}) {
 	panic(err)
 }
 
-func errTo(r Error, setter *Error, rawSetter *error, contexts ...context.Context) bool {
+func catchErr(r Error, setter *Error, rawSetter *error, contexts ...context.Context) bool {
 	if setter == nil {
 		errMust(errors.Errorf("error setter is nil"))
 	}
@@ -128,8 +128,9 @@ func errTo(r Error, setter *Error, rawSetter *error, contexts ...context.Context
 		break
 	}
 
+	checkers := append(aherrcheck.GetErrChecks(), aherrcheck.GetCheckersFromCtx(ctx)...)
 	var err = r.getErr()
-	for _, fn := range aherrcheck.GetErrChecks() {
+	for _, fn := range checkers {
 		err = fn(ctx, err)
 		if err == nil {
 			return false

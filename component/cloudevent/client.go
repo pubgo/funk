@@ -10,6 +10,7 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/nats-io/nats.go/jetstream"
 	ants "github.com/panjf2000/ants/v2"
+	"github.com/pubgo/funk/anyhow"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/component/natsclient"
 	"github.com/pubgo/funk/errors"
@@ -224,20 +225,20 @@ func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects m
 				return false, nil
 			}
 
-			dur, err := decodeDelayTime(delayDur)
-			err = errors.IfErr(err, func(err error) error {
+			dur := decodeDelayTime(delayDur).WithErr(func(err error) error {
 				return errors.Wrap(err, "failed to parse cloud job delay time")
 			})
-			if errcheck.Check(&gErr, err) {
+			if dur.CatchErr(&gErr) {
 				return
 			}
 
+			durVal := dur.GetValue()
 			// ignore negative delay
-			if dur < 0 {
+			if durVal < 0 {
 				return false, nil
 			}
 
-			return true, msg.NakWithDelay(dur)
+			return true, msg.NakWithDelay(durVal)
 		}
 
 		if ok, err := handlerDelayJob(); err != nil {
@@ -277,7 +278,7 @@ func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects m
 				Msg(msg)
 		}
 
-		err = try.Try(func() error { return c.doHandler(meta, msg, handler, cfg) })
+		err = try.Try(func() error { return c.doHandler(meta, msg, handler, cfg).GetErr() })
 		if err == nil {
 			checkErrAndLog(msg.Ack(), "failed to do msg ack with handler ok")
 			return
@@ -346,7 +347,7 @@ func (c *Client) doErrHandler(streamName, consumerName string) jetstream.PullCon
 	})
 }
 
-func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *jobEventHandler, cfg *JobEventConfig) (r error) {
+func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *jobEventHandler, cfg *JobEventConfig) (gErr anyhow.Error) {
 	var timeout = lo.FromPtr(cfg.Timeout)
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
@@ -373,51 +374,53 @@ func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *
 	var now = time.Now()
 	var args any
 	defer func() {
-		if r != nil {
-			logger.Err(r).Func(func(e *zerolog.Event) {
-				e.Any("context", msgCtx)
-				e.Any("args", args)
-				e.Str("timeout", timeout.String())
-				e.Str("start_time", now.String())
-				e.Str("job_cost", time.Since(now).String())
-				e.Msg("failed to do cloud job handler")
-			})
+		if gErr.IsOK() {
+			return
 		}
+
+		logger.Err(gErr.GetErr()).Func(func(e *zerolog.Event) {
+			e.Any("context", msgCtx)
+			e.Any("args", args)
+			e.Str("timeout", timeout.String())
+			e.Str("start_time", now.String())
+			e.Str("job_cost", time.Since(now).String())
+			e.Msg("failed to do cloud job handler")
+		})
 	}()
 
 	var pb anypb.Any
-	err := proto.Unmarshal(msg.Data(), &pb)
-	err = errors.IfErr(err, func(err error) error {
-		return errors.WrapTag(err,
-			errors.T("msg", "failed to unmarshal stream msg data to any proto"),
-			errors.T("args", string(msg.Data())),
-		)
-	})
-	if errcheck.Check(&r, err) {
+	err := anyhow.ErrOf(proto.Unmarshal(msg.Data(), &pb)).
+		WithErr(func(err error) error {
+			return errors.WrapTag(err,
+				errors.T("msg", "failed to unmarshal stream msg data to any proto"),
+				errors.T("args", string(msg.Data())),
+			)
+		})
+	if err.Catch(&gErr) {
 		return
 	}
 	args = &pb
 
-	dst, err := anypb.UnmarshalNew(args.(*anypb.Any), proto.UnmarshalOptions{})
-	err = errors.IfErr(err, func(err error) error {
-		return errors.WrapTag(err,
-			errors.T("msg", "failed to unmarshal any proto to proto msg"),
-			errors.T("args", args),
-		)
-	})
-	if errcheck.Check(&r, err) {
+	dst := anyhow.Wrap(anypb.UnmarshalNew(args.(*anypb.Any), proto.UnmarshalOptions{})).
+		WithErr(func(err error) error {
+			return errors.WrapTag(err,
+				errors.T("msg", "failed to unmarshal any proto to proto msg"),
+				errors.T("args", args),
+			)
+		})
+	if dst.Catch(&gErr) {
 		return
 	}
 
 	ctx = createCtxWithContext(ctx, msgCtx)
-	err = job.handler(ctx, dst)
-	err = errors.IfErr(err, func(err error) error {
-		return errors.WrapTag(err,
-			errors.T("msg", "failed to do cloud job handler"),
-			errors.T("args", dst),
-			errors.T("any_pb", dst),
-		)
-	})
+	err = anyhow.ErrOf(job.handler(ctx, dst.GetValue())).
+		WithErr(func(err error) error {
+			return errors.WrapTag(err,
+				errors.T("msg", "failed to do cloud job handler"),
+				errors.T("args", dst),
+				errors.T("any_pb", dst),
+			)
+		})
 	return err
 }
 

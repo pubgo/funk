@@ -79,12 +79,12 @@ func (r Result[T]) String() string {
 	return fmt.Sprint(errors.WrapCaller(r.getErr(), 1))
 }
 
-func (r Result[T]) RawErrTo(setter *error, ctx ...context.Context) bool {
-	return errTo(r.Err, nil, setter, ctx...)
+func (r Result[T]) CatchErr(setter *error, ctx ...context.Context) bool {
+	return catchErr(r.Err, nil, setter, ctx...)
 }
 
-func (r Result[T]) ErrTo(setter *Error, ctx ...context.Context) bool {
-	return errTo(r.Err, setter, nil, ctx...)
+func (r Result[T]) Catch(setter *Error, ctx ...context.Context) bool {
+	return catchErr(r.Err, setter, nil, ctx...)
 }
 
 func (r Result[T]) OrElse(t T) T {
