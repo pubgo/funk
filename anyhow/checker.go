@@ -75,6 +75,10 @@ func (c *Checker) Recovery(callbacks ...func(err error) error) {
 	}
 }
 
-func (c *Checker) Check(err error) bool {
+func (c *Checker) Check(err Error) bool {
+	return errTo(err, c.setter, c.errSetter, c.contexts...)
+}
+
+func (c *Checker) CheckErr(err error) bool {
 	return errTo(newError(err), c.setter, c.errSetter, c.contexts...)
 }
