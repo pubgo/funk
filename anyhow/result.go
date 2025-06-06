@@ -6,7 +6,6 @@ import (
 
 	"github.com/pubgo/funk/errors"
 	"github.com/samber/lo"
-	"runtime/debug"
 )
 
 type Result[T any] struct {
@@ -145,12 +144,7 @@ func (r Result[T]) OnErr(callbacks ...func(err error)) {
 }
 
 func (r Result[T]) UnwrapErr(setter *error, contexts ...context.Context) T {
-	if setter == nil {
-		debug.PrintStack()
-		panic("Unwrap: setter is nil")
-	}
-
-	ret, err := unwrapErr(r, newError(lo.FromPtr(setter)), contexts...)
+	ret, err := unwrapErr(r, setter, nil, contexts...)
 	if err != nil {
 		*setter = errors.WrapCaller(err, 1)
 	}
@@ -158,12 +152,7 @@ func (r Result[T]) UnwrapErr(setter *error, contexts ...context.Context) T {
 }
 
 func (r Result[T]) Unwrap(setter *Error, contexts ...context.Context) T {
-	if setter == nil {
-		debug.PrintStack()
-		panic("Unwrap: setter is nil")
-	}
-
-	ret, err := unwrapErr(r, lo.FromPtr(setter), contexts...)
+	ret, err := unwrapErr(r, nil, setter, contexts...)
 	if err != nil {
 		*setter = newError(errors.WrapCaller(err, 1))
 	}

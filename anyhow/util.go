@@ -10,6 +10,7 @@ import (
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/stack"
+	"github.com/samber/lo"
 )
 
 var errFnIsNil = errors.New("[fn] is nil")
@@ -165,7 +166,12 @@ func errRecovery[T any](setter *T, isErr func() bool, getErr func() error, newEr
 	*setter = newErr(err)
 }
 
-func unwrapErr[T any, Setter any](r Result[T], setter *Setter, contexts ...context.Context) (T, error) {
+func unwrapErr[T any](r Result[T], setter1 *error, setter2 *Error, contexts ...context.Context) (T, error) {
+	if setter1 == nil && setter2 == nil {
+		debug.PrintStack()
+		panic("Unwrap: error setter is nil")
+	}
+
 	var ret = r.getValue()
 	if r.IsOK() {
 		return ret, nil
@@ -176,9 +182,16 @@ func unwrapErr[T any, Setter any](r Result[T], setter *Setter, contexts ...conte
 		ctx = contexts[0]
 	}
 
-	// err No checking, repeat setting
-	if setter.IsErr() {
-		log.Error(ctx).Msgf("Unwrap: error setter has value, err=%v", setter.GetErr())
+	getSetterErr := func() error {
+		err := lo.FromPtr(setter1)
+		if err == nil {
+			err = lo.FromPtr(setter2).getErr()
+		}
+		return err
+	}
+	setterErr := getSetterErr()
+	if setterErr != nil {
+		log.Error(ctx).Msgf("Unwrap: error setter has value, err=%v", setterErr)
 	}
 
 	var err = r.getErr()
