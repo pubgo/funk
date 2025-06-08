@@ -1,4 +1,4 @@
-package recovery
+package recovery_test
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/log"
+	"github.com/pubgo/funk/recovery"
 	"github.com/pubgo/funk/result"
 )
 
@@ -15,7 +16,7 @@ func testExit1() {
 }
 
 func testExit() {
-	defer Exit()
+	defer recovery.Exit()
 
 	assert.Must(fmt.Errorf("test"))
 }
@@ -26,7 +27,7 @@ func TestExit(t *testing.T) {
 
 func TestErr(t *testing.T) {
 	handler := func() (gErr error) {
-		defer Err(&gErr)
+		defer recovery.Err(&gErr)
 
 		panic("ok")
 	}
@@ -44,7 +45,7 @@ func TestResult(t *testing.T) {
 	}
 
 	handler := func() (r result.Result[A]) {
-		defer Result(&r)
+		defer recovery.Err(&r.E)
 
 		r = r.WithVal(A{A: "hello"})
 		panic("ok")
@@ -55,7 +56,7 @@ func TestResult(t *testing.T) {
 }
 
 func TestName(t *testing.T) {
-	defer DebugPrint()
+	defer recovery.DebugPrint()
 
 	log.Print("test panic")
 	hello()
@@ -66,7 +67,7 @@ func hello() {
 }
 
 func TestTesting(t *testing.T) {
-	defer Testing(t)
+	defer recovery.Testing(t)
 
 	log.Print("test panic")
 	hello()

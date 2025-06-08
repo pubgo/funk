@@ -20,8 +20,8 @@ func init2() {
 }
 
 func init3() {
-	pretty.Println(stack.GetGORoot())
-	pretty.Println(stack.Callers(4))
+	pretty.Println("GetGORoot", stack.GetGORoot())
+	pretty.Println("Callers", stack.Callers(4))
 	fmt.Println(stack.Caller(0))
 	fmt.Println(stack.Caller(1))
 	fmt.Println(stack.Caller(2))

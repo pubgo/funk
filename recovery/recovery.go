@@ -2,46 +2,40 @@ package recovery
 
 import (
 	"os"
-	"runtime/debug"
 	"testing"
 
 	"github.com/pubgo/funk"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/result"
 )
 
-func Result[T any](ret *result.Result[T]) {
+func Err(gErr *error, callbacks ...func(err error) error) {
 	err := errors.Parse(recover())
-	if generic.IsNil(err) {
+	if funk.IsNil(err) {
 		return
 	}
 
-	*ret = result.Err[T](errors.WrapStack(err))
-}
-
-func Err(gErr *error, fns ...func(err error) error) {
-	err := errors.Parse(recover())
-	if generic.IsNil(err) {
-		return
-	}
-
-	for i := range fns {
-		err = fns[i](err)
+	for i := range callbacks {
+		err = callbacks[i](err)
+		if funk.IsNil(err) {
+			return
+		}
 	}
 
 	*gErr = errors.WrapStack(err)
 }
 
-func Raise(fns ...func(err error) error) {
+func Raise(callbacks ...func(err error) error) {
 	err := errors.Parse(recover())
-	if generic.IsNil(err) {
+	if funk.IsNil(err) {
 		return
 	}
 
-	if len(fns) > 0 && fns[0] != nil {
-		panic(errors.WrapCaller(fns[0](err), 1))
+	for i := range callbacks {
+		err = callbacks[i](err)
+		if funk.IsNil(err) {
+			return
+		}
 	}
 
 	panic(errors.WrapStack(err))
@@ -51,7 +45,7 @@ func Recovery(fn func(err error)) {
 	assert.If(fn == nil, "[fn] should not be nil")
 
 	err := errors.Parse(recover())
-	if generic.IsNil(err) {
+	if funk.IsNil(err) {
 		return
 	}
 
@@ -60,27 +54,28 @@ func Recovery(fn func(err error)) {
 
 func Exit(handlers ...func(err error) error) {
 	err := errors.Parse(recover())
-	if generic.IsNil(err) {
+	if funk.IsNil(err) {
 		return
 	}
 
 	for i := range handlers {
 		err = handlers[i](err)
+		if funk.IsNil(err) {
+			return
+		}
 	}
 
 	errors.Debug(errors.WrapStack(err))
-	debug.PrintStack()
 	os.Exit(1)
 }
 
 func DebugPrint() {
 	err := errors.Parse(recover())
-	if generic.IsNil(err) {
+	if funk.IsNil(err) {
 		return
 	}
 
 	errors.Debug(errors.WrapStack(err))
-	debug.PrintStack()
 }
 
 func Testing(t *testing.T) {
@@ -90,6 +85,5 @@ func Testing(t *testing.T) {
 	}
 
 	errors.Debug(errors.WrapStack(err))
-	debug.PrintStack()
 	t.Fatal(err)
 }
