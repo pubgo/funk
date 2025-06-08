@@ -115,13 +115,6 @@ func (r Result[T]) MapErr(fn func(error) error) Result[T] {
 	return Fail[T](fn(r.getErr()))
 }
 
-func (r Result[T]) OrElse(fn func(error) Result[T]) Result[T] {
-	if r.IsOK() {
-		return r
-	}
-	return fn(r.getErr())
-}
-
 func (r Result[T]) GetErr() error {
 	if r.IsOK() {
 		return nil
@@ -161,6 +154,13 @@ func (r Result[T]) UnwrapErr(setter *Error, contexts ...context.Context) T {
 		*setter = newError(errors.WrapCaller(err, 1))
 	}
 	return ret
+}
+
+func (r Result[T]) OrElse(fn func(error) T) Result[T] {
+	if r.IsOK() {
+		return r
+	}
+	return OK(fn(r.getErr()))
 }
 
 func (r Result[T]) UnwrapOrElse(fn func(error) T) T {

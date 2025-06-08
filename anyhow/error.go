@@ -29,16 +29,6 @@ func (e Error) Map(fn func(error) error) Error {
 	return Error{err: err}
 }
 
-func (e Error) OrElse(fn func(error) Error) Error {
-	if e.IsOK() {
-		return e
-	}
-
-	err := e.getErr()
-	err = errors.WrapCaller(err, 1)
-	return fn(err)
-}
-
 func (e Error) Inspect(fn func(error)) Error {
 	if e.IsErr() {
 		err := e.getErr()
@@ -90,6 +80,7 @@ func (e Error) String() string {
 	if e.IsOK() {
 		return "Ok"
 	}
+
 	return fmt.Sprintf("Error(%v)", e.err)
 }
 
@@ -98,6 +89,16 @@ func (e Error) Error() string {
 		return ""
 	}
 	return e.err.Error()
+}
+
+func (e Error) OrElse(fn func(error) Error) Error {
+	if e.IsOK() {
+		return e
+	}
+
+	err := e.getErr()
+	err = errors.WrapCaller(err, 1)
+	return fn(err)
 }
 
 func (e Error) getErr() error { return e.err }
