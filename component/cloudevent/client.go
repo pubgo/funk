@@ -225,10 +225,10 @@ func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects m
 				return false, nil
 			}
 
-			dur := decodeDelayTime(delayDur).WithErr(func(err error) error {
+			dur := decodeDelayTime(delayDur).MapErr(func(err error) error {
 				return errors.Wrap(err, "failed to parse cloud job delay time")
 			})
-			if dur.CatchErr(&gErr) {
+			if dur.Catch(&gErr) {
 				return
 			}
 
@@ -390,7 +390,7 @@ func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *
 
 	var pb anypb.Any
 	err := anyhow.ErrOf(proto.Unmarshal(msg.Data(), &pb)).
-		WithErr(func(err error) error {
+		MapErr(func(err error) error {
 			return errors.WrapTag(err,
 				errors.T("msg", "failed to unmarshal stream msg data to any proto"),
 				errors.T("args", string(msg.Data())),
@@ -414,7 +414,7 @@ func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *
 
 	ctx = createCtxWithContext(ctx, msgCtx)
 	err = anyhow.ErrOf(job.handler(ctx, dst.GetValue())).
-		WithErr(func(err error) error {
+		MapErr(func(err error) error {
 			return errors.WrapTag(err,
 				errors.T("msg", "failed to do cloud job handler"),
 				errors.T("args", dst),

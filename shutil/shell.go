@@ -11,7 +11,7 @@ import (
 )
 
 func Run(args ...string) (r anyhow.Result[string]) {
-	defer anyhow.Recovery(&r.Err)
+	defer anyhow.RecoveryErr(&r.Err)
 
 	b := bytes.NewBufferString("")
 

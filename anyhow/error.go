@@ -2,6 +2,7 @@ package anyhow
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pubgo/funk/errors"
 )
@@ -16,68 +17,87 @@ type Error struct {
 	err error
 }
 
-func (r Error) WithErr(callbacks ...func(err error) error) Error {
-	if r.IsOK() {
-		return r
+func (e Error) Unwrap() error { return e.err }
+
+func (e Error) Map(fn func(error) error) Error {
+	if e.IsOK() {
+		return e
 	}
 
-	var err = r.getErr()
-	for _, fn := range callbacks {
-		err = fn(err)
-		if err == nil {
-			return Error{}
-		}
-	}
-	return Error{err: errors.WrapCaller(err, 1)}
+	err := e.getErr()
+	err = errors.WrapCaller(fn(err), 1)
+	return Error{err: err}
 }
 
-func (r Error) OnErr(callbacks ...func(err error)) {
-	if r.IsOK() {
-		return
+func (e Error) OrElse(fn func(error) Error) Error {
+	if e.IsOK() {
+		return e
 	}
 
-	var err = r.getErr()
-	for _, fn := range callbacks {
+	err := e.getErr()
+	err = errors.WrapCaller(err, 1)
+	return fn(err)
+}
+
+func (e Error) Inspect(fn func(error)) Error {
+	if e.IsErr() {
+		err := e.getErr()
 		fn(err)
 	}
+
+	return e
 }
 
-func (r Error) CatchErr(setter *error, ctx ...context.Context) bool {
-	return catchErr(r, nil, setter, ctx...)
+func (e Error) Catch(setter *error, ctx ...context.Context) bool {
+	return catchErr(e, nil, setter, ctx...)
 }
 
-func (r Error) Catch(setter *Error, ctx ...context.Context) bool {
-	return catchErr(r, setter, nil, ctx...)
+func (e Error) CatchErr(setter *Error, ctx ...context.Context) bool {
+	return catchErr(e, setter, nil, ctx...)
 }
 
-func (r Error) IsErr() bool { return r.getErr() != nil }
+func (e Error) IsErr() bool { return e.getErr() != nil }
 
-func (r Error) IsOK() bool { return r.getErr() == nil }
+func (e Error) IsOK() bool { return e.getErr() == nil }
 
-func (r Error) GetErr() error {
-	if r.IsOK() {
+func (e Error) GetErr() error {
+	if e.IsOK() {
 		return nil
 	}
 
-	return errors.WrapCaller(r.getErr(), 1)
+	return errors.WrapCaller(e.getErr(), 1)
 }
 
-func (r Error) Must() {
-	if r.IsOK() {
+func (e Error) Must() {
+	if e.IsOK() {
 		return
 	}
 
-	errMust(errors.WrapCaller(r.getErr(), 1))
+	errMust(errors.WrapCaller(e.getErr(), 1))
 }
 
-func (r Error) Expect(format string, args ...any) {
-	if r.IsOK() {
+func (e Error) Expect(format string, args ...any) {
+	if e.IsOK() {
 		return
 	}
 
-	err := errors.WrapCaller(r.getErr(), 1)
+	err := errors.WrapCaller(e.getErr(), 1)
 	err = errors.Wrapf(err, format, args...)
 	errMust(err)
 }
 
-func (r Error) getErr() error { return r.err }
+func (e Error) String() string {
+	if e.IsOK() {
+		return "Ok"
+	}
+	return fmt.Sprintf("Error(%v)", e.err)
+}
+
+func (e Error) Error() string {
+	if e.IsOK() {
+		return ""
+	}
+	return e.err.Error()
+}
+
+func (e Error) getErr() error { return e.err }

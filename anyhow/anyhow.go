@@ -2,11 +2,23 @@ package anyhow
 
 import (
 	"context"
+	"time"
 
 	"github.com/pubgo/funk/errors"
 )
 
-func RecoveryErr(setter *error, callbacks ...func(err error) error) {
+func All[T any](results ...Result[T]) Result[[]T] {
+	values := make([]T, 0, len(results))
+	for _, result := range results {
+		if result.IsErr() {
+			return Fail[[]T](result.GetErr())
+		}
+		values = append(values, result.getValue())
+	}
+	return OK(values)
+}
+
+func Recovery(setter *error, callbacks ...func(err error) error) {
 	errRecovery(
 		setter,
 		func() bool { return *setter != nil },
@@ -16,7 +28,7 @@ func RecoveryErr(setter *error, callbacks ...func(err error) error) {
 	)
 }
 
-func Recovery(setter *Error, callbacks ...func(err error) error) {
+func RecoveryErr(setter *Error, callbacks ...func(err error) error) {
 	errRecovery(
 		setter,
 		func() bool { return setter.IsErr() },
@@ -49,7 +61,7 @@ func OK[T any](v T) Result[T] {
 	return Result[T]{v: &v}
 }
 
-func Err[T any](err error) Result[T] {
+func Fail[T any](err error) Result[T] {
 	if err == nil {
 		return Result[T]{}
 	}
@@ -77,18 +89,61 @@ func WrapFn[T any](fn func() (T, error)) Result[T] {
 	return Result[T]{Err: newError(err)}
 }
 
-func DoResult[T any](fn func() (r Result[T])) (t T, gErr error) {
-	return t, try(func() error { return fn().ValueTo(&t).GetErr() })
-}
-
-func DoError(fn func() (r Error)) error {
-	return try(func() error { return fn().GetErr() })
-}
-
-func ErrTo(setter *Error, err error, contexts ...context.Context) bool {
+func CatchErr(setter *Error, err error, contexts ...context.Context) bool {
 	return catchErr(newError(err), setter, nil, contexts...)
 }
 
-func RawErrTo(rawSetter *error, err error, contexts ...context.Context) bool {
+func Catch(rawSetter *error, err error, contexts ...context.Context) bool {
 	return catchErr(newError(err), nil, rawSetter, contexts...)
+}
+
+func Try[T any](fn func() (T, error)) (r Result[T]) {
+	if fn == nil {
+		err := errors.WrapCaller(errors.New("function is nil"), 1)
+		return Fail[T](err)
+	}
+
+	defer Recovery(&r.Err)
+	return Wrap(fn())
+}
+
+func MapTo[T, U any](r Result[T], fn func(T) U) Result[U] {
+	if r.IsErr() {
+		err := errors.WrapCaller(r.getErr(), 1)
+		return Fail[U](err)
+	}
+
+	return OK(fn(r.getValue()))
+}
+
+func FlatMapTo[T, U any](r Result[T], fn func(T) Result[U]) Result[U] {
+	if r.IsErr() {
+		err := errors.WrapCaller(r.getErr(), 1)
+		return Fail[U](err)
+	}
+
+	return fn(r.getValue())
+}
+
+// RetryWith retries a function with exponential backoff
+func RetryWith[T any](fn func() (T, error), attempts int) Result[T] {
+	if attempts <= 0 {
+		return Fail[T](errors.New("retry attempts must be positive"))
+	}
+
+	var lastErr error
+	for i := 0; i < attempts; i++ {
+		result := Try(fn)
+		if result.IsOK() {
+			return result
+		}
+		lastErr = result.GetErr()
+
+		// Simple backoff - in production you might want exponential backoff
+		if i < attempts-1 {
+			time.Sleep(time.Duration(i+1) * 100 * time.Millisecond)
+		}
+	}
+
+	return Fail[T](errors.Wrapf(lastErr, "failed after %d attempts", attempts))
 }

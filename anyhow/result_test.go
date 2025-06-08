@@ -48,7 +48,7 @@ func TestErrOf(t *testing.T) {
 	aherrcheck.RegisterErrCheck(log.RecordErr())
 
 	var err anyhow.Error
-	if fn1().Catch(&err, ctx) {
+	if fn1().CatchErr(&err, ctx) {
 		errors.Debug(err.GetErr())
 	}
 }
@@ -67,9 +67,11 @@ func fn1() (r anyhow.Result[string]) {
 }
 
 func fn2() (r anyhow.Result[string]) {
-	if fn3().WithErr(func(err error) error {
-		return errors.Wrap(err, "test error")
-	}).Catch(&r.Err) {
+	if fn3().
+		Map(func(err error) error {
+			return errors.Wrap(err, "test error")
+		}).
+		Catch(&r.Err) {
 		return
 	}
 

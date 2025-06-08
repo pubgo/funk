@@ -12,7 +12,7 @@ type Result[T any] struct {
 	_ [0]func() // disallow ==
 
 	v   *T
-	Err Error
+	Err error
 }
 
 func (r Result[T]) GetValue() T {
@@ -21,14 +21,6 @@ func (r Result[T]) GetValue() T {
 	}
 
 	return r.getValue()
-}
-
-func (r Result[T]) OnValue(fn func(v T)) {
-	if r.IsErr() {
-		return
-	}
-
-	fn(r.getValue())
 }
 
 func (r Result[T]) SetWithValue(v T) Result[T] {
@@ -71,33 +63,64 @@ func (r Result[T]) Must() T {
 	return r.getValue()
 }
 
-func (r Result[T]) String() string {
-	if !r.IsErr() {
-		return fmt.Sprintf("%v", r.getValue())
-	}
-
-	return fmt.Sprint(errors.WrapCaller(r.getErr(), 1))
+func (r Result[T]) Catch(setter *error, ctx ...context.Context) bool {
+	return catchErr(newError(r.Err), nil, setter, ctx...)
 }
 
-func (r Result[T]) CatchErr(setter *error, ctx ...context.Context) bool {
-	return catchErr(r.Err, nil, setter, ctx...)
-}
-
-func (r Result[T]) Catch(setter *Error, ctx ...context.Context) bool {
-	return catchErr(r.Err, setter, nil, ctx...)
-}
-
-func (r Result[T]) OrElse(t T) T {
-	if r.IsErr() {
-		return t
-	}
-
-	return r.getValue()
+func (r Result[T]) CatchErr(setter *Error, ctx ...context.Context) bool {
+	return catchErr(newError(r.Err), setter, nil, ctx...)
 }
 
 func (r Result[T]) IsErr() bool { return r.getErr() != nil }
 
 func (r Result[T]) IsOK() bool { return r.getErr() == nil }
+
+func (r Result[T]) Filter(predicate func(T) bool, errorMsg string) Result[T] {
+	if r.IsErr() {
+		return r
+	}
+
+	if predicate(r.getValue()) {
+		return r
+	}
+
+	return Fail[T](errors.New(errorMsg))
+}
+
+func (r Result[T]) InspectErr(fn func(error)) Result[T] {
+	if r.IsErr() {
+		fn(r.getErr())
+	}
+	return r
+}
+
+func (r Result[T]) Inspect(fn func(T)) Result[T] {
+	if r.IsOK() {
+		fn(r.getValue())
+	}
+	return r
+}
+
+func (r Result[T]) Map(fn func(T) T) Result[T] {
+	if r.IsOK() {
+		return r
+	}
+	return OK(fn(r.getValue()))
+}
+
+func (r Result[T]) MapErr(fn func(error) error) Result[T] {
+	if r.IsOK() {
+		return r
+	}
+	return Fail[T](fn(r.getErr()))
+}
+
+func (r Result[T]) OrElse(fn func(error) Result[T]) Result[T] {
+	if r.IsOK() {
+		return r
+	}
+	return fn(r.getErr())
+}
 
 func (r Result[T]) GetErr() error {
 	if r.IsOK() {
@@ -106,6 +129,13 @@ func (r Result[T]) GetErr() error {
 
 	var err = r.getErr()
 	return errors.WrapCaller(err, 1)
+}
+
+func (r Result[T]) String() string {
+	if r.IsOK() {
+		return fmt.Sprintf("Ok(%v)", r.getValue())
+	}
+	return fmt.Sprintf("Error(%v)", r.getErr())
 }
 
 func (r Result[T]) SetWithErr(err error) Result[T] {
@@ -117,33 +147,7 @@ func (r Result[T]) SetWithErr(err error) Result[T] {
 	return Result[T]{Err: newError(err)}
 }
 
-func (r Result[T]) WithErr(callbacks ...func(err error) error) Result[T] {
-	if r.IsOK() {
-		return r
-	}
-
-	var err = r.getErr()
-	for _, fn := range callbacks {
-		err = fn(err)
-		if err == nil {
-			return OK(r.getValue())
-		}
-	}
-	return Wrap(r.getValue(), errors.WrapCaller(err, 1))
-}
-
-func (r Result[T]) OnErr(callbacks ...func(err error)) {
-	if r.IsOK() {
-		return
-	}
-
-	var err = r.getErr()
-	for _, fn := range callbacks {
-		fn(err)
-	}
-}
-
-func (r Result[T]) UnwrapErr(setter *error, contexts ...context.Context) T {
+func (r Result[T]) Unwrap(setter *error, contexts ...context.Context) T {
 	ret, err := unwrapErr(r, setter, nil, contexts...)
 	if err != nil {
 		*setter = errors.WrapCaller(err, 1)
@@ -151,7 +155,7 @@ func (r Result[T]) UnwrapErr(setter *error, contexts ...context.Context) T {
 	return ret
 }
 
-func (r Result[T]) Unwrap(setter *Error, contexts ...context.Context) T {
+func (r Result[T]) UnwrapErr(setter *Error, contexts ...context.Context) T {
 	ret, err := unwrapErr(r, nil, setter, contexts...)
 	if err != nil {
 		*setter = newError(errors.WrapCaller(err, 1))
@@ -159,6 +163,20 @@ func (r Result[T]) Unwrap(setter *Error, contexts ...context.Context) T {
 	return ret
 }
 
+func (r Result[T]) UnwrapOrElse(fn func(error) T) T {
+	if r.IsOK() {
+		return r.getValue()
+	}
+	return fn(r.getErr())
+}
+
+func (r Result[T]) UnwrapOr(defaultValue T) T {
+	if r.IsOK() {
+		return r.getValue()
+	}
+	return defaultValue
+}
+
 func (r Result[T]) getValue() T { return lo.FromPtr(r.v) }
 
-func (r Result[T]) getErr() error { return r.Err.getErr() }
+func (r Result[T]) getErr() error { return r.Err }
