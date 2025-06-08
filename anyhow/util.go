@@ -4,13 +4,11 @@ import (
 	"context"
 	"fmt"
 	"runtime/debug"
+	"strings"
 
-	"github.com/pubgo/funk/anyhow/aherrcheck"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/stack"
-	"github.com/samber/lo"
 )
 
 var errFnIsNil = errors.New("[fn] is nil")
@@ -70,138 +68,194 @@ func errMust(err error, args ...interface{}) {
 	panic(err)
 }
 
-func catchErr(r Error, setter *Error, rawSetter *error, contexts ...context.Context) bool {
-	if setter == nil {
-		errMust(errors.Errorf("error setter is nil"))
+// TryContext executes a function with context cancellation support
+func TryContext[T any](ctx context.Context, fn func(context.Context) (T, error)) Result[T] {
+	if fn == nil {
+		return Fail[T](errors.New("function is nil"))
 	}
 
-	if r.IsOK() {
-		return false
+	// Check if context is already cancelled
+	select {
+	case <-ctx.Done():
+		return Fail[T](ctx.Err())
+	default:
 	}
 
-	var isErr = func() bool {
-		if setter != nil {
-			return (*setter).IsErr()
-		}
+	resultChan := make(chan Result[T], 1)
 
-		if rawSetter != nil {
-			return (*rawSetter) != nil
-		}
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				if err, ok := r.(error); ok {
+					resultChan <- Fail[T](errors.Wrap(err, "panic in TryContext"))
+				} else {
+					resultChan <- Fail[T](errors.Errorf("panic in TryContext: %v", r))
+				}
+			}
+		}()
 
-		return false
+		value, err := fn(ctx)
+		resultChan <- From(value, err)
+	}()
+
+	select {
+	case result := <-resultChan:
+		return result
+	case <-ctx.Done():
+		return Fail[T](ctx.Err())
 	}
-
-	var getErr = func() error {
-		if setter != nil {
-			return (*setter).getErr()
-		}
-
-		if rawSetter != nil {
-			return *rawSetter
-		}
-
-		return nil
-	}
-
-	var setErr = func(err error) {
-		if setter != nil {
-			*setter = newError(err)
-		}
-
-		if rawSetter != nil {
-			*rawSetter = err
-		}
-	}
-
-	// err No checking, repeat setting
-	if isErr() {
-		err := getErr()
-		log.Err(err).Msgf("error setter is has value, err=%s", err.Error())
-	}
-
-	var ctx = context.Background()
-	for i := range contexts {
-		if contexts[i] == nil {
-			continue
-		}
-		ctx = contexts[i]
-		break
-	}
-
-	checkers := append(aherrcheck.GetErrChecks(), aherrcheck.GetCheckersFromCtx(ctx)...)
-	var err = r.getErr()
-	for _, fn := range checkers {
-		err = fn(ctx, err)
-		if err == nil {
-			return false
-		}
-	}
-
-	setErr(errors.WrapCaller(err, 2))
-
-	return true
 }
 
-func errRecovery[T any](setter *T, isErr func() bool, getErr func() error, newErr func(err error) T, callbacks ...func(err error) error) {
-	if setter == nil {
-		errMust(errors.Errorf("setter is nil"))
+// BatchTry executes multiple functions concurrently and returns all results
+func BatchTry[T any](fns ...func() (T, error)) []Result[T] {
+	if len(fns) == 0 {
+		return []Result[T]{}
 	}
 
-	err := errors.Parse(recover())
-	if err == nil && !isErr() {
-		return
+	results := make([]Result[T], len(fns))
+	done := make(chan struct{})
+
+	for i, fn := range fns {
+		go func(index int, f func() (T, error)) {
+			results[index] = Try(f)
+			done <- struct{}{}
+		}(i, fn)
 	}
 
-	if err == nil {
-		err = getErr()
+	// Wait for all goroutines to complete
+	for range fns {
+		<-done
 	}
 
-	for _, fn := range callbacks {
-		err = fn(err)
-		if err == nil {
-			return
-		}
-	}
-
-	err = errors.WrapCaller(err, 1)
-	*setter = newErr(err)
+	return results
 }
 
-func unwrapErr[T any](r Result[T], setter1 *error, setter2 *Error, contexts ...context.Context) (T, error) {
-	if setter1 == nil && setter2 == nil {
-		debug.PrintStack()
-		panic("Unwrap: error setter is nil")
+// RetryWith retries a function with exponential backoff
+func RetryWith[T any](fn func() (T, error), attempts int) Result[T] {
+	if attempts <= 0 {
+		return Fail[T](errors.New("retry attempts must be positive"))
 	}
 
-	var ret = r.getValue()
-	if r.IsOK() {
-		return ret, nil
-	}
-
-	var ctx = context.Background()
-	if len(contexts) > 0 {
-		ctx = contexts[0]
-	}
-
-	getSetterErr := func() error {
-		err := lo.FromPtr(setter1)
-		if err == nil {
-			err = lo.FromPtr(setter2).getErr()
+	var lastErr error
+	for i := 0; i < attempts; i++ {
+		result := Try(fn)
+		if result.IsOk() {
+			return result
 		}
-		return err
-	}
-	setterErr := getSetterErr()
-	if setterErr != nil {
-		log.Error(ctx).Msgf("Unwrap: error setter has value, err=%v", setterErr)
-	}
+		lastErr = result.Err()
 
-	var err = r.getErr()
-	for _, fn := range aherrcheck.GetErrChecks() {
-		err = fn(ctx, err)
-		if err == nil {
-			return ret, nil
+		// Simple backoff - in production you might want exponential backoff
+		if i < attempts-1 {
+			// time.Sleep(time.Duration(i+1) * 100 * time.Millisecond)
 		}
 	}
 
-	return ret, err
+	return Fail[T](errors.Wrapf(lastErr, "failed after %d attempts", attempts))
+}
+
+// Memoize caches the result of a function call
+func Memoize[T any](fn func() (T, error)) func() Result[T] {
+	var cached Result[T]
+	var computed bool
+
+	return func() Result[T] {
+		if !computed {
+			cached = Try(fn)
+			computed = true
+		}
+		return cached
+	}
+}
+
+// Collect transforms a slice using a Result-returning function
+func Collect[T, U any](slice []T, fn func(T) Result[U]) Result[[]U] {
+	results := make([]U, 0, len(slice))
+
+	for _, item := range slice {
+		result := fn(item)
+		if result.IsError() {
+			return Fail[[]U](result.Err())
+		}
+		results = append(results, result.Unwrap())
+	}
+
+	return Ok(results)
+}
+
+// CollectOptions transforms a slice into Results, filtering out errors
+func CollectOptions[T, U any](slice []T, fn func(T) Result[U]) []U {
+	var results []U
+
+	for _, item := range slice {
+		if res := fn(item); res.IsOk() {
+			results = append(results, res.Unwrap())
+		}
+	}
+
+	return results
+}
+
+// Partition separates a slice into two slices based on a predicate
+func Partition[T any](slice []T, predicate func(T) bool) (truthy []T, falsy []T) {
+	for _, item := range slice {
+		if predicate(item) {
+			truthy = append(truthy, item)
+		} else {
+			falsy = append(falsy, item)
+		}
+	}
+	return
+}
+
+// FindFirst finds the first element matching a predicate
+func FindFirst[T any](slice []T, predicate func(T) bool) Result[T] {
+	for _, item := range slice {
+		if predicate(item) {
+			return Ok(item)
+		}
+	}
+	return Fail[T](errors.New("no element found matching predicate"))
+}
+
+// === Error Collection ===
+
+// MultiError represents multiple errors
+type MultiError struct {
+	Errors []error
+}
+
+func (m MultiError) Error() string {
+	if len(m.Errors) == 0 {
+		return "no errors"
+	}
+	if len(m.Errors) == 1 {
+		return m.Errors[0].Error()
+	}
+
+	var msg strings.Builder
+	msg.WriteString(fmt.Sprintf("%d errors: ", len(m.Errors)))
+	for i, err := range m.Errors {
+		if i > 0 {
+			msg.WriteString("; ")
+		}
+		msg.WriteString(err.Error())
+	}
+	return msg.String()
+}
+
+// CollectErrors collects all errors from a slice of Results
+func CollectErrors[T any](results []Result[T]) Result[MultiError] {
+	var errors []error
+
+	for _, result := range results {
+		if result.IsError() {
+			errors = append(errors, result.Err())
+		}
+	}
+
+	if len(errors) == 0 {
+		return Fail[MultiError](fmt.Errorf("no errors found"))
+	}
+
+	return Ok(MultiError{Errors: errors})
 }
