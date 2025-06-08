@@ -390,31 +390,31 @@ func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *
 
 	var pb anypb.Any
 	err := anyhow.ErrOf(proto.Unmarshal(msg.Data(), &pb)).
-		MapErr(func(err error) error {
+		Map(func(err error) error {
 			return errors.WrapTag(err,
 				errors.T("msg", "failed to unmarshal stream msg data to any proto"),
 				errors.T("args", string(msg.Data())),
 			)
 		})
-	if err.Catch(&gErr) {
+	if err.CatchErr(&gErr) {
 		return
 	}
 	args = &pb
 
 	dst := anyhow.Wrap(anypb.UnmarshalNew(args.(*anypb.Any), proto.UnmarshalOptions{})).
-		WithErr(func(err error) error {
+		MapErr(func(err error) error {
 			return errors.WrapTag(err,
 				errors.T("msg", "failed to unmarshal any proto to proto msg"),
 				errors.T("args", args),
 			)
 		})
-	if dst.Catch(&gErr) {
+	if dst.CatchErr(&gErr) {
 		return
 	}
 
 	ctx = createCtxWithContext(ctx, msgCtx)
 	err = anyhow.ErrOf(job.handler(ctx, dst.GetValue())).
-		MapErr(func(err error) error {
+		Map(func(err error) error {
 			return errors.WrapTag(err,
 				errors.T("msg", "failed to do cloud job handler"),
 				errors.T("args", dst),

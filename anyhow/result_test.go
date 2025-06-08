@@ -32,13 +32,12 @@ func TestName(t *testing.T) {
 
 func TestResultDo(t *testing.T) {
 	ok := anyhow.OK(&hello{Name: "abc"})
-	ok.OnValue(func(v *hello) {
+	ok.Inspect(func(v *hello) {
+		assert.If(v.Name != "abc", "not match")
+	}).Inspect(func(v *hello) {
 		assert.If(v.Name != "abc", "not match")
 	})
-	ok.OnValue(func(v *hello) {
-		assert.If(v.Name != "abc", "not match")
-	})
-	ok.OnErr(func(err error) {
+	ok.InspectErr(func(err error) {
 		t.Log(err)
 	})
 }
@@ -67,11 +66,11 @@ func fn1() (r anyhow.Result[string]) {
 }
 
 func fn2() (r anyhow.Result[string]) {
-	if fn3().
-		Map(func(err error) error {
-			return errors.Wrap(err, "test error")
-		}).
-		Catch(&r.Err) {
+	ret := fn3().Map(func(err error) error {
+		return errors.Wrap(err, "test error")
+	})
+
+	if ret.Catch(&r.Err) {
 		return
 	}
 

@@ -86,14 +86,14 @@ func encodeDelayTime(duration time.Duration) string {
 }
 
 func decodeDelayTime(delayTime string) (r anyhow.Result[time.Duration]) {
-	tt := anyhow.Wrap(strconv.Atoi(delayTime)).WithErr(func(err error) error {
-		return errors.Wrapf(err, "failed to parse cloud event job delay time, time=%s", delayTime)
-	})
-	if tt.Catch(&r.Err) {
-		return
-	}
+	tt := anyhow.Wrap(strconv.Atoi(delayTime)).
+		MapErr(func(err error) error {
+			return errors.Wrapf(err, "failed to parse cloud event job delay time, time=%s", delayTime)
+		})
 
-	return r.SetWithValue(time.Until(time.UnixMilli(int64(tt.GetValue()))))
+	return anyhow.MapTo(tt, func(t int) time.Duration {
+		return time.Until(time.UnixMilli(int64(tt.GetValue())))
+	})
 }
 
 type subjectOpt struct {
