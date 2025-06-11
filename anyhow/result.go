@@ -101,6 +101,10 @@ func (r Result[T]) Inspect(fn func(T)) Result[T] {
 	return r
 }
 
+func (r Result[T]) WrapCaller() error {
+	return errors.WrapCaller(r.Err, 1)
+}
+
 func (r Result[T]) Map(fn func(T) T) Result[T] {
 	if r.IsOK() {
 		return r
