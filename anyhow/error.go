@@ -84,10 +84,6 @@ func (e Error) String() string {
 	return fmt.Sprintf("Error(%v)", e.err)
 }
 
-func (e Error) WrapCaller() error {
-	return errors.WrapCaller(e.err, 1)
-}
-
 func (e Error) Error() string {
 	if e.IsOK() {
 		return ""
