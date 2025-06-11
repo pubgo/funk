@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/log"
 )
 
 func newError(err error) Error {
@@ -27,6 +28,14 @@ func (e Error) Map(fn func(error) error) Error {
 	err := e.getErr()
 	err = errors.WrapCaller(fn(err), 1)
 	return Error{err: err}
+}
+
+func (e Error) InspectLog(fn func(evt *log.Event), contexts ...context.Context) Error {
+	if e.IsErr() {
+		fn(log.Err(e.err, contexts...))
+	}
+
+	return e
 }
 
 func (e Error) Inspect(fn func(error)) Error {

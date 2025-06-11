@@ -71,7 +71,7 @@ func errMust(err error, args ...any) {
 }
 
 func catchErr(r Error, setter *Error, rawSetter *error, contexts ...context.Context) bool {
-	if setter == nil {
+	if setter == nil && rawSetter == nil {
 		errMust(errors.Errorf("error setter is nil"))
 	}
 

@@ -78,5 +78,11 @@ func fn2() (r anyhow.Result[string]) {
 }
 
 func fn3() anyhow.Error {
-	return anyhow.ErrOf(fmt.Errorf("error test, this is error"))
+	return anyhow.ErrOf(fmt.Errorf("error test, this is error")).
+		Inspect(func(err error) {
+			log.Err(err).Msg("ddd")
+		}).
+		InspectLog(func(evt *log.Event) {
+			evt.Msg("test log")
+		})
 }
