@@ -56,7 +56,7 @@ func try1[T any](fn func() (T, error)) (t T, gErr error) {
 	return
 }
 
-func errMust(err error, args ...interface{}) {
+func errMust(err error, args ...any) {
 	if generic.IsNil(err) {
 		return
 	}

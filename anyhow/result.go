@@ -17,7 +17,7 @@ type Result[T any] struct {
 
 func (r Result[T]) GetValue() T {
 	if r.IsErr() {
-		errMust(r.getErr())
+		errMust(errors.WrapCaller(r.getErr(), 1))
 	}
 
 	return r.getValue()
@@ -48,8 +48,7 @@ func (r Result[T]) ValueTo(v *T) Error {
 func (r Result[T]) Expect(format string, args ...any) T {
 	if r.IsErr() {
 		err := errors.WrapCaller(r.getErr(), 1)
-		err = errors.Wrapf(err, format, args...)
-		errMust(err)
+		errMust(errors.Wrapf(err, format, args...))
 	}
 
 	return r.getValue()
@@ -120,7 +119,7 @@ func (r Result[T]) GetErr() error {
 		return nil
 	}
 
-	var err = r.getErr()
+	err := r.getErr()
 	return errors.WrapCaller(err, 1)
 }
 
@@ -161,13 +160,6 @@ func (r Result[T]) OrElse(fn func(error) T) Result[T] {
 		return r
 	}
 	return OK(fn(r.getErr()))
-}
-
-func (r Result[T]) UnwrapOrElse(fn func(error) T) T {
-	if r.IsOK() {
-		return r.getValue()
-	}
-	return fn(r.getErr())
 }
 
 func (r Result[T]) UnwrapOr(defaultValue T) T {
