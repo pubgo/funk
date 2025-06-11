@@ -106,13 +106,9 @@ func (r Result[T]) Err(check ...func(err error) error) error {
 	return errors.WrapCaller(r.E, 1)
 }
 
-func (r Result[T]) IsErr() bool {
-	return r.E != nil && !generic.IsNil(r.E)
-}
+func (r Result[T]) IsErr() bool { return r.E != nil }
 
-func (r Result[T]) IsOK() bool {
-	return r.E == nil || generic.IsNil(r.E)
-}
+func (r Result[T]) IsOK() bool { return r.E == nil }
 
 func (r Result[T]) OrElse(v T) T {
 	if r.IsErr() {
@@ -203,6 +199,34 @@ func (r Result[T]) ErrTo(setter *error, callbacks ...func(err error) error) bool
 
 	*setter = errors.WrapCaller(err, 1)
 	return true
+}
+
+func (r Result[T]) InspectErr(fn func(error)) Result[T] {
+	if r.IsErr() {
+		fn(r.E)
+	}
+	return r
+}
+
+func (r Result[T]) Inspect(fn func(T)) Result[T] {
+	if r.IsOK() {
+		fn(generic.FromPtr(r.v))
+	}
+	return r
+}
+
+func (r Result[T]) Map(fn func(T) T) Result[T] {
+	if r.IsOK() {
+		return r
+	}
+	return OK(fn(generic.FromPtr(r.v)))
+}
+
+func (r Result[T]) MapErr(fn func(error) error) Result[T] {
+	if r.IsOK() {
+		return r
+	}
+	return Err[T](fn(r.E))
 }
 
 func Map[Src any, To any](s Result[Src], do func(s Src) (r Result[To])) Result[To] {
