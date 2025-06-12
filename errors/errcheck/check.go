@@ -2,6 +2,7 @@ package errcheck
 
 import (
 	"context"
+	"fmt"
 	"runtime/debug"
 
 	"github.com/pubgo/funk/errors"
@@ -11,8 +12,8 @@ import (
 
 func RecoveryAndCheck(setter *error, callbacks ...func(err error) error) {
 	if setter == nil {
-		debug.PrintStack()
-		panic("setter is nil")
+		errMust(fmt.Errorf("setter is nil"))
+		return
 	}
 
 	err := errors.Parse(recover())
@@ -62,33 +63,6 @@ func Check(errSetter *error, err error, contexts ...context.Context) bool {
 	return true
 }
 
-func CheckCtx(ctx context.Context, errSetter *error, err error, errCheckers ...ErrChecker) bool {
-	if errSetter == nil {
-		debug.PrintStack()
-		panic("errSetter is nil")
-	}
-
-	if err == nil {
-		return false
-	}
-
-	// err No checking, repeat setting
-	if (*errSetter) != nil {
-		log.Err(*errSetter, ctx).Msgf("setter is not nil, err=%v", *errSetter)
-		return true
-	}
-
-	for _, fn := range append(GetCheckersFromCtx(ctx), errCheckers...) {
-		err = fn(ctx, err)
-		if err == nil {
-			return false
-		}
-	}
-
-	*errSetter = errors.WrapCaller(err, 1)
-	return true
-}
-
 func Expect(err error, format string, args ...any) {
 	if err == nil {
 		return
@@ -107,20 +81,20 @@ func Map(err error, fn func(err error) error) error {
 	return fn(err)
 }
 
-func InspectLog(err error, fn func(evt *log.Event), contexts ...context.Context) {
-	if err == nil {
-		return
-	}
-
-	fn(log.Err(err, contexts...))
-}
-
 func Inspect(err error, fn func(err error)) {
 	if err == nil {
 		return
 	}
 
 	fn(err)
+}
+
+func InspectLog(err error, fn func(logger *log.Event), contexts ...context.Context) {
+	if err == nil {
+		return
+	}
+
+	fn(log.Err(err, contexts...))
 }
 
 func RecordLog(err error, contexts ...context.Context) {

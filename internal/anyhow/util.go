@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"runtime/debug"
 
-	"github.com/pubgo/funk/anyhow/aherrcheck"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
+	"github.com/pubgo/funk/internal/anyhow/aherrcheck"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/stack"
 	"github.com/samber/lo"

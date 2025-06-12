@@ -2,13 +2,12 @@ package errcheck
 
 import (
 	"fmt"
-	
+
 	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/generic"
 )
 
 func errMust(err error, args ...any) {
-	if generic.IsNil(err) {
+	if err == nil {
 		return
 	}
 
