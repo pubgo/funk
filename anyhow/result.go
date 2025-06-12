@@ -103,7 +103,7 @@ func (r Result[T]) Inspect(fn func(T)) Result[T] {
 	return r
 }
 
-func (r Result[T]) InspectLog(fn func(evt *log.Event), contexts ...context.Context) Result[T] {
+func (r Result[T]) InspectLog(fn func(logger *log.Event), contexts ...context.Context) Result[T] {
 	if r.IsErr() {
 		fn(log.Err(r.getErr(), contexts...))
 	}

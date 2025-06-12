@@ -31,7 +31,7 @@ func (e Error) Map(fn func(error) error) Error {
 	return Error{err: err}
 }
 
-func (e Error) InspectLog(fn func(evt *log.Event), contexts ...context.Context) Error {
+func (e Error) InspectLog(fn func(logger *log.Event), contexts ...context.Context) Error {
 	if e.IsErr() {
 		fn(log.Err(e.err, contexts...))
 	}
