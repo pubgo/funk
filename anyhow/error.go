@@ -3,8 +3,9 @@ package anyhow
 import (
 	"context"
 	"fmt"
-	
+
 	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/errors/errutil"
 	"github.com/pubgo/funk/log"
 )
 
@@ -93,11 +94,12 @@ func (e Error) String() string {
 	return fmt.Sprintf("Error(%v)", e.err)
 }
 
-func (e Error) Error() string {
-	if e.IsOK() {
-		return ""
+func (e Error) MarshalJSON() ([]byte, error) {
+	if e.IsErr() {
+		return nil, errors.WrapCaller(e.err, 1)
 	}
-	return e.err.Error()
+
+	return errutil.Json(e.err), nil
 }
 
 func (e Error) OrElse(fn func(error) Error) Error {
