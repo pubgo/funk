@@ -2,6 +2,7 @@ package anyhow
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/pubgo/funk/errors"
@@ -36,6 +37,10 @@ func RecoveryErr(setter *Error, callbacks ...func(err error) error) {
 		func(err error) Error { return newError(err) },
 		callbacks...,
 	)
+}
+
+func ErrorOf(msg string, args ...any) Error {
+	return newError(errors.WrapCaller(fmt.Errorf(msg, args...), 1))
 }
 
 func ErrOf(err error) Error {
