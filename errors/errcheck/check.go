@@ -122,3 +122,13 @@ func Inspect(err error, fn func(err error)) {
 
 	fn(err)
 }
+
+func RecordLog(err error, contexts ...context.Context) {
+	if err == nil {
+		return
+	}
+
+	log.Err(err, contexts...).
+		CallerSkipFrame(1).
+		Msg(err.Error())
+}
