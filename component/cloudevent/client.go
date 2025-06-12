@@ -3,6 +3,7 @@ package cloudevent
 import (
 	"context"
 	"fmt"
+	"github.com/pubgo/funk/internal/anyhow"
 	"net/http"
 	"strings"
 	"time"
@@ -10,7 +11,6 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/nats-io/nats.go/jetstream"
 	ants "github.com/panjf2000/ants/v2"
-	"github.com/pubgo/funk/anyhow"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/component/natsclient"
 	"github.com/pubgo/funk/errors"
@@ -225,14 +225,16 @@ func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects m
 				return false, nil
 			}
 
-			dur := decodeDelayTime(delayDur).MapErr(func(err error) error {
-				return errors.Wrap(err, "failed to parse cloud job delay time")
-			})
-			if dur.Catch(&gErr) {
+			dur := decodeDelayTime(delayDur).
+				MapErr(func(err error) error {
+					return errors.Wrap(err, "failed to parse cloud job delay time")
+				}).
+				UnwrapErr(&gErr)
+			if gErr != nil {
 				return
 			}
 
-			durVal := dur.GetValue()
+			durVal := dur
 			// ignore negative delay
 			if durVal < 0 {
 				return false, nil

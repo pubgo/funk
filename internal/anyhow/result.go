@@ -29,7 +29,7 @@ func (r Result[T]) GetValue() T {
 	return r.getValue()
 }
 
-func (r Result[T]) SetWithValue(v T) Result[T] {
+func (r Result[T]) SetValue(v T) Result[T] {
 	if r.IsErr() {
 		err := errors.WrapCaller(r.getErr(), 1)
 		return Result[T]{Err: err}
@@ -160,7 +160,7 @@ func (r Result[T]) String() string {
 	return fmt.Sprintf("Error(%v)", r.getErr())
 }
 
-func (r Result[T]) SetWithErr(err error) Result[T] {
+func (r Result[T]) SetErr(err error) Result[T] {
 	if err == nil {
 		return r
 	}

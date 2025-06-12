@@ -8,6 +8,7 @@ import (
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
 	"github.com/rs/zerolog/log"
+	"github.com/samber/lo"
 )
 
 var _ error = (*Error)(nil)
@@ -115,6 +116,19 @@ func (r Result[T]) OrElse(v T) T {
 		return v
 	}
 	return generic.FromPtr(r.v)
+}
+
+func (r Result[T]) UnwrapErr(setter *error) T {
+	if setter == nil {
+		debug.PrintStack()
+		panic("UnwrapErr: setter is nil")
+	}
+
+	if r.IsErr() {
+		*setter = errors.WrapCaller(r.E, 1)
+	}
+
+	return lo.FromPtr(r.v)
 }
 
 func (r Result[T]) Unwrap(check ...func(err error) error) T {
@@ -229,7 +243,15 @@ func (r Result[T]) MapErr(fn func(error) error) Result[T] {
 	return Err[T](fn(r.E))
 }
 
-func Map[Src any, To any](s Result[Src], do func(s Src) (r Result[To])) Result[To] {
+func MapTo[Src any, To any](s Result[Src], do func(s Src) To) Result[To] {
+	if s.IsErr() {
+		return Err[To](errors.WrapCaller(s.Err(), 1))
+	}
+
+	return OK(do(s.Unwrap()))
+}
+
+func FlatMap[Src any, To any](s Result[Src], do func(s Src) (r Result[To])) Result[To] {
 	if s.IsErr() {
 		return Err[To](errors.WrapCaller(s.Err(), 1))
 	}

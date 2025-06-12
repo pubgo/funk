@@ -78,7 +78,7 @@ func Map(err error, fn func(err error) error) error {
 		return nil
 	}
 
-	return fn(err)
+	return errors.WrapCaller(fn(err), 1)
 }
 
 func Inspect(err error, fn func(err error)) {

@@ -74,7 +74,7 @@ func fn2() (r anyhow.Result[string]) {
 		return
 	}
 
-	return r.SetWithValue("ok")
+	return r.SetValue("ok")
 }
 
 func fn3() anyhow.Error {

@@ -1,12 +1,10 @@
 package vars
 
 import (
+	"encoding/json"
 	"expvar"
 	"fmt"
 
-	json "github.com/goccy/go-json"
-
-	"github.com/pubgo/funk/anyhow"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/convert"
 	"github.com/pubgo/funk/pretty"
@@ -57,11 +55,11 @@ func (f Value) Value() interface{} { return f() }
 
 func (f Value) String() (r string) {
 	var errStr = func(err any) string {
-		ret := anyhow.Wrap(json.Marshal(err))
-		if ret.IsErr() {
-			return pretty.Sprint(ret.GetErr())
+		ret, err := json.Marshal(err)
+		if err != nil {
+			return pretty.Sprint(err)
 		} else {
-			return convert.B2S(ret.GetValue())
+			return convert.B2S(ret)
 		}
 	}
 

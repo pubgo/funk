@@ -6,27 +6,36 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/pubgo/funk/anyhow"
-	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/errors/errcheck"
+	"github.com/pubgo/funk/log"
+	"github.com/pubgo/funk/recovery"
+	"github.com/pubgo/funk/result"
 )
 
-func Run(args ...string) (r anyhow.Result[string]) {
-	defer anyhow.Recovery(&r.Err)
+func Run(args ...string) (r result.Result[string]) {
+	defer recovery.Err(&r.E)
 
 	b := bytes.NewBufferString("")
 
 	cmd := Shell(args...)
 	cmd.Stdout = b
 
-	assert.Must(cmd.Run(), strings.Join(args, " "))
-	return r.SetWithValue(strings.TrimSpace(b.String()))
+	err := cmd.Run()
+	errcheck.Inspect(err, func(err error) {
+		log.Err(err).Msg("fail to execute: " + strings.Join(args, " "))
+	})
+	if errcheck.Check(&r.E, err) {
+		return
+	}
+
+	return r.WithVal(strings.TrimSpace(b.String()))
 }
 
-func GoModGraph() anyhow.Result[string] {
+func GoModGraph() result.Result[string] {
 	return Run("go", "mod", "graph")
 }
 
-func GoList() anyhow.Result[string] {
+func GoList() result.Result[string] {
 	return Run("go", "list", "./...")
 }
 
