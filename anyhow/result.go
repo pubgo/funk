@@ -28,7 +28,7 @@ func (r Result[T]) GetValue() T {
 func (r Result[T]) SetWithValue(v T) Result[T] {
 	if r.IsErr() {
 		err := errors.WrapCaller(r.getErr(), 1)
-		return Result[T]{Err: newError(err)}
+		return Result[T]{Err: err}
 	}
 
 	return OK(v)
@@ -138,7 +138,7 @@ func (r Result[T]) SetWithErr(err error) Result[T] {
 	}
 
 	err = errors.WrapCaller(err, 1)
-	return Result[T]{Err: newError(err)}
+	return Result[T]{Err: err}
 }
 
 func (r Result[T]) Unwrap(setter *error, contexts ...context.Context) T {

@@ -67,7 +67,7 @@ func Fail[T any](err error) Result[T] {
 	}
 
 	err = errors.WrapCaller(err, 1)
-	return Result[T]{Err: newError(err)}
+	return Result[T]{Err: err}
 }
 
 func Wrap[T any](v T, err error) Result[T] {
@@ -76,7 +76,7 @@ func Wrap[T any](v T, err error) Result[T] {
 	}
 
 	err = errors.WrapCaller(err, 1)
-	return Result[T]{Err: newError(err)}
+	return Result[T]{Err: err}
 }
 
 func WrapFn[T any](fn func() (T, error)) Result[T] {
@@ -86,7 +86,7 @@ func WrapFn[T any](fn func() (T, error)) Result[T] {
 	}
 
 	err = errors.WrapCaller(err, 1)
-	return Result[T]{Err: newError(err)}
+	return Result[T]{Err: err}
 }
 
 func CatchErr(setter *Error, err error, contexts ...context.Context) bool {
