@@ -11,6 +11,9 @@ import (
 	"github.com/samber/lo"
 )
 
+var _ Catchable = new(Result[any])
+var _ Checkable = new(Result[any])
+
 type Result[T any] struct {
 	_ [0]func() // disallow ==
 

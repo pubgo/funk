@@ -9,6 +9,9 @@ import (
 	"github.com/pubgo/funk/log"
 )
 
+var _ Catchable = new(Error)
+var _ Checkable = new(Error)
+
 func newError(err error) Error {
 	return Error{err: err}
 }
