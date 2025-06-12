@@ -117,6 +117,13 @@ func (r Result[T]) Map(fn func(T) T) Result[T] {
 	return OK(fn(r.getValue()))
 }
 
+func (r Result[T]) FlatMap(fn func(T) Result[T]) Result[T] {
+	if r.IsOK() {
+		return r
+	}
+	return fn(r.getValue())
+}
+
 func (r Result[T]) MapErr(fn func(error) error) Result[T] {
 	if r.IsOK() {
 		return r
