@@ -2,8 +2,10 @@ package anyhow
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
+	"github.com/pubgo/funk"
 	"github.com/pubgo/funk/errors"
 	"github.com/samber/lo"
 )
@@ -167,6 +169,14 @@ func (r Result[T]) UnwrapOr(defaultValue T) T {
 		return r.getValue()
 	}
 	return defaultValue
+}
+
+func (r Result[T]) MarshalJSON() ([]byte, error) {
+	if r.IsErr() {
+		return nil, errors.WrapCaller(r.Err, 1)
+	}
+
+	return json.Marshal(funk.FromPtr(r.v))
 }
 
 func (r Result[T]) getValue() T { return lo.FromPtr(r.v) }
