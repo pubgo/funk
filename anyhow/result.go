@@ -7,6 +7,7 @@ import (
 
 	"github.com/pubgo/funk"
 	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/log"
 	"github.com/samber/lo"
 )
 
@@ -98,6 +99,13 @@ func (r Result[T]) InspectErr(fn func(error)) Result[T] {
 func (r Result[T]) Inspect(fn func(T)) Result[T] {
 	if r.IsOK() {
 		fn(r.getValue())
+	}
+	return r
+}
+
+func (r Result[T]) InspectLog(fn func(evt *log.Event), contexts ...context.Context) Result[T] {
+	if r.IsErr() {
+		fn(log.Err(r.getErr(), contexts...))
 	}
 	return r
 }
