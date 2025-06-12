@@ -84,5 +84,6 @@ func fn3() anyhow.Error {
 		}).
 		InspectLog(func(evt *log.Event) {
 			evt.Msg("test log")
-		})
+		}).
+		RecordLog()
 }

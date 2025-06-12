@@ -103,6 +103,16 @@ func (r Result[T]) Inspect(fn func(T)) Result[T] {
 	return r
 }
 
+func (r Result[T]) RecordLog(contexts ...context.Context) Result[T] {
+	if r.IsErr() {
+		log.Err(r.Err, contexts...).
+			CallerSkipFrame(1).
+			Msg(r.Err.Error())
+	}
+
+	return r
+}
+
 func (r Result[T]) InspectLog(fn func(logger *log.Event), contexts ...context.Context) Result[T] {
 	if r.IsErr() {
 		fn(log.Err(r.getErr(), contexts...))
