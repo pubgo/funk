@@ -88,3 +88,37 @@ func CheckCtx(ctx context.Context, errSetter *error, err error, errCheckers ...E
 	*errSetter = errors.WrapCaller(err, 1)
 	return true
 }
+
+func Expect(err error, format string, args ...any) {
+	if err == nil {
+		return
+	}
+
+	err = errors.WrapCaller(err, 1)
+	err = errors.Wrapf(err, format, args...)
+	errMust(err)
+}
+
+func Map(err error, fn func(err error) error) error {
+	if err == nil {
+		return nil
+	}
+
+	return fn(err)
+}
+
+func InspectLog(err error, fn func(evt *log.Event), contexts ...context.Context) {
+	if err == nil {
+		return
+	}
+
+	fn(log.Err(err, contexts...))
+}
+
+func Inspect(err error, fn func(err error)) {
+	if err == nil {
+		return
+	}
+
+	fn(err)
+}
