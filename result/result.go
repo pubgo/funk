@@ -187,10 +187,10 @@ func (r Result[T]) Do(fn func(v T)) {
 	fn(generic.FromPtr(r.v))
 }
 
-func (r Result[T]) ErrTo(setter *error, callbacks ...func(err error) error) bool {
+func (r Result[T]) CatchTo(setter *error, callbacks ...func(err error) error) bool {
 	if setter == nil {
 		debug.PrintStack()
-		panic("ErrTo: setter is nil")
+		panic("CatchTo: setter is nil")
 	}
 
 	if r.IsOK() {
@@ -199,7 +199,7 @@ func (r Result[T]) ErrTo(setter *error, callbacks ...func(err error) error) bool
 
 	// setter err is not nil
 	if *setter != nil {
-		log.Err(*setter).Msgf("ErrTo: setter error is not nil")
+		log.Err(*setter).Msgf("CatchTo: setter error is not nil")
 		return true
 	}
 
@@ -227,6 +227,13 @@ func (r Result[T]) Inspect(fn func(T)) Result[T] {
 		fn(generic.FromPtr(r.v))
 	}
 	return r
+}
+
+func (r Result[T]) FlatMap(fn func(T) Result[T]) Result[T] {
+	if r.IsOK() {
+		return r
+	}
+	return fn(generic.FromPtr(r.v))
 }
 
 func (r Result[T]) Map(fn func(T) T) Result[T] {
