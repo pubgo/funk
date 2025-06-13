@@ -12,8 +12,8 @@ import (
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/merge"
 	"github.com/pubgo/funk/pathutil"
-	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/strutil"
+	"github.com/pubgo/funk/v2/result"
 )
 
 func New(cfg *Config, log log.Logger) *Client {
