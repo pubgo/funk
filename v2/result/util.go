@@ -142,14 +142,10 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 	return true
 }
 
-func errRecovery[T any](setter *T, isErr func() bool, getErr func() error, newErr func(err error) T, callbacks ...func(err error) error) {
-	if setter == nil {
-		errMust(errors.Errorf("setter is nil"))
-	}
-
+func errRecovery(isErr func() bool, getErr func() error, callbacks ...func(err error) error) error {
 	err := errors.Parse(recover())
 	if err == nil && !isErr() {
-		return
+		return nil
 	}
 
 	if err == nil {
@@ -159,12 +155,10 @@ func errRecovery[T any](setter *T, isErr func() bool, getErr func() error, newEr
 	for _, fn := range callbacks {
 		err = fn(err)
 		if err == nil {
-			return
+			return nil
 		}
 	}
-
-	err = errors.WrapCaller(err, 1)
-	*setter = newErr(err)
+	return err
 }
 
 func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts ...context.Context) (T, error) {

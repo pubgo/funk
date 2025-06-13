@@ -6,29 +6,28 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/pubgo/funk/errors/errcheck"
 	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/recovery"
-	"github.com/pubgo/funk/result"
+	"github.com/pubgo/funk/v2/result"
 )
 
 func Run(args ...string) (r result.Result[string]) {
-	defer recovery.Err(&r.E)
+	defer result.RecoveryErr(&r)
 
 	b := bytes.NewBufferString("")
 
 	cmd := Shell(args...)
 	cmd.Stdout = b
 
-	err := cmd.Run()
-	errcheck.Inspect(err, func(err error) {
-		log.Err(err).Msg("fail to execute: " + strings.Join(args, " "))
-	})
-	if errcheck.Check(&r.E, err) {
+	err := result.ErrOf(cmd.Run()).
+		Inspect(func(err error) {
+			log.Err(err).Msg("failed to execute: " + strings.Join(args, " "))
+		}).
+		CatchErr(&r)
+	if err {
 		return
 	}
 
-	return r.WithVal(strings.TrimSpace(b.String()))
+	return r.WithValue(strings.TrimSpace(b.String()))
 }
 
 func GoModGraph() result.Result[string] {

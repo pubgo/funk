@@ -3,6 +3,7 @@ package result
 import (
 	"context"
 	"fmt"
+
 	"github.com/pubgo/funk/errors"
 )
 
@@ -18,23 +19,29 @@ func All[T any](results ...Result[T]) Result[[]T] {
 }
 
 func Recovery(setter *error, callbacks ...func(err error) error) {
-	errRecovery(
-		setter,
+	if setter == nil {
+		errMust(errors.Errorf("setter is nil"))
+		return
+	}
+
+	*setter = errRecovery(
 		func() bool { return *setter != nil },
 		func() error { return *setter },
-		func(err error) error { return err },
 		callbacks...,
 	)
 }
 
-func RecoveryErr(setter *Error, callbacks ...func(err error) error) {
-	errRecovery(
-		setter,
+func RecoveryErr(setter ErrSetter, callbacks ...func(err error) error) {
+	if setter == nil {
+		errMust(errors.Errorf("setter is nil"))
+		return
+	}
+
+	setter.setError(errRecovery(
 		func() bool { return setter.IsErr() },
 		func() error { return setter.GetErr() },
-		func(err error) Error { return newError(err) },
 		callbacks...,
-	)
+	))
 }
 
 func ErrorOf(msg string, args ...any) Error {
