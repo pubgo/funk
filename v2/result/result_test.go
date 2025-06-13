@@ -8,10 +8,10 @@ import (
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/internal/anyhow"
-	"github.com/pubgo/funk/internal/anyhow/aherrcheck"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/recovery"
+	"github.com/pubgo/funk/v2/result"
+	"github.com/pubgo/funk/v2/result/resultchecker"
 )
 
 type hello struct {
@@ -21,7 +21,7 @@ type hello struct {
 func TestName(t *testing.T) {
 	defer recovery.DebugPrint()
 	ok := &hello{Name: "abc"}
-	okBytes := anyhow.Wrap(json.Marshal(&ok))
+	okBytes := result.Wrap(json.Marshal(&ok))
 	data := string(okBytes.Expect("failed to encode json data"))
 	t.Log(data)
 	if data != `{"name":"abc"}` {
@@ -31,7 +31,7 @@ func TestName(t *testing.T) {
 }
 
 func TestResultDo(t *testing.T) {
-	ok := anyhow.OK(&hello{Name: "abc"})
+	ok := result.OK(&hello{Name: "abc"})
 	ok.Inspect(func(v *hello) {
 		assert.If(v.Name != "abc", "not match")
 	}).Inspect(func(v *hello) {
@@ -44,41 +44,42 @@ func TestResultDo(t *testing.T) {
 
 func TestErrOf(t *testing.T) {
 	var ctx = log.UpdateEventCtx(context.Background(), log.Map{"test": "ok"})
-	aherrcheck.RegisterErrCheck(log.RecordErr())
+	resultchecker.RegisterErrCheck(log.RecordErr())
 
-	var err anyhow.Error
+	var err result.Error
 	if fn1().CatchErr(&err, ctx) {
 		errors.Debug(err.GetErr())
 	}
 }
 
-func fn1() (r anyhow.Result[string]) {
-	if fn3().Catch(&r.Err) {
+func fn1() (r result.Result[string]) {
+	if fn3().CatchErr(&r) {
 		return
 	}
 
-	var vv = fn2()
-	if vv.Catch(&r.Err) {
+	val := fn2().UnwrapErr(&r)
+	if r.IsErr() {
 		return
 	}
 
-	return vv
+	return r.WithValue(val)
 }
 
-func fn2() (r anyhow.Result[string]) {
-	ret := fn3().Map(func(err error) error {
-		return errors.Wrap(err, "test error")
-	})
-
-	if ret.Catch(&r.Err) {
+func fn2() (r result.Result[string]) {
+	isErr := fn3().
+		Map(func(err error) error {
+			return errors.Wrap(err, "test error")
+		}).
+		CatchErr(&r)
+	if isErr {
 		return
 	}
 
-	return r.SetValue("ok")
+	return r.WithValue("ok")
 }
 
-func fn3() anyhow.Error {
-	return anyhow.ErrOf(fmt.Errorf("error test, this is error")).
+func fn3() result.Error {
+	return result.ErrOf(fmt.Errorf("error test, this is error")).
 		Inspect(func(err error) {
 			log.Err(err).Msg("ddd")
 		}).
