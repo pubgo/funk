@@ -66,12 +66,12 @@ func fn1() (r result.Result[string]) {
 }
 
 func fn2() (r result.Result[string]) {
-	isErr := fn3().
+	fn3().
 		Map(func(err error) error {
 			return errors.Wrap(err, "test error")
 		}).
 		CatchErr(&r)
-	if isErr {
+	if r.IsErr() {
 		return
 	}
 
