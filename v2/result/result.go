@@ -161,6 +161,12 @@ func (r Result[T]) String() string {
 	return fmt.Sprintf("Error(%v)", r.getErr())
 }
 
+func (r Result[T]) WithErrorf(str string, args ...any) Result[T] {
+	err := fmt.Errorf(str, args...)
+	err = errors.WrapCaller(err, 1)
+	return Result[T]{err: err}
+}
+
 func (r Result[T]) WithErr(err error) Result[T] {
 	if err == nil {
 		return r
