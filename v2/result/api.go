@@ -99,7 +99,7 @@ func WrapFn[T any](fn func() (T, error)) Result[T] {
 	return Result[T]{err: err}
 }
 
-func CatchErr(setter *Error, err error, contexts ...context.Context) bool {
+func CatchErr(setter ErrSetter, err error, contexts ...context.Context) bool {
 	return catchErr(newError(err), setter, nil, contexts...)
 }
 
