@@ -63,7 +63,7 @@ func main() {
 	}
 
 	// let the user mark a ROI to track
-	rect := gocv.SelectROI("Tracking", img)
+	rect := window.SelectROI(img)
 	if rect.Max.X == 0 {
 		fmt.Printf("user cancelled roi selection\n")
 		return
