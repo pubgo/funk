@@ -157,6 +157,13 @@ func (r Result[T]) MapErr(fn func(error) error) Result[T] {
 	return Fail[T](fn(r.getErr()))
 }
 
+func (r Result[T]) MapErrOr(fn func(error) Result[T]) Result[T] {
+	if r.IsOK() {
+		return r
+	}
+	return fn(r.getErr())
+}
+
 func (r Result[T]) GetErr() error {
 	if r.IsOK() {
 		return nil
