@@ -138,6 +138,18 @@ func (r Result[T]) FlatMap(fn func(T) Result[T]) Result[T] {
 	return fn(r.getValue())
 }
 
+func (r Result[T]) Validate(fn func(T) error) Result[T] {
+	if r.IsErr() {
+		return r
+	}
+
+	err := fn(r.getValue())
+	if err != nil {
+		return Fail[T](errors.WrapCaller(err, 1))
+	}
+	return OK(r.getValue())
+}
+
 func (r Result[T]) MapErr(fn func(error) error) Result[T] {
 	if r.IsOK() {
 		return r
