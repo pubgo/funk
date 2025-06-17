@@ -23,13 +23,6 @@ type Error struct {
 	err error
 }
 
-func (e *Error) setError(err error) {
-	if err == nil {
-		return
-	}
-	e.err = err
-}
-
 func (e Error) Map(fn func(error) error) Error {
 	if e.IsOK() {
 		return e
@@ -134,3 +127,10 @@ func (e Error) OrElse(fn func(error) Error) Error {
 }
 
 func (e Error) getErr() error { return e.err }
+
+func (e *Error) setError(err error) {
+	if err == nil {
+		return
+	}
+	e.err = err
+}

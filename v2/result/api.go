@@ -48,6 +48,14 @@ func ErrorOf(msg string, args ...any) Error {
 	return newError(errors.WrapCaller(fmt.Errorf(msg, args...), 1))
 }
 
+func ErrProxyOf(err *error) *ErrProxy {
+	if err == nil {
+		errMust(errors.Errorf("setter is nil"))
+		return &ErrProxy{}
+	}
+	return &ErrProxy{err: err}
+}
+
 func ErrOf(err error) Error {
 	if err == nil {
 		return Error{}
