@@ -50,6 +50,7 @@ require (
 	go.etcd.io/bbolt v1.3.7
 	go.etcd.io/etcd/client/v3 v3.5.9
 	go.uber.org/atomic v1.10.0
+	gocv.io/x/gocv v0.41.0
 	golang.org/x/crypto v0.24.0
 	golang.org/x/exp v0.0.0-20230811145659-89c5cff77bcb
 	golang.org/x/sys v0.21.0
