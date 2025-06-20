@@ -1,5 +1,3 @@
-version: 2
-
 builds:
   - main: ./cmds/protoc-gen-go-errors/main.go
     id: protoc-gen-go-errors
