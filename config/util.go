@@ -30,12 +30,7 @@ func GetConfigDir() string {
 }
 
 func GetConfigPath() string {
-	if configPath != "" {
-		return configPath
-	}
-
-	path, _ := getConfigPath(defaultConfigName, defaultConfigType)
-	return path
+	return configPath
 }
 
 func getConfigPath(name, typ string, configDir ...string) (string, string) {

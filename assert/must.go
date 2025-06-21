@@ -5,13 +5,12 @@ import (
 	"os"
 	"runtime/debug"
 
-	"github.com/pubgo/funk"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/try"
 )
 
 func Must(err error, args ...interface{}) {
-	if funk.IsNil(err) {
+	if err == nil {
 		return
 	}
 
@@ -20,7 +19,7 @@ func Must(err error, args ...interface{}) {
 
 func MustFn(errFn func() error, args ...interface{}) {
 	err := try.Try(errFn)
-	if funk.IsNil(err) {
+	if err == nil {
 		return
 	}
 
@@ -28,7 +27,7 @@ func MustFn(errFn func() error, args ...interface{}) {
 }
 
 func MustF(err error, msg string, args ...interface{}) {
-	if funk.IsNil(err) {
+	if err == nil {
 		return
 	}
 
@@ -36,7 +35,7 @@ func MustF(err error, msg string, args ...interface{}) {
 }
 
 func Must1[T any](ret T, err error) T {
-	if !funk.IsNil(err) {
+	if err != nil {
 		panic(errors.WrapStack(err))
 	}
 
@@ -44,7 +43,7 @@ func Must1[T any](ret T, err error) T {
 }
 
 func Exit(err error, args ...interface{}) {
-	if funk.IsNil(err) {
+	if err == nil {
 		return
 	}
 
@@ -55,7 +54,7 @@ func Exit(err error, args ...interface{}) {
 
 func ExitFn(errFn func() error, args ...interface{}) {
 	err := try.Try(errFn)
-	if funk.IsNil(err) {
+	if err == nil {
 		return
 	}
 
@@ -65,7 +64,7 @@ func ExitFn(errFn func() error, args ...interface{}) {
 }
 
 func ExitF(err error, msg string, args ...interface{}) {
-	if funk.IsNil(err) {
+	if err == nil {
 		return
 	}
 
@@ -75,7 +74,7 @@ func ExitF(err error, msg string, args ...interface{}) {
 }
 
 func Exit1[T any](ret T, err error) T {
-	if !funk.IsNil(err) {
+	if err != nil {
 		errors.Debug(errors.WrapStack(err))
 		debug.PrintStack()
 		os.Exit(1)
