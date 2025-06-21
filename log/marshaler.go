@@ -18,15 +18,13 @@ func (l logLogObjectMarshaler) MarshalZerologObject(e *zerolog.Event) {
 		return
 	}
 
+	e.Str("error", l.err.Error())
+	e.Str("error_detail", fmt.Sprintf("%#v", l.err))
+
 	if errJson, ok := l.err.(json.Marshaler); ok {
 		errJsonBytes, _ := errJson.MarshalJSON()
 		if len(errJsonBytes) > 0 {
-			e.Str("msg", l.err.Error())
-			e.RawJSON("detail", errJsonBytes)
-			return
+			e.RawJSON("error_detail_json", errJsonBytes)
 		}
 	}
-
-	e.Str("error", l.err.Error())
-	e.Str("error_detail", fmt.Sprintf("%v", l.err))
 }

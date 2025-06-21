@@ -1,4 +1,4 @@
-package aherrcheck
+package resultchecker
 
 import (
 	"context"

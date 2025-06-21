@@ -6,21 +6,28 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/recovery"
-	"github.com/pubgo/funk/result"
+	"github.com/pubgo/funk/log"
+	"github.com/pubgo/funk/v2/result"
 )
 
 func Run(args ...string) (r result.Result[string]) {
-	defer recovery.Result(&r)
+	defer result.RecoveryErr(&r)
 
 	b := bytes.NewBufferString("")
 
 	cmd := Shell(args...)
 	cmd.Stdout = b
 
-	assert.Must(cmd.Run(), strings.Join(args, " "))
-	return r.WithVal(strings.TrimSpace(b.String()))
+	result.ErrOf(cmd.Run()).
+		Inspect(func(err error) {
+			log.Err(err).Msg("failed to execute: " + strings.Join(args, " "))
+		}).
+		CatchErr(&r)
+	if r.IsErr() {
+		return
+	}
+
+	return r.WithValue(strings.TrimSpace(b.String()))
 }
 
 func GoModGraph() result.Result[string] {
@@ -34,10 +41,10 @@ func GoList() result.Result[string] {
 func GraphViz(in, out string) (err error) {
 	ret := Run("dot", "-Tsvg", in)
 	if ret.IsErr() {
-		return ret.Err()
+		return ret.GetErr()
 	}
 
-	return os.WriteFile(out, []byte(ret.Unwrap()), 0o600)
+	return os.WriteFile(out, []byte(ret.GetValue()), 0o600)
 }
 
 func Shell(args ...string) *exec.Cmd {

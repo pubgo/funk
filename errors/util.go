@@ -64,8 +64,11 @@ func cloneAndCheck(code *errorpb.ErrCode) *errorpb.ErrCode {
 }
 
 func MustProtoToAny(p proto.Message) *anypb.Any {
-	if p == nil {
+	switch p := p.(type) {
+	case nil:
 		return nil
+	case *anypb.Any:
+		return p
 	}
 
 	pb, err := anypb.New(p)
@@ -78,11 +81,9 @@ func MustProtoToAny(p proto.Message) *anypb.Any {
 }
 
 func ParseErrToPb(err error) proto.Message {
-	if err == nil {
-		return nil
-	}
-
 	switch err1 := err.(type) {
+	case nil:
+		return nil
 	case ErrorProto:
 		return err1.Proto()
 	case GRPCStatus:
@@ -95,11 +96,9 @@ func ParseErrToPb(err error) proto.Message {
 }
 
 func handleGrpcError(err error) error {
-	if err == nil {
-		return nil
-	}
-
 	switch v := err.(type) {
+	case nil:
+		return nil
 	case *ErrWrap:
 		return v
 
