@@ -57,7 +57,7 @@ func try1[T any](fn func() (T, error)) (t T, gErr error) {
 }
 
 func errMust(err error, args ...any) {
-	if generic.IsNil(err) {
+	if err == nil {
 		return
 	}
 

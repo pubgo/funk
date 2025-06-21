@@ -83,8 +83,5 @@ func fn3() result.Error {
 		Inspect(func(err error) {
 			log.Err(err).Msg("ddd")
 		}).
-		InspectLog(func(evt *log.Event) {
-			evt.Msg("test log")
-		}).
-		RecordLog()
+		LogErr()
 }
