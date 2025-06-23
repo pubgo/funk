@@ -45,7 +45,7 @@ func (r Result[T]) ValueTo(v *T) Error {
 	}
 
 	if v == nil {
-		return newError(errors.WrapStack(errors.New("v params is nil")))
+		return newError(errors.WrapStack(errors.New("v param is nil")))
 	}
 
 	*v = r.getValue()
@@ -81,18 +81,6 @@ func (r Result[T]) IsErr() bool { return r.getErr() != nil }
 
 func (r Result[T]) IsOK() bool { return r.getErr() == nil }
 
-func (r Result[T]) Filter(predicate func(T) bool, errorMsg string) Result[T] {
-	if r.IsErr() {
-		return r
-	}
-
-	if predicate(r.getValue()) {
-		return r
-	}
-
-	return Fail[T](errors.New(errorMsg))
-}
-
 func (r Result[T]) InspectErr(fn func(error)) Result[T] {
 	if r.IsErr() {
 		fn(r.getErr())
@@ -107,20 +95,13 @@ func (r Result[T]) Inspect(fn func(T)) Result[T] {
 	return r
 }
 
-func (r Result[T]) RecordLog(contexts ...context.Context) Result[T] {
+func (r Result[T]) LogErr(contexts ...context.Context) Result[T] {
 	if r.IsErr() {
 		log.Err(r.err, contexts...).
 			CallerSkipFrame(1).
 			Msg(r.err.Error())
 	}
 
-	return r
-}
-
-func (r Result[T]) InspectLog(fn func(logger *log.Event), contexts ...context.Context) Result[T] {
-	if r.IsErr() {
-		fn(log.Err(r.getErr(), contexts...))
-	}
 	return r
 }
 
@@ -209,20 +190,6 @@ func (r Result[T]) UnwrapErr(setter ErrSetter, contexts ...context.Context) T {
 		setter.setError(errors.WrapCaller(err, 1))
 	}
 	return ret
-}
-
-func (r Result[T]) OrElse(fn func(error) T) Result[T] {
-	if r.IsOK() {
-		return r
-	}
-	return OK(fn(r.getErr()))
-}
-
-func (r Result[T]) UnwrapOr(defaultValue T) T {
-	if r.IsOK() {
-		return r.getValue()
-	}
-	return defaultValue
 }
 
 func (r Result[T]) MarshalJSON() ([]byte, error) {

@@ -4,20 +4,19 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pubgo/funk"
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
 )
 
 func Err(gErr *error, callbacks ...func(err error) error) {
 	err := errors.Parse(recover())
-	if funk.IsNil(err) {
+	if err == nil {
 		return
 	}
 
 	for i := range callbacks {
 		err = callbacks[i](err)
-		if funk.IsNil(err) {
+		if err == nil {
 			return
 		}
 	}
@@ -27,13 +26,13 @@ func Err(gErr *error, callbacks ...func(err error) error) {
 
 func Raise(callbacks ...func(err error) error) {
 	err := errors.Parse(recover())
-	if funk.IsNil(err) {
+	if err == nil {
 		return
 	}
 
 	for i := range callbacks {
 		err = callbacks[i](err)
-		if funk.IsNil(err) {
+		if err == nil {
 			return
 		}
 	}
@@ -45,7 +44,7 @@ func Recovery(fn func(err error)) {
 	assert.If(fn == nil, "[fn] should not be nil")
 
 	err := errors.Parse(recover())
-	if funk.IsNil(err) {
+	if err == nil {
 		return
 	}
 
@@ -54,13 +53,13 @@ func Recovery(fn func(err error)) {
 
 func Exit(handlers ...func(err error) error) {
 	err := errors.Parse(recover())
-	if funk.IsNil(err) {
+	if err == nil {
 		return
 	}
 
 	for i := range handlers {
 		err = handlers[i](err)
-		if funk.IsNil(err) {
+		if err == nil {
 			return
 		}
 	}
@@ -71,7 +70,7 @@ func Exit(handlers ...func(err error) error) {
 
 func DebugPrint() {
 	err := errors.Parse(recover())
-	if funk.IsNil(err) {
+	if err == nil {
 		return
 	}
 
@@ -80,7 +79,7 @@ func DebugPrint() {
 
 func Testing(t *testing.T) {
 	err := errors.Parse(recover())
-	if funk.IsNil(err) {
+	if err == nil {
 		return
 	}
 

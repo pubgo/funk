@@ -50,7 +50,7 @@ func ErrorOf(msg string, args ...any) Error {
 
 func ErrProxyOf(err *error) ErrProxy {
 	if err == nil {
-		errMust(errors.Errorf("setter is nil"))
+		errMust(errors.Errorf("err param is nil"))
 		return ErrProxy{}
 	}
 	return ErrProxy{err: err}
@@ -113,16 +113,6 @@ func CatchErr(setter ErrSetter, err error, contexts ...context.Context) bool {
 
 func Catch(rawSetter *error, err error, contexts ...context.Context) bool {
 	return catchErr(newError(err), nil, rawSetter, contexts...)
-}
-
-func Try[T any](fn func() (T, error)) (r Result[T]) {
-	if fn == nil {
-		err := errors.WrapCaller(errors.New("function is nil"), 1)
-		return Fail[T](err)
-	}
-
-	defer Recovery(&r.err)
-	return Wrap(fn())
 }
 
 func MapTo[T, U any](r Result[T], fn func(T) U) Result[U] {

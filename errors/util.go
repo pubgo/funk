@@ -64,11 +64,11 @@ func cloneAndCheck(code *errorpb.ErrCode) *errorpb.ErrCode {
 }
 
 func MustProtoToAny(p proto.Message) *anypb.Any {
-	switch p.(type) {
+	switch p := p.(type) {
 	case nil:
 		return nil
 	case *anypb.Any:
-		return p.(*anypb.Any)
+		return p
 	}
 
 	pb, err := anypb.New(p)

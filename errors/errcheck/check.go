@@ -3,7 +3,6 @@ package errcheck
 import (
 	"context"
 	"fmt"
-	"runtime/debug"
 
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/log"
@@ -38,8 +37,8 @@ func RecoveryAndCheck(setter *error, callbacks ...func(err error) error) {
 
 func Check(errSetter *error, err error, contexts ...context.Context) bool {
 	if errSetter == nil {
-		debug.PrintStack()
-		panic("errSetter is nil")
+		errMust(fmt.Errorf("errSetter is nil"))
+		return false
 	}
 
 	if err == nil {
@@ -97,7 +96,7 @@ func InspectLog(err error, fn func(logger *log.Event), contexts ...context.Conte
 	fn(log.Err(err, contexts...))
 }
 
-func RecordLog(err error, contexts ...context.Context) {
+func LogErr(err error, contexts ...context.Context) {
 	if err == nil {
 		return
 	}

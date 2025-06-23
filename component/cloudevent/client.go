@@ -3,7 +3,6 @@ package cloudevent
 import (
 	"context"
 	"fmt"
-	"github.com/pubgo/funk/internal/anyhow"
 	"net/http"
 	"strings"
 	"time"
@@ -15,6 +14,7 @@ import (
 	"github.com/pubgo/funk/component/natsclient"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/errors/errcheck"
+	"github.com/pubgo/funk/internal/anyhow"
 	"github.com/pubgo/funk/log"
 	cloudeventpb "github.com/pubgo/funk/proto/cloudevent"
 	"github.com/pubgo/funk/running"

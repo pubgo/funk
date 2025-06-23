@@ -18,12 +18,12 @@ func Run(args ...string) (r result.Result[string]) {
 	cmd := Shell(args...)
 	cmd.Stdout = b
 
-	err := result.ErrOf(cmd.Run()).
+	result.ErrOf(cmd.Run()).
 		Inspect(func(err error) {
 			log.Err(err).Msg("failed to execute: " + strings.Join(args, " "))
 		}).
 		CatchErr(&r)
-	if err {
+	if r.IsErr() {
 		return
 	}
 
