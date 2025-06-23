@@ -25,6 +25,14 @@ func New(msg string) error {
 	return WrapCaller(&Err{Msg: msg}, 1)
 }
 
+// NewFmt
+// Deprecated, use Errorf instead
+func NewFmt(msg string, args ...interface{}) error {
+	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...)}, 1)
+}
+
+// Format
+// Deprecated, use Errorf instead
 func Format(msg string, args ...interface{}) error {
 	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...)}, 1)
 }
