@@ -7,6 +7,7 @@ import (
 
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
+	"github.com/pubgo/funk/stack"
 	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
 )
@@ -52,6 +53,10 @@ func Of[T any](v T, err error) Result[T] {
 type Result[T any] struct {
 	v *T
 	E error
+}
+
+func (r Result[T]) WithErrorf(format string, args ...any) Result[T] {
+	return Result[T]{E: errors.WrapCaller(errors.Errorf(format, args...), 1)}
 }
 
 func (r Result[T]) WithErr(err error) Result[T] {
@@ -288,4 +293,23 @@ func Unwrap[T any](ret Result[T], gErr *error, callback ...func(err error) error
 
 	*gErr = errors.WrapCaller(err, 1)
 	return t
+}
+
+func Try[T any](fn func() Result[T]) (g Result[T]) {
+	if fn == nil {
+		return g.WithErr(errors.WrapStack(errors.New("[fn] is nil")))
+	}
+
+	defer func() {
+		if err := errors.Parse(recover()); !generic.IsNil(err) {
+			g = g.WithErr(errors.WrapStack(err))
+		}
+
+		if g.IsErr() {
+			g = g.WithErr(errors.WrapKV(g.Err(), "fn_stack", stack.CallerWithFunc(fn)))
+		}
+	}()
+
+	g = fn()
+	return
 }
