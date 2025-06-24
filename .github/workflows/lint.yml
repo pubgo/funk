@@ -48,11 +48,9 @@ jobs:
           git diff --exit-code go.sum
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
         with:
-          version: v1.62.0
-          install-mode: cache
-          args: --out-format=colored-line-number --timeout=10m --new-from-rev=HEAD~1 --config=./.golangci.yml --verbose --print-issued-lines
+          args: --timeout=10m --verbose --print-issued-lines
           skip-cache: false
         env:
           GOLANGCI_LINT_CACHE: go-lint-cache-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
