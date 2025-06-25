@@ -37,9 +37,9 @@ type Logger interface {
 }
 
 type StdLogger interface {
-	Printf(format string, v ...interface{})
-	Logf(format string, v ...interface{})
-	Print(v ...interface{})
-	Log(v ...interface{})
-	Println(v ...interface{})
+	Printf(format string, v ...any)
+	Logf(format string, v ...any)
+	Print(v ...any)
+	Log(v ...any)
+	Println(v ...any)
 }

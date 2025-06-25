@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"runtime/debug"
 
-	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
@@ -24,10 +24,14 @@ func New(msg string) error {
 	return WrapCaller(&Err{Msg: msg}, 1)
 }
 
+// NewFmt
+// Deprecated: use Errorf instead
 func NewFmt(msg string, args ...interface{}) error {
 	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...)}, 1)
 }
 
+// Format
+// Deprecated: use Errorf instead
 func Format(msg string, args ...interface{}) error {
 	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...)}, 1)
 }
@@ -45,7 +49,7 @@ func Parse(val interface{}) error {
 }
 
 func Debug(err error) {
-	if generic.IsNil(err) {
+	if err == nil {
 		return
 	}
 
@@ -119,10 +123,11 @@ func Unwrap(err error) error {
 }
 
 func WrapStack(err error) error {
-	if generic.IsNil(err) {
+	if err == nil {
 		return nil
 	}
 
+	debug.PrintStack()
 	return &ErrWrap{
 		err: handleGrpcError(err),
 		pb: &errorpb.ErrWrap{
@@ -134,7 +139,7 @@ func WrapStack(err error) error {
 }
 
 func WrapCaller(err error, skip ...int) error {
-	if generic.IsNil(err) {
+	if err == nil {
 		return nil
 	}
 
@@ -153,7 +158,7 @@ func WrapCaller(err error, skip ...int) error {
 }
 
 func Wrapf(err error, format string, args ...interface{}) error {
-	if generic.IsNil(err) {
+	if err == nil {
 		return nil
 	}
 
@@ -168,7 +173,7 @@ func Wrapf(err error, format string, args ...interface{}) error {
 }
 
 func Wrap(err error, msg string) error {
-	if generic.IsNil(err) {
+	if err == nil {
 		return nil
 	}
 
@@ -183,7 +188,7 @@ func Wrap(err error, msg string) error {
 }
 
 func WrapMapTag(err error, tags Maps) error {
-	if generic.IsNil(err) {
+	if err == nil {
 		return nil
 	}
 
@@ -202,7 +207,7 @@ func WrapMapTag(err error, tags Maps) error {
 }
 
 func WrapTag(err error, tags ...Tag) error {
-	if generic.IsNil(err) {
+	if err == nil {
 		return nil
 	}
 
@@ -217,7 +222,7 @@ func WrapTag(err error, tags ...Tag) error {
 }
 
 func WrapFn(err error, fn func() Tags) error {
-	if generic.IsNil(err) {
+	if err == nil {
 		return nil
 	}
 
@@ -232,7 +237,7 @@ func WrapFn(err error, fn func() Tags) error {
 }
 
 func WrapKV(err error, key string, value any, kvs ...any) error {
-	if generic.IsNil(err) {
+	if err == nil {
 		return nil
 	}
 

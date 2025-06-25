@@ -39,13 +39,13 @@ func TestResultDo(t *testing.T) {
 		assert.If(v.Name != "abc", "not match")
 	})
 
-	assert.Assert(err1().Err() == nil, "failed to check ErrTo")
+	assert.Assert(err1().Err() == nil, "failed to check CatchTo")
 	assert.Assert(err1().Err().Error() != "test error", "error not match")
 }
 
 func err1() (gErr result.Result[any]) {
 	ret := result.Err[any](fmt.Errorf("test error"))
-	if ret.ErrTo(&gErr.E) {
+	if ret.CatchTo(&gErr.E) {
 		return
 	}
 	return

@@ -1,16 +1,14 @@
 package vars
 
 import (
+	"encoding/json"
 	"expvar"
 	"fmt"
-
-	json "github.com/goccy/go-json"
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/convert"
 	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/recovery"
-	"github.com/pubgo/funk/result"
 )
 
 func Float(name string) *expvar.Float {
@@ -57,26 +55,26 @@ func (f Value) Value() interface{} { return f() }
 
 func (f Value) String() (r string) {
 	var errStr = func(err any) string {
-		ret := result.Wrap(json.Marshal(err))
-		if ret.IsErr() {
-			return pretty.Sprint(ret.Err())
+		ret, err := json.Marshal(err)
+		if err != nil {
+			return pretty.Sprint(err)
 		} else {
-			return convert.B2S(ret.Unwrap())
+			return convert.B2S(ret)
 		}
 	}
 
 	defer recovery.Recovery(func(err error) { r = errStr(err) })
 
 	dt := f()
-	switch dt.(type) {
+	switch dt := dt.(type) {
 	case nil:
 		return "null"
 	case string:
-		return dt.(string)
+		return dt
 	case []byte:
-		return string(dt.([]byte))
+		return string(dt)
 	case fmt.Stringer:
-		return dt.(fmt.Stringer).String()
+		return dt.String()
 	default:
 		return errStr(dt)
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/stack"
 	"github.com/rs/zerolog/log"
+	"github.com/samber/lo"
 )
 
 var _ error = (*Error)(nil)
@@ -54,6 +55,10 @@ type Result[T any] struct {
 	E error
 }
 
+func (r Result[T]) WithErrorf(format string, args ...any) Result[T] {
+	return Result[T]{E: errors.WrapCaller(errors.Errorf(format, args...), 1)}
+}
+
 func (r Result[T]) WithErr(err error) Result[T] {
 	return Result[T]{E: errors.WrapCaller(err, 1)}
 }
@@ -80,15 +85,23 @@ func (r Result[T]) OnValue(fn func(t T) error) error {
 }
 
 func (r Result[T]) OnErr(check func(err error)) {
-	if !r.IsErr() {
+	if r.IsOK() {
 		return
 	}
 
 	check(r.E)
 }
 
+func (r Result[T]) GetErr() error {
+	if r.IsOK() {
+		return nil
+	}
+
+	return errors.WrapCaller(r.E, 1)
+}
+
 func (r Result[T]) Err(check ...func(err error) error) error {
-	if !r.IsErr() {
+	if r.IsOK() {
 		return nil
 	}
 
@@ -99,9 +112,9 @@ func (r Result[T]) Err(check ...func(err error) error) error {
 	return errors.WrapCaller(r.E, 1)
 }
 
-func (r Result[T]) IsErr() bool {
-	return r.E != nil || !generic.IsNil(r.E)
-}
+func (r Result[T]) IsErr() bool { return r.E != nil }
+
+func (r Result[T]) IsOK() bool { return r.E == nil }
 
 func (r Result[T]) OrElse(v T) T {
 	if r.IsErr() {
@@ -110,8 +123,21 @@ func (r Result[T]) OrElse(v T) T {
 	return generic.FromPtr(r.v)
 }
 
+func (r Result[T]) UnwrapErr(setter *error) T {
+	if setter == nil {
+		debug.PrintStack()
+		panic("UnwrapErr: setter is nil")
+	}
+
+	if r.IsErr() {
+		*setter = errors.WrapCaller(r.E, 1)
+	}
+
+	return lo.FromPtr(r.v)
+}
+
 func (r Result[T]) Unwrap(check ...func(err error) error) T {
-	if !r.IsErr() {
+	if r.IsOK() {
 		return generic.FromPtr(r.v)
 	}
 
@@ -122,19 +148,24 @@ func (r Result[T]) Unwrap(check ...func(err error) error) T {
 	}
 }
 
-func (r Result[T]) Expect(format string, args ...any) T {
-	if !r.IsErr() {
+func (r Result[T]) GetValue() T {
+	if r.IsOK() {
 		return generic.FromPtr(r.v)
 	}
 
-	panic(&Error{
-		Msg:   fmt.Sprintf(format, args...),
-		Stack: stack.Caller(1).String(),
-	})
+	panic(errors.WrapStack(r.E))
+}
+
+func (r Result[T]) Expect(format string, args ...any) T {
+	if r.IsOK() {
+		return generic.FromPtr(r.v)
+	}
+
+	panic(errors.WrapStack(errors.Wrapf(r.E, format, args...)))
 }
 
 func (r Result[T]) String() string {
-	if !r.IsErr() {
+	if r.IsOK() {
 		return fmt.Sprintf("%v", generic.FromPtr(r.v))
 	}
 
@@ -161,19 +192,19 @@ func (r Result[T]) Do(fn func(v T)) {
 	fn(generic.FromPtr(r.v))
 }
 
-func (r Result[T]) ErrTo(setter *error, callbacks ...func(err error) error) bool {
+func (r Result[T]) CatchTo(setter *error, callbacks ...func(err error) error) bool {
 	if setter == nil {
 		debug.PrintStack()
-		panic("ErrTo: setter is nil")
+		panic("CatchTo: setter is nil")
 	}
 
-	if !r.IsErr() {
+	if r.IsOK() {
 		return false
 	}
 
 	// setter err is not nil
 	if *setter != nil {
-		log.Err(*setter).Msgf("ErrTo: setter error is not nil")
+		log.Err(*setter).Msgf("CatchTo: setter error is not nil")
 		return true
 	}
 
@@ -189,7 +220,50 @@ func (r Result[T]) ErrTo(setter *error, callbacks ...func(err error) error) bool
 	return true
 }
 
-func Map[Src any, To any](s Result[Src], do func(s Src) (r Result[To])) Result[To] {
+func (r Result[T]) InspectErr(fn func(error)) Result[T] {
+	if r.IsErr() {
+		fn(r.E)
+	}
+	return r
+}
+
+func (r Result[T]) Inspect(fn func(T)) Result[T] {
+	if r.IsOK() {
+		fn(generic.FromPtr(r.v))
+	}
+	return r
+}
+
+func (r Result[T]) FlatMap(fn func(T) Result[T]) Result[T] {
+	if r.IsOK() {
+		return r
+	}
+	return fn(generic.FromPtr(r.v))
+}
+
+func (r Result[T]) Map(fn func(T) T) Result[T] {
+	if r.IsOK() {
+		return r
+	}
+	return OK(fn(generic.FromPtr(r.v)))
+}
+
+func (r Result[T]) MapErr(fn func(error) error) Result[T] {
+	if r.IsOK() {
+		return r
+	}
+	return Err[T](fn(r.E))
+}
+
+func MapTo[Src any, To any](s Result[Src], do func(s Src) To) Result[To] {
+	if s.IsErr() {
+		return Err[To](errors.WrapCaller(s.Err(), 1))
+	}
+
+	return OK(do(s.Unwrap()))
+}
+
+func FlatMap[Src any, To any](s Result[Src], do func(s Src) (r Result[To])) Result[To] {
 	if s.IsErr() {
 		return Err[To](errors.WrapCaller(s.Err(), 1))
 	}
@@ -203,8 +277,8 @@ func Unwrap[T any](ret Result[T], gErr *error, callback ...func(err error) error
 		panic("Unwrap: gErr is nil")
 	}
 
-	if !ret.IsErr() {
-		return ret.Unwrap()
+	if ret.IsOK() {
+		return ret.GetValue()
 	}
 
 	var t T
@@ -219,4 +293,23 @@ func Unwrap[T any](ret Result[T], gErr *error, callback ...func(err error) error
 
 	*gErr = errors.WrapCaller(err, 1)
 	return t
+}
+
+func Try[T any](fn func() Result[T]) (g Result[T]) {
+	if fn == nil {
+		return g.WithErr(errors.WrapStack(errors.New("[fn] is nil")))
+	}
+
+	defer func() {
+		if err := errors.Parse(recover()); !generic.IsNil(err) {
+			g = g.WithErr(errors.WrapStack(err))
+		}
+
+		if g.IsErr() {
+			g = g.WithErr(errors.WrapKV(g.Err(), "fn_stack", stack.CallerWithFunc(fn)))
+		}
+	}()
+
+	g = fn()
+	return
 }

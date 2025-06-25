@@ -41,6 +41,19 @@ func init() {
 	})
 }
 
+func GetConfigData(cfgPath string) (_ []byte, gErr error) {
+	var configBytes []byte
+	defer recovery.Err(&gErr, func(err error) error {
+		log.Err(err).Str("config_path", cfgPath).Msgf("config: %s", configBytes)
+		return err
+	})
+
+	configBytes = result.Of(os.ReadFile(cfgPath)).Expect("failed to read config data: %s", cfgPath)
+	configBytes = result.Of(envsubst.Bytes(configBytes)).Expect("failed to handler config env data: %s", cfgPath)
+	configBytes = []byte(cfgFormat(string(configBytes), &config{workDir: filepath.Dir(cfgPath)}))
+	return configBytes, nil
+}
+
 func LoadFromPath[T any](val *T, cfgPath string) {
 	defer recovery.Exit(func(err error) error {
 		log.Err(err).Str("config_path", cfgPath).Msg("failed to load config")
@@ -62,14 +75,10 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 			Msg("config type not correct")
 	}
 
-	parentDir := filepath.Dir(cfgPath)
-	configBytes := result.Of(os.ReadFile(cfgPath)).Expect("failed to read config data: %s", cfgPath)
-	configBytes = result.Of(envsubst.Bytes(configBytes)).Expect("failed to handler config env data: %s", cfgPath)
-
+	configBytes := result.Of(GetConfigData(cfgPath)).Expect("failed to handler config data")
 	defer recovery.Exit(func(err error) error {
 		log.Err(err).
 			Str("config_path", cfgPath).
-			Str("config_dir", parentDir).
 			Str("config_data", string(configBytes)).
 			Msg("failed to load config")
 		return err
@@ -84,7 +93,8 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 		return
 	}
 
-	var getRealPath = func(pp []string) []string {
+	parentDir := filepath.Dir(cfgPath)
+	getRealPath := func(pp []string) []string {
 		pp = lo.Map(pp, func(item string, index int) string { return filepath.Join(parentDir, item) })
 
 		var resPaths []string
@@ -100,12 +110,8 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 		resPaths = lo.Filter(resPaths, cfgFilter)
 		return lo.Uniq(resPaths)
 	}
-	var getCfg = func(resPath string) T {
-		resBytes := result.Of(os.ReadFile(resPath)).Expect("failed to read config data: %s", resPath)
-		resBytes = result.Of(envsubst.Bytes(resBytes)).Expect("failed to handler config env data: %s", resPath)
-		resBytes = []byte(cfgFormat(string(resBytes), &config{
-			workDir: filepath.Dir(resPath),
-		}))
+	getCfg := func(resPath string) T {
+		resBytes := result.Of(GetConfigData(resPath)).Expect("failed to handler config data")
 
 		var cfg1 T
 		result.Err[any](yaml.Unmarshal(resBytes, &cfg1)).

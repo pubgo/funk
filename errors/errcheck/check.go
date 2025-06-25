@@ -2,7 +2,7 @@ package errcheck
 
 import (
 	"context"
-	"runtime/debug"
+	"fmt"
 
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/log"
@@ -11,8 +11,8 @@ import (
 
 func RecoveryAndCheck(setter *error, callbacks ...func(err error) error) {
 	if setter == nil {
-		debug.PrintStack()
-		panic("setter is nil")
+		errMust(fmt.Errorf("setter is nil"))
+		return
 	}
 
 	err := errors.Parse(recover())
@@ -37,8 +37,8 @@ func RecoveryAndCheck(setter *error, callbacks ...func(err error) error) {
 
 func Check(errSetter *error, err error, contexts ...context.Context) bool {
 	if errSetter == nil {
-		debug.PrintStack()
-		panic("errSetter is nil")
+		errMust(fmt.Errorf("errSetter is nil"))
+		return false
 	}
 
 	if err == nil {
@@ -62,93 +62,46 @@ func Check(errSetter *error, err error, contexts ...context.Context) bool {
 	return true
 }
 
-func CheckCtx(ctx context.Context, errSetter *error, err error, errCheckers ...ErrChecker) bool {
-	if errSetter == nil {
-		debug.PrintStack()
-		panic("errSetter is nil")
-	}
-
+func Expect(err error, format string, args ...any) {
 	if err == nil {
-		return false
-	}
-
-	// err No checking, repeat setting
-	if (*errSetter) != nil {
-		log.Err(*errSetter, ctx).Msgf("setter is not nil, err=%v", *errSetter)
-		return true
-	}
-
-	for _, fn := range append(GetCheckersFromCtx(ctx), errCheckers...) {
-		err = fn(ctx, err)
-		if err == nil {
-			return false
-		}
-	}
-
-	*errSetter = errors.WrapCaller(err, 1)
-	return true
-}
-
-func NewChecker(ctx context.Context, errSetter *error, errCheckers ...ErrChecker) *Checker {
-	if errSetter == nil {
-		debug.PrintStack()
-		panic("errSetter is nil")
-	}
-
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	return &Checker{ctx: ctx, errSetter: errSetter, errCheckers: errCheckers}
-}
-
-type Checker struct {
-	ctx         context.Context
-	errSetter   *error
-	errCheckers []ErrChecker
-}
-
-func (c *Checker) Check(err error, errCheckers ...ErrChecker) bool {
-	if err == nil {
-		return false
-	}
-
-	// err No checking, repeat setting
-	if (*c.errSetter) != nil {
-		log.Err(*c.errSetter, c.ctx).Msgf("setter is not nil, err=%v", *c.errSetter)
-		return true
-	}
-
-	checkers := append(append(GetCheckersFromCtx(c.ctx), c.errCheckers...), errCheckers...)
-	for _, fn := range checkers {
-		err = fn(c.ctx, err)
-		if err == nil {
-			return false
-		}
-	}
-
-	*c.errSetter = errors.WrapCaller(err, 1)
-	return true
-}
-
-func (c *Checker) Recovery() {
-	err := errors.Parse(recover())
-	gErr := *c.errSetter
-	if err == nil && gErr == nil {
 		return
 	}
 
+	err = errors.WrapCaller(err, 1)
+	err = errors.Wrapf(err, format, args...)
+	errMust(err)
+}
+
+func Map(err error, fn func(err error) error) error {
 	if err == nil {
-		err = gErr
+		return nil
 	}
 
-	checkers := append(GetCheckersFromCtx(c.ctx), c.errCheckers...)
-	for _, fn := range checkers {
-		err = fn(c.ctx, err)
-		if err == nil {
-			return
-		}
+	return errors.WrapCaller(fn(err), 1)
+}
+
+func Inspect(err error, fn func(err error)) {
+	if err == nil {
+		return
 	}
 
-	*c.errSetter = errors.WrapCaller(err, 1)
+	fn(err)
+}
+
+func InspectLog(err error, fn func(logger *log.Event), contexts ...context.Context) {
+	if err == nil {
+		return
+	}
+
+	fn(log.Err(err, contexts...))
+}
+
+func LogErr(err error, contexts ...context.Context) {
+	if err == nil {
+		return
+	}
+
+	log.Err(err, contexts...).
+		CallerSkipFrame(1).
+		Msg(err.Error())
 }

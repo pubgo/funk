@@ -1,4 +1,4 @@
-package anyhow
+package result
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 
 var _ Catchable = new(Error)
 var _ Checkable = new(Error)
+var _ ErrSetter = new(Error)
 
 func newError(err error) Error {
 	return Error{err: err}
@@ -22,8 +23,6 @@ type Error struct {
 	err error
 }
 
-func (e Error) Unwrap() error { return e.err }
-
 func (e Error) Map(fn func(error) error) Error {
 	if e.IsOK() {
 		return e
@@ -34,19 +33,11 @@ func (e Error) Map(fn func(error) error) Error {
 	return Error{err: err}
 }
 
-func (e Error) RecordLog(contexts ...context.Context) Error {
+func (e Error) LogErr(contexts ...context.Context) Error {
 	if e.IsErr() {
 		log.Err(e.err, contexts...).
 			CallerSkipFrame(1).
 			Msg(e.err.Error())
-	}
-
-	return e
-}
-
-func (e Error) InspectLog(fn func(logger *log.Event), contexts ...context.Context) Error {
-	if e.IsErr() {
-		fn(log.Err(e.err, contexts...))
 	}
 
 	return e
@@ -61,11 +52,13 @@ func (e Error) Inspect(fn func(error)) Error {
 	return e
 }
 
+func (e Error) Unwrap() error { return e.err }
+
 func (e Error) Catch(setter *error, ctx ...context.Context) bool {
 	return catchErr(e, nil, setter, ctx...)
 }
 
-func (e Error) CatchErr(setter *Error, ctx ...context.Context) bool {
+func (e Error) CatchErr(setter ErrSetter, ctx ...context.Context) bool {
 	return catchErr(e, setter, nil, ctx...)
 }
 
@@ -115,14 +108,11 @@ func (e Error) MarshalJSON() ([]byte, error) {
 	return errutil.Json(e.err), nil
 }
 
-func (e Error) OrElse(fn func(error) Error) Error {
-	if e.IsOK() {
-		return e
-	}
-
-	err := e.getErr()
-	err = errors.WrapCaller(err, 1)
-	return fn(err)
-}
-
 func (e Error) getErr() error { return e.err }
+
+func (e *Error) setError(err error) {
+	if err == nil {
+		return
+	}
+	e.err = err
+}

@@ -48,9 +48,4 @@ install-protoc:
 	go install -v ./cmds/protoc-gen-go-errors
 
 lint:
-	golangci-lint run \
-		--out-format=colored-line-number \
-		--timeout=10m --new-from-rev=HEAD~1 \
-		--config=./.golangci.yml \
-		--verbose \
-		--print-issued-lines
+	golangci-lint run --timeout=10m --verbose

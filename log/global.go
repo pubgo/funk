@@ -2,12 +2,12 @@ package log
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"time"
 
-	"github.com/goccy/go-json"
 	"github.com/rs/zerolog"
 	zlog "github.com/rs/zerolog/log"
 
@@ -17,7 +17,6 @@ import (
 
 var (
 	logEnableChecker = func(ctx context.Context, lvl Level, nameOrMessage string, fields Map) bool { return true }
-	zErrMarshalFunc  = zerolog.ErrorMarshalFunc
 	logGlobalHook    = zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, message string) {
 		if logEnableChecker == nil {
 			return
@@ -30,23 +29,28 @@ var (
 
 		e.Discard()
 	})
+
 	_ = generic.Init(func() {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-		zerolog.ErrorMarshalFunc = func(err error) interface{} {
+		zerolog.ErrorMarshalFunc = func(err error) any {
 			if err == nil {
 				return nil
 			}
 
-			switch err.(type) {
+			var errDetail string
+			switch errData := err.(type) {
 			case json.Marshaler:
-				return &logLogObjectMarshaler{err: err}
+				detail, err := errData.MarshalJSON()
+				if err != nil {
+					errDetail = err.Error()
+				} else {
+					errDetail = string(detail)
+				}
+			default:
+				errDetail = fmt.Sprintf("%#v", err)
 			}
 
-			if zErrMarshalFunc == nil {
-				return fmt.Sprintf("%v", err)
-			}
-
-			return zErrMarshalFunc(err)
+			return fmt.Sprintf("%s: %s", err.Error(), errDetail)
 		}
 	})
 
@@ -150,13 +154,13 @@ func Panic(ctx ...context.Context) *zerolog.Event {
 
 // Print sends a log event using debug level and no extra field.
 // Arguments are handled in the manner of fmt.Print.
-func Print(v ...interface{}) {
+func Print(v ...any) {
 	stdLog.Debug().CallerSkipFrame(1).Msg(fmt.Sprint(v...))
 }
 
 // Printf sends a log event using debug level and no extra field.
 // Arguments are handled in the manner of fmt.Printf.
-func Printf(format string, v ...interface{}) {
+func Printf(format string, v ...any) {
 	stdLog.Debug().CallerSkipFrame(1).Msgf(format, v...)
 }
 
