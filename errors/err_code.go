@@ -67,6 +67,11 @@ type ErrCode struct {
 	pb  *errorpb.ErrCode
 }
 
+func (t *ErrCode) Id() string {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (t *ErrCode) Unwrap() error                 { return t.err }
 func (t *ErrCode) Error() string                 { return t.err.Error() }
 func (t *ErrCode) Proto() proto.Message          { return t.pb }
