@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pubgo/funk/errors"
 	"io"
 	"os"
 	"time"
@@ -13,6 +12,7 @@ import (
 	zlog "github.com/rs/zerolog/log"
 
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
 )
 
