@@ -1,5 +1,5 @@
-checksum: dc1f12e770401c2e354a83b04975fb7673d301b5
-vendor: .proto
+checksum: 0cff806a9bcb71452eac9fa294e6aa308e31cdfe
+vendor: proto-vendor
 base:
   out: proto
   paths: source_relative
@@ -18,3 +18,15 @@ plugins:
   - name: go
   - name: go-errors
   - name: go-enum
+linter:
+  rules:
+    included_paths: []
+    excluded_paths: []
+    enabled_rules:
+      - core::0131::http-method
+      - core::0131::http-body
+      - core::0235::plural-method-name
+    disabled_rules:
+      - all
+  format_type: yaml
+  ignore_comment_disables_flag: false

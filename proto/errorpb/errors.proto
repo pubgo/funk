@@ -2,16 +2,17 @@ syntax = "proto3";
 
 package errors;
 
-option go_package = "github.com/pubgo/funk/proto/errorpb;errorpb";
-
 import "errorpb/code.proto";
 import "google/protobuf/any.proto";
+
+option go_package = "github.com/pubgo/funk/proto/errorpb;errorpb";
 
 message ErrMsg {
   string msg = 1;
   string detail = 2;
   string stack = 3;
   map<string, string> tags = 4;
+  optional string id = 5;
 }
 
 message ErrCode {
@@ -30,6 +31,7 @@ message ErrCode {
 
   // Error detail include request or other user defined information
   repeated google.protobuf.Any details = 5;
+  optional string id = 6;
 }
 
 message ErrTrace {
@@ -50,4 +52,5 @@ message ErrWrap {
   string caller = 2;
   repeated string stacks = 3;
   google.protobuf.Any error = 4;
+  optional string id = 5;
 }

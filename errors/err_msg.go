@@ -2,14 +2,15 @@ package errors
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 
-	json "github.com/goccy/go-json"
 	"github.com/pubgo/funk/errors/errinter"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
+	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -18,22 +19,24 @@ func NewMsgErr(msg *errorpb.ErrMsg) error {
 		return nil
 	}
 
-	return &ErrWrap{
-		err: &ErrMsg{pb: msg, err: errors.New(msg.Msg)},
-		pb: &errorpb.ErrWrap{
-			Caller: stack.Caller(1).String(),
-			Error:  MustProtoToAny(msg),
-		},
+	if msg.Id == nil {
+		msg.Id = newErrorId()
 	}
+
+	return &ErrMsg{pb: msg, err: errors.New(msg.Msg)}
 }
 
 func WrapMsg(err error, msg *errorpb.ErrMsg) error {
-	if generic.IsNil(err) {
+	if err == nil {
 		return nil
 	}
 
 	if msg == nil {
-		panic("error msg is nil")
+		return Wrap(err, "error msg is nil")
+	}
+
+	if msg.Id == nil {
+		msg.Id = lo.ToPtr(getErrorId(err))
 	}
 
 	return &ErrWrap{
@@ -41,6 +44,7 @@ func WrapMsg(err error, msg *errorpb.ErrMsg) error {
 		pb: &errorpb.ErrWrap{
 			Caller: stack.Caller(1).String(),
 			Error:  MustProtoToAny(msg),
+			Id:     msg.Id,
 		},
 	}
 }
@@ -55,6 +59,7 @@ type ErrMsg struct {
 	pb  *errorpb.ErrMsg
 }
 
+func (t *ErrMsg) ID() string                    { return lo.FromPtr(t.pb.Id) }
 func (t *ErrMsg) Unwrap() error                 { return t.err }
 func (t *ErrMsg) Error() string                 { return t.err.Error() }
 func (t *ErrMsg) Kind() string                  { return "err_msg" }
@@ -68,6 +73,7 @@ func (t *ErrMsg) String() string {
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorDetail, t.pb.Detail))
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorStack, t.pb.Stack))
 	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorTags, t.pb.Tags))
+	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorId, lo.FromPtr(t.pb.Id)))
 	errStringify(buf, t.err)
 	return buf.String()
 }
@@ -79,5 +85,6 @@ func (t *ErrMsg) MarshalJSON() ([]byte, error) {
 	data["detail"] = t.pb.Detail
 	data["stack"] = t.pb.Stack
 	data["tags"] = t.pb.Tags
+	data["id"] = t.pb.Id
 	return json.Marshal(data)
 }

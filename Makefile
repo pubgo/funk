@@ -37,6 +37,10 @@ protobuf:
 	protobuild vendor
 	protobuild gen
 
+.PHONY: protolint
+protolint:
+	protobuild lint
+
 vet:
 	go vet ./...
 

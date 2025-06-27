@@ -76,11 +76,8 @@ type ErrAs interface {
 	As(any) bool
 }
 
-type ErrID interface {
-	ID() string
-}
-
 type Error interface {
+	ID() string
 	Kind() string
 	Error() string
 	String() string

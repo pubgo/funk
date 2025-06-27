@@ -11,16 +11,21 @@ type (
 	ctxMapFieldKey struct{}
 )
 
-func LoggerFromCtx(ctx context.Context) Logger {
+func LoggerFromCtx(ctx context.Context, loggers ...Logger) Logger {
+	defaultLog := stdLog
+	if len(loggers) > 0 {
+		defaultLog = loggers[0]
+	}
+
 	if ctx == nil {
-		return stdLog
+		return defaultLog
 	}
 
 	if ll, ok := ctx.Value(ctxLoggerKey{}).(Logger); ok {
 		return ll
 	}
 
-	return stdLog
+	return defaultLog
 }
 
 func CreateLoggerCtx(ctx context.Context, ll Logger) context.Context {
