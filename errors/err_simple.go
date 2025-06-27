@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/samber/lo"
 
 	"github.com/pubgo/funk/errors/errinter"
 	"github.com/pubgo/funk/proto/errorpb"
+	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
 )
 
