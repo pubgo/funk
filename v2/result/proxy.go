@@ -2,7 +2,7 @@ package result
 
 import (
 	"fmt"
-
+	
 	"github.com/samber/lo"
 )
 

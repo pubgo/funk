@@ -47,6 +47,10 @@ func (e Error) WrapErr(err *errors.Err, tags ...errors.Tag) Error {
 	return Error{err: errors.WrapTag(errors.WrapCaller(err, 1), tags...)}
 }
 
+func (e Error) WithErr(err error) Error {
+	return Error{err: errors.WrapCaller(err, 1)}
+}
+
 func (e Error) Inspect(fn func(error)) Error {
 	if e.IsErr() {
 		err := e.getErr()
