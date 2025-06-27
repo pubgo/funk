@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/stack"
 	"github.com/rs/zerolog"
 )
@@ -141,18 +142,24 @@ func (l *loggerImpl) Err(err error, ctxL ...context.Context) *zerolog.Event {
 		return nil
 	}
 
+	var fn = func(e *zerolog.Event) {
+		if id := errors.GetErrorId(err); id != "" {
+			e.Str("error_id", id)
+		}
+	}
+
 	if err != nil {
 		if errJson, ok := err.(json.Marshaler); ok {
 			errJsonBytes, _ := errJson.MarshalJSON()
 			if len(errJsonBytes) > 0 {
-				return l.newEvent(ctx, l.getLog().Error().Str("error", err.Error()).RawJSON("error_detail", errJsonBytes))
+				return l.newEvent(ctx, l.getLog().Error().Func(fn).Str(zerolog.ErrorFieldName, err.Error()).RawJSON("error_detail", errJsonBytes))
 			}
 		}
 
-		return l.newEvent(ctx, l.getLog().Error().Str("error", err.Error()))
+		return l.newEvent(ctx, l.getLog().Error().Func(fn).Str(zerolog.ErrorFieldName, err.Error()))
 	}
 
-	return l.newEvent(ctx, l.getLog().Err(err))
+	return l.newEvent(ctx, l.getLog().Err(err).Func(fn))
 }
 
 func (l *loggerImpl) Panic(ctxL ...context.Context) *zerolog.Event {

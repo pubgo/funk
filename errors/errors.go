@@ -304,3 +304,19 @@ func ParseErrToPb(err error) proto.Message {
 		return &errorpb.ErrMsg{Msg: err.Error(), Detail: fmt.Sprintf("%v", err)}
 	}
 }
+
+func GetErrorId(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	for err != nil {
+		if v, ok := err.(Error); ok {
+			return v.ID()
+		}
+
+		err = Unwrap(err)
+	}
+
+	return ""
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pubgo/funk/errors"
 	"io"
 	"os"
 	"time"
@@ -48,6 +49,11 @@ var (
 				}
 			default:
 				errDetail = fmt.Sprintf("%#v", err)
+			}
+
+			id := errors.GetErrorId(err)
+			if id != "" {
+				return fmt.Sprintf("%s(%s): %s", err.Error(), id, errDetail)
 			}
 
 			return fmt.Sprintf("%s: %s", err.Error(), errDetail)
