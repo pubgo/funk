@@ -167,6 +167,10 @@ func (r Result[T]) WithErrorf(str string, args ...any) Result[T] {
 	return Result[T]{err: err}
 }
 
+func (r Result[T]) WrapErr(err *errors.Err, tags ...errors.Tag) Result[T] {
+	return Result[T]{err: errors.WrapTag(errors.WrapCaller(err, 1), tags...)}
+}
+
 func (r Result[T]) WithErr(err error) Result[T] {
 	if err == nil {
 		return r
