@@ -208,7 +208,7 @@ func (r Result[T]) getValue() T { return lo.FromPtr(r.v) }
 
 func (r Result[T]) getErr() error { return r.err }
 
-func (r Result[T]) setError(err error) {
+func (r *Result[T]) setError(err error) {
 	if err == nil {
 		return
 	}
