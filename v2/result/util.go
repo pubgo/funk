@@ -7,9 +7,9 @@ import (
 
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/internal/anyhow/aherrcheck"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/stack"
+	"github.com/pubgo/funk/v2/result/resultchecker"
 	"github.com/samber/lo"
 )
 
@@ -128,7 +128,7 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 		break
 	}
 
-	checkers := append(aherrcheck.GetErrChecks(), aherrcheck.GetCheckersFromCtx(ctx)...)
+	checkers := append(resultchecker.GetErrChecks(), resultchecker.GetCheckersFromCtx(ctx)...)
 	var err = r.getErr()
 	for _, fn := range checkers {
 		err = fn(ctx, err)
@@ -190,7 +190,7 @@ func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts .
 	}
 
 	var err = r.getErr()
-	for _, fn := range aherrcheck.GetErrChecks() {
+	for _, fn := range resultchecker.GetErrChecks() {
 		err = fn(ctx, err)
 		if err == nil {
 			return ret, nil
