@@ -6,10 +6,24 @@ import (
 	"fmt"
 
 	"github.com/pubgo/funk/errors/errinter"
+	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/proto/errorpb"
+	"github.com/rs/xid"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
 )
+
+func NewErr(msg *Err) error {
+	if generic.IsNil(msg) {
+		return nil
+	}
+
+	if msg.id == "" {
+		msg.id = xid.New().String()
+	}
+
+	return msg
+}
 
 var (
 	_ fmt.Formatter = (*Err)(nil)
