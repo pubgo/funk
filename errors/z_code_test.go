@@ -6,8 +6,6 @@ import (
 
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/proto/errorpb"
-	"github.com/pubgo/funk/version"
-	"github.com/rs/xid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -54,11 +52,6 @@ func TestCodeErr(t *testing.T) {
 	})
 
 	err = errors.WrapTag(err, errors.T("name", "value"), errors.T("name1", "value"))
-	err = errors.WrapTrace(err, &errorpb.ErrTrace{
-		Version: version.Version(),
-		Service: version.Project(),
-		Id:      xid.New().String(),
-	})
 
 	err = errors.WrapStack(err)
 	errors.Debug(err)

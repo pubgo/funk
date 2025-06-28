@@ -4,7 +4,37 @@ import (
 	"context"
 )
 
-type ctxEventKey struct{}
+type (
+	ctxEventKey    struct{}
+	ctxLoggerKey   struct{}
+	disableLogKey  struct{}
+	ctxMapFieldKey struct{}
+)
+
+func LoggerFromCtx(ctx context.Context, loggers ...Logger) Logger {
+	defaultLog := stdLog
+	if len(loggers) > 0 {
+		defaultLog = loggers[0]
+	}
+
+	if ctx == nil {
+		return defaultLog
+	}
+
+	if ll, ok := ctx.Value(ctxLoggerKey{}).(Logger); ok {
+		return ll
+	}
+
+	return defaultLog
+}
+
+func CreateLoggerCtx(ctx context.Context, ll Logger) context.Context {
+	if ll == nil || ctx == nil {
+		panic("ctx or log param is nil")
+	}
+
+	return context.WithValue(ctx, ctxLoggerKey{}, ll)
+}
 
 func CreateEventCtx(ctx context.Context, evt *Event) context.Context {
 	if evt == nil || ctx == nil {
@@ -45,8 +75,6 @@ func getEventFromCtx(ctx context.Context) *Event {
 	return nil
 }
 
-type disableLogKey struct{}
-
 func WithDisabled(ctx context.Context) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
@@ -59,8 +87,6 @@ func isLogDisabled(ctx context.Context) bool {
 	b, ok := ctx.Value(disableLogKey{}).(bool)
 	return b && ok
 }
-
-type ctxMapFieldKey struct{}
 
 func createFieldCtx(ctx context.Context, mm Map) context.Context {
 	if ctx == nil {

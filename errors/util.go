@@ -7,48 +7,16 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/alecthomas/repr"
+	"github.com/kr/pretty"
 	"github.com/pubgo/funk/convert"
 	"github.com/pubgo/funk/errors/errinter"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/xid"
+	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
-	"google.golang.org/protobuf/types/known/structpb"
 )
-
-func NewCodeErrWithMap(code *errorpb.ErrCode, details ...map[string]any) error {
-	code = cloneAndCheck(code)
-	if code == nil {
-		return nil
-	}
-
-	var detailMaps = make(map[string]any)
-	for _, detail := range details {
-		for k, v := range detail {
-			detailMaps[k] = v
-		}
-	}
-
-	pnData, err := structpb.NewStruct(detailMaps)
-	if err != nil {
-		log.Err(err).Msg("failed to create detail struct")
-	}
-
-	return NewCodeErr(code, pnData)
-}
-
-func NewCodeErrWithMsg(code *errorpb.ErrCode, msg string, details ...proto.Message) error {
-	code = cloneAndCheck(code)
-	if code == nil {
-		return nil
-	}
-
-	code.Message = strings.ToTitle(strings.TrimSpace(msg))
-	return NewCodeErr(code, details...)
-}
 
 func cloneAndCheck(code *errorpb.ErrCode) *errorpb.ErrCode {
 	if code == nil {
@@ -61,38 +29,6 @@ func cloneAndCheck(code *errorpb.ErrCode) *errorpb.ErrCode {
 	}
 
 	return code
-}
-
-func MustProtoToAny(p proto.Message) *anypb.Any {
-	switch p := p.(type) {
-	case nil:
-		return nil
-	case *anypb.Any:
-		return p
-	}
-
-	pb, err := anypb.New(p)
-	if err != nil {
-		log.Err(err).Any("data", p).Msgf("failed to encode protobuf message to any message")
-		return nil
-	} else {
-		return pb
-	}
-}
-
-func ParseErrToPb(err error) proto.Message {
-	switch err1 := err.(type) {
-	case nil:
-		return nil
-	case ErrorProto:
-		return err1.Proto()
-	case GRPCStatus:
-		return err1.GRPCStatus().Proto()
-	case proto.Message:
-		return err1
-	default:
-		return &errorpb.ErrMsg{Msg: err.Error(), Detail: fmt.Sprintf("%v", err)}
-	}
 }
 
 func handleGrpcError(err error) error {
@@ -127,7 +63,7 @@ func parseError(val interface{}) error {
 	case []byte:
 		return errors.New(convert.B2S(v))
 	default:
-		return &Err{Msg: fmt.Sprintf("%v", v), Detail: repr.String(v)}
+		return &Err{Msg: fmt.Sprintf("%v", v), Detail: pretty.Sprint(v)}
 	}
 }
 
@@ -139,7 +75,7 @@ func errStringify(buf *bytes.Buffer, err error) {
 	err1, ok := err.(fmt.Stringer)
 	if ok {
 		if _, ok = err.(*ErrWrap); !ok {
-			buf.WriteString("error:\n")
+			buf.WriteString("===============================================================\n")
 		}
 		buf.WriteString(err1.String())
 		return
@@ -147,10 +83,7 @@ func errStringify(buf *bytes.Buffer, err error) {
 
 	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorErrMsg, strings.TrimSpace(err.Error())))
 	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorErrDetail, strings.TrimSpace(fmt.Sprintf("%v", err))))
-	err = Unwrap(err)
-	if err != nil {
-		errStringify(buf, err)
-	}
+	errStringify(buf, Unwrap(err))
 }
 
 func errJsonify(err error) map[string]any {
@@ -198,11 +131,31 @@ func getStack() []*stack.Frame {
 			continue
 		}
 
-		if _, ok := skipStackMap.Load(cc.Pkg); ok {
+		if filterStack(cc) {
 			continue
 		}
 
 		ss = append(ss, cc)
 	}
 	return ss
+}
+
+func newErrorId() *string {
+	return lo.ToPtr(xid.New().String())
+}
+
+func getErrorId(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	for err != nil {
+		if v, ok := err.(Error); ok {
+			return v.ID()
+		}
+
+		err = Unwrap(err)
+	}
+
+	return xid.New().String()
 }

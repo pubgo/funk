@@ -9,7 +9,12 @@ import (
 	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
+	"github.com/rs/xid"
+	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
+	"google.golang.org/protobuf/encoding/prototext"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func IfErr(err error, fn func(err error) error) error {
@@ -21,27 +26,27 @@ func IfErr(err error, fn func(err error) error) error {
 }
 
 func New(msg string) error {
-	return WrapCaller(&Err{Msg: msg}, 1)
+	return WrapCaller(&Err{Msg: msg, id: xid.New().String()}, 1)
 }
 
 // NewFmt
 // Deprecated: use Errorf instead
 func NewFmt(msg string, args ...interface{}) error {
-	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...)}, 1)
+	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...), id: xid.New().String()}, 1)
 }
 
 // Format
 // Deprecated: use Errorf instead
 func Format(msg string, args ...interface{}) error {
-	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...)}, 1)
+	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...), id: xid.New().String()}, 1)
 }
 
 func Errorf(msg string, args ...interface{}) error {
-	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...)}, 1)
+	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...), id: xid.New().String()}, 1)
 }
 
 func NewTags(msg string, tags ...Tag) error {
-	return WrapCaller(&Err{Msg: msg, Tags: tags}, 1)
+	return WrapCaller(&Err{Msg: msg, Tags: tags, id: xid.New().String()}, 1)
 }
 
 func Parse(val interface{}) error {
@@ -258,4 +263,52 @@ func WrapKV(err error, key string, value any, kvs ...any) error {
 
 func T(k string, v any) Tag {
 	return Tag{K: k, V: v}
+}
+
+func MustProtoToAny(p proto.Message) *anypb.Any {
+	switch p := p.(type) {
+	case nil:
+		return nil
+	case *anypb.Any:
+		return p
+	}
+
+	pb, err := anypb.New(p)
+	if err != nil {
+		log.Err(err).Str("protobuf", prototext.Format(p)).Msgf("failed to encode protobuf message to any")
+		return nil
+	} else {
+		return pb
+	}
+}
+
+func ParseErrToPb(err error) proto.Message {
+	switch err1 := err.(type) {
+	case nil:
+		return nil
+	case ErrorProto:
+		return err1.Proto()
+	case GRPCStatus:
+		return err1.GRPCStatus().Proto()
+	case proto.Message:
+		return err1
+	default:
+		return &errorpb.ErrMsg{Msg: err.Error(), Detail: fmt.Sprintf("%v", err)}
+	}
+}
+
+func GetErrorId(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	for err != nil {
+		if v, ok := err.(Error); ok {
+			return v.ID()
+		}
+
+		err = Unwrap(err)
+	}
+
+	return ""
 }

@@ -1,9 +1,9 @@
 package errors
 
 import (
+	"encoding/json"
 	"fmt"
 
-	json "github.com/goccy/go-json"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 )
@@ -77,6 +77,7 @@ type ErrAs interface {
 }
 
 type Error interface {
+	ID() string
 	Kind() string
 	Error() string
 	String() string

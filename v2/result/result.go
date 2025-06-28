@@ -150,8 +150,7 @@ func (r Result[T]) GetErr() error {
 		return nil
 	}
 
-	err := r.getErr()
-	return errors.WrapCaller(err, 1)
+	return r.getErr()
 }
 
 func (r Result[T]) String() string {
@@ -165,6 +164,10 @@ func (r Result[T]) WithErrorf(str string, args ...any) Result[T] {
 	err := fmt.Errorf(str, args...)
 	err = errors.WrapCaller(err, 1)
 	return Result[T]{err: err}
+}
+
+func (r Result[T]) WrapErr(err *errors.Err, tags ...errors.Tag) Result[T] {
+	return Result[T]{err: errors.WrapTag(errors.WrapCaller(err, 1), tags...)}
 }
 
 func (r Result[T]) WithErr(err error) Result[T] {
@@ -204,7 +207,7 @@ func (r Result[T]) getValue() T { return lo.FromPtr(r.v) }
 
 func (r Result[T]) getErr() error { return r.err }
 
-func (r Result[T]) setError(err error) {
+func (r *Result[T]) setError(err error) {
 	if err == nil {
 		return
 	}

@@ -8,8 +8,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/alecthomas/repr"
 	jjson "github.com/goccy/go-json"
+	"github.com/kr/pretty"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -29,7 +29,7 @@ func Json(err error) []byte {
 	err = errors.Parse(err)
 	data, err := jjson.Marshal(err)
 	if err != nil {
-		log.Err(err).Stack().Str("err_stack", repr.String(err)).Msg("failed to marshal error")
+		log.Err(err).Stack().Str("err_stack", pretty.Sprint(err)).Msg("failed to marshal error")
 		panic(fmt.Errorf("failed to marshal error, err=%w", err))
 	}
 	return data
@@ -43,7 +43,7 @@ func JsonPretty(err error) []byte {
 	err = errors.Parse(err)
 	data, err := jjson.MarshalIndent(err, " ", "  ")
 	if err != nil {
-		log.Err(err).Stack().Str("err_stack", repr.String(err)).Msg("failed to marshal error")
+		log.Err(err).Stack().Str("err_stack", pretty.Sprint(err)).Msg("failed to marshal error")
 		panic(fmt.Errorf("failed to marshal error, err=%w", err))
 	}
 	return data

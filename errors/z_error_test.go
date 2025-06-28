@@ -4,13 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/rs/xid"
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/proto/testcodepb"
-	"github.com/pubgo/funk/version"
 )
 
 func TestFormat(t *testing.T) {
@@ -38,11 +36,6 @@ func TestFormat(t *testing.T) {
 	})
 
 	err = errors.WrapTag(err, errors.T("name", "value"), errors.T("name1", "value"))
-	err = errors.WrapTrace(err, &errorpb.ErrTrace{
-		Version: version.Version(),
-		Service: version.Project(),
-		Id:      xid.New().String(),
-	})
 
 	err = errors.WrapStack(err)
 	errors.Debug(err)
