@@ -96,7 +96,6 @@ func WrapCode(err error, code *errorpb.ErrCode) error {
 		pb: &errorpb.ErrWrap{
 			Caller: stack.Caller(1).String(),
 			Error:  MustProtoToAny(code),
-			Id:     code.Id,
 		},
 	}
 }

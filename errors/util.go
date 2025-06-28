@@ -83,10 +83,7 @@ func errStringify(buf *bytes.Buffer, err error) {
 
 	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorErrMsg, strings.TrimSpace(err.Error())))
 	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorErrDetail, strings.TrimSpace(fmt.Sprintf("%v", err))))
-	err = Unwrap(err)
-	if err != nil {
-		errStringify(buf, err)
-	}
+	errStringify(buf, Unwrap(err))
 }
 
 func errJsonify(err error) map[string]any {

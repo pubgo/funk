@@ -44,7 +44,6 @@ func WrapMsg(err error, msg *errorpb.ErrMsg) error {
 		pb: &errorpb.ErrWrap{
 			Caller: stack.Caller(1).String(),
 			Error:  MustProtoToAny(msg),
-			Id:     msg.Id,
 		},
 	}
 }

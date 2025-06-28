@@ -136,7 +136,6 @@ func WrapStack(err error) error {
 	return &ErrWrap{
 		err: handleGrpcError(err),
 		pb: &errorpb.ErrWrap{
-			Id:     lo.ToPtr(getErrorId(err)),
 			Caller: stack.Caller(1).String(),
 			Stacks: lo.Map(getStack(), func(item *stack.Frame, index int) string { return item.String() }),
 			Error:  MustProtoToAny(ParseErrToPb(err)),
@@ -157,7 +156,6 @@ func WrapCaller(err error, skip ...int) error {
 	return &ErrWrap{
 		err: handleGrpcError(err),
 		pb: &errorpb.ErrWrap{
-			Id:     lo.ToPtr(getErrorId(err)),
 			Caller: stack.Caller(depth).String(),
 			Error:  MustProtoToAny(ParseErrToPb(err)),
 		},
@@ -172,7 +170,6 @@ func Wrapf(err error, format string, args ...interface{}) error {
 	return &ErrWrap{
 		err: handleGrpcError(err),
 		pb: &errorpb.ErrWrap{
-			Id:     lo.ToPtr(getErrorId(err)),
 			Caller: stack.Caller(1).String(),
 			Error:  MustProtoToAny(ParseErrToPb(err)),
 			Tags:   Tags{T("msg", fmt.Sprintf(format, args...))}.ToMap(),
@@ -188,7 +185,6 @@ func Wrap(err error, msg string) error {
 	return &ErrWrap{
 		err: handleGrpcError(err),
 		pb: &errorpb.ErrWrap{
-			Id:     lo.ToPtr(getErrorId(err)),
 			Caller: stack.Caller(1).String(),
 			Error:  MustProtoToAny(ParseErrToPb(err)),
 			Tags:   Tags{T("msg", msg)}.ToMap(),
@@ -208,7 +204,6 @@ func WrapMapTag(err error, tags Maps) error {
 	return &ErrWrap{
 		err: handleGrpcError(err),
 		pb: &errorpb.ErrWrap{
-			Id:     lo.ToPtr(getErrorId(err)),
 			Caller: stack.Caller(1).String(),
 			Error:  MustProtoToAny(ParseErrToPb(err)),
 			Tags:   tags.Tags().ToMap(),
@@ -224,7 +219,6 @@ func WrapTag(err error, tags ...Tag) error {
 	return &ErrWrap{
 		err: handleGrpcError(err),
 		pb: &errorpb.ErrWrap{
-			Id:     lo.ToPtr(getErrorId(err)),
 			Caller: stack.Caller(1).String(),
 			Error:  MustProtoToAny(ParseErrToPb(err)),
 			Tags:   Tags(tags).ToMap(),
@@ -240,7 +234,6 @@ func WrapFn(err error, fn func() Tags) error {
 	return &ErrWrap{
 		err: handleGrpcError(err),
 		pb: &errorpb.ErrWrap{
-			Id:     lo.ToPtr(getErrorId(err)),
 			Caller: stack.Caller(1).String(),
 			Error:  MustProtoToAny(ParseErrToPb(err)),
 			Tags:   fn().ToMap(),
@@ -261,7 +254,6 @@ func WrapKV(err error, key string, value any, kvs ...any) error {
 	return &ErrWrap{
 		err: handleGrpcError(err),
 		pb: &errorpb.ErrWrap{
-			Id:     lo.ToPtr(getErrorId(err)),
 			Caller: stack.Caller(1).String(),
 			Error:  MustProtoToAny(ParseErrToPb(err)),
 			Tags:   Tags{T(key, value)}.ToMap(),
