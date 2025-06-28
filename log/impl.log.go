@@ -3,12 +3,12 @@ package log
 import (
 	"context"
 	"fmt"
-	"google.golang.org/protobuf/encoding/prototext"
 	"strings"
 
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/stack"
 	"github.com/rs/zerolog"
+	"google.golang.org/protobuf/encoding/prototext"
 )
 
 var _ Logger = (*loggerImpl)(nil)

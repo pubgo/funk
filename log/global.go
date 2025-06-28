@@ -3,13 +3,13 @@ package log
 import (
 	"context"
 	"fmt"
-	"google.golang.org/protobuf/encoding/prototext"
 	"io"
 	"os"
 	"time"
 
 	"github.com/rs/zerolog"
 	zlog "github.com/rs/zerolog/log"
+	"google.golang.org/protobuf/encoding/prototext"
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
