@@ -17,10 +17,18 @@ var (
 
 type ErrWrap struct {
 	err error
+	id  string
 	pb  *errorpb.ErrWrap
 }
 
-func (e *ErrWrap) ID() string { return getErrorId(e.err) }
+func (e *ErrWrap) ID() string {
+	if e.id != "" {
+		return e.id
+	}
+
+	e.id = getErrorId(e.err)
+	return e.id
+}
 func (e *ErrWrap) Proto() proto.Message {
 	return e.pb
 }
