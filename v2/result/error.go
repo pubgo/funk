@@ -79,7 +79,7 @@ func (e Error) GetErr() error {
 		return nil
 	}
 
-	return errors.WrapCaller(e.getErr(), 1)
+	return e.getErr()
 }
 
 func (e Error) Must() {

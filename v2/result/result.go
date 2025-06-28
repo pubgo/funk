@@ -150,8 +150,7 @@ func (r Result[T]) GetErr() error {
 		return nil
 	}
 
-	err := r.getErr()
-	return errors.WrapCaller(err, 1)
+	return r.getErr()
 }
 
 func (r Result[T]) String() string {
