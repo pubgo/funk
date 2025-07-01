@@ -134,8 +134,11 @@ func LoadFromPath[T any](val *T, cfgPath string) EnvConfigMap {
 			continue
 		}
 
-		envConfigBytes := result.Of(os.ReadFile(envPath)).Expect("failed to handler env config data, path=%s", envPath)
-		assert.MustF(yaml.Unmarshal(envConfigBytes, &envCfgMap), "failed to unmarshal env config, path=%s", envPath)
+		pathList := listAllPath(envPath).Expect("failed to list envPath: %s", envPath)
+		for _, p := range pathList {
+			envConfigBytes := result.Of(os.ReadFile(p)).Expect("failed to handler env config data, path=%s", p)
+			assert.MustF(yaml.Unmarshal(envConfigBytes, &envCfgMap), "failed to unmarshal env config, path=%s", p)
+		}
 	}
 	initEnv(envCfgMap)
 
