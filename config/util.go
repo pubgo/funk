@@ -220,6 +220,9 @@ func getEnvData(cfg *config) map[string]any {
 		"get_path_dir": func() string {
 			return cfg.workDir
 		},
+		"path_dir": func() string {
+			return cfg.workDir
+		},
 		"embed": func(name string) string {
 			if name == "" {
 				return ""

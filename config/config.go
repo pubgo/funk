@@ -54,7 +54,7 @@ func GetConfigData(cfgPath string) (_ []byte, gErr error) {
 	return configBytes, nil
 }
 
-func LoadFromPath[T any](val *T, cfgPath string) {
+func LoadFromPath[T any](val *T, cfgPath string) EnvConfigMap {
 	defer recovery.Exit(func(err error) error {
 		log.Err(err).Str("config_path", cfgPath).Msg("failed to load config")
 		return err
@@ -90,7 +90,7 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 			Str("config_data", string(configBytes)).
 			Str("config_path", cfgPath).
 			Msg("failed to unmarshal config")
-		return
+		return nil
 	}
 
 	parentDir := filepath.Dir(cfgPath)
@@ -128,6 +128,17 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 	var res Resources
 	assert.Must(yaml.Unmarshal(configBytes, &res), "failed to unmarshal resource config")
 
+	var envCfgMap EnvConfigMap
+	for _, envPath := range res.PatchEnvs {
+		if pathutil.IsNotExist(envPath) {
+			continue
+		}
+
+		envConfigBytes := result.Of(os.ReadFile(envPath)).Expect("failed to handler env config data, path=%s", envPath)
+		assert.MustF(yaml.Unmarshal(envConfigBytes, &envCfgMap), "failed to unmarshal env config, path=%s", envPath)
+	}
+	initEnv(envCfgMap)
+
 	var cfgList []T
 	cfgList = append(cfgList, typex.DoBlock1(func() []T {
 		var resPathList = getRealPath(res.Resources)
@@ -160,11 +171,13 @@ func LoadFromPath[T any](val *T, cfgPath string) {
 	})...)
 
 	assert.Exit(Merge(val, cfgList...), "failed to merge config")
+	return envCfgMap
 }
 
 type Cfg[T any] struct {
-	T T
-	P *T
+	T      T
+	P      *T
+	EnvCfg *EnvConfigMap
 }
 
 func Load[T any]() Cfg[T] {
@@ -175,6 +188,6 @@ func Load[T any]() Cfg[T] {
 	}
 
 	var cfg T
-	LoadFromPath(&cfg, configPath)
-	return Cfg[T]{T: cfg, P: &cfg}
+	cfgMap := LoadFromPath(&cfg, configPath)
+	return Cfg[T]{T: cfg, P: &cfg, EnvCfg: lo.ToPtr(cfgMap)}
 }
