@@ -2,7 +2,6 @@ package log
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/rs/zerolog"
 	zlog "github.com/rs/zerolog/log"
+	"google.golang.org/protobuf/encoding/prototext"
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
@@ -40,13 +40,8 @@ var (
 
 			var errDetail string
 			switch errData := err.(type) {
-			case json.Marshaler:
-				detail, err := errData.MarshalJSON()
-				if err != nil {
-					errDetail = err.Error()
-				} else {
-					errDetail = string(detail)
-				}
+			case errors.ErrorProto:
+				errDetail = prototext.Format(errData.Proto())
 			default:
 				errDetail = fmt.Sprintf("%#v", err)
 			}
@@ -56,7 +51,7 @@ var (
 				return fmt.Sprintf("%s(%s): %s", err.Error(), id, errDetail)
 			}
 
-			return fmt.Sprintf("%s: %s", err.Error(), errDetail)
+			return fmt.Sprintf("%s: %v", err.Error(), errDetail)
 		}
 	})
 

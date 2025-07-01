@@ -52,5 +52,4 @@ message ErrWrap {
   string caller = 2;
   repeated string stacks = 3;
   google.protobuf.Any error = 4;
-  optional string id = 5;
 }

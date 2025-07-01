@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/alecthomas/repr"
+	"github.com/kr/pretty"
 	"github.com/pubgo/funk/convert"
 	"github.com/pubgo/funk/errors/errinter"
 	"github.com/pubgo/funk/generic"
@@ -63,7 +63,7 @@ func parseError(val interface{}) error {
 	case []byte:
 		return errors.New(convert.B2S(v))
 	default:
-		return &Err{Msg: fmt.Sprintf("%v", v), Detail: repr.String(v)}
+		return &Err{Msg: fmt.Sprintf("%v", v), Detail: pretty.Sprint(v)}
 	}
 }
 
@@ -75,7 +75,7 @@ func errStringify(buf *bytes.Buffer, err error) {
 	err1, ok := err.(fmt.Stringer)
 	if ok {
 		if _, ok = err.(*ErrWrap); !ok {
-			buf.WriteString("error:\n")
+			buf.WriteString("===============================================================\n")
 		}
 		buf.WriteString(err1.String())
 		return
@@ -83,10 +83,7 @@ func errStringify(buf *bytes.Buffer, err error) {
 
 	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorErrMsg, strings.TrimSpace(err.Error())))
 	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorErrDetail, strings.TrimSpace(fmt.Sprintf("%v", err))))
-	err = Unwrap(err)
-	if err != nil {
-		errStringify(buf, err)
-	}
+	errStringify(buf, Unwrap(err))
 }
 
 func errJsonify(err error) map[string]any {

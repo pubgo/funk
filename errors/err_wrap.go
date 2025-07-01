@@ -7,7 +7,6 @@ import (
 
 	"github.com/pubgo/funk/errors/errinter"
 	"github.com/pubgo/funk/proto/errorpb"
-	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -18,10 +17,18 @@ var (
 
 type ErrWrap struct {
 	err error
+	id  string
 	pb  *errorpb.ErrWrap
 }
 
-func (e *ErrWrap) ID() string { return lo.FromPtr(e.pb.Id) }
+func (e *ErrWrap) ID() string {
+	if e.id != "" {
+		return e.id
+	}
+
+	e.id = getErrorId(e.err)
+	return e.id
+}
 func (e *ErrWrap) Proto() proto.Message {
 	return e.pb
 }

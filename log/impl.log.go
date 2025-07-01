@@ -2,13 +2,13 @@ package log
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/stack"
 	"github.com/rs/zerolog"
+	"google.golang.org/protobuf/encoding/prototext"
 )
 
 var _ Logger = (*loggerImpl)(nil)
@@ -149,11 +149,10 @@ func (l *loggerImpl) Err(err error, ctxL ...context.Context) *zerolog.Event {
 	}
 
 	if err != nil {
-		if errJson, ok := err.(json.Marshaler); ok {
-			errJsonBytes, _ := errJson.MarshalJSON()
-			if len(errJsonBytes) > 0 {
-				return l.newEvent(ctx, l.getLog().Error().Func(fn).Str(zerolog.ErrorFieldName, err.Error()).RawJSON("error_detail", errJsonBytes))
-			}
+		if errStr, ok := err.(errors.ErrorProto); ok {
+			return l.newEvent(ctx, l.getLog().Error().Func(fn).
+				Str(zerolog.ErrorFieldName, err.Error()).
+				Str("error_detail", prototext.Format(errStr.Proto())))
 		}
 
 		return l.newEvent(ctx, l.getLog().Error().Func(fn).Str(zerolog.ErrorFieldName, err.Error()))
