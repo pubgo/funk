@@ -130,7 +130,9 @@ func LoadFromPath[T any](val *T, cfgPath string) EnvConfigMap {
 
 	var envCfgMap EnvConfigMap
 	for _, envPath := range res.PatchEnvs {
+		envPath = filepath.Join(parentDir, envPath)
 		if pathutil.IsNotExist(envPath) {
+			log.Warn().Str("env_path", envPath).Msg("env config cfgPath not found")
 			continue
 		}
 
