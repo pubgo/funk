@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/stack"
 	"github.com/rs/zerolog"
 	"google.golang.org/protobuf/encoding/prototext"
 )
@@ -59,7 +58,6 @@ func (l *loggerImpl) nameWithCaller(name string, caller int) Logger {
 	if log.fields == nil {
 		log.fields = make(Map, 1)
 	}
-	log.fields[ModuleName] = stack.Caller(caller + 1).Pkg
 
 	if log.name == "" {
 		log.name = name
