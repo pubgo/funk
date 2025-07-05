@@ -11,10 +11,13 @@ import (
 type EnvConfigMap map[string]*EnvConf
 
 type EnvConf struct {
+	Name        string `yaml:"name"`
 	Description string `yaml:"description"`
 	Default     string `yaml:"default"`
-	Name        string `yaml:"name"`
 	Required    bool   `yaml:"required"`
+	Example     string `yaml:"example"`
+	Versions    string `yaml:"versions"`
+	Tags        string `yaml:"tags"`
 }
 
 func initEnv(envMap EnvConfigMap) {
