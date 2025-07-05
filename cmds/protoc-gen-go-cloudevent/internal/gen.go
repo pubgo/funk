@@ -122,7 +122,7 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 			info := subjects[subName]
 			var keyName = fmt.Sprintf("%sCloudEventKey", info.mth.GoName)
 			genFile.Commentf("%s /%s/%s", keyName, info.srv.Desc.FullName(), info.mth.GoName)
-			genFile.Commentf(strings.TrimSpace(info.mth.Comments.Leading.String()))
+			genFile.Comment(strings.TrimSpace(info.mth.Comments.Leading.String()))
 			genFile.Const().
 				Id(keyName).
 				Op("=").

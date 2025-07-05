@@ -138,10 +138,10 @@ func TestErr(t *testing.T) {
 }
 
 func TestError(t *testing.T) {
-	err := fmt.Errorf("test error")
+	err := fmt.Errorf("test raw error")
 	log.Error().Err(err).Msg(err.Error())
 
-	err1 := errors.Errorf("test format")
-	log.Error().Err(err1).Msg(err1.Error())
+	err1 := errors.Errorf("test errors format")
+	log.Error().Err(err1).Msg("raw error: " + err1.Error())
 	log.Err(err1).Msg(err1.Error())
 }

@@ -1,3 +1,4 @@
 package log
 
-// https://github.com/phuslu/log
+// github.com/phuslu/log
+// github.com/rs/zerolog

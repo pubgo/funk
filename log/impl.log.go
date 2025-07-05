@@ -7,7 +7,6 @@ import (
 
 	"github.com/pubgo/funk/errors"
 	"github.com/rs/zerolog"
-	"google.golang.org/protobuf/encoding/prototext"
 )
 
 var _ Logger = (*loggerImpl)(nil)
@@ -141,21 +140,17 @@ func (l *loggerImpl) Err(err error, ctxL ...context.Context) *zerolog.Event {
 	}
 
 	var fn = func(e *zerolog.Event) {
+		if err == nil {
+			return
+		}
+
 		if id := errors.GetErrorId(err); id != "" {
 			e.Str("error_id", id)
 		}
+
+		e.Str("error_detail", string(errDetail(err)))
+		e.Str(zerolog.ErrorFieldName, err.Error())
 	}
-
-	if err != nil {
-		if errStr, ok := err.(errors.ErrorProto); ok {
-			return l.newEvent(ctx, l.getLog().Error().Func(fn).
-				Str(zerolog.ErrorFieldName, err.Error()).
-				Str("error_detail", prototext.Format(errStr.Proto())))
-		}
-
-		return l.newEvent(ctx, l.getLog().Error().Func(fn).Str(zerolog.ErrorFieldName, err.Error()))
-	}
-
 	return l.newEvent(ctx, l.getLog().Err(err).Func(fn))
 }
 
