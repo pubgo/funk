@@ -3,6 +3,7 @@ package errors
 import (
 	"errors"
 	"fmt"
+	"os"
 	"reflect"
 	"runtime/debug"
 
@@ -60,7 +61,7 @@ func Debug(err error) {
 
 	err = parseError(err)
 	if _err, ok := err.(fmt.Stringer); ok {
-		fmt.Println(_err.String())
+		_, _ = fmt.Fprintln(os.Stderr, _err.String())
 		return
 	}
 
