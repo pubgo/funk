@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/pubgo/funk/errors"
+
 	"github.com/rs/zerolog"
 )
 

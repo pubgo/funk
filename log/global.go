@@ -10,6 +10,7 @@ import (
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
+
 	"github.com/rs/zerolog"
 	zlog "github.com/rs/zerolog/log"
 )
