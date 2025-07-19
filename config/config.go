@@ -54,6 +54,30 @@ func GetConfigData(cfgPath string) (_ []byte, gErr error) {
 	return configBytes, nil
 }
 
+func loadEnvConfigMap(cfgPath string) EnvConfigMap {
+	var res Resources
+	configBytes := result.Of(os.ReadFile(cfgPath)).Expect("failed to read config data: %s", cfgPath)
+	assert.Must(yaml.Unmarshal(configBytes, &res), "failed to unmarshal resource config")
+
+	parentDir := filepath.Dir(cfgPath)
+	var envCfgMap EnvConfigMap
+	for _, envPath := range res.PatchEnvs {
+		envPath = filepath.Join(parentDir, envPath)
+		if pathutil.IsNotExist(envPath) {
+			log.Warn().Str("env_path", envPath).Msg("env config cfgPath not found")
+			continue
+		}
+
+		pathList := listAllPath(envPath).Expect("failed to list envPath: %s", envPath)
+		for _, p := range pathList {
+			envConfigBytes := result.Of(os.ReadFile(p)).Expect("failed to handler env config data, path=%s", p)
+			assert.MustF(yaml.Unmarshal(envConfigBytes, &envCfgMap), "failed to unmarshal env config, path=%s", p)
+		}
+	}
+	initEnv(envCfgMap)
+	return envCfgMap
+}
+
 func LoadFromPath[T any](val *T, cfgPath string) EnvConfigMap {
 	defer recovery.Exit(func(err error) error {
 		log.Err(err).Str("config_path", cfgPath).Msg("failed to load config")
@@ -74,6 +98,8 @@ func LoadFromPath[T any](val *T, cfgPath string) EnvConfigMap {
 			Str("type", fmt.Sprintf("%#v", val)).
 			Msg("config type not correct")
 	}
+
+	var envCfgMap = loadEnvConfigMap(cfgPath)
 
 	configBytes := result.Of(GetConfigData(cfgPath)).Expect("failed to handler config data")
 	defer recovery.Exit(func(err error) error {
@@ -127,22 +153,6 @@ func LoadFromPath[T any](val *T, cfgPath string) EnvConfigMap {
 
 	var res Resources
 	assert.Must(yaml.Unmarshal(configBytes, &res), "failed to unmarshal resource config")
-
-	var envCfgMap EnvConfigMap
-	for _, envPath := range res.PatchEnvs {
-		envPath = filepath.Join(parentDir, envPath)
-		if pathutil.IsNotExist(envPath) {
-			log.Warn().Str("env_path", envPath).Msg("env config cfgPath not found")
-			continue
-		}
-
-		pathList := listAllPath(envPath).Expect("failed to list envPath: %s", envPath)
-		for _, p := range pathList {
-			envConfigBytes := result.Of(os.ReadFile(p)).Expect("failed to handler env config data, path=%s", p)
-			assert.MustF(yaml.Unmarshal(envConfigBytes, &envCfgMap), "failed to unmarshal env config, path=%s", p)
-		}
-	}
-	initEnv(envCfgMap)
 
 	var cfgList []T
 	cfgList = append(cfgList, typex.DoBlock1(func() []T {
