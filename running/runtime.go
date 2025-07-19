@@ -57,5 +57,5 @@ var (
 
 func init() {
 	env.GetBoolVal(&IsDebug, "enable_debug", "debug")
-	env.GetWith(&Env, "env", "run_mode")
+	env.GetWith(&Env, "env", "run_mode", "run_env")
 }

@@ -177,7 +177,7 @@ func unmarshalOneOrList[T any](list *[]T, value *yaml.Node) error {
 	if value.Kind == yaml.SequenceNode {
 		return value.Decode(list)
 	}
-	return errors.Format("unmarshalled node: %v", value.Value)
+	return errors.Errorf("unmarshalled node: %v", value.Value)
 }
 
 func listAllPath(dirOrPath string) (ret result.Result[[]string]) {
@@ -220,6 +220,9 @@ func getEnvData(cfg *config) map[string]any {
 		"get_path_dir": func() string {
 			return cfg.workDir
 		},
+		"path_dir": func() string {
+			return cfg.workDir
+		},
 		"embed": func(name string) string {
 			if name == "" {
 				return ""
@@ -239,9 +242,9 @@ func getEnvData(cfg *config) map[string]any {
 	}
 }
 
-func cfgFormat(template string, cfg *config) string {
-	tpl := fasttemplate.New(template, "${{", "}}")
-	return tpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
+func cfgFormat(template []byte, cfg *config) []byte {
+	tpl := fasttemplate.New(string(template), "{{", "}}")
+	return []byte(tpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
 		tag = strings.TrimSpace(tag)
 		evalData, err := eval(tag, cfg)
 		if err != nil {
@@ -257,7 +260,7 @@ func cfgFormat(template string, cfg *config) string {
 		}
 
 		return w.Write(bytes.TrimSpace(data))
-	})
+	}))
 }
 
 func eval(code string, cfg *config) (any, error) {

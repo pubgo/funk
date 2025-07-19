@@ -7,13 +7,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/rs/zerolog"
-	zlog "github.com/rs/zerolog/log"
-	"google.golang.org/protobuf/encoding/prototext"
-
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
+
+	"github.com/rs/zerolog"
+	zlog "github.com/rs/zerolog/log"
 )
 
 var (
@@ -38,17 +37,10 @@ var (
 				return nil
 			}
 
-			var errDetail string
-			switch errData := err.(type) {
-			case errors.ErrorProto:
-				errDetail = prototext.Format(errData.Proto())
-			default:
-				errDetail = fmt.Sprintf("%#v", err)
-			}
-
+			errDetail := string(errDetail(err))
 			id := errors.GetErrorId(err)
 			if id != "" {
-				return fmt.Sprintf("%s(%s): %s", err.Error(), id, errDetail)
+				return fmt.Sprintf("%s, error_id:%s error_detail:%s", err.Error(), id, errDetail)
 			}
 
 			return fmt.Sprintf("%s: %v", err.Error(), errDetail)

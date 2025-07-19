@@ -24,7 +24,6 @@ func try(fn func() error) (gErr error) {
 	defer func() {
 		if err := errors.Parse(recover()); !generic.IsNil(err) {
 			gErr = errors.WrapStack(err)
-			debug.PrintStack()
 			errors.Debug(gErr)
 		}
 
@@ -43,7 +42,6 @@ func try1[T any](fn func() (T, error)) (t T, gErr error) {
 	defer func() {
 		if err := errors.Parse(recover()); !generic.IsNil(err) {
 			gErr = errors.WrapStack(err)
-			debug.PrintStack()
 			errors.Debug(gErr)
 		}
 
@@ -128,7 +126,7 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 		break
 	}
 
-	checkers := append(resultchecker.GetErrChecks(), resultchecker.GetCheckersFromCtx(ctx)...)
+	var checkers = append(resultchecker.GetErrChecks(), resultchecker.GetCheckersFromCtx(ctx)...)
 	var err = r.getErr()
 	for _, fn := range checkers {
 		err = fn(ctx, err)
@@ -184,13 +182,13 @@ func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts .
 		}
 		return err
 	}
-	setterErr := getSetterErr()
-	if setterErr != nil {
+	if setterErr := getSetterErr(); setterErr != nil {
 		log.Error(ctx).Msgf("Unwrap: error setter has value, err=%v", setterErr)
 	}
 
 	var err = r.getErr()
-	for _, fn := range resultchecker.GetErrChecks() {
+	var checkers = append(resultchecker.GetErrChecks(), resultchecker.GetCheckersFromCtx(ctx)...)
+	for _, fn := range checkers {
 		err = fn(ctx, err)
 		if err == nil {
 			return ret, nil
