@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bytes"
 	_ "embed"
 	"os"
 	"sort"
@@ -30,16 +31,16 @@ func TestExpr(t *testing.T) {
 	os.Setenv("testAbc", "hello")
 	env.Init()
 
-	assert.Equal(t, cfgFormat("${{env.TEST_ABC}}", &config{}), "hello")
-	assert.Equal(t, cfgFormat(`${{embed("configs/assets/secret")}}`, &config{}), strings.TrimSpace(`MTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1Ng==`))
+	assert.Equal(t, string(cfgFormat([]byte("{{env.TEST_ABC}}"), &config{})), "hello")
+	assert.Equal(t, string(cfgFormat([]byte(`{{embed("configs/assets/secret")}}`), &config{})), strings.TrimSpace(`MTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1Ng==`))
 
 	var dd, err = os.ReadFile("configs/assets/assets.yaml")
 	assert.NoError(t, err)
-	var dd1 = strings.TrimSpace(cfgFormat(string(dd), &config{workDir: "configs/assets"}))
+	var dd1 = bytes.TrimSpace(cfgFormat(dd, &config{workDir: "configs/assets"}))
 	var cfg testCfg
-	assert.NoError(t, yaml.Unmarshal([]byte(dd1), &cfg))
+	assert.NoError(t, yaml.Unmarshal(dd1, &cfg))
 
-	assert.Equal(t, dd1, strings.TrimSpace(genYaml))
+	assert.Equal(t, string(dd1), strings.TrimSpace(genYaml))
 }
 
 func TestEnv(t *testing.T) {
