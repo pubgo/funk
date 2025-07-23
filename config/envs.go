@@ -3,7 +3,6 @@ package config
 import (
 	"strings"
 
-	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/env"
 	"github.com/samber/lo"
 )
@@ -28,6 +27,6 @@ func initEnv(envMap EnvConfigMap) {
 			panic("env " + cfg.Name + " is required")
 		}
 
-		assert.Must(env.Set(name, envData))
+		env.Set(name, envData).Must()
 	}
 }

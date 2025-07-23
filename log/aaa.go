@@ -6,10 +6,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const (
-	ModuleName = "module"
-)
-
 type (
 	Map           = map[string]any
 	Hook          = zerolog.Hook

@@ -197,12 +197,3 @@ func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts .
 
 	return ret, err
 }
-
-func CheckErr(r ErrSetter, checks ...func() Catchable) bool {
-	for _, check := range checks {
-		if check().CatchErr(r) {
-			return true
-		}
-	}
-	return false
-}
