@@ -27,11 +27,13 @@ require (
 	github.com/mattn/go-isatty v0.0.20
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/mitchellh/mapstructure v1.5.0
+	github.com/moby/term v0.5.0
 	github.com/nats-io/nats.go v1.37.0
 	github.com/open2b/scriggo v0.56.1
 	github.com/panjf2000/ants/v2 v2.10.0
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58
 	github.com/phuslu/goid v1.0.0
+	github.com/projectdiscovery/machineid v0.0.0-20250715113114-c77eb3567582
 	github.com/pubgo/dix v0.3.15
 	github.com/rs/xid v1.5.0
 	github.com/rs/zerolog v1.33.0
@@ -113,7 +115,6 @@ require (
 	github.com/moby/patternmatcher v0.6.0 // indirect
 	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/moby/sys/user v0.1.0 // indirect
-	github.com/moby/term v0.5.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/nats-io/nkeys v0.4.7 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect

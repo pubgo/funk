@@ -2,6 +2,9 @@ package ctxutil
 
 import (
 	"context"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/samber/lo"
@@ -65,4 +68,20 @@ func GetTimeout(ctx context.Context) *time.Duration {
 		return lo.ToPtr(time.Until(deadline))
 	}
 	return nil
+}
+
+func Signal() context.Context {
+	ctx, cancel := context.WithCancel(context.Background())
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL)
+	go func() {
+		defer cancel()
+		select {
+		case <-ch:
+			break
+		case <-ctx.Done():
+			break
+		}
+	}()
+	return ctx
 }
