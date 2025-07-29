@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,6 +10,9 @@ import (
 	"strings"
 
 	"github.com/a8m/envsubst"
+	"github.com/samber/lo"
+	"gopkg.in/yaml.v3"
+
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/log"
@@ -17,8 +21,6 @@ import (
 	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/typex"
 	"github.com/pubgo/funk/vars"
-	"github.com/samber/lo"
-	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -54,6 +56,8 @@ func GetConfigData(cfgPath string) (_ []byte, gErr error) {
 	return configBytes, nil
 }
 
+func LoadEnvConfigMap(cfgPath string) EnvConfigMap { return loadEnvConfigMap(cfgPath) }
+
 func loadEnvConfigMap(cfgPath string) EnvConfigMap {
 	var res Resources
 	configBytes := result.Of(os.ReadFile(cfgPath)).Expect("failed to read config data: %s", cfgPath)
@@ -71,7 +75,12 @@ func loadEnvConfigMap(cfgPath string) EnvConfigMap {
 		pathList := listAllPath(envPath).Expect("failed to list envPath: %s", envPath)
 		for _, p := range pathList {
 			envConfigBytes := result.Of(os.ReadFile(p)).Expect("failed to handler env config data, path=%s", p)
-			assert.MustF(yaml.Unmarshal(envConfigBytes, &envCfgMap), "failed to unmarshal env config, path=%s", p)
+			envConfigBytes = bytes.TrimSpace(envConfigBytes)
+			if len(envConfigBytes) == 0 {
+				continue
+			}
+
+			assert.MustF(yaml.Unmarshal(envConfigBytes, &envCfgMap), "failed to unmarshal env config, data=%s path=%s", envConfigBytes, p)
 		}
 	}
 	initEnv(envCfgMap)

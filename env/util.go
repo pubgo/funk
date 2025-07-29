@@ -10,7 +10,10 @@ import (
 	"github.com/pubgo/funk/log/logutil"
 )
 
-var logFn = func(e *zerolog.Event) { e.Str("logger", "env") }
+var logFn = func(e *zerolog.Event) {
+	e.Str(logutil.LoggerName, "env")
+	e.Str(logutil.ModuleName, "env")
+}
 
 const PrefixKey = "ENV_PREFIX"
 
