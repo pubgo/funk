@@ -11,6 +11,9 @@ import (
 	"github.com/pubgo/funk/version"
 )
 
+func SetVersion(v string) { Version = v }
+func SetProject(p string) { Project = p }
+
 func GetSysInfo() map[string]string {
 	return map[string]string{
 		"main_path":     version.MainPath(),

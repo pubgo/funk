@@ -19,6 +19,3 @@ func BuildTime() string {
 func Project() string {
 	return project
 }
-
-func SetVersion(v string) { version = v }
-func SetProject(p string) { project = p }
