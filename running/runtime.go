@@ -56,6 +56,8 @@ var (
 			return strings.TrimSpace(string(assert.Exit1(os.ReadFile(file))))
 		},
 	)
+
+	Domain string
 )
 
 func init() {

@@ -13,6 +13,7 @@ import (
 
 func SetVersion(v string) { Version = v }
 func SetProject(p string) { Project = p }
+func SetDomain(d string)  { Domain = d }
 
 func GetSysInfo() map[string]string {
 	return map[string]string{
@@ -29,6 +30,7 @@ func GetSysInfo() map[string]string {
 		"hostname":      Hostname,
 		"build_time":    version.BuildTime(),
 		"version":       Version,
+		"domain":        Domain,
 		"commit_id":     CommitID,
 		"go_root":       rt.GOROOT(),
 		"go_arch":       rt.GOARCH,
