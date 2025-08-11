@@ -6,7 +6,7 @@ require (
 	dario.cat/mergo v1.0.0
 	entgo.io/ent v0.13.1
 	github.com/DATA-DOG/go-sqlmock v1.5.2
-	github.com/a8m/envsubst v1.3.0
+	github.com/a8m/envsubst v1.4.2
 	github.com/bradleyjkemp/memviz v0.2.3
 	github.com/dave/jennifer v1.7.0
 	github.com/deckarep/golang-set/v2 v2.6.0

@@ -51,8 +51,8 @@ func GetConfigData(cfgPath string) (_ []byte, gErr error) {
 	})
 
 	configBytes = result.Of(os.ReadFile(cfgPath)).Expect("failed to read config data: %s", cfgPath)
-	configBytes = result.Of(envsubst.Bytes(configBytes)).Expect("failed to handler config env data: %s", cfgPath)
 	configBytes = cfgFormat(configBytes, &config{workDir: filepath.Dir(cfgPath)})
+	configBytes = result.Of(envsubst.Bytes(configBytes)).Expect("failed to handler config env data: %s", cfgPath)
 	return configBytes, nil
 }
 

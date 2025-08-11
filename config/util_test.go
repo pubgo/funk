@@ -31,8 +31,8 @@ func TestExpr(t *testing.T) {
 	os.Setenv("testAbc", "hello")
 	env.Init()
 
-	assert.Equal(t, string(cfgFormat([]byte("{{env.TEST_ABC}}"), &config{})), "hello")
-	assert.Equal(t, string(cfgFormat([]byte(`{{embed("configs/assets/secret")}}`), &config{})), strings.TrimSpace(`MTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1Ng==`))
+	assert.Equal(t, string(cfgFormat([]byte("${{env.TEST_ABC}}"), &config{})), "hello")
+	assert.Equal(t, string(cfgFormat([]byte(`${{embed("configs/assets/secret")}}`), &config{})), strings.TrimSpace(`MTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1Ng==`))
 
 	var dd, err = os.ReadFile("configs/assets/assets.yaml")
 	assert.NoError(t, err)

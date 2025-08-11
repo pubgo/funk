@@ -243,7 +243,7 @@ func getEnvData(cfg *config) map[string]any {
 }
 
 func cfgFormat(template []byte, cfg *config) []byte {
-	tpl := fasttemplate.New(string(template), "{{", "}}")
+	tpl := fasttemplate.New(string(template), "${{", "}}")
 	return []byte(tpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
 		tag = strings.TrimSpace(tag)
 		evalData, err := eval(tag, cfg)
@@ -267,7 +267,7 @@ func eval(code string, cfg *config) (any, error) {
 	envData := getEnvData(cfg)
 	data, err := expr.Eval(strings.TrimSpace(code), envData)
 	if err != nil {
-		return nil, errors.WrapCaller(err)
+		return nil, errors.Wrapf(err, "failed to eval expr:%q", code)
 	}
 	return data, nil
 }
