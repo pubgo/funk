@@ -214,8 +214,17 @@ type config struct {
 	workDir string
 }
 
+var registerMap = make(map[string]any)
+
+func RegisterExpr(name string, expr any) {
+	if registerMap[name] != nil {
+		panic(fmt.Sprintf("expr:%s has existed", name))
+	}
+	registerMap[name] = expr
+}
+
 func getEnvData(cfg *config) map[string]any {
-	return map[string]any{
+	exprEnv := map[string]any{
 		"env": env.Map(),
 		"get_path_dir": func() string {
 			return cfg.workDir
@@ -240,6 +249,14 @@ func getEnvData(cfg *config) map[string]any {
 			return strings.TrimSpace(base64.StdEncoding.EncodeToString(d))
 		},
 	}
+
+	for k, v := range registerMap {
+		if exprEnv[k] != nil {
+			panic(fmt.Sprintf("expr:%s has existed", k))
+		}
+		exprEnv[k] = v
+	}
+	return exprEnv
 }
 
 func cfgFormat(template []byte, cfg *config) []byte {
