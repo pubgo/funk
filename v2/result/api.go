@@ -44,7 +44,7 @@ func RecoveryErr(setter ErrSetter, callbacks ...func(err error) error) {
 	))
 }
 
-func ErrorOf(msg string, args ...any) Error {
+func Errorf(msg string, args ...any) Error {
 	return newError(errors.WrapCaller(fmt.Errorf(msg, args...), 1))
 }
 

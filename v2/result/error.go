@@ -3,7 +3,7 @@ package result
 import (
 	"context"
 	"fmt"
-
+	
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/errors/errutil"
 	"github.com/pubgo/funk/log"
