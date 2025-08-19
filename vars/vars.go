@@ -54,6 +54,10 @@ func (f Value) MarshalJSON() ([]byte, error) {
 func (f Value) Value() interface{} { return f() }
 
 func (f Value) String() (r string) {
+	return toString(f())
+}
+
+func toString(dt any) (r string) {
 	var errStr = func(err any) string {
 		ret, err := json.Marshal(err)
 		if err != nil {
@@ -65,7 +69,6 @@ func (f Value) String() (r string) {
 
 	defer recovery.Recovery(func(err error) { r = errStr(err) })
 
-	dt := f()
 	switch dt := dt.(type) {
 	case nil:
 		return "null"
@@ -75,9 +78,33 @@ func (f Value) String() (r string) {
 		return string(dt)
 	case fmt.Stringer:
 		return dt.String()
+	case error:
+		return fmt.Sprintf("err:%s detail:%#v", dt, dt)
 	default:
 		return errStr(dt)
 	}
+}
+
+func Any(v any) expvar.Var {
+	assert.If(v == nil, "value can't be nil")
+	switch v.(type) {
+	case nil:
+		return anyValue{v: nil}
+	case Value:
+		return v.(Value)
+	default:
+		return anyValue{v: v}
+	}
+}
+
+var _ expvar.Var = (*anyValue)(nil)
+
+type anyValue struct {
+	v any
+}
+
+func (a anyValue) String() string {
+	return toString(a)
 }
 
 func Register(name string, value Value) {
@@ -86,7 +113,7 @@ func Register(name string, value Value) {
 	expvar.Publish(name, value)
 }
 
-func RegisterValue(name string, data interface{}) {
+func RegisterValue(name string, data any) {
 	defer recovery.Exit()
 	assert.If(Has(name), "name:%s already exists", name)
 	expvar.Publish(name, Value(func() interface{} { return data }))
