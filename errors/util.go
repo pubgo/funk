@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kr/pretty"
 	"github.com/pubgo/funk/convert"
 	"github.com/pubgo/funk/errors/errinter"
 	"github.com/pubgo/funk/generic"
+	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
 	"github.com/rs/xid"
@@ -63,7 +63,7 @@ func parseError(val interface{}) error {
 	case []byte:
 		return errors.New(convert.B2S(v))
 	default:
-		return &Err{Msg: fmt.Sprintf("%v", v), Detail: pretty.Sprint(v)}
+		return &Err{Msg: fmt.Sprintf("%v", v), Detail: pretty.SimplePrint(v)}
 	}
 }
 
@@ -108,12 +108,17 @@ func errJsonify(err error) map[string]any {
 func strFormat(f fmt.State, verb rune, err Error) {
 	switch verb {
 	case 'v':
-		data, err := err.MarshalJSON()
-		if err != nil {
-			fmt.Fprintln(f, err.Error())
+		if f.Flag('#') {
+			fmt.Fprint(f, pretty.SimplePrint(err))
 		} else {
-			fmt.Fprintln(f, string(data))
+			data, err := err.MarshalJSON()
+			if err != nil {
+				fmt.Fprintln(f, err.Error())
+			} else {
+				fmt.Fprintln(f, string(data))
+			}
 		}
+
 	case 's', 'q':
 		fmt.Fprintln(f, err.String())
 	}

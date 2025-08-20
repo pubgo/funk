@@ -60,7 +60,12 @@ func (e Error) Inspect(fn func(error)) Error {
 	return e
 }
 
+func (e Error) InspectErr(fn func(error)) Error { return e.Inspect(fn) }
+
 func (e Error) Unwrap() error { return e.err }
+func (e Error) UnwrapErr(setter ErrSetter, contexts ...context.Context) bool {
+	return catchErr(e, setter, nil, contexts...)
+}
 
 func (e Error) Catch(setter *error, ctx ...context.Context) bool {
 	return catchErr(e, nil, setter, ctx...)
@@ -118,9 +123,5 @@ func (e Error) MarshalJSON() ([]byte, error) {
 
 func (e Error) getErr() error { return e.err }
 
-func (e *Error) setError(err error) {
-	if err == nil {
-		return
-	}
-	e.err = err
+func (e Error) setErrorInner() {
 }

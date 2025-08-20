@@ -150,7 +150,7 @@ func (l *loggerImpl) Err(err error, ctxL ...context.Context) *zerolog.Event {
 			e.Str("error_id", id)
 		}
 
-		e.Str("error_detail", string(errDetail(err)))
+		e.Str("error_detail", errDetail(err))
 		e.Str(zerolog.ErrorFieldName, err.Error())
 	}
 	return l.newEvent(ctx, l.getLog().Err(err).Func(fn))

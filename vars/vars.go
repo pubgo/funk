@@ -61,7 +61,7 @@ func toString(dt any) (r string) {
 	var errStr = func(err any) string {
 		ret, err := json.Marshal(err)
 		if err != nil {
-			return pretty.Sprint(err)
+			return pretty.SimplePrint(err)
 		} else {
 			return convert.B2S(ret)
 		}

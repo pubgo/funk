@@ -2,10 +2,8 @@ package log
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
-	"github.com/kr/pretty"
+	"github.com/pubgo/funk/pretty"
 	"github.com/samber/lo"
 )
 
@@ -28,19 +26,10 @@ func RecordErr(logs ...Logger) func(ctx context.Context, err error) error {
 	}
 }
 
-func errDetail(err error) []byte {
+func errDetail(err error) string {
 	if err == nil {
-		return nil
+		return ""
 	}
 
-	switch errData := err.(type) {
-	case json.Marshaler:
-		data, err1 := errData.MarshalJSON()
-		if err1 != nil {
-			return []byte(fmt.Sprintf("%s: %s", err1.Error(), pretty.Sprint(err)))
-		}
-		return data
-	default:
-		return []byte(pretty.Sprint(err))
-	}
+	return pretty.SimplePrint(err)
 }

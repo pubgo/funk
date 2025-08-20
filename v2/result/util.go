@@ -103,7 +103,7 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 
 	var setErr = func(err error) {
 		if setter != nil {
-			setter.setError(err)
+			setError(setter, err)
 		}
 
 		if rawSetter != nil {
@@ -196,4 +196,23 @@ func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts .
 	}
 
 	return ret, err
+}
+
+func setError(setter ErrSetter, err error) {
+	if err == nil {
+		return
+	}
+
+	if setter == nil {
+		return
+	}
+
+	switch errSet := setter.(type) {
+	case *Error:
+		errSet.err = err
+	case *ErrProxy:
+		*errSet.err = err
+	case *Result[any]:
+		errSet.err = err
+	}
 }

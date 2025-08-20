@@ -37,13 +37,13 @@ var (
 				return nil
 			}
 
-			errDetail := string(errDetail(err))
+			errDetail := errDetail(err)
 			id := errors.GetErrorId(err)
 			if id != "" {
 				return fmt.Sprintf("%s, error_id:%s error_detail:%s", err.Error(), id, errDetail)
 			}
 
-			return fmt.Sprintf("%s: %v", err.Error(), errDetail)
+			return fmt.Sprintf("%s: %s", err.Error(), errDetail)
 		}
 	})
 

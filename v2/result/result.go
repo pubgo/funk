@@ -190,7 +190,7 @@ func (r Result[T]) Unwrap(setter *error, contexts ...context.Context) T {
 func (r Result[T]) UnwrapErr(setter ErrSetter, contexts ...context.Context) T {
 	ret, err := unwrapErr(r, nil, setter, contexts...)
 	if err != nil {
-		setter.setError(errors.WrapCaller(err, 1))
+		setError(setter, errors.WrapCaller(err, 1))
 	}
 	return ret
 }
@@ -207,9 +207,5 @@ func (r Result[T]) getValue() T { return lo.FromPtr(r.v) }
 
 func (r Result[T]) getErr() error { return r.err }
 
-func (r *Result[T]) setError(err error) {
-	if err == nil {
-		return
-	}
-	r.err = err
+func (r Result[T]) setErrorInner() {
 }
