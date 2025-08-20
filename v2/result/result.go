@@ -22,9 +22,9 @@ type Result[T any] struct {
 	err error
 }
 
-func (r Result[T]) GetValue() T {
+func (r Result[T]) GetValue() (t T) {
 	if r.IsErr() {
-		errMust(errors.WrapCaller(r.getErr(), 1))
+		return
 	}
 
 	return r.getValue()
