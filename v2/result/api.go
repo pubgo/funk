@@ -48,6 +48,11 @@ func Errorf(msg string, args ...any) Error {
 	return newError(errors.WrapCaller(fmt.Errorf(msg, args...), 1))
 }
 
+// Deprecated: use Errorf
+func ErrorOf(msg string, args ...any) Error {
+	return newError(errors.WrapCaller(fmt.Errorf(msg, args...), 1))
+}
+
 func ErrProxyOf(err *error) ErrProxy {
 	if err == nil {
 		errMust(errors.Errorf("err param is nil"))
