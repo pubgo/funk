@@ -2,7 +2,6 @@ package funk
 
 import (
 	"reflect"
-	"sync"
 	"unsafe"
 
 	"golang.org/x/exp/constraints"
