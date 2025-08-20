@@ -177,12 +177,3 @@ func Init(fn func()) error {
 func DoFunc[T any](fn func() T) T {
 	return fn()
 }
-
-func Once[T any](do func() T) func() T {
-	var once sync.Once
-	var data T
-	return func() T {
-		once.Do(func() { data = do() })
-		return data
-	}
-}
