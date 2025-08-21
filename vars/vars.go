@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"expvar"
 	"fmt"
+	"strconv"
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/convert"
@@ -58,6 +59,8 @@ func (f Value) String() (r string) {
 }
 
 func toString(dt any) (r string) {
+	defer func() { r = strconv.Quote(r) }()
+
 	var errStr = func(err any) string {
 		ret, err := json.Marshal(err)
 		if err != nil {
