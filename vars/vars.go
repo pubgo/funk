@@ -86,7 +86,6 @@ func toString(dt any) (r string) {
 }
 
 func Any(v any) expvar.Var {
-	assert.If(v == nil, "value can't be nil")
 	switch v.(type) {
 	case nil:
 		return anyValue{v: nil}
