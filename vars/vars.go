@@ -103,7 +103,7 @@ type anyValue struct {
 }
 
 func (a anyValue) String() string {
-	return toString(a)
+	return toString(a.v)
 }
 
 func Register(name string, value Value) {
