@@ -22,8 +22,8 @@ func New[Cfg any]() *cli.Command {
 				Description: "show config data",
 				Action: func(ctx context.Context, command *cli.Command) error {
 					defer recovery.Exit()
-					fmt.Println("config path:", config.GetConfigPath())
-					fmt.Println("config raw data:", string(assert.Must1(yaml.Marshal(config.Load[Cfg]().T))))
+					fmt.Println("config path:\n", config.GetConfigPath())
+					fmt.Println("config raw data:\n", string(assert.Must1(yaml.Marshal(config.Load[Cfg]().T))))
 					return nil
 				},
 			},
