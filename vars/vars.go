@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"expvar"
 	"fmt"
+	"strconv"
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/convert"
@@ -61,7 +62,7 @@ func toString(dt any) (r string) {
 	var errStr = func(err any) string {
 		ret, err := json.Marshal(err)
 		if err != nil {
-			return pretty.SimplePrint(err)
+			return strconv.Quote(pretty.SimplePrint(err))
 		} else {
 			return convert.B2S(ret)
 		}
@@ -73,13 +74,13 @@ func toString(dt any) (r string) {
 	case nil:
 		return "null"
 	case string:
-		return dt
+		return strconv.Quote(dt)
 	case []byte:
-		return string(dt)
+		return strconv.Quote(string(dt))
 	case fmt.Stringer:
-		return dt.String()
+		return strconv.Quote(dt.String())
 	case error:
-		return fmt.Sprintf("err:%s detail:%#v", dt, dt)
+		return strconv.Quote(fmt.Sprintf("err:%s detail:%#v", dt, dt))
 	default:
 		return errStr(dt)
 	}
