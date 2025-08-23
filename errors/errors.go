@@ -93,6 +93,30 @@ func UnwrapEach(err error, call func(e error) bool) {
 	}
 }
 
+func AsA[T any](err error) (*T, bool) {
+	var target T
+	val := reflect.ValueOf(&target)
+	typ := val.Type()
+	if typ.Kind() != reflect.Ptr || val.IsNil() {
+		panic("errors: target must be a non-nil pointer")
+	}
+
+	targetType := typ.Elem()
+	for err != nil {
+		if reflect.TypeOf(err).AssignableTo(targetType) {
+			val.Elem().Set(reflect.ValueOf(err))
+			return &target, true
+		}
+
+		if x, ok := err.(ErrAs); ok && x.As(&target) {
+			return &target, true
+		}
+
+		err = Unwrap(err)
+	}
+	return &target, false
+}
+
 func As(err error, target any) bool {
 	if target == nil {
 		panic("errors: target cannot be nil")
