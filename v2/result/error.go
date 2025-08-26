@@ -3,7 +3,7 @@ package result
 import (
 	"context"
 	"fmt"
-	
+
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/errors/errutil"
 	"github.com/pubgo/funk/log"
@@ -47,8 +47,15 @@ func (e Error) WrapErr(err *errors.Err, tags ...errors.Tag) Error {
 	return Error{err: errors.WrapTag(errors.WrapCaller(err, 1), tags...)}
 }
 
+func (e Error) WithFn(fn func() error) Error {
+	return Error{err: errors.WrapCaller(fn(), 1)}
+}
+
 func (e Error) WithErr(err error) Error {
 	return Error{err: errors.WrapCaller(err, 1)}
+}
+func (e Error) WithErrorf(format string, args ...any) Error {
+	return Error{err: errors.WrapCaller(fmt.Errorf(format, args...), 1)}
 }
 
 func (e Error) Inspect(fn func(error)) Error {
