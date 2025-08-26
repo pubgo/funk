@@ -3,6 +3,7 @@ package result
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"runtime/debug"
 
 	"github.com/pubgo/funk/errors"
@@ -214,5 +215,7 @@ func setError(setter ErrSetter, err error) {
 		*errSet.err = err
 	case *Result[any]:
 		errSet.err = err
+	default:
+		slog.Error("Unwrap: error setter type error", "type", fmt.Sprintf("%T", setter))
 	}
 }
