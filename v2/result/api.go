@@ -25,7 +25,6 @@ func Recovery(setter *error, callbacks ...func(err error) error) {
 	}
 
 	*setter = errRecovery(
-		func() bool { return *setter != nil },
 		func() error { return *setter },
 		callbacks...,
 	)
@@ -38,7 +37,6 @@ func RecoveryErr(setter ErrSetter, callbacks ...func(err error) error) {
 	}
 
 	setError(setter, errRecovery(
-		func() bool { return setter.IsErr() },
 		func() error { return setter.GetErr() },
 		callbacks...,
 	))

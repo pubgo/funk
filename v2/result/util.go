@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"runtime/debug"
 
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
@@ -112,12 +111,6 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 		}
 	}
 
-	// err No checking, repeat setting
-	if isErr() {
-		err := getErr()
-		log.Err(err).Msgf("error setter is has value, err=%s", err.Error())
-	}
-
 	var ctx = context.Background()
 	for i := range contexts {
 		if contexts[i] == nil {
@@ -125,6 +118,12 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 		}
 		ctx = contexts[i]
 		break
+	}
+
+	// err No checking, repeat setting
+	if isErr() {
+		err := getErr()
+		log.Err(err, ctx).Msgf("error setter has already set the error, err=%s", err.Error())
 	}
 
 	var checkers = append(resultchecker.GetErrChecks(), resultchecker.GetCheckersFromCtx(ctx)...)
@@ -141,14 +140,14 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 	return true
 }
 
-func errRecovery(isErr func() bool, getErr func() error, callbacks ...func(err error) error) error {
+func errRecovery(getErr func() error, callbacks ...func(err error) error) error {
 	err := errors.Parse(recover())
-	if err == nil && !isErr() {
-		return nil
+	if err == nil {
+		err = getErr()
 	}
 
 	if err == nil {
-		err = getErr()
+		return nil
 	}
 
 	for _, fn := range callbacks {
@@ -162,8 +161,7 @@ func errRecovery(isErr func() bool, getErr func() error, callbacks ...func(err e
 
 func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts ...context.Context) (T, error) {
 	if setter1 == nil && setter2 == nil {
-		debug.PrintStack()
-		panic("Unwrap: error setter is nil")
+		errNilOrPanic(fmt.Errorf("error setter is nil"))
 	}
 
 	var ret = r.getValue()
@@ -176,15 +174,15 @@ func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts .
 		ctx = contexts[0]
 	}
 
-	getSetterErr := func() error {
+	getErr := func() error {
 		err := lo.FromPtr(setter1)
 		if err == nil {
 			err = setter2.GetErr()
 		}
 		return err
 	}
-	if setterErr := getSetterErr(); setterErr != nil {
-		log.Error(ctx).Msgf("Unwrap: error setter has value, err=%v", setterErr)
+	if preErr := getErr(); preErr != nil {
+		log.Err(preErr, ctx).Msgf("error setter has already set the error, err=%v", preErr)
 	}
 
 	var err = r.getErr()

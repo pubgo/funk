@@ -56,6 +56,8 @@ func parseError(val interface{}) error {
 	}
 
 	switch v := val.(type) {
+	case nil:
+		return nil
 	case error:
 		return v
 	case string:
