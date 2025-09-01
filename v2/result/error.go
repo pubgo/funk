@@ -3,7 +3,7 @@ package result
 import (
 	"context"
 	"fmt"
-	
+
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/errors/errutil"
 	"github.com/pubgo/funk/log"
@@ -92,7 +92,7 @@ func (e Error) Must() {
 		return
 	}
 
-	errMust(errors.WrapCaller(e.getErr(), 1))
+	errNilOrPanic(errors.WrapCaller(e.getErr(), 1))
 }
 
 func (e Error) Expect(format string, args ...any) {
@@ -102,7 +102,7 @@ func (e Error) Expect(format string, args ...any) {
 
 	err := errors.WrapCaller(e.getErr(), 1)
 	err = errors.Wrapf(err, format, args...)
-	errMust(err)
+	errNilOrPanic(err)
 }
 
 func (e Error) String() string {

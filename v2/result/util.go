@@ -54,7 +54,7 @@ func try1[T any](fn func() (T, error)) (t T, gErr error) {
 	return
 }
 
-func errMust(err error, args ...any) {
+func errNilOrPanic(err error, args ...any) {
 	if err == nil {
 		return
 	}
@@ -70,7 +70,7 @@ func errMust(err error, args ...any) {
 
 func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.Context) bool {
 	if setter == nil && rawSetter == nil {
-		errMust(errors.Errorf("error setter is nil"))
+		errNilOrPanic(errors.Errorf("error setter is nil"))
 	}
 
 	if r.IsOK() {
@@ -204,6 +204,7 @@ func setError(setter ErrSetter, err error) {
 	}
 
 	if setter == nil {
+		errNilOrPanic(errors.Errorf("error setter is nil"))
 		return
 	}
 

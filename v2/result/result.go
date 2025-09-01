@@ -55,7 +55,7 @@ func (r Result[T]) ValueTo(v *T) Error {
 func (r Result[T]) Expect(format string, args ...any) T {
 	if r.IsErr() {
 		err := errors.WrapCaller(r.getErr(), 1)
-		errMust(errors.Wrapf(err, format, args...))
+		errNilOrPanic(errors.Wrapf(err, format, args...))
 	}
 
 	return r.getValue()
@@ -63,7 +63,7 @@ func (r Result[T]) Expect(format string, args ...any) T {
 
 func (r Result[T]) Must() T {
 	if r.IsErr() {
-		errMust(errors.WrapCaller(r.getErr(), 1))
+		errNilOrPanic(errors.WrapCaller(r.getErr(), 1))
 	}
 
 	return r.getValue()

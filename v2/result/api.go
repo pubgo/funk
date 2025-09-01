@@ -20,7 +20,7 @@ func All[T any](results ...Result[T]) Result[[]T] {
 
 func Recovery(setter *error, callbacks ...func(err error) error) {
 	if setter == nil {
-		errMust(errors.Errorf("setter is nil"))
+		errNilOrPanic(errors.Errorf("setter is nil"))
 		return
 	}
 
@@ -33,7 +33,7 @@ func Recovery(setter *error, callbacks ...func(err error) error) {
 
 func RecoveryErr(setter ErrSetter, callbacks ...func(err error) error) {
 	if setter == nil {
-		errMust(errors.Errorf("setter is nil"))
+		errNilOrPanic(errors.Errorf("setter is nil"))
 		return
 	}
 
@@ -55,7 +55,7 @@ func ErrorOf(msg string, args ...any) Error {
 
 func ErrProxyOf(err *error) ErrProxy {
 	if err == nil {
-		errMust(errors.Errorf("err param is nil"))
+		errNilOrPanic(errors.Errorf("err param is nil"))
 		return ErrProxy{}
 	}
 	return ErrProxy{err: err}
