@@ -29,7 +29,7 @@ var genYaml string
 
 func TestExpr(t *testing.T) {
 	os.Setenv("testAbc", "hello")
-	env.Init()
+	env.Reload()
 
 	assert.Equal(t, string(cfgFormat([]byte("${{env.TEST_ABC}}"), &config{})), "hello")
 	assert.Equal(t, string(cfgFormat([]byte(`${{embed("configs/assets/secret")}}`), &config{})), strings.TrimSpace(`MTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1Ng==`))

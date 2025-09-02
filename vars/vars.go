@@ -5,7 +5,10 @@ import (
 	"expvar"
 	"fmt"
 	"strconv"
+	"strings"
 
+	"github.com/rs/xid"
+	
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/convert"
 	"github.com/pubgo/funk/pretty"
@@ -125,4 +128,8 @@ func Has(name string) bool {
 
 func Each(fn func(key string, val expvar.Var)) {
 	expvar.Do(func(kv expvar.KeyValue) { fn(kv.Key, kv.Value) })
+}
+
+func UniqueName(names ...string) string {
+	return strings.Join(append(names, xid.New().String()), "_")
 }

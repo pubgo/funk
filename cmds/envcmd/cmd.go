@@ -19,7 +19,7 @@ func New() *cli.Command {
 		Action: func(ctx context.Context, command *cli.Command) error {
 			defer recovery.Exit()
 
-			env.Init()
+			env.Reload()
 
 			fmt.Println("config path:", config.GetConfigPath())
 			envs := config.LoadEnvConfigMap(config.GetConfigPath())

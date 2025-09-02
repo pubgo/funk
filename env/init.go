@@ -8,6 +8,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func Reload() {
+	loadEnv()
+}
+
+// Init reload env
+// Deprecated: use Reload instead.
 func Init() {
 	loadEnv()
 }
@@ -36,7 +42,7 @@ func loadEnv() {
 			strings.HasPrefix(envKey, "_") ||
 			strings.HasPrefix(envKey, "=") ||
 			!hasEnvPrefix(envKey, envPrefix) {
-			logRecord(log.Warn(), envPrefixEventFn, rawEnvFn).Msgf("ignore env, key=%s", envKey)
+			logRecord(log.Warn(), envPrefixEventFn, rawEnvFn).Msgf("unset not match env, key=%s", envKey)
 			continue
 		}
 

@@ -7,12 +7,13 @@ import (
 	"github.com/ettle/strcase"
 	"github.com/rs/zerolog"
 
+	"github.com/pubgo/funk/log/logfields"
 	"github.com/pubgo/funk/log/logutil"
 )
 
 var logFn = func(e *zerolog.Event) {
-	e.Str(logutil.LoggerName, "env")
-	e.Str(logutil.ModuleName, "env")
+	e.Str(logfields.LoggerName, "env")
+	e.Str(logfields.ModuleName, "env")
 }
 
 const PrefixKey = "ENV_PREFIX"
@@ -44,7 +45,7 @@ func KeyHandler(key string) string {
 	key = strings.ToUpper(replacer.ToSNAKE(key))
 	envPrefix := getEnvPrefix()
 	if envPrefix != "" {
-		key = envPrefix + strings.TrimPrefix(key, envPrefix)
+		key = envPrefix + "_" + strings.TrimPrefix(key, envPrefix)
 	}
 	return strings.ToUpper(trim(strings.ReplaceAll(key, "__", "_")))
 }
