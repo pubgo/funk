@@ -6,11 +6,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const (
-	ModuleName = "module"
-	LoggerName = "logger"
-)
-
 func Record(evt *zerolog.Event, events ...func(e *zerolog.Event)) *zerolog.Event {
 	for _, fn := range events {
 		fn(evt)
@@ -23,4 +18,10 @@ func RecordCtx(ctx context.Context, evt *zerolog.Event, events ...func(e *zerolo
 		fn(evt)
 	}
 	return evt.Ctx(ctx)
+}
+
+func WithNotice() func(e *zerolog.Event) {
+	return func(e *zerolog.Event) {
+		e.Str("alert", "notice").Bool("critical", true)
+	}
 }

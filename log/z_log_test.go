@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/log"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
+
+	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/log"
+	"github.com/pubgo/funk/log/logutil"
 )
 
 func TestWithName(t *testing.T) {
@@ -75,7 +77,7 @@ func TestName(t *testing.T) {
 		WithFields(log.Map{"module": "pkg"}).
 		Info().
 		Str("hello", "world world").
-		Func(log.WithNotice()).
+		Func(logutil.WithNotice()).
 		Msg("ok ok")
 }
 

@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/log/logutil"
+	"github.com/pubgo/funk/log/logfields"
 )
 
 var _ Logger = (*loggerImpl)(nil)
@@ -200,7 +200,7 @@ func (l *loggerImpl) getLog() *zerolog.Logger {
 
 func (l *loggerImpl) newEvent(ctx context.Context, e *zerolog.Event) *zerolog.Event {
 	if l.name != "" {
-		e = e.Str(logutil.LoggerName, l.name)
+		e = e.Str(logfields.LoggerName, l.name)
 	}
 
 	if l.callerSkip != 0 {

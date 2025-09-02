@@ -7,10 +7,12 @@ import (
 	"github.com/samber/lo"
 )
 
-func WithNotice() func(e *Event) {
-	return func(e *Event) {
-		e.Str("alert", "notice").Bool("critical", true)
+func errDetail(err error) string {
+	if err == nil {
+		return ""
 	}
+
+	return pretty.SimplePrint(err)
 }
 
 func RecordErr(logs ...Logger) func(ctx context.Context, err error) error {
@@ -24,12 +26,4 @@ func RecordErr(logs ...Logger) func(ctx context.Context, err error) error {
 		logger.WithCallerSkip(3).Err(err, ctx).Msg(err.Error())
 		return err
 	}
-}
-
-func errDetail(err error) string {
-	if err == nil {
-		return ""
-	}
-
-	return pretty.SimplePrint(err)
 }
