@@ -74,7 +74,7 @@ func DebugPrint() {
 		return
 	}
 
-	errors.Debug(errors.WrapStack(err))
+	errors.Debug(err)
 }
 
 func Testing(t *testing.T) {

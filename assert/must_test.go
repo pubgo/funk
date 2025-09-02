@@ -1,9 +1,10 @@
-package assert
+package assert_test
 
 import (
 	"fmt"
 	"testing"
 
+	assert1 "github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
 	"github.com/stretchr/testify/assert"
 )
@@ -23,12 +24,12 @@ func panicNoErr() (*errBase, error) {
 func TestPanicErr(t *testing.T) {
 	is := assert.New(t)
 	is.Panics(func() {
-		ret := Must1(panicErr())
+		ret := assert1.Must1(panicErr())
 		fmt.Println(ret == nil)
 	})
 
 	is.NotPanics(func() {
-		ret := Must1(panicNoErr())
+		ret := assert1.Must1(panicNoErr())
 		fmt.Println(ret.msg)
 	})
 }
@@ -37,22 +38,22 @@ func TestRespTest(t *testing.T) {
 	defer func() {
 		errors.Debug(errors.Parse(recover()))
 	}()
-	Must(init1Next())
+	assert1.Must(init1Next())
 }
 
 func TestRespNext(t *testing.T) {
-	Must(init1Next())
+	assert1.Must(init1Next())
 }
 
 func init1Next() (err error) {
-	Must(fmt.Errorf("test next"))
+	assert1.Must(fmt.Errorf("test next"))
 	return nil
 }
 
 func BenchmarkNoPanic(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_ = func() (err error) {
-			Must(nil)
+			assert1.Must(nil)
 			return
 		}()
 	}

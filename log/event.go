@@ -13,9 +13,6 @@ type event struct {
 	buf []byte
 }
 
-//go:linkname putEvent github.com/rs/zerolog.putEvent
-func putEvent(e *Event)
-
 func WithEvent(evt *Event) func(e *Event) {
 	return func(e *Event) {
 		if !e.Enabled() {

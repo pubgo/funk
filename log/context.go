@@ -11,7 +11,7 @@ type (
 	ctxMapFieldKey struct{}
 )
 
-func LoggerFromCtx(ctx context.Context, loggers ...Logger) Logger {
+func GetFromCtx(ctx context.Context, loggers ...Logger) Logger {
 	defaultLog := stdLog
 	if len(loggers) > 0 {
 		defaultLog = loggers[0]
@@ -28,7 +28,7 @@ func LoggerFromCtx(ctx context.Context, loggers ...Logger) Logger {
 	return defaultLog
 }
 
-func CreateLoggerCtx(ctx context.Context, ll Logger) context.Context {
+func CreateCtxWithLogger(ctx context.Context, ll Logger) context.Context {
 	if ll == nil || ctx == nil {
 		panic("ctx or log param is nil")
 	}

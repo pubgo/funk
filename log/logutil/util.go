@@ -2,7 +2,7 @@ package logutil
 
 import (
 	"context"
-	
+
 	"github.com/rs/zerolog"
 )
 
@@ -11,15 +11,15 @@ const (
 	LoggerName = "logger"
 )
 
-func Record(evt *zerolog.Event, funcs ...func(e *zerolog.Event)) *zerolog.Event {
-	for _, fn := range funcs {
+func Record(evt *zerolog.Event, events ...func(e *zerolog.Event)) *zerolog.Event {
+	for _, fn := range events {
 		fn(evt)
 	}
 	return evt
 }
 
-func RecordCtx(ctx context.Context, evt *zerolog.Event, funcs ...func(e *zerolog.Event)) *zerolog.Event {
-	for _, fn := range funcs {
+func RecordCtx(ctx context.Context, evt *zerolog.Event, events ...func(e *zerolog.Event)) *zerolog.Event {
+	for _, fn := range events {
 		fn(evt)
 	}
 	return evt.Ctx(ctx)
