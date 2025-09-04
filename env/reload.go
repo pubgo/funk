@@ -48,9 +48,8 @@ func loadEnv() {
 
 		key, ok := Normalize(envKey)
 		if ok {
-			_ = os.Setenv(key, kvs[1])
+			setOk := os.Setenv(key, kvs[1]) == nil
+			logRecord(logger.Info()).Msgf("reset env, old_key=%s new_key=%s set_ok=%v", envKey, key, setOk)
 		}
-
-		logRecord(logger.Info()).Msgf("reset env, old_env_key=%s new_env_key=%s", envKey, key)
 	}
 }
