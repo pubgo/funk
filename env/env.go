@@ -2,8 +2,6 @@ package env
 
 import (
 	"fmt"
-	"github.com/pubgo/funk/pathutil"
-	"github.com/samber/lo"
 	"log/slog"
 	"os"
 	"strconv"
@@ -12,11 +10,18 @@ import (
 	"github.com/a8m/envsubst"
 	"github.com/joho/godotenv"
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/pathutil"
 	"github.com/pubgo/funk/v2/result"
+	"github.com/samber/lo"
 )
 
 func Set(key, value string) result.Error {
 	return result.ErrOf(os.Setenv(KeyHandler(key), value))
+}
+
+func GetDefault(name string, defaultVal string) string {
+	val := Get(name)
+	return lo.If(val != "", val).Else(defaultVal)
 }
 
 func Get(names ...string) string {
