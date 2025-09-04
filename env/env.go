@@ -2,6 +2,8 @@ package env
 
 import (
 	"fmt"
+	"github.com/pubgo/funk/pathutil"
+	"github.com/samber/lo"
 	"log/slog"
 	"os"
 	"strconv"
@@ -19,18 +21,18 @@ func Set(key, value string) result.Error {
 
 func Get(names ...string) string {
 	var val string
-	GetWith(&val, names...)
+	GetVal(&val, names...)
 	return trim(val)
 }
 
 func MustGet(names ...string) string {
 	var val string
-	GetWith(&val, names...)
+	GetVal(&val, names...)
 	assert.If(val == "", "env not found, names=%q", names)
 	return trim(val)
 }
 
-func GetWith(val *string, names ...string) {
+func GetVal(val *string, names ...string) {
 	for _, name := range names {
 		env, ok := Lookup(name)
 		env = trim(env)
@@ -111,12 +113,9 @@ func Key(key string) string {
 	return KeyHandler(key)
 }
 
-func Load(filenames ...string) (r result.Error) {
-	if len(filenames) == 0 {
-		return
-	}
-
-	if result.CatchErr(&r, godotenv.Load(filenames...)) {
+func LoadFiles(files ...string) (r result.Error) {
+	files = lo.Filter(files, func(item string, index int) bool { return pathutil.IsExist(item) })
+	if result.CatchErr(&r, godotenv.Load(files...)) {
 		return
 	}
 

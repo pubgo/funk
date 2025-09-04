@@ -60,6 +60,5 @@ func Normalize(key string) (string, bool) {
 }
 
 func logRecord(evt *zerolog.Event, funcs ...func(e *zerolog.Event)) *zerolog.Event {
-	funcs = append(funcs, logFn)
-	return logutil.Record(evt, funcs...)
+	return logutil.Record(evt, append(funcs, logFn)...)
 }
