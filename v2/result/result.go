@@ -8,7 +8,9 @@ import (
 	"github.com/pubgo/funk"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/log"
+	"github.com/rs/zerolog"
 	"github.com/samber/lo"
+	"google.golang.org/protobuf/encoding/prototext"
 )
 
 var _ Catchable = new(Result[any])
@@ -104,11 +106,14 @@ func (r Result[T]) Inspect(fn func(T)) Result[T] {
 	return r
 }
 
-func (r Result[T]) LogErr(contexts ...context.Context) Result[T] {
+func (r Result[T]) Log(contexts ...context.Context) Result[T] {
 	if r.IsErr() {
-		log.Err(r.err, contexts...).
+		err := r.err
+		log.Error(contexts...).
+			Str(zerolog.ErrorFieldName, err.Error()).
 			CallerSkipFrame(1).
-			Msg(r.err.Error())
+			Str("error_id", errors.GetErrorId(err)).
+			Msgf("%s\n%s", err.Error(), prototext.Format(errors.ParseErrToPb(err)))
 	}
 
 	return r

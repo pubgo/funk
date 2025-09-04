@@ -12,7 +12,6 @@ import (
 )
 
 var logFn = func(e *zerolog.Event) {
-	e.Str(logfields.LoggerName, "env")
 	e.Str(logfields.ModuleName, "env")
 }
 

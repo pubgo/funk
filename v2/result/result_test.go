@@ -83,5 +83,5 @@ func fn3() result.Error {
 		Inspect(func(err error) {
 			log.Err(err).Msg("ddd")
 		}).
-		LogErr()
+		Log()
 }

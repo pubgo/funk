@@ -3,8 +3,9 @@ package log
 import (
 	"context"
 
-	"github.com/pubgo/funk/pretty"
+	"github.com/pubgo/funk/errors"
 	"github.com/samber/lo"
+	"google.golang.org/protobuf/encoding/prototext"
 )
 
 func errDetail(err error) string {
@@ -12,7 +13,7 @@ func errDetail(err error) string {
 		return ""
 	}
 
-	return pretty.SimplePrint(err)
+	return prototext.Format(errors.ParseErrToPb(err))
 }
 
 func RecordErr(logs ...Logger) func(ctx context.Context, err error) error {

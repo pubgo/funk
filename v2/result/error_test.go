@@ -7,5 +7,5 @@ import (
 )
 
 func TestErrorLog(t *testing.T) {
-	ErrOf(errors.New("test")).LogErr()
+	ErrOf(errors.New("test")).Log()
 }

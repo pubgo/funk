@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"reflect"
+	"runtime/debug"
+	"strings"
 
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
@@ -212,9 +215,19 @@ func setError(setter ErrSetter, err error) {
 		errSet.err = err
 	case *ErrProxy:
 		*errSet.err = err
-	case *Result[any]:
-		errSet.err = err
 	default:
-		slog.Error("Unwrap: error setter type error", "type", fmt.Sprintf("%T", setter))
+		rv := reflect.ValueOf(setter)
+		t := rv.Type()
+
+		if !strings.Contains(t.String(), "Result[") {
+			slog.Error("error setter type error",
+				slog.String("type", fmt.Sprintf("%T", setter)),
+				slog.String("stack", string(debug.Stack())),
+			)
+			return
+		}
+
+		ret := (*Result[any])(rv.UnsafePointer())
+		ret.err = err
 	}
 }

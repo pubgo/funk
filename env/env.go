@@ -1,7 +1,8 @@
 package env
 
 import (
-	"log"
+	"fmt"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
@@ -48,7 +49,7 @@ func GetBoolVal(val *bool, names ...string) {
 
 	v, err := strconv.ParseBool(dt)
 	if err != nil {
-		log.Printf("env: failed to parse string to bool, keys=%q value=%s err=%v", names, dt, err)
+		slog.Error(fmt.Sprintf("env: failed to parse string to bool, keys=%q value=%s err=%v", names, dt, err))
 		return
 	}
 
@@ -63,7 +64,7 @@ func GetIntVal(val *int, names ...string) {
 
 	v, err := strconv.Atoi(dt)
 	if err != nil {
-		log.Printf("env: failed to parse string to int, keys=%q value=%s err=%v", names, dt, err)
+		slog.Error(fmt.Sprintf("env: failed to parse string to int, keys=%q value=%s err=%v", names, dt, err))
 		return
 	}
 
@@ -78,7 +79,7 @@ func GetFloatVal(val *float64, names ...string) {
 
 	v, err := strconv.ParseFloat(dt, 64)
 	if err != nil {
-		log.Printf("env: failed to parse string to float, keys=%q value=%s err=%v", names, dt, err)
+		slog.Error(fmt.Sprintf("env: failed to parse string to float, keys=%q value=%s err=%v", names, dt, err))
 		return
 	}
 

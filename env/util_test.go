@@ -21,12 +21,12 @@ func TestNormalize(t *testing.T) {
 func TestEnvPrefix(t *testing.T) {
 	log.Logger = log.Hook(zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, message string) {
 		if strings.HasPrefix(message, "unset not match env") {
-			e.Discard()
+			//e.Discard()
 		}
 	}))
 
-	env.Set(env.PrefixKey, "test")
-	env.Set("test_hello", "world")
+	env.Set(env.PrefixKey, "test").Must()
+	env.Set("test_hello", "world").Must()
 	env.Reload()
 
 	envMap := env.Map()
