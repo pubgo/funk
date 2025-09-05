@@ -2,11 +2,15 @@ package errinter
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"sync"
 
 	"github.com/k0kubun/pp/v3"
+	"google.golang.org/protobuf/proto"
+	
 	"github.com/pubgo/funk"
+	"github.com/pubgo/funk/proto/errorpb"
 )
 
 func ParseError(val interface{}) error {
@@ -39,4 +43,43 @@ var Simple = sync.OnceValue(func() *pp.PrettyPrinter {
 
 func SimplePrint(v interface{}) string {
 	return strings.ReplaceAll(Simple().Sprint(v), "\n", "")
+}
+
+func GetErrorId(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	for err != nil {
+		if v, ok := err.(Error); ok {
+			return v.ID()
+		}
+
+		err = Unwrap(err)
+	}
+
+	return ""
+}
+
+func Unwrap(err error) error {
+	u, ok := err.(ErrUnwrap)
+	if !ok {
+		return nil
+	}
+	return u.Unwrap()
+}
+
+func ParseErrToPb(err error) proto.Message {
+	switch err1 := err.(type) {
+	case nil:
+		return nil
+	case ErrorProto:
+		return err1.Proto()
+	case GRPCStatus:
+		return err1.GRPCStatus().Proto()
+	case proto.Message:
+		return err1
+	default:
+		return &errorpb.ErrMsg{Msg: err.Error(), Detail: fmt.Sprintf("%v", err)}
+	}
 }

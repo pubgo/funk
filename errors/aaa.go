@@ -4,8 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/proto"
+	"github.com/pubgo/funk/errors/errinter"
 )
 
 var (
@@ -64,9 +63,7 @@ func (t Tag) String() string {
 	return fmt.Sprintf("%s: %v", t.K, t.V)
 }
 
-type ErrUnwrap interface {
-	Unwrap() error
-}
+type ErrUnwrap errinter.ErrUnwrap
 
 type ErrIs interface {
 	Is(error) bool
@@ -76,18 +73,6 @@ type ErrAs interface {
 	As(any) bool
 }
 
-type Error interface {
-	ID() string
-	Kind() string
-	Error() string
-	String() string
-	MarshalJSON() ([]byte, error)
-}
-
-type ErrorProto interface {
-	Proto() proto.Message
-}
-
-type GRPCStatus interface {
-	GRPCStatus() *status.Status
-}
+type Error = errinter.Error
+type ErrorProto = errinter.ErrorProto
+type GRPCStatus = errinter.GRPCStatus

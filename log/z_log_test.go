@@ -21,7 +21,6 @@ func TestWithName(t *testing.T) {
 		Func(func(e *zerolog.Event) {
 			var buf = gjson.ParseBytes(log.GetEventBuf(e))
 			assert.Equal(t, buf.Get("logger").String(), "log1")
-			assert.Equal(t, buf.Get("module").String(), "github.com/pubgo/funk/log_test")
 		}).Msg("hello")
 
 	log.GetLogger("log1").
@@ -30,14 +29,12 @@ func TestWithName(t *testing.T) {
 		Func(func(e *zerolog.Event) {
 			var buf = gjson.ParseBytes(log.GetEventBuf(e))
 			assert.Equal(t, buf.Get("logger").String(), "log1.log2")
-			assert.Equal(t, buf.Get("module").String(), "github.com/pubgo/funk/log_test")
 		}).Msg("hello")
 
 	log.Debug().
 		Func(func(e *zerolog.Event) {
 			var buf = gjson.ParseBytes(log.GetEventBuf(e))
 			assert.Equal(t, buf.Get("logger").String(), "")
-			assert.Equal(t, buf.Get("module").String(), "")
 		}).Msg("hello")
 }
 

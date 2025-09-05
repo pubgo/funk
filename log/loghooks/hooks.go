@@ -1,4 +1,4 @@
-package log
+package loghooks
 
 import (
 	"sync/atomic"

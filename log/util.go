@@ -3,7 +3,7 @@ package log
 import (
 	"context"
 
-	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/errors/errinter"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/encoding/prototext"
 )
@@ -13,7 +13,7 @@ func errDetail(err error) string {
 		return ""
 	}
 
-	return prototext.Format(errors.ParseErrToPb(err))
+	return prototext.Format(errinter.ParseErrToPb(err))
 }
 
 func RecordErr(logs ...Logger) func(ctx context.Context, err error) error {

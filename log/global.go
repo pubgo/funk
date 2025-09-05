@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/errors/errinter"
 	"github.com/pubgo/funk/generic"
 
 	"github.com/rs/zerolog"
@@ -38,7 +38,7 @@ var (
 			}
 
 			errDetail := errDetail(err)
-			id := errors.GetErrorId(err)
+			id := errinter.GetErrorId(err)
 			if id != "" {
 				return fmt.Sprintf("%s, error_id:%s error_detail:%s", err.Error(), id, errDetail)
 			}
@@ -56,7 +56,7 @@ var (
 			Output(zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
 				w.Out = os.Stderr
 				w.TimeFormat = time.RFC3339
-			})).Hook(new(hookImpl), logGlobalHook),
+			})).Hook(logGlobalHook),
 	)
 
 	_ = generic.Init(func() {
