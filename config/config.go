@@ -17,6 +17,7 @@ import (
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/pathutil"
+	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/recovery"
 	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/typex"
@@ -194,7 +195,13 @@ func LoadFromPath[T any](val *T, cfgPath string) EnvConfigMap {
 		return pathList
 	})...)
 
-	assert.Exit(Merge(val, cfgList...), "failed to merge config")
+	err := Merge(val, cfgList...)
+	if err != nil {
+		for _, cfg := range cfgList {
+			pretty.Simple().Println(cfg)
+		}
+		log.Fatal().Err(err).Msg("failed to merge config")
+	}
 	return envCfgMap
 }
 
