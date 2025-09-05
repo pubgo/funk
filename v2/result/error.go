@@ -33,7 +33,7 @@ func (e Error) Map(fn func(error) error) Error {
 	return Error{err: err}
 }
 
-func (e Error) LogErr(contexts ...context.Context) Error {
+func (e Error) Log(contexts ...context.Context) Error {
 	if e.IsErr() {
 		log.Err(e.err, contexts...).
 			CallerSkipFrame(1).

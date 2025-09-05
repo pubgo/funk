@@ -25,8 +25,8 @@ func TestEnvPrefix(t *testing.T) {
 		}
 	}))
 
-	env.Set(env.PrefixKey, "test")
-	env.Set("test_hello", "world")
+	env.Set(env.PrefixKey, "test").Must()
+	env.Set("test_hello", "world").Must()
 	env.Reload()
 
 	envMap := env.Map()
