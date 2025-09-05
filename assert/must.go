@@ -2,7 +2,7 @@ package assert
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"runtime/debug"
 )
@@ -45,7 +45,7 @@ func Exit(err error, args ...interface{}) {
 		return
 	}
 
-	log.Printf("[ERROR] %s", fmt.Sprint(args...))
+	slog.Error("os exit with error", "err", err, "msg", fmt.Sprint(args...))
 	debug.PrintStack()
 	os.Exit(1)
 }
@@ -56,7 +56,7 @@ func ExitFn(errFn func() error, args ...interface{}) {
 		return
 	}
 
-	log.Printf("[ERROR] %s", fmt.Sprint(args...))
+	slog.Error("os exit with error func", "err", err, "msg", fmt.Sprint(args...))
 	debug.PrintStack()
 	os.Exit(1)
 }
@@ -66,14 +66,14 @@ func ExitF(err error, msg string, args ...interface{}) {
 		return
 	}
 
-	log.Printf("[ERROR] %s", fmt.Sprintf(msg, args...))
+	slog.Error("os exit with error format", "err", err, "msg", fmt.Sprintf(msg, args...))
 	debug.PrintStack()
 	os.Exit(1)
 }
 
 func Exit1[T any](ret T, err error) T {
 	if err != nil {
-		log.Printf("[ERROR] %s", err.Error())
+		slog.Error("os exit with error unwrap", "err", err)
 		debug.PrintStack()
 		os.Exit(1)
 	}

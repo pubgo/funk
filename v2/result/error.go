@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/rs/zerolog"
+	"google.golang.org/protobuf/encoding/prototext"
+
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/errors/errutil"
 	"github.com/pubgo/funk/log"
@@ -35,9 +38,11 @@ func (e Error) Map(fn func(error) error) Error {
 
 func (e Error) Log(contexts ...context.Context) Error {
 	if e.IsErr() {
-		log.Err(e.err, contexts...).
+		log.Error(contexts...).
+			Str(zerolog.ErrorFieldName, e.err.Error()).
 			CallerSkipFrame(1).
-			Msg(e.err.Error())
+			Str("error_id", errors.GetErrorId(e.err)).
+			Msgf("%s\n%s", e.err.Error(), prototext.Format(errors.ParseErrToPb(e.err)))
 	}
 
 	return e

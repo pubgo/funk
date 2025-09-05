@@ -22,16 +22,16 @@ func Init() {
 // a-b=>a_b, a.b=>a_b, a/b=>a_b
 func loadEnv() {
 	envPrefix := getEnvPrefix()
+	logger := log.With().Str("operation", "reload_env").Logger()
 	envPrefixEventFn := func(e *zerolog.Event) {
 		e.Dict("env_prefix", zerolog.Dict().Str("key", PrefixKey).Str("value", envPrefix))
 	}
-	logRecord(log.Info(), envPrefixEventFn).Msg("load env")
+	logRecord(logger.Info(), envPrefixEventFn).Msg("reload env")
 
 	for _, env := range os.Environ() {
-		rawEnvFn := func(e *zerolog.Event) { e.Str("raw_env", env) }
 		kvs := strings.SplitN(env, "=", 2)
 		if len(kvs) != 2 {
-			logRecord(log.Error(), envPrefixEventFn, rawEnvFn).Msg("split env error")
+			logRecord(logger.Error()).Msg("split env error")
 			continue
 		}
 
@@ -42,15 +42,14 @@ func loadEnv() {
 			strings.HasPrefix(envKey, "_") ||
 			strings.HasPrefix(envKey, "=") ||
 			!hasEnvPrefix(envKey, envPrefix) {
-			logRecord(log.Warn(), envPrefixEventFn, rawEnvFn).Msgf("unset not match env, key=%s", envKey)
+			logRecord(logger.Warn()).Msgf("unset env, key=%s", envKey)
 			continue
 		}
 
 		key, ok := Normalize(envKey)
 		if ok {
-			_ = os.Setenv(key, kvs[1])
+			setOk := os.Setenv(key, kvs[1]) == nil
+			logRecord(logger.Info()).Msgf("reset env, old_key=%s new_key=%s set_ok=%v", envKey, key, setOk)
 		}
-
-		logRecord(log.Info(), envPrefixEventFn, rawEnvFn).Msgf("reset env, old_env_key=%s new_env_key=%s", envKey, key)
 	}
 }

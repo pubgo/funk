@@ -63,7 +63,6 @@ func Debug(err error) {
 		return
 	}
 
-	err = parseError(err)
 	if _err, ok := err.(fmt.Stringer); ok {
 		_, _ = fmt.Fprintln(os.Stderr, _err.String())
 		return

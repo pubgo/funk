@@ -12,7 +12,6 @@ import (
 )
 
 var logFn = func(e *zerolog.Event) {
-	e.Str(logfields.LoggerName, "env")
 	e.Str(logfields.ModuleName, "env")
 }
 
@@ -61,6 +60,5 @@ func Normalize(key string) (string, bool) {
 }
 
 func logRecord(evt *zerolog.Event, funcs ...func(e *zerolog.Event)) *zerolog.Event {
-	funcs = append(funcs, logFn)
-	return logutil.Record(evt, funcs...)
+	return logutil.Record(evt, append(funcs, logFn)...)
 }
