@@ -3,13 +3,16 @@ package result
 import (
 	"context"
 	"fmt"
+
 	"log/slog"
 	"reflect"
 	"runtime/debug"
 	"strings"
 
+	"github.com/rs/zerolog"
 	"github.com/samber/lo"
-	
+	"google.golang.org/protobuf/encoding/prototext"
+
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/log"
@@ -231,4 +234,24 @@ func setError(setter ErrSetter, err error) {
 		ret := (*Result[any])(rv.UnsafePointer())
 		ret.err = err
 	}
+}
+
+func logErr(ctx context.Context, err error, events ...func(e *zerolog.Event)) {
+	if err == nil {
+		return
+	}
+
+	log.Error(ctx).
+		Func(func(e *zerolog.Event) {
+			for _, fn := range events {
+				fn(e)
+			}
+
+			if id := errors.GetErrorId(err); id != "" {
+				e.Str("error_id", id)
+			}
+		}).
+		Str(zerolog.ErrorFieldName, err.Error()).
+		CallerSkipFrame(2).
+		Msgf("%s\n%s", err.Error(), prototext.Format(errors.ParseErrToPb(err)))
 }

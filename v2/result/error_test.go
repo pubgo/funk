@@ -1,16 +1,15 @@
 package result
 
 import (
-	"github.com/rs/zerolog"
 	"testing"
 
 	"github.com/pubgo/funk/errors"
+	"github.com/rs/zerolog"
 )
 
 func TestErrorLog(t *testing.T) {
 	ErrOf(errors.New("test")).
-		Log().
-		LogCtx(nil, func(e *zerolog.Event) {
-			e.Str("abc", "test")
+		Log(func(e *zerolog.Event) {
+			e.Str("test-log", "ok")
 		})
 }

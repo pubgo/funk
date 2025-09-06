@@ -7,11 +7,9 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
-	"google.golang.org/protobuf/encoding/prototext"
 
 	"github.com/pubgo/funk"
 	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/log"
 )
 
 var _ Catchable = new(Result[any])
@@ -108,33 +106,12 @@ func (r Result[T]) Inspect(fn func(T)) Result[T] {
 }
 
 func (r Result[T]) LogCtx(ctx context.Context, events ...func(e *zerolog.Event)) Result[T] {
-	if r.IsErr() {
-		err := r.err
-		log.Error(ctx).
-			Func(func(e *zerolog.Event) {
-				for _, fn := range events {
-					fn(e)
-				}
-			}).
-			Str(zerolog.ErrorFieldName, err.Error()).
-			CallerSkipFrame(1).
-			Str("error_id", errors.GetErrorId(err)).
-			Msgf("%s\n%s", err.Error(), prototext.Format(errors.ParseErrToPb(err)))
-	}
-
+	logErr(ctx, r.err, events...)
 	return r
 }
 
-func (r Result[T]) Log(contexts ...context.Context) Result[T] {
-	if r.IsErr() {
-		err := r.err
-		log.Error(contexts...).
-			Str(zerolog.ErrorFieldName, err.Error()).
-			CallerSkipFrame(1).
-			Str("error_id", errors.GetErrorId(err)).
-			Msgf("%s\n%s", err.Error(), prototext.Format(errors.ParseErrToPb(err)))
-	}
-
+func (r Result[T]) Log(events ...func(e *zerolog.Event)) Result[T] {
+	logErr(nil, r.err, events...)
 	return r
 }
 
