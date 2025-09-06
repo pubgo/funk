@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/pubgo/funk"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/log"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/encoding/prototext"
+
+	"github.com/pubgo/funk"
+	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/log"
 )
 
 var _ Catchable = new(Result[any])
@@ -103,6 +104,24 @@ func (r Result[T]) Inspect(fn func(T)) Result[T] {
 	if r.IsOK() {
 		fn(r.getValue())
 	}
+	return r
+}
+
+func (r Result[T]) LogCtx(ctx context.Context, events ...func(e *zerolog.Event)) Result[T] {
+	if r.IsErr() {
+		err := r.err
+		log.Error(ctx).
+			Func(func(e *zerolog.Event) {
+				for _, fn := range events {
+					fn(e)
+				}
+			}).
+			Str(zerolog.ErrorFieldName, err.Error()).
+			CallerSkipFrame(1).
+			Str("error_id", errors.GetErrorId(err)).
+			Msgf("%s\n%s", err.Error(), prototext.Format(errors.ParseErrToPb(err)))
+	}
+
 	return r
 }
 

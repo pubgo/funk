@@ -8,12 +8,13 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"github.com/samber/lo"
+	
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/stack"
 	"github.com/pubgo/funk/v2/result/resultchecker"
-	"github.com/samber/lo"
 )
 
 var errFnIsNil = errors.New("[fn] is nil")
@@ -110,7 +111,7 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 		}
 
 		if rawSetter != nil {
-			*rawSetter = err
+			setError(ErrProxyOf(rawSetter), err)
 		}
 	}
 

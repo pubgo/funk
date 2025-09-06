@@ -36,6 +36,24 @@ func (e Error) Map(fn func(error) error) Error {
 	return Error{err: err}
 }
 
+func (e Error) LogCtx(ctx context.Context, events ...func(e *zerolog.Event)) Error {
+	if e.IsErr() {
+		err := e.err
+		log.Error(ctx).
+			Func(func(e *zerolog.Event) {
+				for _, fn := range events {
+					fn(e)
+				}
+			}).
+			Str(zerolog.ErrorFieldName, err.Error()).
+			CallerSkipFrame(1).
+			Str("error_id", errors.GetErrorId(err)).
+			Msgf("%s\n%s", err.Error(), prototext.Format(errors.ParseErrToPb(err)))
+	}
+
+	return e
+}
+
 func (e Error) Log(contexts ...context.Context) Error {
 	if e.IsErr() {
 		log.Error(contexts...).

@@ -93,8 +93,11 @@ func (l *loggerImpl) WithFields(m Map) Logger {
 
 func (l *loggerImpl) getCtx(ctxL ...context.Context) context.Context {
 	ctx := context.Background()
-	if len(ctxL) > 0 {
-		ctx = ctxL[0]
+	for i := range ctxL {
+		if ctxL[i] != nil {
+			ctx = ctxL[i]
+			break
+		}
 	}
 	return ctx
 }
