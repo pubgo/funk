@@ -4,6 +4,10 @@ import "fmt"
 
 var _ StdLogger = (*stdLogImpl)(nil)
 
+func NewStd(log Logger) StdLogger {
+	return &stdLogImpl{log: log.WithCallerSkip(1)}
+}
+
 type stdLogImpl struct {
 	log Logger
 }

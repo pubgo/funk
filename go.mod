@@ -13,7 +13,6 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/ettle/strcase v0.2.0
 	github.com/expr-lang/expr v1.17.5
-	github.com/flosch/pongo2/v6 v6.0.0
 	github.com/goccy/go-json v0.10.2
 	github.com/gopherjs/gopherjs v1.17.2
 	github.com/hashicorp/go-version v1.6.0
@@ -36,7 +35,8 @@ require (
 	github.com/pubgo/dix v0.3.15
 	github.com/rs/xid v1.5.0
 	github.com/rs/zerolog v1.33.0
-	github.com/samber/lo v1.47.0
+	github.com/samber/lo v1.51.0
+	github.com/samber/slog-common v0.19.0
 	github.com/stretchr/testify v1.10.0
 	github.com/testcontainers/testcontainers-go v0.30.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.30.0

@@ -23,7 +23,13 @@ var (
 		}
 
 		ctx := e.GetCtx()
-		if logEnableChecker(ctx, level, message, getFieldFromCtx(ctx)) {
+		field := getFieldFromCtx(ctx)
+
+		if field == nil {
+			return
+		}
+
+		if logEnableChecker(ctx, level, field.name, message, field.fields) {
 			return
 		}
 
@@ -72,7 +78,7 @@ func GetLogger(names ...string) Logger {
 	if len(names) == 0 || names[0] == "" {
 		return stdLog
 	}
-	return stdLog.nameWithCaller(names[0], 1)
+	return stdLog.nameWithCaller(names[0], 0)
 }
 
 // SetLogger set global log

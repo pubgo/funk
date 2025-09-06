@@ -13,6 +13,12 @@ import (
 
 var _ Logger = (*loggerImpl)(nil)
 
+func New(log *zerolog.Logger) Logger {
+	return &loggerImpl{
+		log: log,
+	}
+}
+
 type loggerImpl struct {
 	name       string
 	log        *zerolog.Logger
@@ -65,11 +71,13 @@ func (l *loggerImpl) nameWithCaller(name string, caller int) Logger {
 	} else {
 		log.name = fmt.Sprintf("%s.%s", log.name, name)
 	}
+
+	log.callerSkip += caller
 	return log
 }
 
 func (l *loggerImpl) WithName(name string) Logger {
-	return l.nameWithCaller(name, 1)
+	return l.nameWithCaller(name, 0)
 }
 
 func (l *loggerImpl) WithFields(m Map) Logger {
@@ -182,11 +190,7 @@ func (l *loggerImpl) enabled(ctx context.Context, lvl zerolog.Level) bool {
 		return false
 	}
 
-	enabled := true
-	if logEnableChecker != nil {
-		enabled = logEnableChecker(ctx, lvl, l.name, l.fields)
-	}
-	return enabled && lvl >= l.lvl && lvl >= zerolog.GlobalLevel()
+	return lvl >= l.lvl && lvl >= zerolog.GlobalLevel()
 }
 
 func (l *loggerImpl) copy() *loggerImpl {
@@ -214,10 +218,7 @@ func (l *loggerImpl) newEvent(ctx context.Context, e *zerolog.Event) *zerolog.Ev
 		e = e.Fields(l.fields)
 	}
 
-	if ctx != nil {
-		ctx = createFieldCtx(ctx, l.fields)
-		e = e.Ctx(ctx)
-	}
+	e = e.Ctx(createFieldCtx(ctx, &fieldMap{name: l.name, fields: l.fields}))
 
 	return mergeEvent(e, getEventFromCtx(ctx), l.content)
 }
