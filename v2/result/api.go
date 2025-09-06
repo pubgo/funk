@@ -24,10 +24,10 @@ func Recovery(setter *error, callbacks ...func(err error) error) {
 		return
 	}
 
-	*setter = errRecovery(
+	setError(ErrProxyOf(setter), errRecovery(
 		func() error { return *setter },
 		callbacks...,
-	)
+	))
 }
 
 func RecoveryErr(setter ErrSetter, callbacks ...func(err error) error) {
