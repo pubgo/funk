@@ -1,6 +1,9 @@
 package logfields
 
 const (
-	ModuleName = "module"
-	LoggerName = "logger"
+	Module      = "module"
+	Logger      = "logger"
+	Error       = "error"
+	ErrorDetail = "error_detail"
+	ErrorStack  = "error_stack"
 )

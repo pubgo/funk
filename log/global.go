@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	logEnableChecker = func(ctx context.Context, lvl Level, nameOrMessage string, fields Map) bool { return true }
+	logEnableChecker EnableChecker
 	logGlobalHook    = zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, message string) {
 		if logEnableChecker == nil {
 			return

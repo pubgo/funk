@@ -12,7 +12,7 @@ import (
 )
 
 var logFn = func(e *zerolog.Event) {
-	e.Str(logfields.ModuleName, "env")
+	e.Str(logfields.Module, "env")
 }
 
 const PrefixKey = "ENV_PREFIX"

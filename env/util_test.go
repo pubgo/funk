@@ -9,6 +9,7 @@ import (
 	"github.com/pubgo/funk/pretty"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,6 +25,9 @@ func TestEnvPrefix(t *testing.T) {
 			e.Discard()
 		}
 	}))
+
+	env.Reload()
+	pretty.Println("env_keys", lo.Keys(env.Map()))
 
 	env.Set(env.PrefixKey, "test").Must()
 	env.Set("test_hello", "world").Must()

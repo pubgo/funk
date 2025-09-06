@@ -88,16 +88,16 @@ func isLogDisabled(ctx context.Context) bool {
 	return b && ok
 }
 
-func createFieldCtx(ctx context.Context, mm Map) context.Context {
+func createFieldCtx(ctx context.Context, fields Map) context.Context {
 	if ctx == nil {
 		panic("ctx is nil")
 	}
 
-	if len(mm) == 0 {
+	if len(fields) == 0 {
 		return ctx
 	}
 
-	return context.WithValue(ctx, ctxMapFieldKey{}, mm)
+	return context.WithValue(ctx, ctxMapFieldKey{}, fields)
 }
 
 func getFieldFromCtx(ctx context.Context) Map {

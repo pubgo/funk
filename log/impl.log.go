@@ -200,7 +200,7 @@ func (l *loggerImpl) getLog() *zerolog.Logger {
 
 func (l *loggerImpl) newEvent(ctx context.Context, e *zerolog.Event) *zerolog.Event {
 	if l.name != "" {
-		e = e.Str(logfields.LoggerName, l.name)
+		e = e.Str(logfields.Logger, l.name)
 	}
 
 	if l.callerSkip != 0 {
