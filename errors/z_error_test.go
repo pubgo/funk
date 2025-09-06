@@ -31,7 +31,7 @@ func TestFormat(t *testing.T) {
 
 	err = errors.WrapFn(err, func() errors.Tags {
 		return errors.Tags{
-			{"key", "map value"},
+			errors.T("key", "map value"),
 		}
 	})
 

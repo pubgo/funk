@@ -3,19 +3,17 @@ package errors
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/pubgo/funk/convert"
-	"github.com/pubgo/funk/errors/errinter"
-	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/pretty"
-	"github.com/pubgo/funk/proto/errorpb"
-	"github.com/pubgo/funk/stack"
 	"github.com/rs/xid"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/pubgo/funk/errors/errinter"
+	"github.com/pubgo/funk/pretty"
+	"github.com/pubgo/funk/proto/errorpb"
+	"github.com/pubgo/funk/stack"
 )
 
 func cloneAndCheck(code *errorpb.ErrCode) *errorpb.ErrCode {
@@ -47,25 +45,6 @@ func handleGrpcError(err error) error {
 		})
 	default:
 		return err
-	}
-}
-
-func parseError(val interface{}) error {
-	if generic.IsNil(val) {
-		return nil
-	}
-
-	switch v := val.(type) {
-	case nil:
-		return nil
-	case error:
-		return v
-	case string:
-		return errors.New(v)
-	case []byte:
-		return errors.New(convert.B2S(v))
-	default:
-		return &Err{Msg: fmt.Sprintf("%v", v), Detail: pretty.SimplePrint(v)}
 	}
 }
 

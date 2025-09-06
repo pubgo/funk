@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/recovery"
 	"github.com/pubgo/funk/result"
@@ -31,11 +30,7 @@ func TestErr(t *testing.T) {
 
 		panic("ok")
 	}
-
-	err := handler()
-	if generic.IsNil(err) {
-		t.Log(err)
-	}
+	t.Log("error:", handler())
 }
 
 func TestResult(t *testing.T) {

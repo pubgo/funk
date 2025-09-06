@@ -1,23 +1,17 @@
 package errors
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"reflect"
 	"runtime/debug"
 
 	"github.com/rs/xid"
-	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
-	"google.golang.org/protobuf/encoding/prototext"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
-	"google.golang.org/protobuf/types/known/structpb"
 
-	"github.com/pubgo/funk/log/logutil"
-	"github.com/pubgo/funk/pretty"
+	"github.com/pubgo/funk/errors/errinter"
 	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/stack"
 )
@@ -30,8 +24,8 @@ func IfErr(err error, fn func(err error) error) error {
 	return fn(err)
 }
 
-func New(msg string) error {
-	return WrapCaller(&Err{Msg: msg, id: xid.New().String()}, 1)
+func New(msg string, tags ...Tag) error {
+	return WrapCaller(&Err{Msg: msg, id: xid.New().String(), Tags: tags}, 1)
 }
 
 // NewFmt
@@ -50,27 +44,8 @@ func Errorf(msg string, args ...interface{}) error {
 	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...), id: xid.New().String()}, 1)
 }
 
-func NewTags(msg string, tags ...Tag) error {
-	return WrapCaller(&Err{Msg: msg, Tags: tags, id: xid.New().String()}, 1)
-}
-
-func Parse(val interface{}) error {
-	return parseError(val)
-}
-
-func Debug(err error) {
-	if err == nil {
-		return
-	}
-
-	if _err, ok := err.(fmt.Stringer); ok {
-		_, _ = fmt.Fprintln(os.Stderr, _err.String())
-		return
-	}
-
-	pretty.SetDefaultMaxDepth(20)
-	pretty.Println(err)
-}
+func Parse(val interface{}) error { return errinter.ParseError(val) }
+func Debug(err error)             { errinter.Debug(err) }
 
 func Is(err, target error) bool {
 	return errors.Is(err, target)
@@ -293,98 +268,8 @@ func T(k string, v any) Tag {
 	return Tag{K: k, V: v}
 }
 
-func MustTagsToAny(tags ...*errorpb.Tag) []*anypb.Any {
-	if len(tags) == 0 {
-		return nil
-	}
-
-	return lo.Map(tags, func(item *errorpb.Tag, index int) *anypb.Any {
-		return MustProtoToAny(item)
-	})
-}
-
-func MustStructToAny(p map[string]any) *anypb.Any {
-	if p == nil {
-		return nil
-	}
-
-	pb, err := structpb.NewStruct(p)
-	if err != nil {
-		log.Err(err).
-			Any("params", p).
-			Func(logutil.WithNotice()).
-			Stack().
-			Msgf("failed to encode map-any to struct protobuf")
-		return anyToProtobuf(p)
-	} else {
-		return MustProtoToAny(pb)
-	}
-}
-
-func anyToProtobuf(v any) *anypb.Any {
-	data, err := json.Marshal(v)
-	if err != nil {
-		return &anypb.Any{
-			TypeUrl: "type.googleapis.com/google.protobuf.StringValue",
-			Value:   []byte(fmt.Sprintf("err:%s detail:%#v", err.Error(), v)),
-		}
-	}
-	return &anypb.Any{
-		TypeUrl: "type.googleapis.com/google.protobuf.Struct",
-		Value:   data,
-	}
-}
-
-func MustProtoToAny(p proto.Message) *anypb.Any {
-	switch p := p.(type) {
-	case nil:
-		return nil
-	case *anypb.Any:
-		return p
-	}
-
-	pb, err := anypb.New(p)
-	if err != nil {
-		params := prototext.Format(p)
-		log.Err(err).
-			Str("protobuf", params).
-			Func(logutil.WithNotice()).
-			Stack().
-			Msgf("failed to encode protobuf message to any protobuf")
-		pb, _ = anypb.New(structpb.NewStringValue(params))
-		return pb
-	}
-
-	return pb
-}
-
-func ParseErrToPb(err error) proto.Message {
-	switch err1 := err.(type) {
-	case nil:
-		return nil
-	case ErrorProto:
-		return err1.Proto()
-	case GRPCStatus:
-		return err1.GRPCStatus().Proto()
-	case proto.Message:
-		return err1
-	default:
-		return &errorpb.ErrMsg{Msg: err.Error(), Detail: fmt.Sprintf("%v", err)}
-	}
-}
-
-func GetErrorId(err error) string {
-	if err == nil {
-		return ""
-	}
-
-	for err != nil {
-		if v, ok := err.(Error); ok {
-			return v.ID()
-		}
-
-		err = Unwrap(err)
-	}
-
-	return ""
-}
+func MustTagsToAny(tags ...*errorpb.Tag) []*anypb.Any { return errinter.MustTagsToAny(tags...) }
+func MustStructToAny(p map[string]any) *anypb.Any     { return errinter.MustStructToAny(p) }
+func MustProtoToAny(p proto.Message) *anypb.Any       { return errinter.MustProtoToAny(p) }
+func ParseErrToPb(err error) proto.Message            { return errinter.ParseErrToPb(err) }
+func GetErrorId(err error) string                     { return errinter.GetErrorId(err) }
