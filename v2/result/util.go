@@ -163,6 +163,8 @@ func errRecovery(getErr func() error, callbacks ...func(err error) error) error 
 			return nil
 		}
 	}
+
+	debug.PrintStack()
 	return err
 }
 
