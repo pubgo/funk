@@ -35,6 +35,9 @@ func init() {
 	}
 
 	mainPath = bi.Main.Path
+	if v := bi.Main.Version; v != "" {
+		version = v
+	}
 
 	for i := range bi.Settings {
 		setting := bi.Settings[i]
