@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/rs/zerolog"
+	"github.com/samber/lo"
+
 	"github.com/pubgo/funk"
 	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/log"
-	"github.com/samber/lo"
 )
 
 var _ Catchable = new(Result[any])
@@ -22,12 +23,21 @@ type Result[T any] struct {
 	err error
 }
 
-func (r Result[T]) GetValue() T {
+func (r Result[T]) GetValue() (t T) {
 	if r.IsErr() {
-		errMust(errors.WrapCaller(r.getErr(), 1))
+		return
 	}
 
 	return r.getValue()
+}
+
+func (r Result[T]) WithFn(fn func() (T, error)) Result[T] {
+	if r.IsErr() {
+		err := errors.WrapCaller(r.getErr(), 1)
+		return Result[T]{err: err}
+	}
+
+	return WrapFn(fn)
 }
 
 func (r Result[T]) WithValue(v T) Result[T] {
@@ -55,7 +65,7 @@ func (r Result[T]) ValueTo(v *T) Error {
 func (r Result[T]) Expect(format string, args ...any) T {
 	if r.IsErr() {
 		err := errors.WrapCaller(r.getErr(), 1)
-		errMust(errors.Wrapf(err, format, args...))
+		errNilOrPanic(errors.Wrapf(err, format, args...))
 	}
 
 	return r.getValue()
@@ -63,7 +73,7 @@ func (r Result[T]) Expect(format string, args ...any) T {
 
 func (r Result[T]) Must() T {
 	if r.IsErr() {
-		errMust(errors.WrapCaller(r.getErr(), 1))
+		errNilOrPanic(errors.WrapCaller(r.getErr(), 1))
 	}
 
 	return r.getValue()
@@ -95,13 +105,13 @@ func (r Result[T]) Inspect(fn func(T)) Result[T] {
 	return r
 }
 
-func (r Result[T]) LogErr(contexts ...context.Context) Result[T] {
-	if r.IsErr() {
-		log.Err(r.err, contexts...).
-			CallerSkipFrame(1).
-			Msg(r.err.Error())
-	}
+func (r Result[T]) LogCtx(ctx context.Context, events ...func(e *zerolog.Event)) Result[T] {
+	logErr(ctx, r.err, events...)
+	return r
+}
 
+func (r Result[T]) Log(events ...func(e *zerolog.Event)) Result[T] {
+	logErr(nil, r.err, events...)
 	return r
 }
 
@@ -160,14 +170,10 @@ func (r Result[T]) String() string {
 	return fmt.Sprintf("Error(%v)", r.getErr())
 }
 
-func (r Result[T]) WithErrorf(str string, args ...any) Result[T] {
-	err := fmt.Errorf(str, args...)
+func (r Result[T]) WithErrorf(format string, args ...any) Result[T] {
+	err := fmt.Errorf(format, args...)
 	err = errors.WrapCaller(err, 1)
 	return Result[T]{err: err}
-}
-
-func (r Result[T]) WrapErr(err *errors.Err, tags ...errors.Tag) Result[T] {
-	return Result[T]{err: errors.WrapTag(errors.WrapCaller(err, 1), tags...)}
 }
 
 func (r Result[T]) WithErr(err error) Result[T] {
@@ -177,6 +183,10 @@ func (r Result[T]) WithErr(err error) Result[T] {
 
 	err = errors.WrapCaller(err, 1)
 	return Result[T]{err: err}
+}
+
+func (r Result[T]) WrapErr(err *errors.Err, tags ...errors.Tag) Result[T] {
+	return Result[T]{err: errors.WrapTag(errors.WrapCaller(err, 1), tags...)}
 }
 
 func (r Result[T]) Unwrap(setter *error, contexts ...context.Context) T {
@@ -190,7 +200,7 @@ func (r Result[T]) Unwrap(setter *error, contexts ...context.Context) T {
 func (r Result[T]) UnwrapErr(setter ErrSetter, contexts ...context.Context) T {
 	ret, err := unwrapErr(r, nil, setter, contexts...)
 	if err != nil {
-		setter.setError(errors.WrapCaller(err, 1))
+		setError(setter, errors.WrapCaller(err, 1))
 	}
 	return ret
 }
@@ -207,9 +217,5 @@ func (r Result[T]) getValue() T { return lo.FromPtr(r.v) }
 
 func (r Result[T]) getErr() error { return r.err }
 
-func (r *Result[T]) setError(err error) {
-	if err == nil {
-		return
-	}
-	r.err = err
+func (r Result[T]) setErrorInner() {
 }

@@ -11,6 +11,10 @@ import (
 	"github.com/pubgo/funk/version"
 )
 
+func SetVersion(v string) { Version = v }
+func SetProject(p string) { Project = p }
+func SetDomain(d string)  { Domain = d }
+
 func GetSysInfo() map[string]string {
 	return map[string]string{
 		"main_path":     version.MainPath(),
@@ -18,12 +22,15 @@ func GetSysInfo() map[string]string {
 		"http_post":     fmt.Sprintf("%v", HttpPort),
 		"debug":         fmt.Sprintf("%v", IsDebug),
 		"cur_dir":       Pwd,
+		"local_ip":      LocalIP,
 		"namespace":     Namespace,
 		"instance_id":   InstanceID,
+		"device_id":     DeviceID,
 		"project":       Project,
 		"hostname":      Hostname,
 		"build_time":    version.BuildTime(),
 		"version":       Version,
+		"domain":        Domain,
 		"commit_id":     CommitID,
 		"go_root":       rt.GOROOT(),
 		"go_arch":       rt.GOARCH,
@@ -36,7 +43,13 @@ func GetSysInfo() map[string]string {
 
 func CheckVersion() {
 	defer recovery.Exit()
-	assert.Must1(semver.NewVersion(version.Version()))
+	assert.MustFn(func() error {
+		_, err := semver.NewVersion(version.Version())
+		if err != nil {
+			return fmt.Errorf("version(%s) error: %w", version.Version(), err)
+		}
+		return nil
+	})
 	assert.If(version.Project() == "", "project is null")
 	assert.If(version.Version() == "", "version is null")
 	assert.If(version.CommitID() == "", "commitID is null")

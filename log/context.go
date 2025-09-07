@@ -11,7 +11,7 @@ type (
 	ctxMapFieldKey struct{}
 )
 
-func LoggerFromCtx(ctx context.Context, loggers ...Logger) Logger {
+func GetFromCtx(ctx context.Context, loggers ...Logger) Logger {
 	defaultLog := stdLog
 	if len(loggers) > 0 {
 		defaultLog = loggers[0]
@@ -28,7 +28,7 @@ func LoggerFromCtx(ctx context.Context, loggers ...Logger) Logger {
 	return defaultLog
 }
 
-func CreateLoggerCtx(ctx context.Context, ll Logger) context.Context {
+func CreateCtxWithLogger(ctx context.Context, ll Logger) context.Context {
 	if ll == nil || ctx == nil {
 		panic("ctx or log param is nil")
 	}
@@ -88,26 +88,27 @@ func isLogDisabled(ctx context.Context) bool {
 	return b && ok
 }
 
-func createFieldCtx(ctx context.Context, mm Map) context.Context {
+type fieldMap struct {
+	fields Map
+	name   string
+}
+
+func createFieldCtx(ctx context.Context, field *fieldMap) context.Context {
 	if ctx == nil {
 		panic("ctx is nil")
 	}
 
-	if len(mm) == 0 {
-		return ctx
-	}
-
-	return context.WithValue(ctx, ctxMapFieldKey{}, mm)
+	return context.WithValue(ctx, ctxMapFieldKey{}, field)
 }
 
-func getFieldFromCtx(ctx context.Context) Map {
+func getFieldFromCtx(ctx context.Context) *fieldMap {
 	if ctx == nil {
-		return make(Map)
+		return nil
 	}
 
-	field, ok := ctx.Value(ctxMapFieldKey{}).(Map)
+	field, ok := ctx.Value(ctxMapFieldKey{}).(*fieldMap)
 	if ok {
 		return field
 	}
-	return make(Map)
+	return nil
 }

@@ -13,9 +13,6 @@ type event struct {
 	buf []byte
 }
 
-//go:linkname putEvent github.com/rs/zerolog.putEvent
-func putEvent(e *Event)
-
 func WithEvent(evt *Event) func(e *Event) {
 	return func(e *Event) {
 		if !e.Enabled() {
@@ -63,17 +60,17 @@ func GetEventBuf(evt *Event) []byte {
 	return append(convertEvent(evt).buf, '}')
 }
 
-func mergeEvent(to *Event, from ...*Event) *Event {
+func mergeEvent(target *Event, from ...*Event) *Event {
 	if len(from) == 0 {
-		return to
+		return target
 	}
 
-	if to == nil {
-		to = zerolog.Dict()
+	if target == nil {
+		target = zerolog.Dict()
 	}
 
-	to1 := convertEvent(to)
-	to1.buf = bytes.TrimSpace(bytes.Trim(to1.buf, ","))
+	targetEvent := convertEvent(target)
+	targetEvent.buf = bytes.TrimSpace(bytes.Trim(targetEvent.buf, ","))
 	for i := range from {
 		if from[i] == nil {
 			continue
@@ -90,14 +87,14 @@ func mergeEvent(to *Event, from ...*Event) *Event {
 			continue
 		}
 
-		if len(to1.buf) == 0 {
-			to1.buf = append(to1.buf, '{')
-			to1.buf = append(to1.buf, buf...)
+		if len(targetEvent.buf) == 0 {
+			targetEvent.buf = append(targetEvent.buf, '{')
+			targetEvent.buf = append(targetEvent.buf, buf...)
 		} else {
-			to1.buf = append(to1.buf, ","...)
-			to1.buf = append(to1.buf, buf...)
+			targetEvent.buf = append(targetEvent.buf, ","...)
+			targetEvent.buf = append(targetEvent.buf, buf...)
 		}
 	}
-	to1.buf = bytes.TrimSpace(to1.buf)
-	return to
+	targetEvent.buf = bytes.TrimSpace(targetEvent.buf)
+	return target
 }

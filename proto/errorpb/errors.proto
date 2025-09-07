@@ -7,6 +7,11 @@ import "google/protobuf/any.proto";
 
 option go_package = "github.com/pubgo/funk/proto/errorpb;errorpb";
 
+message Tag {
+  string key = 1;
+  string value = 2;
+}
+
 message ErrMsg {
   string msg = 1;
   string detail = 2;

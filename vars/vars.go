@@ -4,7 +4,11 @@ import (
 	"encoding/json"
 	"expvar"
 	"fmt"
+	"strconv"
+	"strings"
 
+	"github.com/rs/xid"
+	
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/convert"
 	"github.com/pubgo/funk/pretty"
@@ -54,10 +58,14 @@ func (f Value) MarshalJSON() ([]byte, error) {
 func (f Value) Value() interface{} { return f() }
 
 func (f Value) String() (r string) {
+	return toString(f())
+}
+
+func toString(dt any) (r string) {
 	var errStr = func(err any) string {
 		ret, err := json.Marshal(err)
 		if err != nil {
-			return pretty.Sprint(err)
+			return strconv.Quote(pretty.SimplePrint(err))
 		} else {
 			return convert.B2S(ret)
 		}
@@ -65,19 +73,41 @@ func (f Value) String() (r string) {
 
 	defer recovery.Recovery(func(err error) { r = errStr(err) })
 
-	dt := f()
 	switch dt := dt.(type) {
 	case nil:
 		return "null"
 	case string:
-		return dt
+		return strconv.Quote(dt)
 	case []byte:
-		return string(dt)
+		return strconv.Quote(string(dt))
 	case fmt.Stringer:
-		return dt.String()
+		return strconv.Quote(dt.String())
+	case error:
+		return strconv.Quote(fmt.Sprintf("err:%s detail:%#v", dt, dt))
 	default:
 		return errStr(dt)
 	}
+}
+
+func Any(v any) expvar.Var {
+	switch v.(type) {
+	case nil:
+		return anyValue{v: nil}
+	case Value:
+		return v.(Value)
+	default:
+		return anyValue{v: v}
+	}
+}
+
+var _ expvar.Var = (*anyValue)(nil)
+
+type anyValue struct {
+	v any
+}
+
+func (a anyValue) String() string {
+	return toString(a.v)
 }
 
 func Register(name string, value Value) {
@@ -86,7 +116,7 @@ func Register(name string, value Value) {
 	expvar.Publish(name, value)
 }
 
-func RegisterValue(name string, data interface{}) {
+func RegisterValue(name string, data any) {
 	defer recovery.Exit()
 	assert.If(Has(name), "name:%s already exists", name)
 	expvar.Publish(name, Value(func() interface{} { return data }))
@@ -98,4 +128,8 @@ func Has(name string) bool {
 
 func Each(fn func(key string, val expvar.Var)) {
 	expvar.Do(func(kv expvar.KeyValue) { fn(kv.Key, kv.Value) })
+}
+
+func UniqueName(names ...string) string {
+	return strings.Join(append(names, xid.New().String()), "_")
 }

@@ -2,6 +2,8 @@ package pretty
 
 import (
 	"io"
+	"strings"
+	"sync"
 
 	"github.com/k0kubun/pp/v3"
 )
@@ -40,4 +42,17 @@ func SetWriter(o io.Writer) {
 
 func SetDefaultMaxDepth(v int) {
 	pp.SetDefaultMaxDepth(v)
+}
+
+var Simple = sync.OnceValue(func() *pp.PrettyPrinter {
+	printer := pp.New()
+	printer.SetColoringEnabled(false)
+	printer.SetExportedOnly(false)
+	printer.SetOmitEmpty(true)
+	printer.SetMaxDepth(3)
+	return printer
+})
+
+func SimplePrint(v interface{}) string {
+	return strings.ReplaceAll(Simple().Sprint(v), "\n", "")
 }

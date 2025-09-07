@@ -3,14 +3,21 @@ package result
 import (
 	"context"
 	"fmt"
+
+	"log/slog"
+	"reflect"
 	"runtime/debug"
+	"strings"
+
+	"github.com/rs/zerolog"
+	"github.com/samber/lo"
+	"google.golang.org/protobuf/encoding/prototext"
 
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/stack"
 	"github.com/pubgo/funk/v2/result/resultchecker"
-	"github.com/samber/lo"
 )
 
 var errFnIsNil = errors.New("[fn] is nil")
@@ -24,7 +31,6 @@ func try(fn func() error) (gErr error) {
 	defer func() {
 		if err := errors.Parse(recover()); !generic.IsNil(err) {
 			gErr = errors.WrapStack(err)
-			debug.PrintStack()
 			errors.Debug(gErr)
 		}
 
@@ -43,7 +49,6 @@ func try1[T any](fn func() (T, error)) (t T, gErr error) {
 	defer func() {
 		if err := errors.Parse(recover()); !generic.IsNil(err) {
 			gErr = errors.WrapStack(err)
-			debug.PrintStack()
 			errors.Debug(gErr)
 		}
 
@@ -56,7 +61,7 @@ func try1[T any](fn func() (T, error)) (t T, gErr error) {
 	return
 }
 
-func errMust(err error, args ...any) {
+func errNilOrPanic(err error, args ...any) {
 	if err == nil {
 		return
 	}
@@ -72,7 +77,7 @@ func errMust(err error, args ...any) {
 
 func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.Context) bool {
 	if setter == nil && rawSetter == nil {
-		errMust(errors.Errorf("error setter is nil"))
+		errNilOrPanic(errors.Errorf("error setter is nil"))
 	}
 
 	if r.IsOK() {
@@ -105,18 +110,12 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 
 	var setErr = func(err error) {
 		if setter != nil {
-			setter.setError(err)
+			setError(setter, err)
 		}
 
 		if rawSetter != nil {
-			*rawSetter = err
+			setError(ErrProxyOf(rawSetter), err)
 		}
-	}
-
-	// err No checking, repeat setting
-	if isErr() {
-		err := getErr()
-		log.Err(err).Msgf("error setter is has value, err=%s", err.Error())
 	}
 
 	var ctx = context.Background()
@@ -128,7 +127,13 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 		break
 	}
 
-	checkers := append(resultchecker.GetErrChecks(), resultchecker.GetCheckersFromCtx(ctx)...)
+	// err No checking, repeat setting
+	if isErr() {
+		err := getErr()
+		log.Err(err, ctx).Msgf("error setter has already set the error, err=%s", err.Error())
+	}
+
+	var checkers = append(resultchecker.GetErrChecks(), resultchecker.GetCheckersFromCtx(ctx)...)
 	var err = r.getErr()
 	for _, fn := range checkers {
 		err = fn(ctx, err)
@@ -142,14 +147,14 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 	return true
 }
 
-func errRecovery(isErr func() bool, getErr func() error, callbacks ...func(err error) error) error {
+func errRecovery(getErr func() error, callbacks ...func(err error) error) error {
 	err := errors.Parse(recover())
-	if err == nil && !isErr() {
-		return nil
+	if err == nil {
+		err = getErr()
 	}
 
 	if err == nil {
-		err = getErr()
+		return nil
 	}
 
 	for _, fn := range callbacks {
@@ -158,13 +163,14 @@ func errRecovery(isErr func() bool, getErr func() error, callbacks ...func(err e
 			return nil
 		}
 	}
+
+	debug.PrintStack()
 	return err
 }
 
 func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts ...context.Context) (T, error) {
 	if setter1 == nil && setter2 == nil {
-		debug.PrintStack()
-		panic("Unwrap: error setter is nil")
+		errNilOrPanic(fmt.Errorf("error setter is nil"))
 	}
 
 	var ret = r.getValue()
@@ -177,20 +183,20 @@ func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts .
 		ctx = contexts[0]
 	}
 
-	getSetterErr := func() error {
+	getErr := func() error {
 		err := lo.FromPtr(setter1)
 		if err == nil {
 			err = setter2.GetErr()
 		}
 		return err
 	}
-	setterErr := getSetterErr()
-	if setterErr != nil {
-		log.Error(ctx).Msgf("Unwrap: error setter has value, err=%v", setterErr)
+	if preErr := getErr(); preErr != nil {
+		log.Err(preErr, ctx).Msgf("error setter has already set the error, err=%v", preErr)
 	}
 
 	var err = r.getErr()
-	for _, fn := range resultchecker.GetErrChecks() {
+	var checkers = append(resultchecker.GetErrChecks(), resultchecker.GetCheckersFromCtx(ctx)...)
+	for _, fn := range checkers {
 		err = fn(ctx, err)
 		if err == nil {
 			return ret, nil
@@ -198,4 +204,56 @@ func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts .
 	}
 
 	return ret, err
+}
+
+func setError(setter ErrSetter, err error) {
+	if err == nil {
+		return
+	}
+
+	if setter == nil {
+		errNilOrPanic(errors.Errorf("error setter is nil"))
+		return
+	}
+
+	switch errSet := setter.(type) {
+	case *Error:
+		errSet.err = err
+	case *ErrProxy:
+		*errSet.err = err
+	default:
+		rv := reflect.ValueOf(setter)
+		t := rv.Type()
+
+		if !strings.Contains(t.String(), "Result[") {
+			slog.Error("error setter type error",
+				slog.String("type", fmt.Sprintf("%T", setter)),
+				slog.String("stack", string(debug.Stack())),
+			)
+			return
+		}
+
+		ret := (*Result[any])(rv.UnsafePointer())
+		ret.err = err
+	}
+}
+
+func logErr(ctx context.Context, err error, events ...func(e *zerolog.Event)) {
+	if err == nil {
+		return
+	}
+
+	log.Error(ctx).
+		Func(func(e *zerolog.Event) {
+			for _, fn := range events {
+				fn(e)
+			}
+
+			if id := errors.GetErrorId(err); id != "" {
+				e.Str("error_id", id)
+			}
+		}).
+		Str(zerolog.ErrorFieldName, err.Error()).
+		CallerSkipFrame(2).
+		Msgf("%s\n%s", err.Error(), prototext.Format(errors.ParseErrToPb(err)))
 }

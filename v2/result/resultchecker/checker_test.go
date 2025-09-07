@@ -19,7 +19,7 @@ func TestErrCheck(t *testing.T) {
 
 	assert.Equal(t, RegisterErrCheck(errCheck1), false)
 	assert.Equal(t, len(GetErrCheckStacks()), 1)
-	assert.Equal(t, GetErrCheckStacks()[0].Short(), "aherrcheck/errcheck_test.go:10 errCheck1")
+	assert.Equal(t, GetErrCheckStacks()[0].Short(), "resultchecker/checker_test.go:10 errCheck1")
 
 	RemoveErrCheck(errCheck1)
 	assert.Equal(t, len(GetErrCheckStacks()), 0)

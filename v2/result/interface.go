@@ -17,7 +17,7 @@ type Checkable interface {
 
 type ErrSetter interface {
 	Checkable
-	setError(err error)
+	setErrorInner()
 }
 
 type UnWrapper[T any] interface {

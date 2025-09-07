@@ -1,7 +1,8 @@
 package env
 
 import (
-	"log"
+	"fmt"
+	"log/slog"
 	"os"
 	"strconv"
 	"strings"
@@ -9,27 +10,34 @@ import (
 	"github.com/a8m/envsubst"
 	"github.com/joho/godotenv"
 	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/result"
+	"github.com/pubgo/funk/pathutil"
+	"github.com/pubgo/funk/v2/result"
+	"github.com/samber/lo"
 )
 
-func Set(key, value string) error {
-	return os.Setenv(KeyHandler(key), value)
+func Set(key, value string) result.Error {
+	return result.ErrOf(os.Setenv(KeyHandler(key), value))
+}
+
+func GetDefault(name string, defaultVal string) string {
+	val := Get(name)
+	return lo.If(val != "", val).Else(defaultVal)
 }
 
 func Get(names ...string) string {
 	var val string
-	GetWith(&val, names...)
+	GetVal(&val, names...)
 	return trim(val)
 }
 
 func MustGet(names ...string) string {
 	var val string
-	GetWith(&val, names...)
+	GetVal(&val, names...)
 	assert.If(val == "", "env not found, names=%q", names)
 	return trim(val)
 }
 
-func GetWith(val *string, names ...string) {
+func GetVal(val *string, names ...string) {
 	for _, name := range names {
 		env, ok := Lookup(name)
 		env = trim(env)
@@ -48,7 +56,7 @@ func GetBoolVal(val *bool, names ...string) {
 
 	v, err := strconv.ParseBool(dt)
 	if err != nil {
-		log.Printf("env: failed to parse string to bool, err=%v\n", err)
+		slog.Error(fmt.Sprintf("env: failed to parse string to bool, keys=%q value=%s err=%v", names, dt, err))
 		return
 	}
 
@@ -63,7 +71,7 @@ func GetIntVal(val *int, names ...string) {
 
 	v, err := strconv.Atoi(dt)
 	if err != nil {
-		log.Printf("env: failed to parse string to int, err=%v\n", err)
+		slog.Error(fmt.Sprintf("env: failed to parse string to int, keys=%q value=%s err=%v", names, dt, err))
 		return
 	}
 
@@ -76,9 +84,9 @@ func GetFloatVal(val *float64, names ...string) {
 		return
 	}
 
-	v, err := strconv.ParseFloat(dt, 32)
+	v, err := strconv.ParseFloat(dt, 64)
 	if err != nil {
-		log.Printf("env: failed to parse string to float, err=%v\n", err)
+		slog.Error(fmt.Sprintf("env: failed to parse string to float, keys=%q value=%s err=%v", names, dt, err))
 		return
 	}
 
@@ -89,12 +97,12 @@ func Lookup(key string) (string, bool) {
 	return os.LookupEnv(Key(key))
 }
 
-func Delete(key string) error {
-	return os.Unsetenv(Key(key))
+func Delete(key string) result.Error {
+	return result.ErrOf(os.Unsetenv(Key(key)))
 }
 
 func Expand(value string) result.Result[string] {
-	return result.Of(envsubst.String(value))
+	return result.Wrap(envsubst.String(value))
 }
 
 func Map() map[string]string {
@@ -110,7 +118,12 @@ func Key(key string) string {
 	return KeyHandler(key)
 }
 
-func Load(filenames ...string) {
-	assert.Must(godotenv.Load(filenames...))
-	Init()
+func LoadFiles(files ...string) (r result.Error) {
+	files = lo.Filter(files, func(item string, index int) bool { return pathutil.IsExist(item) })
+	if result.CatchErr(&r, godotenv.Load(files...)) {
+		return
+	}
+
+	loadEnv()
+	return
 }

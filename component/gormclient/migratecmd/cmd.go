@@ -46,10 +46,10 @@ func New(di *dix.Dix) *cli.Command {
 				Destination: &id,
 			},
 		},
-		Before: func(ctx context.Context, command *cli.Command) error {
+		Before: func(ctx context.Context, command *cli.Command) (context.Context, error) {
 			p := dix.Inject(di, new(params))
 			options.TableName = p.Db.TablePrefix + migrates.DefaultConfig.TableName
-			return nil
+			return ctx, nil
 		},
 		Commands: []*cli.Command{
 			{

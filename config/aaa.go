@@ -11,4 +11,7 @@ type Resources struct {
 
 	// PatchResources resource config not required to exist
 	PatchResources []string `yaml:"patch_resources"`
+
+	// PatchEnvs config file or path, not required to exist
+	PatchEnvs []string `yaml:"patch_envs"`
 }

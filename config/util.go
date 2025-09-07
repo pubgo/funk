@@ -177,7 +177,7 @@ func unmarshalOneOrList[T any](list *[]T, value *yaml.Node) error {
 	if value.Kind == yaml.SequenceNode {
 		return value.Decode(list)
 	}
-	return errors.Format("unmarshalled node: %v", value.Value)
+	return errors.Errorf("unmarshalled node: %v", value.Value)
 }
 
 func listAllPath(dirOrPath string) (ret result.Result[[]string]) {
@@ -214,10 +214,22 @@ type config struct {
 	workDir string
 }
 
+var registerMap = make(map[string]any)
+
+func RegisterExpr(name string, expr any) {
+	if registerMap[name] != nil {
+		panic(fmt.Sprintf("expr:%s has existed", name))
+	}
+	registerMap[name] = expr
+}
+
 func getEnvData(cfg *config) map[string]any {
-	return map[string]any{
+	exprEnv := map[string]any{
 		"env": env.Map(),
 		"get_path_dir": func() string {
+			return cfg.workDir
+		},
+		"path_dir": func() string {
 			return cfg.workDir
 		},
 		"embed": func(name string) string {
@@ -237,11 +249,19 @@ func getEnvData(cfg *config) map[string]any {
 			return strings.TrimSpace(base64.StdEncoding.EncodeToString(d))
 		},
 	}
+
+	for k, v := range registerMap {
+		if exprEnv[k] != nil {
+			panic(fmt.Sprintf("expr:%s has existed", k))
+		}
+		exprEnv[k] = v
+	}
+	return exprEnv
 }
 
-func cfgFormat(template string, cfg *config) string {
-	tpl := fasttemplate.New(template, "${{", "}}")
-	return tpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
+func cfgFormat(template []byte, cfg *config) []byte {
+	tpl := fasttemplate.New(string(template), "${{", "}}")
+	return []byte(tpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
 		tag = strings.TrimSpace(tag)
 		evalData, err := eval(tag, cfg)
 		if err != nil {
@@ -257,14 +277,14 @@ func cfgFormat(template string, cfg *config) string {
 		}
 
 		return w.Write(bytes.TrimSpace(data))
-	})
+	}))
 }
 
 func eval(code string, cfg *config) (any, error) {
 	envData := getEnvData(cfg)
 	data, err := expr.Eval(strings.TrimSpace(code), envData)
 	if err != nil {
-		return nil, errors.WrapCaller(err)
+		return nil, errors.Wrapf(err, "failed to eval expr:%q", code)
 	}
 	return data, nil
 }

@@ -32,10 +32,5 @@ func (e ErrProxy) String() string {
 	return fmt.Sprintf("Error(%v)", lo.FromPtr(e.err))
 }
 
-func (e *ErrProxy) setError(err error) {
-	if err == nil {
-		return
-	}
-
-	*e.err = err
+func (e ErrProxy) setErrorInner() {
 }

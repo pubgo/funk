@@ -4,14 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pubgo/dix"
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/config"
 	"github.com/urfave/cli/v3"
 	"gopkg.in/yaml.v3"
+
+	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/config"
+	"github.com/pubgo/funk/recovery"
 )
 
-func New[Cfg any](di *dix.Dix) *cli.Command {
+func New[Cfg any]() *cli.Command {
 	return &cli.Command{
 		Name:  "config",
 		Usage: "config management",
@@ -20,8 +21,9 @@ func New[Cfg any](di *dix.Dix) *cli.Command {
 				Name:        "show",
 				Description: "show config data",
 				Action: func(ctx context.Context, command *cli.Command) error {
-					fmt.Println("config path:", config.GetConfigPath())
-					fmt.Println("config raw data:", string(assert.Must1(yaml.Marshal(config.Load[Cfg]().T))))
+					defer recovery.Exit()
+					fmt.Println("config path:\n", config.GetConfigPath())
+					fmt.Println("config raw data:\n", string(assert.Must1(yaml.Marshal(config.Load[Cfg]().T))))
 					return nil
 				},
 			},

@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/rs/zerolog"
+
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/errors/errutil"
-	"github.com/pubgo/funk/log"
 )
 
 var _ Catchable = new(Error)
@@ -33,13 +34,13 @@ func (e Error) Map(fn func(error) error) Error {
 	return Error{err: err}
 }
 
-func (e Error) LogErr(contexts ...context.Context) Error {
-	if e.IsErr() {
-		log.Err(e.err, contexts...).
-			CallerSkipFrame(1).
-			Msg(e.err.Error())
-	}
+func (e Error) LogCtx(ctx context.Context, events ...func(e *zerolog.Event)) Error {
+	logErr(ctx, e.err, events...)
+	return e
+}
 
+func (e Error) Log(events ...func(e *zerolog.Event)) Error {
+	logErr(nil, e.err, events...)
 	return e
 }
 
@@ -47,8 +48,15 @@ func (e Error) WrapErr(err *errors.Err, tags ...errors.Tag) Error {
 	return Error{err: errors.WrapTag(errors.WrapCaller(err, 1), tags...)}
 }
 
+func (e Error) WithFn(fn func() error) Error {
+	return Error{err: errors.WrapCaller(fn(), 1)}
+}
+
 func (e Error) WithErr(err error) Error {
 	return Error{err: errors.WrapCaller(err, 1)}
+}
+func (e Error) WithErrorf(format string, args ...any) Error {
+	return Error{err: errors.WrapCaller(fmt.Errorf(format, args...), 1)}
 }
 
 func (e Error) Inspect(fn func(error)) Error {
@@ -60,7 +68,12 @@ func (e Error) Inspect(fn func(error)) Error {
 	return e
 }
 
+func (e Error) InspectErr(fn func(error)) Error { return e.Inspect(fn) }
+
 func (e Error) Unwrap() error { return e.err }
+func (e Error) UnwrapErr(setter ErrSetter, contexts ...context.Context) bool {
+	return catchErr(e, setter, nil, contexts...)
+}
 
 func (e Error) Catch(setter *error, ctx ...context.Context) bool {
 	return catchErr(e, nil, setter, ctx...)
@@ -87,7 +100,7 @@ func (e Error) Must() {
 		return
 	}
 
-	errMust(errors.WrapCaller(e.getErr(), 1))
+	errNilOrPanic(errors.WrapCaller(e.getErr(), 1))
 }
 
 func (e Error) Expect(format string, args ...any) {
@@ -97,7 +110,7 @@ func (e Error) Expect(format string, args ...any) {
 
 	err := errors.WrapCaller(e.getErr(), 1)
 	err = errors.Wrapf(err, format, args...)
-	errMust(err)
+	errNilOrPanic(err)
 }
 
 func (e Error) String() string {
@@ -118,9 +131,5 @@ func (e Error) MarshalJSON() ([]byte, error) {
 
 func (e Error) getErr() error { return e.err }
 
-func (e *Error) setError(err error) {
-	if err == nil {
-		return
-	}
-	e.err = err
+func (e Error) setErrorInner() {
 }

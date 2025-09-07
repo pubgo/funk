@@ -3,19 +3,17 @@ package errors
 import (
 	"errors"
 	"fmt"
-	"os"
 	"reflect"
 	"runtime/debug"
 
-	"github.com/pubgo/funk/pretty"
-	"github.com/pubgo/funk/proto/errorpb"
-	"github.com/pubgo/funk/stack"
 	"github.com/rs/xid"
-	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
-	"google.golang.org/protobuf/encoding/prototext"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	"github.com/pubgo/funk/errors/errinter"
+	"github.com/pubgo/funk/proto/errorpb"
+	"github.com/pubgo/funk/stack"
 )
 
 func IfErr(err error, fn func(err error) error) error {
@@ -26,8 +24,8 @@ func IfErr(err error, fn func(err error) error) error {
 	return fn(err)
 }
 
-func New(msg string) error {
-	return WrapCaller(&Err{Msg: msg, id: xid.New().String()}, 1)
+func New(msg string, tags ...Tag) error {
+	return WrapCaller(&Err{Msg: msg, id: xid.New().String(), Tags: tags}, 1)
 }
 
 // NewFmt
@@ -46,28 +44,8 @@ func Errorf(msg string, args ...interface{}) error {
 	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...), id: xid.New().String()}, 1)
 }
 
-func NewTags(msg string, tags ...Tag) error {
-	return WrapCaller(&Err{Msg: msg, Tags: tags, id: xid.New().String()}, 1)
-}
-
-func Parse(val interface{}) error {
-	return parseError(val)
-}
-
-func Debug(err error) {
-	if err == nil {
-		return
-	}
-
-	err = parseError(err)
-	if _err, ok := err.(fmt.Stringer); ok {
-		_, _ = fmt.Fprintln(os.Stderr, _err.String())
-		return
-	}
-
-	pretty.SetDefaultMaxDepth(20)
-	pretty.Println(err)
-}
+func Parse(val interface{}) error { return errinter.ParseError(val) }
+func Debug(err error)             { errinter.Debug(err) }
 
 func Is(err, target error) bool {
 	return errors.Is(err, target)
@@ -91,6 +69,30 @@ func UnwrapEach(err error, call func(e error) bool) {
 
 		err = err1.Unwrap()
 	}
+}
+
+func AsA[T any](err error) (*T, bool) {
+	var target T
+	val := reflect.ValueOf(&target)
+	typ := val.Type()
+	if typ.Kind() != reflect.Ptr || val.IsNil() {
+		panic("errors: target must be a non-nil pointer")
+	}
+
+	targetType := typ.Elem()
+	for err != nil {
+		if reflect.TypeOf(err).AssignableTo(targetType) {
+			val.Elem().Set(reflect.ValueOf(err))
+			return &target, true
+		}
+
+		if x, ok := err.(ErrAs); ok && x.As(&target) {
+			return &target, true
+		}
+
+		err = Unwrap(err)
+	}
+	return &target, false
 }
 
 func As(err error, target any) bool {
@@ -266,50 +268,8 @@ func T(k string, v any) Tag {
 	return Tag{K: k, V: v}
 }
 
-func MustProtoToAny(p proto.Message) *anypb.Any {
-	switch p := p.(type) {
-	case nil:
-		return nil
-	case *anypb.Any:
-		return p
-	}
-
-	pb, err := anypb.New(p)
-	if err != nil {
-		log.Err(err).Str("protobuf", prototext.Format(p)).Msgf("failed to encode protobuf message to any")
-		return nil
-	} else {
-		return pb
-	}
-}
-
-func ParseErrToPb(err error) proto.Message {
-	switch err1 := err.(type) {
-	case nil:
-		return nil
-	case ErrorProto:
-		return err1.Proto()
-	case GRPCStatus:
-		return err1.GRPCStatus().Proto()
-	case proto.Message:
-		return err1
-	default:
-		return &errorpb.ErrMsg{Msg: err.Error(), Detail: fmt.Sprintf("%v", err)}
-	}
-}
-
-func GetErrorId(err error) string {
-	if err == nil {
-		return ""
-	}
-
-	for err != nil {
-		if v, ok := err.(Error); ok {
-			return v.ID()
-		}
-
-		err = Unwrap(err)
-	}
-
-	return ""
-}
+func MustTagsToAny(tags ...*errorpb.Tag) []*anypb.Any { return errinter.MustTagsToAny(tags...) }
+func MustStructToAny(p map[string]any) *anypb.Any     { return errinter.MustStructToAny(p) }
+func MustProtoToAny(p proto.Message) *anypb.Any       { return errinter.MustProtoToAny(p) }
+func ParseErrToPb(err error) proto.Message            { return errinter.ParseErrToPb(err) }
+func GetErrorId(err error) string                     { return errinter.GetErrorId(err) }

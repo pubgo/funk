@@ -2,6 +2,7 @@ package version
 
 import (
 	"runtime/debug"
+	"strings"
 )
 
 var mainPath string
@@ -20,6 +21,13 @@ var (
 	project = "project"
 )
 
+var (
+	modified  bool
+	os        string
+	arch      string
+	buildTags []string
+)
+
 func init() {
 	bi, ok := debug.ReadBuildInfo()
 	if !ok {
@@ -30,12 +38,21 @@ func init() {
 
 	for i := range bi.Settings {
 		setting := bi.Settings[i]
-		if setting.Key == "vcs.revision" {
+		switch setting.Key {
+		case "vcs.revision":
 			commitID = setting.Value
-		}
-
-		if setting.Key == "vcs.time" {
+		case "vcs.time":
 			buildTime = setting.Value
+		case "vcs.modified":
+			modified = setting.Value == "true"
+		case "GOOS":
+			os = setting.Value
+		case "GOARCH":
+			arch = setting.Value
+		case "-tags":
+			if setting.Value != "" {
+				buildTags = strings.Split(setting.Value, ",")
+			}
 		}
 	}
 }

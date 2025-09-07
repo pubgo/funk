@@ -67,8 +67,8 @@ func fn1() (r result.Result[string]) {
 
 func fn2() (r result.Result[string]) {
 	fn3().
-		Map(func(err error) error {
-			return errors.Wrap(err, "test error")
+		InspectErr(func(err error) {
+			log.Err(err).Msg("test error")
 		}).
 		CatchErr(&r)
 	if r.IsErr() {
@@ -79,9 +79,10 @@ func fn2() (r result.Result[string]) {
 }
 
 func fn3() result.Error {
-	return result.ErrOf(fmt.Errorf("error test, this is error")).
-		Inspect(func(err error) {
+	return result.
+		ErrOf(fmt.Errorf("error test, this is error")).
+		InspectErr(func(err error) {
 			log.Err(err).Msg("ddd")
 		}).
-		LogErr()
+		Log()
 }

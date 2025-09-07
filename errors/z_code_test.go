@@ -15,7 +15,7 @@ func TestWrapCaller(t *testing.T) {
 		return errors.WrapCaller(err, 1)
 	}
 
-	assert.Contains(t, fmt.Sprint(ff()), "z_code_test.go:20 TestWrapCaller")
+	assert.Contains(t, fmt.Sprint(ff()), "z_code_test.go:18 TestWrapCaller")
 }
 
 func TestCodeErr(t *testing.T) {
@@ -47,7 +47,7 @@ func TestCodeErr(t *testing.T) {
 
 	err = errors.WrapFn(err, func() errors.Tags {
 		return errors.Tags{
-			{"key", "map value"},
+			errors.T("key", "map value"),
 		}
 	})
 

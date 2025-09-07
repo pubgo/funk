@@ -3,19 +3,17 @@ package errors
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/kr/pretty"
-	"github.com/pubgo/funk/convert"
-	"github.com/pubgo/funk/errors/errinter"
-	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/proto/errorpb"
-	"github.com/pubgo/funk/stack"
 	"github.com/rs/xid"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/pubgo/funk/errors/errinter"
+	"github.com/pubgo/funk/pretty"
+	"github.com/pubgo/funk/proto/errorpb"
+	"github.com/pubgo/funk/stack"
 )
 
 func cloneAndCheck(code *errorpb.ErrCode) *errorpb.ErrCode {
@@ -47,23 +45,6 @@ func handleGrpcError(err error) error {
 		})
 	default:
 		return err
-	}
-}
-
-func parseError(val interface{}) error {
-	if generic.IsNil(val) {
-		return nil
-	}
-
-	switch v := val.(type) {
-	case error:
-		return v
-	case string:
-		return errors.New(v)
-	case []byte:
-		return errors.New(convert.B2S(v))
-	default:
-		return &Err{Msg: fmt.Sprintf("%v", v), Detail: pretty.Sprint(v)}
 	}
 }
 
@@ -108,12 +89,17 @@ func errJsonify(err error) map[string]any {
 func strFormat(f fmt.State, verb rune, err Error) {
 	switch verb {
 	case 'v':
-		data, err := err.MarshalJSON()
-		if err != nil {
-			fmt.Fprintln(f, err.Error())
+		if f.Flag('#') {
+			fmt.Fprint(f, pretty.SimplePrint(err))
 		} else {
-			fmt.Fprintln(f, string(data))
+			data, err := err.MarshalJSON()
+			if err != nil {
+				fmt.Fprintln(f, err.Error())
+			} else {
+				fmt.Fprintln(f, string(data))
+			}
 		}
+
 	case 's', 'q':
 		fmt.Fprintln(f, err.String())
 	}

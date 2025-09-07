@@ -20,37 +20,40 @@ func All[T any](results ...Result[T]) Result[[]T] {
 
 func Recovery(setter *error, callbacks ...func(err error) error) {
 	if setter == nil {
-		errMust(errors.Errorf("setter is nil"))
+		errNilOrPanic(errors.Errorf("setter is nil"))
 		return
 	}
 
-	*setter = errRecovery(
-		func() bool { return *setter != nil },
+	setError(ErrProxyOf(setter), errRecovery(
 		func() error { return *setter },
 		callbacks...,
-	)
+	))
 }
 
 func RecoveryErr(setter ErrSetter, callbacks ...func(err error) error) {
 	if setter == nil {
-		errMust(errors.Errorf("setter is nil"))
+		errNilOrPanic(errors.Errorf("setter is nil"))
 		return
 	}
 
-	setter.setError(errRecovery(
-		func() bool { return setter.IsErr() },
+	setError(setter, errRecovery(
 		func() error { return setter.GetErr() },
 		callbacks...,
 	))
 }
 
+func Errorf(msg string, args ...any) Error {
+	return newError(errors.WrapCaller(fmt.Errorf(msg, args...), 1))
+}
+
+// Deprecated: use Errorf
 func ErrorOf(msg string, args ...any) Error {
 	return newError(errors.WrapCaller(fmt.Errorf(msg, args...), 1))
 }
 
 func ErrProxyOf(err *error) ErrProxy {
 	if err == nil {
-		errMust(errors.Errorf("err param is nil"))
+		errNilOrPanic(errors.Errorf("err param is nil"))
 		return ErrProxy{}
 	}
 	return ErrProxy{err: err}

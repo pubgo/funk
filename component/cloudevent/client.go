@@ -11,6 +11,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	ants "github.com/panjf2000/ants/v2"
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/component/lifecycle"
 	"github.com/pubgo/funk/component/natsclient"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/errors/errcheck"
@@ -22,7 +23,6 @@ import (
 	"github.com/pubgo/funk/try"
 	"github.com/pubgo/funk/typex"
 	"github.com/pubgo/funk/version"
-	"github.com/pubgo/lava/core/lifecycle"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
@@ -454,7 +454,7 @@ func (c *Client) doConsume() (r error) {
 				c.doConsumeHandler(streamName, consumerName, jobSubjects, concurrent),
 				c.doErrHandler(streamName, consumerName),
 			))
-			c.p.Lc.BeforeStop(func() { con.Stop() })
+			c.p.Lc.BeforeStop(lifecycle.WrapNoCtxErr(con.Stop))
 		}
 	}
 	return

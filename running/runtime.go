@@ -4,6 +4,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/projectdiscovery/machineid"
 	"github.com/rs/xid"
 
 	"github.com/pubgo/funk/assert"
@@ -25,6 +26,8 @@ var (
 
 	// InstanceID service id
 	InstanceID = xid.New().String()
+
+	DeviceID = InstanceID
 
 	Version = version.Version()
 
@@ -53,9 +56,16 @@ var (
 			return strings.TrimSpace(string(assert.Exit1(os.ReadFile(file))))
 		},
 	)
+
+	Domain string
 )
 
 func init() {
-	env.GetBoolVal(&IsDebug, "enable_debug", "debug")
-	env.GetWith(&Env, "env", "run_mode")
+	env.GetBoolVal(&IsDebug, "enable_debug", "debug", "dev_mode")
+	env.GetVal(&Env, "env", "run_mode", "run_env")
+
+	id, err := machineid.ID()
+	if err == nil {
+		DeviceID = id
+	}
 }

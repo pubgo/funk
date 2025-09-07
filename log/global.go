@@ -7,24 +7,29 @@ import (
 	"os"
 	"time"
 
+	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/errors/errinter"
+	"github.com/pubgo/funk/generic"
+
 	"github.com/rs/zerolog"
 	zlog "github.com/rs/zerolog/log"
-	"google.golang.org/protobuf/encoding/prototext"
-
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/generic"
 )
 
 var (
-	logEnableChecker = func(ctx context.Context, lvl Level, nameOrMessage string, fields Map) bool { return true }
+	logEnableChecker EnableChecker
 	logGlobalHook    = zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, message string) {
 		if logEnableChecker == nil {
 			return
 		}
 
 		ctx := e.GetCtx()
-		if logEnableChecker(ctx, level, message, getFieldFromCtx(ctx)) {
+		field := getFieldFromCtx(ctx)
+
+		if field == nil {
+			return
+		}
+
+		if logEnableChecker(ctx, level, field.name, message, field.fields) {
 			return
 		}
 
@@ -38,20 +43,13 @@ var (
 				return nil
 			}
 
-			var errDetail string
-			switch errData := err.(type) {
-			case errors.ErrorProto:
-				errDetail = prototext.Format(errData.Proto())
-			default:
-				errDetail = fmt.Sprintf("%#v", err)
-			}
-
-			id := errors.GetErrorId(err)
+			errDetail := errDetail(err)
+			id := errinter.GetErrorId(err)
 			if id != "" {
-				return fmt.Sprintf("%s(%s): %s", err.Error(), id, errDetail)
+				return fmt.Sprintf("%s, error_id:%s error_detail:%s", err.Error(), id, errDetail)
 			}
 
-			return fmt.Sprintf("%s: %v", err.Error(), errDetail)
+			return fmt.Sprintf("%s: %s", err.Error(), errDetail)
 		}
 	})
 
@@ -64,7 +62,7 @@ var (
 			Output(zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
 				w.Out = os.Stderr
 				w.TimeFormat = time.RFC3339
-			})).Hook(new(hookImpl), logGlobalHook),
+			})).Hook(logGlobalHook),
 	)
 
 	_ = generic.Init(func() {
@@ -80,7 +78,7 @@ func GetLogger(names ...string) Logger {
 	if len(names) == 0 || names[0] == "" {
 		return stdLog
 	}
-	return stdLog.nameWithCaller(names[0], 1)
+	return stdLog.nameWithCaller(names[0], 0)
 }
 
 // SetLogger set global log

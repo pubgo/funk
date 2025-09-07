@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/proto/errorpb"
 	"github.com/pubgo/funk/proto/testcodepb"
 )
 
@@ -15,4 +16,5 @@ func TestErrCode(t *testing.T) {
 	}
 
 	t.Log(errors.As(err1, testcodepb.TestErrCodeDbConn))
+	t.Log(errors.AsA[errorpb.ErrCode](err1))
 }

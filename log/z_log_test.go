@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/log"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
+
+	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/log"
+	"github.com/pubgo/funk/log/logutil"
 )
 
 func TestWithName(t *testing.T) {
@@ -19,7 +21,6 @@ func TestWithName(t *testing.T) {
 		Func(func(e *zerolog.Event) {
 			var buf = gjson.ParseBytes(log.GetEventBuf(e))
 			assert.Equal(t, buf.Get("logger").String(), "log1")
-			assert.Equal(t, buf.Get("module").String(), "github.com/pubgo/funk/log_test")
 		}).Msg("hello")
 
 	log.GetLogger("log1").
@@ -28,14 +29,12 @@ func TestWithName(t *testing.T) {
 		Func(func(e *zerolog.Event) {
 			var buf = gjson.ParseBytes(log.GetEventBuf(e))
 			assert.Equal(t, buf.Get("logger").String(), "log1.log2")
-			assert.Equal(t, buf.Get("module").String(), "github.com/pubgo/funk/log_test")
 		}).Msg("hello")
 
 	log.Debug().
 		Func(func(e *zerolog.Event) {
 			var buf = gjson.ParseBytes(log.GetEventBuf(e))
 			assert.Equal(t, buf.Get("logger").String(), "")
-			assert.Equal(t, buf.Get("module").String(), "")
 		}).Msg("hello")
 }
 
@@ -75,7 +74,7 @@ func TestName(t *testing.T) {
 		WithFields(log.Map{"module": "pkg"}).
 		Info().
 		Str("hello", "world world").
-		Func(log.WithNotice()).
+		Func(logutil.WithNotice()).
 		Msg("ok ok")
 }
 
@@ -119,7 +118,7 @@ func TestChecker(t *testing.T) {
 	l := log.GetLogger("test-checker")
 	l.Info().Msg("hello")
 
-	log.SetEnableChecker(func(ctx context.Context, lvl log.Level, name string, fields log.Map) bool {
+	log.SetEnableChecker(func(ctx context.Context, lvl log.Level, name, message string, fields log.Map) bool {
 		fmt.Println(lvl, name, fields)
 		return true
 	})
@@ -138,10 +137,10 @@ func TestErr(t *testing.T) {
 }
 
 func TestError(t *testing.T) {
-	err := fmt.Errorf("test error")
+	err := fmt.Errorf("test raw error")
 	log.Error().Err(err).Msg(err.Error())
 
-	err1 := errors.Errorf("test format")
-	log.Error().Err(err1).Msg(err1.Error())
+	err1 := errors.Errorf("test errors format")
+	log.Error().Err(err1).Msg("raw error: " + err1.Error())
 	log.Err(err1).Msg(err1.Error())
 }

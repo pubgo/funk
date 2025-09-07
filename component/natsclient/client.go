@@ -5,9 +5,9 @@ import (
 
 	"github.com/nats-io/nats.go"
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/component/lifecycle"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/running"
-	"github.com/pubgo/lava/core/lifecycle"
 )
 
 type Param struct {
@@ -50,7 +50,7 @@ func New(p Param) *Client {
 
 	log.Info().Bool("is_connected", nc.IsConnected()).Msg("nats connection ...")
 
-	p.Lc.BeforeStop(func() { nc.Close() })
+	p.Lc.BeforeStop(lifecycle.WrapNoCtxErr(nc.Close))
 
 	return &Client{Param: p, logger: logger, Conn: nc}
 }

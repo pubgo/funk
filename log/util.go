@@ -3,13 +3,17 @@ package log
 import (
 	"context"
 
+	"github.com/pubgo/funk/errors/errinter"
 	"github.com/samber/lo"
+	"google.golang.org/protobuf/encoding/prototext"
 )
 
-func WithNotice() func(e *Event) {
-	return func(e *Event) {
-		e.Str("alert", "notice").Bool("critical", true)
+func errDetail(err error) string {
+	if err == nil {
+		return ""
 	}
+
+	return prototext.Format(errinter.ParseErrToPb(err))
 }
 
 func RecordErr(logs ...Logger) func(ctx context.Context, err error) error {

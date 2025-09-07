@@ -5,13 +5,19 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/stack"
 	"github.com/rs/zerolog"
-	"google.golang.org/protobuf/encoding/prototext"
+
+	"github.com/pubgo/funk/errors/errinter"
+	"github.com/pubgo/funk/log/logfields"
 )
 
 var _ Logger = (*loggerImpl)(nil)
+
+func New(log *zerolog.Logger) Logger {
+	return &loggerImpl{
+		log: log,
+	}
+}
 
 type loggerImpl struct {
 	name       string
@@ -59,18 +65,19 @@ func (l *loggerImpl) nameWithCaller(name string, caller int) Logger {
 	if log.fields == nil {
 		log.fields = make(Map, 1)
 	}
-	log.fields[ModuleName] = stack.Caller(caller + 1).Pkg
 
 	if log.name == "" {
 		log.name = name
 	} else {
 		log.name = fmt.Sprintf("%s.%s", log.name, name)
 	}
+
+	log.callerSkip += caller
 	return log
 }
 
 func (l *loggerImpl) WithName(name string) Logger {
-	return l.nameWithCaller(name, 1)
+	return l.nameWithCaller(name, 0)
 }
 
 func (l *loggerImpl) WithFields(m Map) Logger {
@@ -94,8 +101,11 @@ func (l *loggerImpl) WithFields(m Map) Logger {
 
 func (l *loggerImpl) getCtx(ctxL ...context.Context) context.Context {
 	ctx := context.Background()
-	if len(ctxL) > 0 {
-		ctx = ctxL[0]
+	for i := range ctxL {
+		if ctxL[i] != nil {
+			ctx = ctxL[i]
+			break
+		}
 	}
 	return ctx
 }
@@ -143,21 +153,17 @@ func (l *loggerImpl) Err(err error, ctxL ...context.Context) *zerolog.Event {
 	}
 
 	var fn = func(e *zerolog.Event) {
-		if id := errors.GetErrorId(err); id != "" {
+		if err == nil {
+			return
+		}
+
+		if id := errinter.GetErrorId(err); id != "" {
 			e.Str("error_id", id)
 		}
+
+		e.Str("error_detail", errDetail(err))
+		e.Str(zerolog.ErrorFieldName, err.Error())
 	}
-
-	if err != nil {
-		if errStr, ok := err.(errors.ErrorProto); ok {
-			return l.newEvent(ctx, l.getLog().Error().Func(fn).
-				Str(zerolog.ErrorFieldName, err.Error()).
-				Str("error_detail", prototext.Format(errStr.Proto())))
-		}
-
-		return l.newEvent(ctx, l.getLog().Error().Func(fn).Str(zerolog.ErrorFieldName, err.Error()))
-	}
-
 	return l.newEvent(ctx, l.getLog().Err(err).Func(fn))
 }
 
@@ -184,11 +190,7 @@ func (l *loggerImpl) enabled(ctx context.Context, lvl zerolog.Level) bool {
 		return false
 	}
 
-	enabled := true
-	if logEnableChecker != nil {
-		enabled = logEnableChecker(ctx, lvl, l.name, l.fields)
-	}
-	return enabled && lvl >= l.lvl && lvl >= zerolog.GlobalLevel()
+	return lvl >= l.lvl && lvl >= zerolog.GlobalLevel()
 }
 
 func (l *loggerImpl) copy() *loggerImpl {
@@ -205,7 +207,7 @@ func (l *loggerImpl) getLog() *zerolog.Logger {
 
 func (l *loggerImpl) newEvent(ctx context.Context, e *zerolog.Event) *zerolog.Event {
 	if l.name != "" {
-		e = e.Str("logger", l.name)
+		e = e.Str(logfields.Logger, l.name)
 	}
 
 	if l.callerSkip != 0 {
@@ -216,10 +218,7 @@ func (l *loggerImpl) newEvent(ctx context.Context, e *zerolog.Event) *zerolog.Ev
 		e = e.Fields(l.fields)
 	}
 
-	if ctx != nil {
-		ctx = createFieldCtx(ctx, l.fields)
-		e = e.Ctx(ctx)
-	}
+	e = e.Ctx(createFieldCtx(ctx, &fieldMap{name: l.name, fields: l.fields}))
 
 	return mergeEvent(e, getEventFromCtx(ctx), l.content)
 }

@@ -1,17 +1,20 @@
-package assert
+package assert_test
 
 import (
 	"testing"
 
-	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/recovery"
 )
+
+func init() {
+	assert.EnablePrintStack = true
+}
 
 func TestCheckNil(t *testing.T) {
 	var a *int
 
-	defer func() {
-		errors.Debug(errors.Parse(recover()))
-	}()
+	defer recovery.DebugPrint()
 
-	Assert(a == nil, "ok")
+	assert.Assert(a == nil, "ok")
 }
