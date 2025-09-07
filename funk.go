@@ -1,11 +1,20 @@
 package funk
 
 import (
+	_ "embed"
+
 	"reflect"
 	"unsafe"
 
 	"golang.org/x/exp/constraints"
 )
+
+//go:embed .version
+var version string
+
+func GetReleaseVersion() string {
+	return version
+}
 
 func AppendOf[T any](v T, vv ...T) []T {
 	return append(append(make([]T, 0, len(vv)+1), v), vv...)
