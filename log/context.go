@@ -28,7 +28,7 @@ func GetFromCtx(ctx context.Context, loggers ...Logger) Logger {
 	return defaultLog
 }
 
-func CreateCtxWithLogger(ctx context.Context, ll Logger) context.Context {
+func CreateCtx(ctx context.Context, ll Logger) context.Context {
 	if ll == nil || ctx == nil {
 		panic("ctx or log param is nil")
 	}

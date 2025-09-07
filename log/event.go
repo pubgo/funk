@@ -60,6 +60,12 @@ func GetEventBuf(evt *Event) []byte {
 	return append(convertEvent(evt).buf, '}')
 }
 
+func cloneEvent(target *Event) *Event {
+	newTarget := zerolog.Dict()
+	convertEvent(newTarget).buf = bytes.Clone(convertEvent(target).buf)
+	return newTarget
+}
+
 func mergeEvent(target *Event, from ...*Event) *Event {
 	if len(from) == 0 {
 		return target

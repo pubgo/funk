@@ -3,6 +3,7 @@ package log
 import (
 	"context"
 	"fmt"
+	"maps"
 	"strings"
 
 	"github.com/rs/zerolog"
@@ -194,8 +195,14 @@ func (l *loggerImpl) enabled(ctx context.Context, lvl zerolog.Level) bool {
 }
 
 func (l *loggerImpl) copy() *loggerImpl {
-	log := *l
-	return &log
+	return &loggerImpl{
+		log:        l.log,
+		content:    cloneEvent(l.content),
+		fields:     maps.Clone(l.fields),
+		lvl:        l.lvl,
+		name:       l.name,
+		callerSkip: l.callerSkip,
+	}
 }
 
 func (l *loggerImpl) getLog() *zerolog.Logger {
