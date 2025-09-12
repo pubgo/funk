@@ -5,8 +5,8 @@ import (
 	"runtime/debug"
 	"testing"
 
-	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors/errinter"
+	"github.com/samber/lo"
 )
 
 func Err(gErr *error, callbacks ...func(err error) error) {
@@ -44,7 +44,7 @@ func Raise(callbacks ...func(err error) error) {
 }
 
 func Recovery(fn func(err error)) {
-	assert.If(fn == nil, "[fn] should not be nil")
+	lo.Assert(fn != nil, "[fn] should not be nil")
 
 	err := errinter.ParseError(recover())
 	if err == nil {

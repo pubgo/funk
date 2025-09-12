@@ -2,13 +2,22 @@ package assert
 
 import (
 	"fmt"
-)
 
-var EnablePrintStack bool
+	"github.com/google/go-cmp/cmp"
+	"github.com/k0kubun/pp/v3"
+)
 
 func Assert(b bool, format string, a ...interface{}) {
 	if b {
 		must(fmt.Errorf(format, a...))
+	}
+}
+
+func MustEqual[T any](a, b T) {
+	if !cmp.Equal(a, b) {
+		pp.Println("a: ", a)
+		pp.Println("b: ", b)
+		must(fmt.Errorf("a,b not equal"))
 	}
 }
 

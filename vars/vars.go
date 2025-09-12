@@ -4,18 +4,28 @@ import (
 	"encoding/json"
 	"expvar"
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/rs/xid"
-	
+	"go.uber.org/atomic"
+
 	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/convert"
-	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/recovery"
 )
 
+var mux sync.Mutex
+
+func Bool(name string) *atomic.Bool {
+	return Any(name, atomic.NewBool(false))
+}
+
 func Float(name string) *expvar.Float {
+	mux.Lock()
+	defer mux.Unlock()
+
 	v := expvar.Get(name)
 	if v == nil {
 		return expvar.NewFloat(name)
@@ -24,6 +34,9 @@ func Float(name string) *expvar.Float {
 }
 
 func Int(name string) *expvar.Int {
+	mux.Lock()
+	defer mux.Unlock()
+
 	v := expvar.Get(name)
 	if v == nil {
 		return expvar.NewInt(name)
@@ -32,6 +45,9 @@ func Int(name string) *expvar.Int {
 }
 
 func String(name string) *expvar.String {
+	mux.Lock()
+	defer mux.Unlock()
+
 	v := expvar.Get(name)
 	if v == nil {
 		return expvar.NewString(name)
@@ -40,6 +56,9 @@ func String(name string) *expvar.String {
 }
 
 func Map(name string) *expvar.Map {
+	mux.Lock()
+	defer mux.Unlock()
+
 	v := expvar.Get(name)
 	if v == nil {
 		return expvar.NewMap(name)
@@ -49,29 +68,36 @@ func Map(name string) *expvar.Map {
 
 var _ json.Marshaler = (*Value)(nil)
 
-type Value func() interface{}
+type Value func() any
 
 func (f Value) MarshalJSON() ([]byte, error) {
 	return json.Marshal(f())
 }
 
-func (f Value) Value() interface{} { return f() }
+func (f Value) Value() any { return f() }
 
 func (f Value) String() (r string) {
 	return toString(f())
 }
 
+func errToString(err error) string {
+	if err == nil {
+		return "null"
+	}
+
+	return strconv.Quote(fmt.Sprintf("err:%s detail:%#v", err.Error(), err))
+}
 func toString(dt any) (r string) {
-	var errStr = func(err any) string {
-		ret, err := json.Marshal(err)
+	var jsonStr = func(data any) string {
+		ret, err := json.Marshal(data)
 		if err != nil {
-			return strconv.Quote(pretty.SimplePrint(err))
+			return errToString(err)
 		} else {
-			return convert.B2S(ret)
+			return string(ret)
 		}
 	}
 
-	defer recovery.Recovery(func(err error) { r = errStr(err) })
+	defer recovery.Recovery(func(err error) { r = jsonStr(err) })
 
 	switch dt := dt.(type) {
 	case nil:
@@ -83,21 +109,23 @@ func toString(dt any) (r string) {
 	case fmt.Stringer:
 		return strconv.Quote(dt.String())
 	case error:
-		return strconv.Quote(fmt.Sprintf("err:%s detail:%#v", dt, dt))
+		return errToString(dt)
 	default:
-		return errStr(dt)
+		return slog.AnyValue(dt).String()
 	}
 }
 
-func Any(v any) expvar.Var {
-	switch v.(type) {
-	case nil:
-		return anyValue{v: nil}
-	case Value:
-		return v.(Value)
-	default:
-		return anyValue{v: v}
+func Any[T any](name string, v T) T {
+	mux.Lock()
+	defer mux.Unlock()
+
+	vv := expvar.Get(name)
+	if vv != nil {
+		return vv.(*anyValue).v.(T)
 	}
+
+	expvar.Publish(name, &anyValue{v: v})
+	return v
 }
 
 var _ expvar.Var = (*anyValue)(nil)
@@ -110,16 +138,15 @@ func (a anyValue) String() string {
 	return toString(a.v)
 }
 
-func Register(name string, value Value) {
-	defer recovery.Exit()
-	assert.If(Has(name), "name:%s already exists", name)
-	expvar.Publish(name, value)
+func (a anyValue) MarshalJSON() ([]byte, error) {
+	return json.Marshal(a.v)
 }
 
-func RegisterValue(name string, data any) {
-	defer recovery.Exit()
+func (a anyValue) Value() any { return a.v }
+
+func Register(name string, value Value) {
 	assert.If(Has(name), "name:%s already exists", name)
-	expvar.Publish(name, Value(func() interface{} { return data }))
+	expvar.Publish(name, value)
 }
 
 func Has(name string) bool {

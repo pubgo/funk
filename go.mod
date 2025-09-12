@@ -14,6 +14,7 @@ require (
 	github.com/ettle/strcase v0.2.0
 	github.com/expr-lang/expr v1.17.5
 	github.com/goccy/go-json v0.10.2
+	github.com/google/go-cmp v0.6.0
 	github.com/gopherjs/gopherjs v1.17.2
 	github.com/hashicorp/go-version v1.6.0
 	github.com/huandu/go-clone v1.5.1
@@ -90,7 +91,6 @@ require (
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.13.0 // indirect
 	github.com/iancoleman/orderedmap v0.0.0-20190318233801-ac98e3ecb4b0 // indirect

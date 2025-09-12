@@ -7,10 +7,6 @@ import (
 	"github.com/pubgo/funk/recovery"
 )
 
-func init() {
-	assert.EnablePrintStack = true
-}
-
 func TestCheckNil(t *testing.T) {
 	var a *int
 

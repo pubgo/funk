@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 	"sync"
 
 	"github.com/k0kubun/pp/v3"
+	"github.com/rs/xid"
 	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/encoding/prototext"
@@ -18,7 +18,6 @@ import (
 
 	"github.com/pubgo/funk"
 	"github.com/pubgo/funk/log/logutil"
-	"github.com/pubgo/funk/pretty"
 	"github.com/pubgo/funk/proto/errorpb"
 )
 
@@ -36,38 +35,19 @@ func ParseError(val interface{}) error {
 		return errors.New(v)
 	case []byte:
 		return errors.New(string(v))
+	case proto.Message:
+		return errors.New(prototext.Format(v))
 	default:
-		return errors.New(SimplePrint(v))
+		return errors.New(errPretty().Sprint(v))
 	}
-}
-
-var Simple = sync.OnceValue(func() *pp.PrettyPrinter {
-	printer := pp.New()
-	printer.SetColoringEnabled(false)
-	printer.SetExportedOnly(false)
-	printer.SetOmitEmpty(true)
-	printer.SetMaxDepth(3)
-	return printer
-})
-
-func SimplePrint(v interface{}) string {
-	return strings.ReplaceAll(Simple().Sprint(v), "\n", "")
 }
 
 func GetErrorId(err error) string {
-	if err == nil {
-		return ""
+	if v, ok := lo.ErrorsAs[Error](err); ok && v != nil {
+		return v.ID()
 	}
 
-	for err != nil {
-		if v, ok := err.(Error); ok {
-			return v.ID()
-		}
-
-		err = Unwrap(err)
-	}
-
-	return ""
+	return xid.New().String()
 }
 
 func Unwrap(err error) error {
@@ -103,8 +83,7 @@ func Debug(err error) {
 		return
 	}
 
-	pretty.SetDefaultMaxDepth(20)
-	pretty.Println(err)
+	Console().Println(err)
 }
 
 func MustTagsToAny(tags ...*errorpb.Tag) []*anypb.Any {
@@ -171,3 +150,21 @@ func MustProtoToAny(p proto.Message) *anypb.Any {
 
 	return pb
 }
+
+var errPretty = sync.OnceValue(func() *pp.PrettyPrinter {
+	printer := pp.New()
+	printer.SetColoringEnabled(false)
+	printer.SetExportedOnly(false)
+	printer.SetOmitEmpty(true)
+	printer.SetMaxDepth(3)
+	return printer
+})
+
+var Console = sync.OnceValue(func() *pp.PrettyPrinter {
+	printer := pp.New()
+	printer.SetColoringEnabled(true)
+	printer.SetExportedOnly(false)
+	printer.SetOmitEmpty(true)
+	printer.SetMaxDepth(5)
+	return printer
+})

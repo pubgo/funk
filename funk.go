@@ -165,10 +165,6 @@ func IsNil(err interface{}) bool {
 	}
 
 	v := reflect.ValueOf(err)
-	if !v.IsValid() {
-		return true
-	}
-
 	switch v.Kind() {
 	case reflect.Chan, reflect.Func, reflect.Map, reflect.Pointer, reflect.UnsafePointer, reflect.Slice, reflect.Interface:
 		return v.IsNil()

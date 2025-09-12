@@ -36,11 +36,13 @@ var (
 )
 
 func init() {
-	vars.RegisterValue("config", map[string]any{
-		"config_type": defaultConfigType,
-		"config_name": defaultConfigName,
-		"config_path": configPath,
-		"config_dir":  configDir,
+	vars.Register("config", func() any {
+		return map[string]any{
+			"config_type": defaultConfigType,
+			"config_name": defaultConfigName,
+			"config_path": configPath,
+			"config_dir":  configDir,
+		}
 	})
 }
 

@@ -3,9 +3,10 @@ package assert
 import (
 	"fmt"
 	"log/slog"
+	"reflect"
 	"runtime/debug"
 
-	"github.com/pubgo/funk/stack"
+	"github.com/k0kubun/pp/v3"
 )
 
 func messageFromMsgAndArgs(msgAndArgs ...any) string {
@@ -17,10 +18,9 @@ func messageFromMsgAndArgs(msgAndArgs ...any) string {
 		if msgAsStr, ok := msgAndArgs[0].(string); ok {
 			return msgAsStr
 		}
-		return fmt.Sprintf("%+v", msgAndArgs[0])
 	}
 
-	return fmt.Sprintf(msgAndArgs[0].(string), msgAndArgs[1:]...)
+	return pp.Sprint(msgAndArgs...)
 }
 
 func must(err error, messageArgs ...any) {
@@ -32,15 +32,12 @@ func must(err error, messageArgs ...any) {
 	if message == "" {
 		message = err.Error()
 	} else {
-		message = fmt.Sprintf("msg:%s err:%s", message, err.Error())
+		message = fmt.Sprintf("msg:%v err:%s", message, err.Error())
 	}
 
-	if EnablePrintStack {
-		slog.Error(message)
-		debug.PrintStack()
-	}
-
-	panic(message)
+	slog.Error(message)
+	debug.PrintStack()
+	panic(err)
 }
 
 func try(fn func() error) (gErr error) {
@@ -51,7 +48,7 @@ func try(fn func() error) (gErr error) {
 
 	defer func() {
 		if gErr != nil {
-			gErr = fmt.Errorf("stack:%s, err:%w", stack.CallerWithFunc(fn).String(), gErr)
+			gErr = fmt.Errorf("stack:%s, err:%w", reflect.TypeOf(fn).String(), gErr)
 		}
 	}()
 
