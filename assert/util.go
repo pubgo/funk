@@ -35,8 +35,7 @@ func must(err error, messageArgs ...any) {
 		message = fmt.Sprintf("msg:%v err:%s", message, err.Error())
 	}
 
-	slog.Error(message)
-	debug.PrintStack()
+	slog.Error(message, slog.String("stack", string(debug.Stack())))
 	panic(err)
 }
 

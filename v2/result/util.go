@@ -255,5 +255,5 @@ func logErr(ctx context.Context, err error, events ...func(e *zerolog.Event)) {
 		}).
 		Str(zerolog.ErrorFieldName, err.Error()).
 		CallerSkipFrame(2).
-		Msgf("%s\n%s", err.Error(), prototext.Format(errors.ParseErrToPb(err)))
+		Msgf("%s\n%s\n", err.Error(), prototext.Format(errors.ParseErrToPb(err)))
 }
