@@ -23,7 +23,7 @@ func (c *Client) Ping() error {
 	return _db.Ping()
 }
 
-func (c *Client) Vars() vars.Value {
+func (c *Client) Vars() vars.Func {
 	return func() interface{} {
 		_db, err := c.DB.DB()
 		if err != nil {

@@ -116,14 +116,14 @@ func (r Result[T]) Log(events ...func(e *zerolog.Event)) Result[T] {
 }
 
 func (r Result[T]) Map(fn func(T) T) Result[T] {
-	if r.IsOK() {
+	if r.IsErr() {
 		return r
 	}
 	return OK(fn(r.getValue()))
 }
 
 func (r Result[T]) FlatMap(fn func(T) Result[T]) Result[T] {
-	if r.IsOK() {
+	if r.IsErr() {
 		return r
 	}
 	return fn(r.getValue())
