@@ -61,6 +61,10 @@ func GetEventBuf(evt *Event) []byte {
 }
 
 func cloneEvent(target *Event) *Event {
+	if target == nil {
+		return nil
+	}
+
 	newTarget := zerolog.Dict()
 	convertEvent(newTarget).buf = bytes.Clone(convertEvent(target).buf)
 	return newTarget
