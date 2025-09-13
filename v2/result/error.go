@@ -8,6 +8,7 @@ import (
 
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/errors/errutil"
+	"github.com/pubgo/funk/log/logfields"
 )
 
 var _ Catchable = new(Error)
@@ -95,12 +96,12 @@ func (e Error) GetErr() error {
 	return e.getErr()
 }
 
-func (e Error) Must() {
+func (e Error) Must(events ...func(e *zerolog.Event)) {
 	if e.IsOK() {
 		return
 	}
 
-	errNilOrPanic(errors.WrapCaller(e.getErr(), 1))
+	errNilOrPanic(errors.WrapCaller(e.getErr(), 1), events...)
 }
 
 func (e Error) Expect(format string, args ...any) {
@@ -109,8 +110,9 @@ func (e Error) Expect(format string, args ...any) {
 	}
 
 	err := errors.WrapCaller(e.getErr(), 1)
-	err = errors.Wrapf(err, format, args...)
-	errNilOrPanic(err)
+	errNilOrPanic(err, func(e *zerolog.Event) {
+		e.Str(logfields.Msg, fmt.Sprintf(format, args...))
+	})
 }
 
 func (e Error) String() string {

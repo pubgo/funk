@@ -25,7 +25,7 @@ func CreateCtx(ctx context.Context, errChecks []ErrChecker, upsert ...bool) cont
 	return context.WithValue(ctx, checkCtx{}, errChecks)
 }
 
-func GetCheckersFromCtx(ctx context.Context) []ErrChecker {
+func getCheckersFromCtx(ctx context.Context) []ErrChecker {
 	if ctx == nil {
 		return nil
 	}

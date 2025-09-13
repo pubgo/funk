@@ -7,4 +7,5 @@ const (
 	Error       = "error"
 	ErrorDetail = "error_detail"
 	ErrorStack  = "error_stack"
+	ErrorID     = "error_id"
 )

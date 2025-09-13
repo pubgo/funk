@@ -71,9 +71,9 @@ func (r Result[T]) Expect(format string, args ...any) T {
 	return r.getValue()
 }
 
-func (r Result[T]) Must() T {
+func (r Result[T]) Must(events ...func(e *zerolog.Event)) T {
 	if r.IsErr() {
-		errNilOrPanic(errors.WrapCaller(r.getErr(), 1))
+		errNilOrPanic(errors.WrapCaller(r.getErr(), 1), events...)
 	}
 
 	return r.getValue()

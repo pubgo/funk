@@ -2,30 +2,27 @@ package shutil
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
 
-	"github.com/pubgo/funk/log"
+	"github.com/pubgo/funk/log/logfields"
 	"github.com/pubgo/funk/v2/result"
+	"github.com/rs/zerolog"
 )
 
 func Run(args ...string) (r result.Result[string]) {
-	defer result.RecoveryErr(&r)
+	defer result.Recovery(&r)
 
 	b := bytes.NewBufferString("")
 
 	cmd := Shell(args...)
 	cmd.Stdout = b
 
-	result.ErrOf(cmd.Run()).
-		Inspect(func(err error) {
-			log.Err(err).Msg("failed to execute: " + strings.Join(args, " "))
-		}).
-		CatchErr(&r)
-	if r.IsErr() {
-		return
-	}
+	result.ErrOf(cmd.Run()).Must(func(e *zerolog.Event) {
+		e.Str(logfields.Msg, fmt.Sprintf("failed to execute: "+strings.Join(args, " ")))
+	})
 
 	return r.WithValue(strings.TrimSpace(b.String()))
 }

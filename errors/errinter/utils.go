@@ -83,7 +83,7 @@ func Debug(err error) {
 		return
 	}
 
-	Console().Println(err)
+	DebugPretty().Println(err)
 }
 
 func MustTagsToAny(tags ...*errorpb.Tag) []*anypb.Any {
@@ -160,7 +160,7 @@ var errPretty = sync.OnceValue(func() *pp.PrettyPrinter {
 	return printer
 })
 
-var Console = sync.OnceValue(func() *pp.PrettyPrinter {
+var DebugPretty = sync.OnceValue(func() *pp.PrettyPrinter {
 	printer := pp.New()
 	printer.SetColoringEnabled(true)
 	printer.SetExportedOnly(false)
