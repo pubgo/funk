@@ -4,25 +4,31 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/errors/errinter"
 	"github.com/pubgo/funk/log"
 	"github.com/samber/lo"
 )
 
 func RecoveryAndCheck(setter *error, callbacks ...func(err error) error) {
 	if setter == nil {
-		errMust(fmt.Errorf("setter is nil"))
+		assert.Must(fmt.Errorf("errcheck: setter is nil"))
 		return
 	}
 
-	err := errors.Parse(recover())
+	err := errinter.ParseError(recover())
+	if err != nil {
+		err = errors.WrapStack(err)
+	}
+
 	gErr := *setter
-	if err == nil && gErr == nil {
-		return
+	if err == nil {
+		err = gErr
 	}
 
 	if err == nil {
-		err = gErr
+		return
 	}
 
 	for _, fn := range callbacks {
@@ -32,12 +38,20 @@ func RecoveryAndCheck(setter *error, callbacks ...func(err error) error) {
 		}
 	}
 
-	*setter = errors.WrapCaller(err, 1)
+	*setter = err
 }
 
 func Check(errSetter *error, err error, contexts ...context.Context) bool {
+	defer func() {
+		if *errSetter == nil {
+			return
+		}
+
+		logErr(lo.FirstOr(contexts, nil), *errSetter)
+	}()
+
 	if errSetter == nil {
-		errMust(fmt.Errorf("errSetter is nil"))
+		assert.Must(fmt.Errorf("errcheck: errSetter is nil"))
 		return false
 	}
 
@@ -51,7 +65,7 @@ func Check(errSetter *error, err error, contexts ...context.Context) bool {
 	}
 
 	var ctx = lo.FirstOr(contexts, context.Background())
-	for _, fn := range GetCheckersFromCtx(ctx) {
+	for _, fn := range getCheckersFromCtx(ctx) {
 		err = fn(ctx, err)
 		if err == nil {
 			return false
@@ -62,14 +76,15 @@ func Check(errSetter *error, err error, contexts ...context.Context) bool {
 	return true
 }
 
-func Expect(err error, format string, args ...any) {
-	if err == nil {
-		return
-	}
+func Must(err error, args ...any) {
+	logErr(nil, err)
+	errNilOrPanic(err, args...)
+}
 
-	err = errors.WrapCaller(err, 1)
-	err = errors.Wrapf(err, format, args...)
-	errMust(err)
+func Must1[T any](v T, err error) T {
+	logErr(nil, err)
+	errNilOrPanic(err)
+	return v
 }
 
 func Map(err error, fn func(err error) error) error {
@@ -88,12 +103,12 @@ func Inspect(err error, fn func(err error)) {
 	fn(err)
 }
 
-func InspectLog(err error, fn func(logger *log.Event), contexts ...context.Context) {
+func InspectLog(err error, fn func(evt *log.Event), contexts ...context.Context) {
 	if err == nil {
 		return
 	}
 
-	fn(log.Err(err, contexts...))
+	logErr(lo.FirstOr(contexts, context.Background()), err, fn)
 }
 
 func LogErr(err error, contexts ...context.Context) {
@@ -101,7 +116,5 @@ func LogErr(err error, contexts ...context.Context) {
 		return
 	}
 
-	log.Err(err, contexts...).
-		CallerSkipFrame(1).
-		Msg(err.Error())
+	logErr(lo.FirstOr(contexts, context.Background()), err)
 }

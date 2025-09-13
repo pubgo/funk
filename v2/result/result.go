@@ -73,6 +73,7 @@ func (r Result[T]) Expect(format string, args ...any) T {
 
 func (r Result[T]) Must() T {
 	if r.IsErr() {
+		logErr(nil, r.err)
 		errNilOrPanic(errors.WrapCaller(r.getErr(), 1))
 	}
 
