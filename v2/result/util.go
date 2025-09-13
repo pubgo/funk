@@ -3,12 +3,14 @@ package result
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"log/slog"
 	"reflect"
 	"runtime/debug"
 	"strings"
 
+	"github.com/k0kubun/pp/v3"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/encoding/prototext"
@@ -16,6 +18,7 @@ import (
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/log"
+	"github.com/pubgo/funk/log/logfields"
 	"github.com/pubgo/funk/stack"
 	"github.com/pubgo/funk/v2/result/resultchecker"
 )
@@ -61,15 +64,12 @@ func try1[T any](fn func() (T, error)) (t T, gErr error) {
 	return
 }
 
-func errNilOrPanic(err error, args ...any) {
+func errNilOrPanic(err error, events ...func(e *zerolog.Event)) {
 	if err == nil {
 		return
 	}
 
-	if len(args) > 0 {
-		err = errors.Wrap(err, fmt.Sprint(args...))
-	}
-
+	logErr(nil, err, events...)
 	err = errors.WrapStack(err)
 	errors.Debug(err)
 	panic(err)
@@ -245,15 +245,25 @@ func logErr(ctx context.Context, err error, events ...func(e *zerolog.Event)) {
 
 	log.Error(ctx).
 		Func(func(e *zerolog.Event) {
+			e.Str(logfields.Module, "resultv2")
+			e.Str(logfields.ErrorStack, string(debug.Stack()))
+			e.Str(logfields.ErrorDetail, pretty().Sprint(err))
+			e.Str(logfields.ErrorID, errors.GetErrorId(err))
+
 			for _, fn := range events {
 				fn(e)
-			}
-
-			if id := errors.GetErrorId(err); id != "" {
-				e.Str("error_id", id)
 			}
 		}).
 		Str(zerolog.ErrorFieldName, err.Error()).
 		CallerSkipFrame(2).
 		Msgf("%s\n%s", err.Error(), prototext.Format(errors.ParseErrToPb(err)))
 }
+
+var pretty = sync.OnceValue(func() *pp.PrettyPrinter {
+	printer := pp.New()
+	printer.SetColoringEnabled(false)
+	printer.SetExportedOnly(false)
+	printer.SetOmitEmpty(true)
+	printer.SetMaxDepth(5)
+	return printer
+})

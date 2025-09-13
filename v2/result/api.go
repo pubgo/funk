@@ -18,7 +18,7 @@ func All[T any](results ...Result[T]) Result[[]T] {
 	return OK(values)
 }
 
-func Recovery(setter *error, callbacks ...func(err error) error) {
+func RecoveryErr(setter *error, callbacks ...func(err error) error) {
 	if setter == nil {
 		errNilOrPanic(errors.Errorf("setter is nil"))
 		return
@@ -30,7 +30,7 @@ func Recovery(setter *error, callbacks ...func(err error) error) {
 	))
 }
 
-func RecoveryErr(setter ErrSetter, callbacks ...func(err error) error) {
+func Recovery(setter ErrSetter, callbacks ...func(err error) error) {
 	if setter == nil {
 		errNilOrPanic(errors.Errorf("setter is nil"))
 		return
@@ -43,11 +43,6 @@ func RecoveryErr(setter ErrSetter, callbacks ...func(err error) error) {
 }
 
 func Errorf(msg string, args ...any) Error {
-	return newError(errors.WrapCaller(fmt.Errorf(msg, args...), 1))
-}
-
-// Deprecated: use Errorf
-func ErrorOf(msg string, args ...any) Error {
 	return newError(errors.WrapCaller(fmt.Errorf(msg, args...), 1))
 }
 
