@@ -5,8 +5,11 @@ import (
 	"log/slog"
 	"reflect"
 	"runtime/debug"
+	"sync"
 
 	"github.com/k0kubun/pp/v3"
+	"github.com/pubgo/funk/log/logfields"
+	"github.com/samber/lo"
 )
 
 func messageFromMsgAndArgs(msgAndArgs ...any) string {
@@ -20,7 +23,21 @@ func messageFromMsgAndArgs(msgAndArgs ...any) string {
 		}
 	}
 
-	return pp.Sprint(msgAndArgs...)
+	return pretty().Sprint(msgAndArgs...)
+}
+
+func logErr(err error, message string, attrs ...slog.Attr) {
+	if err == nil {
+		return
+	}
+
+	attrs = append(attrs,
+		slog.String(logfields.Module, "assert"),
+		slog.String(logfields.Error, err.Error()),
+		slog.String("stack", string(debug.Stack())),
+		slog.String(logfields.ErrorDetail, pretty().Sprint(err)),
+	)
+	slog.Error(message, lo.ToAnySlice(attrs)...)
 }
 
 func must(err error, messageArgs ...any) {
@@ -35,26 +52,36 @@ func must(err error, messageArgs ...any) {
 		message = fmt.Sprintf("msg:%v err:%s", message, err.Error())
 	}
 
-	slog.Error(message)
-	debug.PrintStack()
+	logErr(err, message, slog.Bool("panic", true))
 	panic(err)
 }
 
+var pretty = sync.OnceValue(func() *pp.PrettyPrinter {
+	printer := pp.New()
+	printer.SetColoringEnabled(false)
+	printer.SetExportedOnly(false)
+	printer.SetOmitEmpty(true)
+	printer.SetMaxDepth(5)
+	return printer
+})
+
 func try(fn func() error) (gErr error) {
 	if fn == nil {
-		gErr = fmt.Errorf("[fn] is nil")
+		gErr = fmt.Errorf("assert: [fn] is nil")
+		logErr(gErr, gErr.Error())
+		debug.PrintStack()
 		return
 	}
 
 	defer func() {
-		if gErr != nil {
-			gErr = fmt.Errorf("stack:%s, err:%w", reflect.TypeOf(fn).String(), gErr)
-		}
-	}()
-
-	defer func() {
 		if err := recover(); err != nil {
 			gErr = fmt.Errorf("%v", err)
+			logErr(gErr, gErr.Error())
+			debug.PrintStack()
+		}
+
+		if gErr != nil {
+			gErr = fmt.Errorf("stack:%s, err:%w", reflect.TypeOf(fn).String(), gErr)
 		}
 	}()
 
