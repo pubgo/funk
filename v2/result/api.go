@@ -106,18 +106,17 @@ func WrapFn[T any](fn func() (T, error)) Result[T] {
 	return Result[T]{err: err}
 }
 
-func CatchErr(setter ErrSetter, err error, contexts ...context.Context) bool {
+func Catch(setter ErrSetter, err error, contexts ...context.Context) bool {
 	return catchErr(newError(err), setter, nil, contexts...)
 }
 
-func Catch(rawSetter *error, err error, contexts ...context.Context) bool {
+func CatchErr(rawSetter *error, err error, contexts ...context.Context) bool {
 	return catchErr(newError(err), nil, rawSetter, contexts...)
 }
 
 func MapTo[T, U any](r Result[T], fn func(T) U) Result[U] {
 	if r.IsErr() {
-		err := errors.WrapCaller(r.getErr(), 1)
-		return Fail[U](err)
+		return Fail[U](errors.WrapCaller(r.getErr(), 1))
 	}
 
 	return OK(fn(r.getValue()))
@@ -125,8 +124,7 @@ func MapTo[T, U any](r Result[T], fn func(T) U) Result[U] {
 
 func FlatMapTo[T, U any](r Result[T], fn func(T) Result[U]) Result[U] {
 	if r.IsErr() {
-		err := errors.WrapCaller(r.getErr(), 1)
-		return Fail[U](err)
+		return Fail[U](errors.WrapCaller(r.getErr(), 1))
 	}
 
 	return fn(r.getValue())

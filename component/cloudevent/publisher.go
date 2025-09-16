@@ -133,7 +133,7 @@ func (c *Client) publish(ctx context.Context, topic string, args proto.Message, 
 		Log(func(e *zerolog.Event) {
 			e.Str(logfields.Msg, "failed to marshal args to any proto")
 		}).
-		Unwrap(&gErr)
+		UnwrapErr(&gErr)
 	if gErr != nil {
 		return
 	}
@@ -143,7 +143,7 @@ func (c *Client) publish(ctx context.Context, topic string, args proto.Message, 
 		Log(func(e *zerolog.Event) {
 			e.Str(logfields.Msg, "failed to marshal any proto to bytes")
 		}).
-		Unwrap(&gErr)
+		UnwrapErr(&gErr)
 	if gErr != nil {
 		return
 	}
@@ -167,7 +167,7 @@ func (c *Client) publish(ctx context.Context, topic string, args proto.Message, 
 		Log(func(e *zerolog.Event) {
 			e.Str(logfields.Msg, fmt.Sprintf("failed to publish msg to stream, topic=%s msg_id=%s", topic, msgId))
 		}).
-		Unwrap(&gErr)
+		UnwrapErr(&gErr)
 	if gErr != nil {
 		return
 	}

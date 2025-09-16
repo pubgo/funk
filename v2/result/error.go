@@ -71,16 +71,11 @@ func (e Error) Inspect(fn func(error)) Error {
 
 func (e Error) InspectErr(fn func(error)) Error { return e.Inspect(fn) }
 
-func (e Error) Unwrap() error { return e.err }
-func (e Error) UnwrapErr(setter ErrSetter, contexts ...context.Context) bool {
-	return catchErr(e, setter, nil, contexts...)
-}
-
-func (e Error) Catch(setter *error, ctx ...context.Context) bool {
+func (e Error) CatchErr(setter *error, ctx ...context.Context) bool {
 	return catchErr(e, nil, setter, ctx...)
 }
 
-func (e Error) CatchErr(setter ErrSetter, ctx ...context.Context) bool {
+func (e Error) Catch(setter ErrSetter, ctx ...context.Context) bool {
 	return catchErr(e, setter, nil, ctx...)
 }
 
