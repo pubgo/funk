@@ -221,6 +221,8 @@ func setError(setter ErrSetter, err error) {
 		errSet.err = err
 	case *ErrProxy:
 		*errSet.err = err
+	case ErrProxy:
+		*errSet.err = err
 	default:
 		rv := reflect.ValueOf(setter)
 		t := rv.Type()
