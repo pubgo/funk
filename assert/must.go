@@ -45,7 +45,7 @@ func Exit(err error, args ...interface{}) {
 		return
 	}
 
-	slog.Error("os exit with error", "err", err, "msg", fmt.Sprint(args...))
+	logErr(err, "os exit with error", slog.String("log-msg", fmt.Sprint(args...)))
 	debug.PrintStack()
 	os.Exit(1)
 }
@@ -56,7 +56,7 @@ func ExitFn(errFn func() error, args ...interface{}) {
 		return
 	}
 
-	slog.Error("os exit with error func", "err", err, "msg", fmt.Sprint(args...))
+	logErr(err, "os exit with error func", slog.String("log-msg", fmt.Sprint(args...)))
 	debug.PrintStack()
 	os.Exit(1)
 }
@@ -66,14 +66,14 @@ func ExitF(err error, msg string, args ...interface{}) {
 		return
 	}
 
-	slog.Error("os exit with error format", "err", err, "msg", fmt.Sprintf(msg, args...))
+	logErr(err, "os exit with error format", slog.String("log-msg", fmt.Sprintf(msg, args...)))
 	debug.PrintStack()
 	os.Exit(1)
 }
 
 func Exit1[T any](ret T, err error) T {
 	if err != nil {
-		slog.Error("os exit with error unwrap", "err", err)
+		logErr(err, "os exit with error unwrap")
 		debug.PrintStack()
 		os.Exit(1)
 	}

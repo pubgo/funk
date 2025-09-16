@@ -34,7 +34,7 @@ func logErr(err error, message string, attrs ...slog.Attr) {
 	attrs = append(attrs,
 		slog.String(logfields.Module, "assert"),
 		slog.String(logfields.Error, err.Error()),
-		slog.String("stack", string(debug.Stack())),
+		slog.String(logfields.ErrorStack, string(debug.Stack())),
 		slog.String(logfields.ErrorDetail, pretty().Sprint(err)),
 	)
 	slog.Error(message, lo.ToAnySlice(attrs)...)

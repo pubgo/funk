@@ -10,6 +10,7 @@ import (
 
 	"github.com/pubgo/funk"
 	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/log/logfields"
 )
 
 var _ Catchable = new(Result[any])
@@ -65,16 +66,17 @@ func (r Result[T]) ValueTo(v *T) Error {
 func (r Result[T]) Expect(format string, args ...any) T {
 	if r.IsErr() {
 		err := errors.WrapCaller(r.getErr(), 1)
-		errNilOrPanic(errors.Wrapf(err, format, args...))
+		errNilOrPanic(err, func(e *zerolog.Event) {
+			e.Str(logfields.Msg, fmt.Sprintf(format, args...))
+		})
 	}
 
 	return r.getValue()
 }
 
-func (r Result[T]) Must() T {
+func (r Result[T]) Must(events ...func(e *zerolog.Event)) T {
 	if r.IsErr() {
-		logErr(nil, r.err)
-		errNilOrPanic(errors.WrapCaller(r.getErr(), 1))
+		errNilOrPanic(errors.WrapCaller(r.getErr(), 1), events...)
 	}
 
 	return r.getValue()

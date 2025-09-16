@@ -15,14 +15,12 @@ import (
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/component/cloudevent"
-	"github.com/pubgo/funk/errors/errcheck"
 	cloudeventpb "github.com/pubgo/funk/proto/cloudevent"
 	"github.com/pubgo/funk/stack"
 )
 
 var cloudeventPkg = reflect.TypeOf(cloudevent.Client{}).PkgPath()
 var jobTypesPkg = reflect.TypeOf(cloudeventpb.PushEventOptions{}).PkgPath()
-var resultTypesPkg = stack.CallerWithFunc(errcheck.Check).Pkg
 var ctxPkg = stack.CallerWithFunc(context.WithTimeout).Pkg
 var assertPkt = stack.CallerWithFunc(assert.Assert).Pkg
 var protojsonPkt = stack.CallerWithFunc(protojson.Marshal).Pkg

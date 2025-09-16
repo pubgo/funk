@@ -2,18 +2,19 @@ package cloudevent
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/pubgo/funk/ctxutil"
 	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/errors/errcheck"
+	"github.com/pubgo/funk/log/logfields"
 	cloudeventpb "github.com/pubgo/funk/proto/cloudevent"
-	"github.com/pubgo/funk/result"
 	"github.com/pubgo/funk/stack"
 	"github.com/pubgo/funk/try"
 	"github.com/pubgo/funk/typex"
+	"github.com/pubgo/funk/v2/result"
 	"github.com/rs/xid"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
@@ -97,6 +98,7 @@ func (c *Client) Publish(ctx context.Context, topic string, args proto.Message, 
 }
 
 func (c *Client) publish(ctx context.Context, topic string, args proto.Message, opts ...*cloudeventpb.PushEventOptions) (_ *PubAckInfo, gErr error) {
+	defer result.RecoveryErr(&gErr)
 	var timeout = ctxutil.GetTimeout(ctx)
 	var now = time.Now()
 	var msgId = xid.New().String()
@@ -127,20 +129,22 @@ func (c *Client) publish(ctx context.Context, topic string, args proto.Message, 
 		msgId = pushEventOpt.GetMsgId()
 	}
 
-	pb, err := anypb.New(args)
-	err = errors.IfErr(err, func(err error) error {
-		return errors.Wrap(err, "failed to marshal args to any proto")
-	})
-	if errcheck.Check(&gErr, err) {
+	pb := result.Wrap(anypb.New(args)).
+		Log(func(e *zerolog.Event) {
+			e.Str(logfields.Msg, "failed to marshal args to any proto")
+		}).
+		Unwrap(&gErr)
+	if gErr != nil {
 		return
 	}
 
 	// TODO get parent event info from ctx
-	data, err := proto.Marshal(pb)
-	err = errors.IfErr(err, func(err error) error {
-		return errors.Wrap(err, "failed to marshal any proto to bytes")
-	})
-	if errcheck.Check(&gErr, err) {
+	data := result.Wrap(proto.Marshal(pb)).
+		Log(func(e *zerolog.Event) {
+			e.Str(logfields.Msg, "failed to marshal any proto to bytes")
+		}).
+		Unwrap(&gErr)
+	if gErr != nil {
 		return
 	}
 
@@ -159,11 +163,12 @@ func (c *Client) publish(ctx context.Context, topic string, args proto.Message, 
 
 	msg := &nats.Msg{Subject: topic, Data: data, Header: header}
 	jetOpts := append([]jetstream.PublishOpt{}, jetstream.WithMsgID(msgId))
-	pubActInfo, err = c.js.PublishMsg(ctx, msg, jetOpts...)
-	err = errors.IfErr(err, func(err error) error {
-		return errors.Wrapf(err, "failed to publish msg to stream, topic=%s msg_id=%s", topic, msgId)
-	})
-	if errcheck.Check(&gErr, err) {
+	pubActInfo = result.Wrap(c.js.PublishMsg(ctx, msg, jetOpts...)).
+		Log(func(e *zerolog.Event) {
+			e.Str(logfields.Msg, fmt.Sprintf("failed to publish msg to stream, topic=%s msg_id=%s", topic, msgId))
+		}).
+		Unwrap(&gErr)
+	if gErr != nil {
 		return
 	}
 

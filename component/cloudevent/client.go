@@ -14,14 +14,15 @@ import (
 	"github.com/pubgo/funk/component/lifecycle"
 	"github.com/pubgo/funk/component/natsclient"
 	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/errors/errcheck"
 	"github.com/pubgo/funk/internal/anyhow"
 	"github.com/pubgo/funk/log"
+	"github.com/pubgo/funk/log/logfields"
 	cloudeventpb "github.com/pubgo/funk/proto/cloudevent"
 	"github.com/pubgo/funk/running"
 	"github.com/pubgo/funk/stack"
 	"github.com/pubgo/funk/try"
 	"github.com/pubgo/funk/typex"
+	"github.com/pubgo/funk/v2/result"
 	"github.com/pubgo/funk/version"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
@@ -73,7 +74,7 @@ type Client struct {
 }
 
 func (c *Client) initStream() (r error) {
-	defer errcheck.RecoveryAndCheck(&r)
+	defer result.RecoveryErr(&r)
 
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancel()
@@ -98,20 +99,16 @@ func (c *Client) initStream() (r error) {
 			Duplicates: time.Minute * 5,
 		}
 
-		stream, err := c.js.CreateOrUpdateStream(ctx, streamCfg)
-		err = errors.IfErr(err, func(err error) error {
-			return errors.Wrapf(err, "failed to create stream:%s", streamName)
+		stream := result.Wrap(c.js.CreateOrUpdateStream(ctx, streamCfg)).Must(func(e *zerolog.Event) {
+			e.Str(logfields.Msg, fmt.Sprintf("failed to create stream:%s", streamName))
 		})
-		if errcheck.Check(&r, err) {
-			return
-		}
 		c.streams[streamName] = stream
 	}
 	return
 }
 
 func (c *Client) initConsumer() (r error) {
-	defer errcheck.RecoveryAndCheck(&r)
+	defer result.RecoveryErr(&r)
 
 	allEventKeysSet := mapset.NewSet(lo.MapToSlice(c.subjects, func(key string, value *cloudeventpb.CloudEventMethodOptions) string { return c.subjectName(key) })...)
 
@@ -427,7 +424,7 @@ func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *
 }
 
 func (c *Client) doConsume() (r error) {
-	defer errcheck.RecoveryAndCheck(&r)
+	defer result.RecoveryErr(&r)
 	for streamName, consumers := range c.consumers {
 		for consumerName, consumer := range consumers {
 			assert.If(c.jobs[streamName] == nil, "stream not found, stream=%s", streamName)
