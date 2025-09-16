@@ -2,11 +2,6 @@ package result
 
 import "context"
 
-type Catchable interface {
-	Catch(err *error, contexts ...context.Context) bool
-	CatchErr(err ErrSetter, contexts ...context.Context) bool
-}
-
 // Checkable defines types that can be checked for Ok/Error state
 type Checkable interface {
 	IsOK() bool
@@ -20,7 +15,12 @@ type ErrSetter interface {
 	setErrorInner()
 }
 
+type Catchable interface {
+	CatchErr(err *error, contexts ...context.Context) bool
+	Catch(err ErrSetter, contexts ...context.Context) bool
+}
+
 type UnWrapper[T any] interface {
-	Unwrap(setter *error, contexts ...context.Context) T
-	UnwrapErr(setter ErrSetter, contexts ...context.Context) T
+	UnwrapErr(setter *error, contexts ...context.Context) T
+	Unwrap(setter ErrSetter, contexts ...context.Context) T
 }

@@ -82,11 +82,11 @@ func (r Result[T]) Must(events ...func(e *zerolog.Event)) T {
 	return r.getValue()
 }
 
-func (r Result[T]) Catch(setter *error, ctx ...context.Context) bool {
+func (r Result[T]) CatchErr(setter *error, ctx ...context.Context) bool {
 	return catchErr(newError(r.err), nil, setter, ctx...)
 }
 
-func (r Result[T]) CatchErr(setter ErrSetter, ctx ...context.Context) bool {
+func (r Result[T]) Catch(setter ErrSetter, ctx ...context.Context) bool {
 	return catchErr(newError(r.err), setter, nil, ctx...)
 }
 
@@ -192,7 +192,7 @@ func (r Result[T]) WrapErr(err *errors.Err, tags ...errors.Tag) Result[T] {
 	return Result[T]{err: errors.WrapTag(errors.WrapCaller(err, 1), tags...)}
 }
 
-func (r Result[T]) Unwrap(setter *error, contexts ...context.Context) T {
+func (r Result[T]) UnwrapErr(setter *error, contexts ...context.Context) T {
 	ret, err := unwrapErr(r, setter, nil, contexts...)
 	if err != nil {
 		*setter = errors.WrapCaller(err, 1)
@@ -200,7 +200,7 @@ func (r Result[T]) Unwrap(setter *error, contexts ...context.Context) T {
 	return ret
 }
 
-func (r Result[T]) UnwrapErr(setter ErrSetter, contexts ...context.Context) T {
+func (r Result[T]) Unwrap(setter ErrSetter, contexts ...context.Context) T {
 	ret, err := unwrapErr(r, nil, setter, contexts...)
 	if err != nil {
 		setError(setter, errors.WrapCaller(err, 1))

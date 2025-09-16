@@ -47,17 +47,17 @@ func TestErrOf(t *testing.T) {
 	resultchecker.RegisterErrCheck(log.RecordErr())
 
 	var err result.Error
-	if fn1().CatchErr(&err, ctx) {
+	if fn1().Catch(&err, ctx) {
 		errors.Debug(err.GetErr())
 	}
 }
 
 func fn1() (r result.Result[string]) {
-	if fn3().CatchErr(&r) {
+	if fn3().Catch(&r) {
 		return
 	}
 
-	val := fn2().UnwrapErr(&r)
+	val := fn2().Unwrap(&r)
 	if r.IsErr() {
 		return
 	}
@@ -70,7 +70,7 @@ func fn2() (r result.Result[string]) {
 		InspectErr(func(err error) {
 			log.Err(err).Msg("test error")
 		}).
-		CatchErr(&r)
+		Catch(&r)
 	if r.IsErr() {
 		return
 	}

@@ -15,6 +15,12 @@ import (
 	"github.com/pubgo/funk/log/logutil"
 )
 
+func TestLogLevel(t *testing.T) {
+	log.Warn().Msg("test warn")
+	logger := log.GetLogger().WithLevel(zerolog.ErrorLevel)
+	logger.Warn().Msg("test warn")
+}
+
 func TestWithName(t *testing.T) {
 	log.GetLogger("log1").
 		Debug().
