@@ -36,12 +36,12 @@ func (e Error) Map(fn func(error) error) Error {
 }
 
 func (e Error) LogCtx(ctx context.Context, events ...func(e *zerolog.Event)) Error {
-	logErr(ctx, e.err, events...)
+	logErr(ctx, 0, e.err, events...)
 	return e
 }
 
 func (e Error) Log(events ...func(e *zerolog.Event)) Error {
-	logErr(nil, e.err, events...)
+	logErr(nil, 0, e.err, events...)
 	return e
 }
 

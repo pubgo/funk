@@ -3,12 +3,11 @@ package result
 import (
 	"context"
 	"fmt"
-	"sync"
-
 	"log/slog"
 	"reflect"
 	"runtime/debug"
 	"strings"
+	"sync"
 
 	"github.com/k0kubun/pp/v3"
 	"github.com/rs/zerolog"
@@ -69,9 +68,7 @@ func errNilOrPanic(err error, events ...func(e *zerolog.Event)) {
 		return
 	}
 
-	logErr(nil, err, events...)
-	err = errors.WrapStack(err)
-	errors.Debug(err)
+	logErr(nil, 1, err, events...)
 	panic(err)
 }
 
@@ -241,7 +238,7 @@ func setError(setter ErrSetter, err error) {
 	}
 }
 
-func logErr(ctx context.Context, err error, events ...func(e *zerolog.Event)) {
+func logErr(ctx context.Context, skip int, err error, events ...func(e *zerolog.Event)) {
 	if err == nil {
 		return
 	}
@@ -258,8 +255,8 @@ func logErr(ctx context.Context, err error, events ...func(e *zerolog.Event)) {
 			}
 		}).
 		Str(zerolog.ErrorFieldName, err.Error()).
-		CallerSkipFrame(2).
-		Msgf("%s\n%s\n", err.Error(), prototext.Format(errors.ParseErrToPb(err)))
+		CallerSkipFrame(2+skip).
+		Msgf("%s\n%s", err.Error(), prototext.Format(errors.ParseErrToPb(err)))
 }
 
 var pretty = sync.OnceValue(func() *pp.PrettyPrinter {
