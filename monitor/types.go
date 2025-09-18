@@ -1,4 +1,3 @@
-// monitor/types.go
 package monitor
 
 import (
@@ -19,7 +18,6 @@ func mergeTags(maps ...map[string]any) map[string]any {
 	return m
 }
 
-// === StringValue ===
 type StringValue struct {
 	p    string
 	name string
@@ -38,9 +36,9 @@ func (s *StringValue) set(val any) error {
 	}
 	return nil
 }
-func (s *StringValue) Get() string    { return s.p }
-func (s *StringValue) Set(val string) { _ = s.set(val) }
-func (s *StringValue) String() string { return s.p }
+func (s *StringValue) Get() string          { return s.p }
+func (s *StringValue) Set(val string) error { return s.set(val) }
+func (s *StringValue) String() string       { return s.p }
 
 func String(name, value, usage string, tags ...map[string]any) *StringValue {
 	s := &StringValue{p: value, name: name}
@@ -49,7 +47,6 @@ func String(name, value, usage string, tags ...map[string]any) *StringValue {
 	return s
 }
 
-// === IntValue ===
 type IntValue struct {
 	p    int64
 	name string
@@ -74,9 +71,9 @@ func (i *IntValue) set(val any) error {
 	i.p = x
 	return nil
 }
-func (i *IntValue) Get() int64     { return i.p }
-func (i *IntValue) Set(val int64)  { _ = i.set(val) }
-func (i *IntValue) String() string { return fmt.Sprintf("%d", i.p) }
+func (i *IntValue) Get() int64          { return i.p }
+func (i *IntValue) Set(val int64) error { return i.set(val) }
+func (i *IntValue) String() string      { return fmt.Sprintf("%d", i.p) }
 
 func Int(name string, value int64, usage string, tags ...map[string]any) *IntValue {
 	i := &IntValue{p: value, name: name}
@@ -85,7 +82,6 @@ func Int(name string, value int64, usage string, tags ...map[string]any) *IntVal
 	return i
 }
 
-// === FloatValue ===
 type FloatValue struct {
 	p    float64
 	name string
@@ -112,9 +108,9 @@ func (f *FloatValue) set(val any) error {
 	f.p = x
 	return nil
 }
-func (f *FloatValue) Get() float64    { return f.p }
-func (f *FloatValue) Set(val float64) { _ = f.set(val) }
-func (f *FloatValue) String() string  { return fmt.Sprintf("%g", f.p) }
+func (f *FloatValue) Get() float64          { return f.p }
+func (f *FloatValue) Set(val float64) error { return f.set(val) }
+func (f *FloatValue) String() string        { return fmt.Sprintf("%g", f.p) }
 
 func Float(name string, value float64, usage string, tags ...map[string]any) *FloatValue {
 	f := &FloatValue{p: value, name: name}
@@ -123,7 +119,6 @@ func Float(name string, value float64, usage string, tags ...map[string]any) *Fl
 	return f
 }
 
-// === BoolValue ===
 type BoolValue struct {
 	p    bool
 	name string
@@ -151,9 +146,9 @@ func (b *BoolValue) set(val any) error {
 	b.p = x
 	return nil
 }
-func (b *BoolValue) Get() bool      { return b.p }
-func (b *BoolValue) Set(val bool)   { _ = b.set(val) }
-func (b *BoolValue) String() string { return fmt.Sprintf("%t", b.p) }
+func (b *BoolValue) Get() bool          { return b.p }
+func (b *BoolValue) Set(val bool) error { return b.set(val) }
+func (b *BoolValue) String() string     { return fmt.Sprintf("%t", b.p) }
 
 func Bool(name string, value bool, usage string, tags ...map[string]any) *BoolValue {
 	b := &BoolValue{p: value, name: name}
@@ -162,7 +157,6 @@ func Bool(name string, value bool, usage string, tags ...map[string]any) *BoolVa
 	return b
 }
 
-// === DurationValue ===
 type DurationValue struct {
 	p    time.Duration
 	name string
@@ -187,9 +181,9 @@ func (d *DurationValue) set(val any) error {
 	d.p = dur
 	return nil
 }
-func (d *DurationValue) Get() time.Duration    { return d.p }
-func (d *DurationValue) Set(val time.Duration) { _ = d.set(val) }
-func (d *DurationValue) String() string        { return d.p.String() }
+func (d *DurationValue) Get() time.Duration          { return d.p }
+func (d *DurationValue) Set(val time.Duration) error { return d.set(val) }
+func (d *DurationValue) String() string              { return d.p.String() }
 
 func Duration(name string, value time.Duration, usage string, tags ...map[string]any) *DurationValue {
 	d := &DurationValue{p: value, name: name}
@@ -198,7 +192,6 @@ func Duration(name string, value time.Duration, usage string, tags ...map[string
 	return d
 }
 
-// === TimeValue ===
 type TimeValue struct {
 	p    time.Time
 	name string
@@ -225,9 +218,9 @@ func (t *TimeValue) set(val any) error {
 	t.p = tm
 	return nil
 }
-func (t *TimeValue) Get() time.Time    { return t.p }
-func (t *TimeValue) Set(val time.Time) { _ = t.set(val) }
-func (t *TimeValue) String() string    { return t.p.Format(time.RFC3339) }
+func (t *TimeValue) Get() time.Time          { return t.p }
+func (t *TimeValue) Set(val time.Time) error { return t.set(val) }
+func (t *TimeValue) String() string          { return t.p.Format(time.RFC3339) }
 
 func Time(name string, value time.Time, usage string, tags ...map[string]any) *TimeValue {
 	t := &TimeValue{p: value, name: name}
@@ -236,7 +229,6 @@ func Time(name string, value time.Time, usage string, tags ...map[string]any) *T
 	return t
 }
 
-// === StringSliceValue ===
 type StringSliceValue struct {
 	p    []string
 	name string
@@ -260,9 +252,9 @@ func (s *StringSliceValue) set(val any) error {
 	s.p = strs
 	return nil
 }
-func (s *StringSliceValue) Get() []string    { return s.p }
-func (s *StringSliceValue) Set(val []string) { _ = s.set(val) }
-func (s *StringSliceValue) String() string   { return fmt.Sprintf("%v", s.p) }
+func (s *StringSliceValue) Get() []string          { return s.p }
+func (s *StringSliceValue) Set(val []string) error { return s.set(val) }
+func (s *StringSliceValue) String() string         { return fmt.Sprintf("%v", s.p) }
 
 func StringSlice(name string, value []string, usage string, tags ...map[string]any) *StringSliceValue {
 	cp := append([]string(nil), value...)
@@ -272,7 +264,6 @@ func StringSlice(name string, value []string, usage string, tags ...map[string]a
 	return s
 }
 
-// === StringMapValue ===
 type StringMapValue struct {
 	p    map[string]string
 	name string
@@ -296,9 +287,9 @@ func (m *StringMapValue) set(val any) error {
 	m.p = mp
 	return nil
 }
-func (m *StringMapValue) Get() map[string]string    { return m.p }
-func (m *StringMapValue) Set(val map[string]string) { _ = m.set(val) }
-func (m *StringMapValue) String() string            { return fmt.Sprintf("%v", m.p) }
+func (m *StringMapValue) Get() map[string]string          { return m.p }
+func (m *StringMapValue) Set(val map[string]string) error { return m.set(val) }
+func (m *StringMapValue) String() string                  { return fmt.Sprintf("%v", m.p) }
 
 func StringMap(name string, value map[string]string, usage string, tags ...map[string]any) *StringMapValue {
 	cp := make(map[string]string)
