@@ -109,12 +109,12 @@ func (r Result[T]) Inspect(fn func(T)) Result[T] {
 }
 
 func (r Result[T]) LogCtx(ctx context.Context, events ...func(e *zerolog.Event)) Result[T] {
-	logErr(ctx, r.err, events...)
+	logErr(ctx, 0, r.err, events...)
 	return r
 }
 
 func (r Result[T]) Log(events ...func(e *zerolog.Event)) Result[T] {
-	logErr(nil, r.err, events...)
+	logErr(nil, 0, r.err, events...)
 	return r
 }
 

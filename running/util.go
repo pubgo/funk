@@ -20,7 +20,7 @@ func GetSysInfo() map[string]string {
 		"main_path":     version.MainPath(),
 		"grpc_port":     fmt.Sprintf("%v", GrpcPort),
 		"http_post":     fmt.Sprintf("%v", HttpPort),
-		"debug":         fmt.Sprintf("%v", IsDebug),
+		"debug":         fmt.Sprintf("%v", Debug()),
 		"cur_dir":       Pwd,
 		"local_ip":      LocalIP,
 		"namespace":     Namespace,

@@ -9,6 +9,7 @@ import (
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/env"
+	"github.com/pubgo/funk/monster"
 	"github.com/pubgo/funk/netutil"
 	"github.com/pubgo/funk/pathutil"
 	"github.com/pubgo/funk/strutil"
@@ -21,7 +22,10 @@ var (
 	GrpcPort = 50051
 	Project  = version.Project()
 
-	Env     = "debug"
+	Env = "debug"
+
+	// IsDebug
+	// Deprecated: use Debug
 	IsDebug = true
 
 	// InstanceID service id
@@ -58,7 +62,13 @@ var (
 	)
 
 	Domain string
+
+	enableDebug = monster.Bool("debug", false, "enable debug")
 )
+
+func Debug() bool {
+	return IsDebug || enableDebug.Get()
+}
 
 func init() {
 	env.GetBoolVal(&IsDebug, "enable_debug", "debug", "dev_mode")
