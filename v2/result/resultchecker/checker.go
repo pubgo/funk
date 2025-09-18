@@ -10,6 +10,10 @@ import (
 var errChecks []ErrChecker
 
 func RegisterErrCheck(f ErrChecker) bool {
+	if f == nil {
+		return false
+	}
+
 	var checkFrame = stack.CallerWithFunc(f)
 	for _, errFunc := range errChecks {
 		if reflect.DeepEqual(checkFrame, stack.CallerWithFunc(errFunc)) {

@@ -1,4 +1,3 @@
-// monitor/monitor.go
 package monitor
 
 import "sync"
@@ -24,10 +23,10 @@ type Monitor struct {
 	mu sync.RWMutex
 }
 
-var defaultMonitor = NewMonitor("default")
+var defaultMonitor = NewMonitor()
 
 // NewMonitor creates a new Monitor instance
-func NewMonitor(name string) *Monitor {
+func NewMonitor() *Monitor {
 	return &Monitor{
 		m: make(map[string]*Entry),
 	}
@@ -69,8 +68,6 @@ func (m *Monitor) VisitAll(fn func(*Entry)) {
 		fn(e)
 	}
 }
-
-// Global functions (use defaultMonitor)
 
 func AddFunc(name string, get Getter, set Setter, usage string, tags ...map[string]any) {
 	defaultMonitor.AddFunc(name, get, set, usage, tags...)

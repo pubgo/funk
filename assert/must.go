@@ -32,9 +32,9 @@ func MustF(err error, msg string, args ...interface{}) {
 	must(err, fmt.Sprintf(msg, args...))
 }
 
-func Must1[T any](ret T, err error, args ...any) T {
+func Must1[T any](ret T, err error) T {
 	if err != nil {
-		must(err, args...)
+		must(err)
 	}
 
 	return ret
