@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"runtime/debug"
 
 	"github.com/rs/xid"
 	"github.com/samber/lo"
@@ -116,7 +115,7 @@ func WrapStack(err error) error {
 		return nil
 	}
 
-	debug.PrintStack()
+	stack.PrintStack()
 	return &ErrWrap{
 		err: handleGrpcError(err),
 		pb: &errorpb.ErrWrap{

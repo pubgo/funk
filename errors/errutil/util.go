@@ -2,13 +2,13 @@ package errutil
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"strings"
 
-	jjson "github.com/goccy/go-json"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -27,7 +27,7 @@ func Json(err error) []byte {
 	}
 
 	err = errors.Parse(err)
-	data, err := jjson.Marshal(err)
+	data, err := json.Marshal(err)
 	if err != nil {
 		log.Err(err).Stack().Str("err_stack", pretty.SimplePrint(err)).Msg("failed to marshal error")
 		panic(fmt.Errorf("failed to marshal error, err=%w", err))
@@ -41,7 +41,7 @@ func JsonPretty(err error) []byte {
 	}
 
 	err = errors.Parse(err)
-	data, err := jjson.MarshalIndent(err, " ", "  ")
+	data, err := json.MarshalIndent(err, " ", "  ")
 	if err != nil {
 		log.Err(err).Stack().Str("err_stack", pretty.SimplePrint(err)).Msg("failed to marshal error")
 		panic(fmt.Errorf("failed to marshal error, err=%w", err))

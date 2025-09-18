@@ -14,6 +14,11 @@ import (
 	"github.com/pubgo/funk/v2/result/resultchecker"
 )
 
+func TestMust(t *testing.T) {
+	defer recovery.Testing(t)
+	result.Must(fmt.Errorf("test must"))
+}
+
 type hello struct {
 	Name string `json:"name"`
 }

@@ -8,6 +8,15 @@ import (
 	"github.com/rs/zerolog"
 )
 
+func Run(executors ...func() error) Error {
+	for _, executor := range executors {
+		if err := executor(); err != nil {
+			return ErrOf(errors.WrapCaller(err, 1))
+		}
+	}
+	return Error{}
+}
+
 func All[T any](results ...Result[T]) Result[[]T] {
 	values := make([]T, 0, len(results))
 	for _, result := range results {
@@ -130,10 +139,26 @@ func FlatMapTo[T, U any](r Result[T], fn func(T) Result[U]) Result[U] {
 	return fn(r.getValue())
 }
 
-func Log(err error, events ...func(e *zerolog.Event)) {
-	logErr(nil, err, events...)
+func LogErr(err error, events ...func(e *zerolog.Event)) {
+	logErr(nil, 0, err, events...)
 }
 
-func LogCtx(ctx context.Context, err error, events ...func(e *zerolog.Event)) {
-	logErr(ctx, err, events...)
+func LogErrCtx(ctx context.Context, err error, events ...func(e *zerolog.Event)) {
+	logErr(ctx, 0, err, events...)
+}
+
+func Must(err error, events ...func(e *zerolog.Event)) {
+	if err == nil {
+		return
+	}
+
+	errNilOrPanic(errors.WrapCaller(err, 1), events...)
+}
+
+func Must1[T any](ret T, err error) T {
+	if err != nil {
+		errNilOrPanic(errors.WrapCaller(err, 1))
+	}
+
+	return ret
 }

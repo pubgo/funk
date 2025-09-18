@@ -3,13 +3,13 @@ package stack
 import (
 	"runtime/debug"
 
-	"github.com/pubgo/funk/vars"
+	"github.com/pubgo/funk/monitor"
 )
 
-var EnablePrintStack = vars.Bool("stack.enable_print_stack")
+var EnablePrintStack = monitor.Bool("stack.enable_print_stack", false, "stack enable print stack data")
 
 func PrintStack() {
-	if !EnablePrintStack.Load() {
+	if !EnablePrintStack.Get() {
 		return
 	}
 
