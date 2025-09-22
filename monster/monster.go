@@ -1,4 +1,4 @@
-package monitor
+package monster
 
 import "sync"
 
@@ -17,23 +17,23 @@ type Entry struct {
 	Tags   map[string]any // 自定义元数据标签
 }
 
-// Monitor manages all registered values
-type Monitor struct {
+// Monster manages all registered values
+type Monster struct {
 	m  map[string]*Entry
 	mu sync.RWMutex
 }
 
-var defaultMonitor = NewMonitor()
+var defaultMonster = NewMonster()
 
-// NewMonitor creates a new Monitor instance
-func NewMonitor() *Monitor {
-	return &Monitor{
+// NewMonster creates a new Monster instance
+func NewMonster() *Monster {
+	return &Monster{
 		m: make(map[string]*Entry),
 	}
 }
 
 // AddFunc registers a new value with getter, setter, usage, and optional tags
-func (m *Monitor) AddFunc(name string, get Getter, set Setter, usage string, tags ...map[string]any) {
+func (m *Monster) AddFunc(name string, get Getter, set Setter, usage string, tags ...map[string]any) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -54,14 +54,14 @@ func (m *Monitor) AddFunc(name string, get Getter, set Setter, usage string, tag
 }
 
 // Lookup returns the entry by name
-func (m *Monitor) Lookup(name string) *Entry {
+func (m *Monster) Lookup(name string) *Entry {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return m.m[name]
 }
 
 // VisitAll calls fn for each entry
-func (m *Monitor) VisitAll(fn func(*Entry)) {
+func (m *Monster) VisitAll(fn func(*Entry)) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	for _, e := range m.m {
@@ -70,13 +70,13 @@ func (m *Monitor) VisitAll(fn func(*Entry)) {
 }
 
 func AddFunc(name string, get Getter, set Setter, usage string, tags ...map[string]any) {
-	defaultMonitor.AddFunc(name, get, set, usage, tags...)
+	defaultMonster.AddFunc(name, get, set, usage, tags...)
 }
 
 func Lookup(name string) *Entry {
-	return defaultMonitor.Lookup(name)
+	return defaultMonster.Lookup(name)
 }
 
 func VisitAll(fn func(*Entry)) {
-	defaultMonitor.VisitAll(fn)
+	defaultMonster.VisitAll(fn)
 }

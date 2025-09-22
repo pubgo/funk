@@ -9,7 +9,7 @@ import (
 
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/env"
-	"github.com/pubgo/funk/monitor"
+	"github.com/pubgo/funk/monster"
 	"github.com/pubgo/funk/netutil"
 	"github.com/pubgo/funk/pathutil"
 	"github.com/pubgo/funk/strutil"
@@ -63,7 +63,7 @@ var (
 
 	Domain string
 
-	enableDebug = monitor.Bool("debug", false, "enable debug")
+	enableDebug = monster.Bool("debug", false, "enable debug")
 )
 
 func Debug() bool {

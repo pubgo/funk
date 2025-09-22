@@ -1,6 +1,7 @@
-package monitor
+package monster
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -43,7 +44,7 @@ func (s *StringValue) String() string       { return s.p }
 func String(name, value, usage string, tags ...map[string]any) *StringValue {
 	s := &StringValue{p: value, name: name}
 	tagCopy := mergeTags(tags...)
-	defaultMonitor.AddFunc(name, s.get, s.set, usage, tagCopy)
+	defaultMonster.AddFunc(name, s.get, s.set, usage, tagCopy)
 	return s
 }
 
@@ -78,7 +79,7 @@ func (i *IntValue) String() string      { return fmt.Sprintf("%d", i.p) }
 func Int(name string, value int64, usage string, tags ...map[string]any) *IntValue {
 	i := &IntValue{p: value, name: name}
 	tagCopy := mergeTags(tags...)
-	defaultMonitor.AddFunc(name, i.get, i.set, usage, tagCopy)
+	defaultMonster.AddFunc(name, i.get, i.set, usage, tagCopy)
 	return i
 }
 
@@ -115,7 +116,7 @@ func (f *FloatValue) String() string        { return fmt.Sprintf("%g", f.p) }
 func Float(name string, value float64, usage string, tags ...map[string]any) *FloatValue {
 	f := &FloatValue{p: value, name: name}
 	tagCopy := mergeTags(tags...)
-	defaultMonitor.AddFunc(name, f.get, f.set, usage, tagCopy)
+	defaultMonster.AddFunc(name, f.get, f.set, usage, tagCopy)
 	return f
 }
 
@@ -153,7 +154,7 @@ func (b *BoolValue) String() string     { return fmt.Sprintf("%t", b.p) }
 func Bool(name string, value bool, usage string, tags ...map[string]any) *BoolValue {
 	b := &BoolValue{p: value, name: name}
 	tagCopy := mergeTags(tags...)
-	defaultMonitor.AddFunc(name, b.get, b.set, usage, tagCopy)
+	defaultMonster.AddFunc(name, b.get, b.set, usage, tagCopy)
 	return b
 }
 
@@ -188,7 +189,7 @@ func (d *DurationValue) String() string              { return d.p.String() }
 func Duration(name string, value time.Duration, usage string, tags ...map[string]any) *DurationValue {
 	d := &DurationValue{p: value, name: name}
 	tagCopy := mergeTags(tags...)
-	defaultMonitor.AddFunc(name, d.get, d.set, usage, tagCopy)
+	defaultMonster.AddFunc(name, d.get, d.set, usage, tagCopy)
 	return d
 }
 
@@ -225,79 +226,42 @@ func (t *TimeValue) String() string          { return t.p.Format(time.RFC3339) }
 func Time(name string, value time.Time, usage string, tags ...map[string]any) *TimeValue {
 	t := &TimeValue{p: value, name: name}
 	tagCopy := mergeTags(tags...)
-	defaultMonitor.AddFunc(name, t.get, t.set, usage, tagCopy)
+	defaultMonster.AddFunc(name, t.get, t.set, usage, tagCopy)
 	return t
 }
 
-type StringSliceValue struct {
-	p    []string
+//
+
+type JsonValue[T any] struct {
+	p    T
 	name string
 }
 
-func (s *StringSliceValue) Key() string { return s.name }
-func (s *StringSliceValue) get() any    { return s.p }
-func (s *StringSliceValue) set(val any) error {
-	var strs []string
-	switch v := val.(type) {
-	case []string:
-		strs = v
-	case []interface{}:
-		strs = make([]string, len(v))
-		for i, item := range v {
-			strs[i] = fmt.Sprintf("%v", item)
-		}
-	default:
-		strs = []string{fmt.Sprintf("%v", val)}
+func (t *JsonValue[T]) Key() string { return t.name }
+func (t *JsonValue[T]) get() any {
+	data, err := json.Marshal(t.p)
+	if err != nil {
+		return err
 	}
-	s.p = strs
-	return nil
+	return data
 }
-func (s *StringSliceValue) Get() []string          { return s.p }
-func (s *StringSliceValue) Set(val []string) error { return s.set(val) }
-func (s *StringSliceValue) String() string         { return fmt.Sprintf("%v", s.p) }
 
-func StringSlice(name string, value []string, usage string, tags ...map[string]any) *StringSliceValue {
-	cp := append([]string(nil), value...)
-	s := &StringSliceValue{p: cp, name: name}
+func (t *JsonValue[T]) set(val any) error {
+	return json.Unmarshal(val.([]byte), &t.p)
+}
+func (t *JsonValue[T]) Get() T          { return t.p }
+func (t *JsonValue[T]) Set(val T) error { return t.set(val) }
+func (t *JsonValue[T]) String() string {
+	data, err := json.Marshal(t.p)
+	if err != nil {
+		return err.Error()
+	}
+	return string(data)
+}
+
+func Json[T any](name string, value T, usage string, tags ...map[string]any) *JsonValue[T] {
+	t := &JsonValue[T]{p: value, name: name}
 	tagCopy := mergeTags(tags...)
-	defaultMonitor.AddFunc(name, s.get, s.set, usage, tagCopy)
-	return s
-}
-
-type StringMapValue struct {
-	p    map[string]string
-	name string
-}
-
-func (m *StringMapValue) Key() string { return m.name }
-func (m *StringMapValue) get() any    { return m.p }
-func (m *StringMapValue) set(val any) error {
-	var mp map[string]string
-	switch v := val.(type) {
-	case map[string]string:
-		mp = v
-	case map[string]interface{}:
-		mp = make(map[string]string)
-		for k, vv := range v {
-			mp[k] = fmt.Sprintf("%v", vv)
-		}
-	default:
-		return fmt.Errorf("cannot convert %T to map[string]string", val)
-	}
-	m.p = mp
-	return nil
-}
-func (m *StringMapValue) Get() map[string]string          { return m.p }
-func (m *StringMapValue) Set(val map[string]string) error { return m.set(val) }
-func (m *StringMapValue) String() string                  { return fmt.Sprintf("%v", m.p) }
-
-func StringMap(name string, value map[string]string, usage string, tags ...map[string]any) *StringMapValue {
-	cp := make(map[string]string)
-	for k, v := range value {
-		cp[k] = v
-	}
-	m := &StringMapValue{p: cp, name: name}
-	tagCopy := mergeTags(tags...)
-	defaultMonitor.AddFunc(name, m.get, m.set, usage, tagCopy)
-	return m
+	defaultMonster.AddFunc(name, t.get, t.set, usage, tagCopy)
+	return t
 }
