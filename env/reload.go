@@ -8,6 +8,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func init() {
+	loadEnv()
+}
+
 func Reload() {
 	loadEnv()
 }
@@ -35,21 +39,26 @@ func loadEnv() {
 			continue
 		}
 
-		envKey := trim(kvs[0])
-		_ = os.Unsetenv(envKey)
-
-		if envKey == "" ||
-			strings.HasPrefix(envKey, "_") ||
-			strings.HasPrefix(envKey, "=") ||
-			!hasEnvPrefix(envKey, envPrefix) {
-			logRecord(logger.Warn()).Msgf("unset env, key=%s", envKey)
+		rawEnvKey := trim(kvs[0])
+		if rawEnvKey == "" ||
+			strings.HasPrefix(rawEnvKey, "_") ||
+			strings.HasPrefix(rawEnvKey, "=") ||
+			!hasEnvPrefix(rawEnvKey, envPrefix) {
+			logRecord(logger.Warn()).Msgf("unset env, key=%s", rawEnvKey)
+			_ = os.Unsetenv(rawEnvKey)
 			continue
 		}
 
-		key, ok := Normalize(envKey)
+		key, ok := Normalize(rawEnvKey)
 		if ok {
+			if key == rawEnvKey {
+				continue
+			}
+
 			setOk := os.Setenv(key, kvs[1]) == nil
-			logRecord(logger.Info()).Msgf("reset env, old_key=%s new_key=%s set_ok=%v", envKey, key, setOk)
+			logRecord(logger.Info()).Msgf("reset env, old_key=%s new_key=%s set_ok=%v", rawEnvKey, key, setOk)
+		} else {
+			_ = os.Unsetenv(rawEnvKey)
 		}
 	}
 }
