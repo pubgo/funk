@@ -7,9 +7,9 @@ import (
 	"github.com/samber/lo"
 )
 
-type EnvConfigMap map[string]*EnvConf
+type EnvSpecMap map[string]*EnvSpec
 
-type EnvConf struct {
+type EnvSpec struct {
 	Name        string `yaml:"name"`
 	Description string `yaml:"description"`
 	Default     string `yaml:"default"`
@@ -19,7 +19,7 @@ type EnvConf struct {
 	Tags        string `yaml:"tags"`
 }
 
-func initEnv(envMap EnvConfigMap) {
+func initEnv(envMap EnvSpecMap) {
 	for name, cfg := range envMap {
 		envData := env.Get(name)
 		envData = strings.TrimSpace(lo.Ternary(envData != "", envData, cfg.Default))

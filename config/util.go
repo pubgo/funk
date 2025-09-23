@@ -22,7 +22,7 @@ import (
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/pathutil"
-	"github.com/pubgo/funk/result"
+	"github.com/pubgo/funk/v2/result"
 )
 
 func GetConfigDir() string {
@@ -81,16 +81,16 @@ func SetConfigPath(confPath string) {
 	configPath = confPath
 }
 
-func MergeR[A any, B any | *any](dst *A, src ...B) (ret result.Result[*A]) {
+func MergeR[A any, B any | *any](dst *A, src ...B) (r result.Result[*A]) {
 	if len(src) == 0 {
-		return ret.WithVal(dst)
+		return r.WithValue(dst)
 	}
 
 	err := Merge(dst, src...)
 	if err != nil {
-		return ret.WithErr(err)
+		return r.WithErr(err)
 	}
-	return ret.WithVal(dst)
+	return r.WithValue(dst)
 }
 
 func Merge[A any, B any | *any](dst *A, src ...B) error {
@@ -182,7 +182,7 @@ func unmarshalOneOrList[T any](list *[]T, value *yaml.Node) error {
 
 func listAllPath(dirOrPath string) (ret result.Result[[]string]) {
 	if !pathutil.IsDir(dirOrPath) {
-		return ret.WithVal([]string{dirOrPath})
+		return ret.WithValue([]string{dirOrPath})
 	}
 
 	var paths []string
@@ -202,7 +202,7 @@ func listAllPath(dirOrPath string) (ret result.Result[[]string]) {
 	if err != nil {
 		return ret.WithErr(err)
 	}
-	return ret.WithVal(paths)
+	return ret.WithValue(paths)
 }
 
 func makeList(typ reflect.Type, data []reflect.Value) reflect.Value {
@@ -229,7 +229,7 @@ func getEnvData(cfg *config) map[string]any {
 		"get_path_dir": func() string {
 			return cfg.workDir
 		},
-		"path_dir": func() string {
+		"config_dir": func() string {
 			return cfg.workDir
 		},
 		"embed": func(name string) string {

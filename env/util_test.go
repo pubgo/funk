@@ -13,6 +13,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestResetEnv(t *testing.T) {
+	os.Setenv("abc", "1")
+	t.Log(os.Getenv("abc"))
+	os.Setenv("abc", "2")
+	t.Log(os.Getenv("abc"))
+}
+
 func TestNormalize(t *testing.T) {
 	k, ok := env.Normalize("aA-bS3_AK/c.d")
 	assert.True(t, ok)
