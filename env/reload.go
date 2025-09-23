@@ -1,16 +1,13 @@
 package env
 
 import (
+	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
+	"github.com/pubgo/funk/log/logfields"
 )
-
-func init() {
-	loadEnv()
-}
 
 func Reload() {
 	loadEnv()
@@ -26,16 +23,17 @@ func Init() {
 // a-b=>a_b, a.b=>a_b, a/b=>a_b
 func loadEnv() {
 	envPrefix := getEnvPrefix()
-	logger := log.With().Str("operation", "reload_env").Logger()
-	envPrefixEventFn := func(e *zerolog.Event) {
-		e.Dict("env_prefix", zerolog.Dict().Str("key", PrefixKey).Str("value", envPrefix))
-	}
-	logRecord(logger.Info(), envPrefixEventFn).Msg("reload env")
+
+	logger := slog.With(
+		slog.String(logfields.Module, "env"),
+		slog.String("operation", "reload_env"),
+	)
+	logger.Info("reload env", slog.Any("env_prefix", map[string]any{"key": PrefixKey, "value": envPrefix}))
 
 	for _, env := range os.Environ() {
 		kvs := strings.SplitN(env, "=", 2)
 		if len(kvs) != 2 {
-			logRecord(logger.Error()).Msg("split env error")
+			logger.Error("split env error")
 			continue
 		}
 
@@ -44,7 +42,7 @@ func loadEnv() {
 			strings.HasPrefix(rawEnvKey, "_") ||
 			strings.HasPrefix(rawEnvKey, "=") ||
 			!hasEnvPrefix(rawEnvKey, envPrefix) {
-			logRecord(logger.Warn()).Msgf("unset env, key=%s", rawEnvKey)
+			logger.Warn(fmt.Sprintf("unset env, key=%s", rawEnvKey))
 			_ = os.Unsetenv(rawEnvKey)
 			continue
 		}
@@ -56,7 +54,7 @@ func loadEnv() {
 			}
 
 			setOk := os.Setenv(key, kvs[1]) == nil
-			logRecord(logger.Info()).Msgf("reset env, old_key=%s new_key=%s set_ok=%v", rawEnvKey, key, setOk)
+			logger.Info(fmt.Sprintf("reset env, old_key=%s new_key=%s set_ok=%v", rawEnvKey, key, setOk))
 		} else {
 			_ = os.Unsetenv(rawEnvKey)
 		}

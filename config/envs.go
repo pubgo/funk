@@ -15,8 +15,6 @@ type EnvSpec struct {
 	Default     string `yaml:"default"`
 	Required    bool   `yaml:"required"`
 	Example     string `yaml:"example"`
-	Versions    string `yaml:"versions"`
-	Tags        string `yaml:"tags"`
 }
 
 func initEnv(envMap EnvSpecMap) {
