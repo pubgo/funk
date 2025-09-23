@@ -5,15 +5,7 @@ import (
 	"strings"
 
 	"github.com/ettle/strcase"
-	"github.com/rs/zerolog"
-
-	"github.com/pubgo/funk/log/logfields"
-	"github.com/pubgo/funk/log/logutil"
 )
-
-var logFn = func(e *zerolog.Event) {
-	e.Str(logfields.Module, "env")
-}
 
 const PrefixKey = "ENV_PREFIX"
 
@@ -57,8 +49,4 @@ func Normalize(key string) (string, bool) {
 	}
 
 	return KeyHandler(key), true
-}
-
-func logRecord(evt *zerolog.Event, funcs ...func(e *zerolog.Event)) *zerolog.Event {
-	return logutil.Record(evt, append(funcs, logFn)...)
 }

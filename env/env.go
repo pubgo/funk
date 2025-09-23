@@ -9,10 +9,11 @@ import (
 
 	"github.com/a8m/envsubst"
 	"github.com/joho/godotenv"
+	"github.com/samber/lo"
+
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/pathutil"
 	"github.com/pubgo/funk/v2/result"
-	"github.com/samber/lo"
 )
 
 func Set(key, value string) result.Error {
@@ -120,7 +121,7 @@ func Key(key string) string {
 
 func LoadFiles(files ...string) (r result.Error) {
 	files = lo.Filter(files, func(item string, index int) bool { return pathutil.IsExist(item) })
-	if result.Catch(&r, godotenv.Load(files...)) {
+	if result.Catch(&r, godotenv.Overload(files...)) {
 		return
 	}
 
