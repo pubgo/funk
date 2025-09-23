@@ -1,23 +1,22 @@
 package env_test
 
 import (
+	"log/slog"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/pubgo/funk/env"
+	"github.com/pubgo/funk/log"
 	"github.com/pubgo/funk/pretty"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestResetEnv(t *testing.T) {
-	os.Setenv("abc", "1")
-	t.Log(os.Getenv("abc"))
-	os.Setenv("abc", "2")
-	t.Log(os.Getenv("abc"))
+	assert.NoError(t, os.Setenv("abc", "1"))
+	assert.Equal(t, os.Getenv("abc"), "1")
+	assert.NoError(t, os.Setenv("abc", "2"))
+	assert.Equal(t, os.Getenv("abc"), "2")
 }
 
 func TestNormalize(t *testing.T) {
@@ -27,11 +26,7 @@ func TestNormalize(t *testing.T) {
 }
 
 func TestEnvPrefix(t *testing.T) {
-	log.Logger = log.Hook(zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, message string) {
-		if strings.HasPrefix(message, "unset not match env") {
-			e.Discard()
-		}
-	}))
+	slog.SetDefault(slog.New(log.NewSlog(log.GetLogger(""))))
 
 	env.Reload()
 	pretty.Println("env_keys", lo.Keys(env.Map()))
