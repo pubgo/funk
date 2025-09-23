@@ -8,10 +8,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func init() {
-	loadEnv()
-}
-
 func Reload() {
 	loadEnv()
 }
