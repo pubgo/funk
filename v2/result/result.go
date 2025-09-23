@@ -94,14 +94,14 @@ func (r Result[T]) IsErr() bool { return r.getErr() != nil }
 
 func (r Result[T]) IsOK() bool { return r.getErr() == nil }
 
-func (r Result[T]) InspectErr(fn func(error)) Result[T] {
+func (r Result[T]) InspectErr(fn func(err error)) Result[T] {
 	if r.IsErr() {
 		fn(r.getErr())
 	}
 	return r
 }
 
-func (r Result[T]) Inspect(fn func(T)) Result[T] {
+func (r Result[T]) Inspect(fn func(val T)) Result[T] {
 	if r.IsOK() {
 		fn(r.getValue())
 	}
@@ -118,21 +118,21 @@ func (r Result[T]) Log(events ...func(e *zerolog.Event)) Result[T] {
 	return r
 }
 
-func (r Result[T]) Map(fn func(T) T) Result[T] {
+func (r Result[T]) Map(fn func(val T) T) Result[T] {
 	if r.IsErr() {
 		return r
 	}
 	return OK(fn(r.getValue()))
 }
 
-func (r Result[T]) FlatMap(fn func(T) Result[T]) Result[T] {
+func (r Result[T]) FlatMap(fn func(val T) Result[T]) Result[T] {
 	if r.IsErr() {
 		return r
 	}
 	return fn(r.getValue())
 }
 
-func (r Result[T]) Validate(fn func(T) error) Result[T] {
+func (r Result[T]) Validate(fn func(val T) error) Result[T] {
 	if r.IsErr() {
 		return r
 	}
@@ -144,14 +144,14 @@ func (r Result[T]) Validate(fn func(T) error) Result[T] {
 	return OK(r.getValue())
 }
 
-func (r Result[T]) MapErr(fn func(error) error) Result[T] {
+func (r Result[T]) MapErr(fn func(err error) error) Result[T] {
 	if r.IsOK() {
 		return r
 	}
 	return Fail[T](fn(r.getErr()))
 }
 
-func (r Result[T]) MapErrOr(fn func(error) Result[T]) Result[T] {
+func (r Result[T]) MapErrOr(fn func(err error) Result[T]) Result[T] {
 	if r.IsOK() {
 		return r
 	}

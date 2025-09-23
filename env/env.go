@@ -9,10 +9,11 @@ import (
 
 	"github.com/a8m/envsubst"
 	"github.com/joho/godotenv"
+	"github.com/samber/lo"
+
 	"github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/pathutil"
 	"github.com/pubgo/funk/v2/result"
-	"github.com/samber/lo"
 )
 
 func Set(key, value string) result.Error {
