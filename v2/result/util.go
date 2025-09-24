@@ -245,9 +245,8 @@ func logErr(ctx context.Context, skip int, err error, events ...func(e *zerolog.
 
 	log.Error(ctx).
 		Func(func(e *zerolog.Event) {
-			e.Str(logfields.Module, "resultv2")
+			e.Str(logfields.Module, "result2")
 			e.Str(logfields.ErrorStack, string(debug.Stack()))
-			e.Str(logfields.ErrorDetail, pretty().Sprint(err))
 			e.Str(logfields.ErrorID, errors.GetErrorId(err))
 
 			for _, fn := range events {
