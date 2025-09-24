@@ -14,6 +14,7 @@ import (
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/encoding/prototext"
 
+	"github.com/pubgo/funk"
 	"github.com/pubgo/funk/errors"
 	"github.com/pubgo/funk/generic"
 	"github.com/pubgo/funk/log"
@@ -41,6 +42,27 @@ func try(fn func() error) (gErr error) {
 
 	gErr = fn()
 	return
+}
+
+func tryResult[T any](fn func() Result[T]) (r Result[T]) {
+	if fn == nil {
+		return r.WithErr(errFnIsNil)
+	}
+
+	defer func() {
+		var gErr error
+		if err := errors.Parse(recover()); !funk.IsNil(err) {
+			gErr = errors.WrapStack(err)
+		}
+
+		if gErr != nil {
+			gErr = errors.WrapKV(gErr, "fn_stack", stack.CallerWithFunc(fn))
+		}
+
+		r = r.WithErr(gErr)
+	}()
+
+	return fn()
 }
 
 func try1[T any](fn func() (T, error)) (t T, gErr error) {
@@ -245,9 +267,8 @@ func logErr(ctx context.Context, skip int, err error, events ...func(e *zerolog.
 
 	log.Error(ctx).
 		Func(func(e *zerolog.Event) {
-			e.Str(logfields.Module, "resultv2")
+			e.Str(logfields.Module, "result2")
 			e.Str(logfields.ErrorStack, string(debug.Stack()))
-			e.Str(logfields.ErrorDetail, pretty().Sprint(err))
 			e.Str(logfields.ErrorID, errors.GetErrorId(err))
 
 			for _, fn := range events {

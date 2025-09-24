@@ -20,6 +20,8 @@ type EnvSpec struct {
 
 func initEnv(envMap EnvSpecMap) {
 	for name, cfg := range envMap {
+		cfg.Name = name
+		
 		envData := strings.TrimSpace(strutil.FirstNotEmpty(env.Get(name), cfg.Value, cfg.Default))
 		if cfg.Required && envData == "" {
 			panic("env " + cfg.Name + " is required")
