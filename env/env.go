@@ -9,16 +9,24 @@ import (
 
 	"github.com/a8m/envsubst"
 	"github.com/joho/godotenv"
+	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 
 	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/log/logfields"
 	"github.com/pubgo/funk/pathutil"
 	"github.com/pubgo/funk/v2/result"
 )
 
 func Set(key, value string) result.Error {
-	return result.ErrOf(os.Setenv(KeyHandler(key), value))
+	return result.ErrOf(os.Setenv(keyHandler(key), value)).Log(func(e *zerolog.Event) {
+		e.Str("key", key)
+		e.Str("value", value)
+		e.Str(logfields.Msg, "env_set_error")
+	})
 }
+
+func MustSet(key, value string) { Set(key, value).Must() }
 
 func GetDefault(name string, defaultVal string) string {
 	val := Get(name)
@@ -28,14 +36,14 @@ func GetDefault(name string, defaultVal string) string {
 func Get(names ...string) string {
 	var val string
 	GetVal(&val, names...)
-	return trim(val)
+	return val
 }
 
 func MustGet(names ...string) string {
 	var val string
 	GetVal(&val, names...)
 	assert.If(val == "", "env not found, names=%q", names)
-	return trim(val)
+	return val
 }
 
 func GetVal(val *string, names ...string) {
@@ -43,14 +51,14 @@ func GetVal(val *string, names ...string) {
 		env, ok := Lookup(name)
 		env = trim(env)
 		if ok && env != "" {
-			*val = trim(env)
+			*val = env
 			break
 		}
 	}
 }
 
 func GetBoolVal(val *bool, names ...string) {
-	dt := trim(Get(names...))
+	dt := Get(names...)
 	if dt == "" {
 		return
 	}
@@ -65,7 +73,7 @@ func GetBoolVal(val *bool, names ...string) {
 }
 
 func GetIntVal(val *int, names ...string) {
-	dt := trim(Get(names...))
+	dt := Get(names...)
 	if dt == "" {
 		return
 	}
@@ -80,7 +88,7 @@ func GetIntVal(val *int, names ...string) {
 }
 
 func GetFloatVal(val *float64, names ...string) {
-	dt := trim(Get(names...))
+	dt := Get(names...)
 	if dt == "" {
 		return
 	}
@@ -94,29 +102,37 @@ func GetFloatVal(val *float64, names ...string) {
 	*val = v
 }
 
-func Lookup(key string) (string, bool) {
-	return os.LookupEnv(Key(key))
-}
+func Lookup(key string) (string, bool) { return os.LookupEnv(keyHandler(key)) }
 
 func Delete(key string) result.Error {
-	return result.ErrOf(os.Unsetenv(Key(key)))
+	return result.ErrOf(os.Unsetenv(keyHandler(key))).Log(func(e *zerolog.Event) {
+		e.Str("key", key)
+		e.Str(logfields.Msg, "env_delete_error")
+	})
 }
 
 func Expand(value string) result.Result[string] {
-	return result.Wrap(envsubst.String(value))
+	return result.Wrap(envsubst.String(value)).Log(func(e *zerolog.Event) {
+		e.Str("value", value)
+		e.Str(logfields.Msg, "env_expand_error")
+	})
 }
 
 func Map() map[string]string {
 	data := make(map[string]string, len(os.Environ()))
 	for _, env := range os.Environ() {
 		envs := strings.SplitN(env, "=", 2)
-		data[envs[0]] = envs[1]
+		if len(envs) != 2 {
+			continue
+		}
+
+		data[keyHandler(envs[0])] = envs[1]
 	}
 	return data
 }
 
 func Key(key string) string {
-	return KeyHandler(key)
+	return keyHandler(key)
 }
 
 func LoadFiles(files ...string) (r result.Error) {
@@ -127,4 +143,14 @@ func LoadFiles(files ...string) (r result.Error) {
 
 	loadEnv()
 	return
+}
+
+// Normalize a-b=>a_b, a.b=>a_b, a/b=>a_b
+func Normalize(key string) (string, bool) {
+	key = trim(key)
+	if key == "" || strings.HasPrefix(key, "_") || strings.HasPrefix(key, "=") {
+		return key, false
+	}
+
+	return keyHandler(key), true
 }
