@@ -5,12 +5,15 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/pubgo/funk/env"
 	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/pretty"
-	"github.com/samber/lo"
-	"github.com/stretchr/testify/assert"
 )
+
+func init() {
+	slog.SetDefault(slog.New(log.NewSlog(log.GetLogger(""))))
+}
 
 func TestResetEnv(t *testing.T) {
 	assert.NoError(t, os.Setenv("abc", "1"))
@@ -26,16 +29,11 @@ func TestNormalize(t *testing.T) {
 }
 
 func TestEnvPrefix(t *testing.T) {
-	slog.SetDefault(slog.New(log.NewSlog(log.GetLogger(""))))
-
 	env.Reload()
-	pretty.Println("env_keys", lo.Keys(env.Map()))
 
-	env.Set(env.PrefixKey, "test").Must()
-	env.Set("test_hello", "world").Must()
+	env.MustSet("test_hello", "world")
 	env.Reload()
 
 	envMap := env.Map()
 	assert.Equal(t, envMap["TEST_HELLO"], "world")
-	pretty.Println(os.Environ())
 }
