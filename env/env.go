@@ -121,7 +121,7 @@ func Key(key string) string {
 
 func LoadFiles(files ...string) (r result.Error) {
 	files = lo.Filter(files, func(item string, index int) bool { return pathutil.IsExist(item) })
-	if result.Catch(&r, godotenv.Load(files...)) {
+	if result.Catch(&r, godotenv.Overload(files...)) {
 		return
 	}
 

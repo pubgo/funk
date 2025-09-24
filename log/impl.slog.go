@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/pubgo/funk/log/slogutil"
 	"github.com/rs/zerolog"
 	slogcommon "github.com/samber/slog-common"
 )
@@ -56,7 +57,11 @@ func (s slogImpl) Handle(ctx context.Context, r slog.Record) error {
 	}
 
 	r.Attrs(func(attr slog.Attr) bool {
-		evt.Any(attr.Key, attr.Value.Any())
+		if fn, ok := attr.Value.Any().(slogutil.LogFunc); ok {
+			evt.Func(fn)
+		} else {
+			evt.Any(attr.Key, attr.Value.Any())
+		}
 		return true
 	})
 
