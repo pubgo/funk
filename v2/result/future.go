@@ -3,28 +3,32 @@ package result
 import (
 	"context"
 
-	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/errors"
 	"github.com/samber/lo"
 )
 
 func AsyncErr(fn func() Error) ErrFuture {
-	assert.If(fn == nil, "[fn] is nil")
+	if fn == nil {
+		return ErrFuture{e: errors.WrapCaller(errFnIsNil, 1)}
+	}
 
 	var future = newErrFuture()
 	go func() { defer future.close(); future.setErr(try(func() error { return fn().getErr() })) }()
 	return future
 }
 
-func Async[T any](fn func() Result[T]) *Future[T] {
-	assert.If(fn == nil, "[fn] is nil")
+func Async[T any](fn func() Result[T]) Future[T] {
+	if fn == nil {
+		return Future[T]{v: Fail[T](errors.WrapCaller(errFnIsNil, 1))}
+	}
 
 	var future = newFuture[T]()
 	go func() { defer future.close(); future.setVal(tryResult(fn)) }()
 	return future
 }
 
-func newFuture[T any]() *Future[T] {
-	return &Future[T]{done: make(chan struct{})}
+func newFuture[T any]() Future[T] {
+	return Future[T]{done: make(chan struct{})}
 }
 
 type Future[T any] struct {

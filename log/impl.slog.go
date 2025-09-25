@@ -19,6 +19,20 @@ var logLevels = map[slog.Level]zerolog.Level{
 	slog.LevelWarn:  zerolog.WarnLevel,
 	slog.LevelError: zerolog.ErrorLevel,
 }
+
+func convertSlog(lvl slog.Level) slog.Level {
+	switch {
+	case lvl < slog.LevelInfo:
+		return slog.LevelDebug
+	case lvl < slog.LevelWarn:
+		return slog.LevelInfo
+	case lvl < slog.LevelError:
+		return slog.LevelWarn
+	default:
+		return slog.LevelError
+	}
+}
+
 var _ slog.Handler = (*slogImpl)(nil)
 
 type slogImpl struct {
@@ -26,29 +40,30 @@ type slogImpl struct {
 }
 
 func (s slogImpl) Enabled(ctx context.Context, level slog.Level) bool {
-	return s.l.(*loggerImpl).enabled(ctx, logLevels[level])
+	return s.l.(*loggerImpl).enabled(ctx, logLevels[convertSlog(level)])
 }
 
 func (s slogImpl) Handle(ctx context.Context, r slog.Record) error {
-	if r.Level < 0 {
-		r.Level = slog.LevelDebug
-	}
-
-	logger := s.l.WithLevel(logLevels[r.Level])
+	level := convertSlog(r.Level)
+	logger := s.l.WithLevel(logLevels[level])
 
 	var evt *Event
-	switch r.Level {
+	switch level {
 	case slog.LevelDebug:
 		evt = logger.Debug(ctx)
 	case slog.LevelInfo:
 		evt = logger.Info(ctx)
 	case slog.LevelWarn:
 		evt = logger.Warn(ctx)
-	case slog.LevelError:
+	default:
 		evt = logger.Error(ctx)
 	}
 
 	if evt == nil {
+		return nil
+	}
+
+	if isLogDisabled(ctx) {
 		return nil
 	}
 
