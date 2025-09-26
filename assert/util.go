@@ -1,6 +1,7 @@
 package assert
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log/slog"
 	"reflect"
@@ -8,8 +9,11 @@ import (
 	"sync"
 
 	"github.com/k0kubun/pp/v3"
-	"github.com/pubgo/funk/log/logfields"
 	"github.com/samber/lo"
+	"google.golang.org/protobuf/encoding/prototext"
+	"google.golang.org/protobuf/proto"
+
+	"github.com/pubgo/funk/log/logfields"
 )
 
 func messageFromMsgAndArgs(msgAndArgs ...any) string {
@@ -34,7 +38,7 @@ func logErr(err error, message string, attrs ...slog.Attr) {
 	attrs = append(attrs,
 		slog.String(logfields.Module, "assert"),
 		slog.String(logfields.Error, err.Error()),
-		slog.String(logfields.ErrorStack, string(debug.Stack())),
+		slog.String(logfields.ErrorStack, base64.StdEncoding.EncodeToString(debug.Stack())),
 		slog.String(logfields.ErrorDetail, pretty().Sprint(err)),
 	)
 	slog.Error(message, lo.ToAnySlice(attrs)...)
@@ -45,14 +49,29 @@ func must(err error, messageArgs ...any) {
 		return
 	}
 
+	var attrs = []slog.Attr{slog.Bool("panic", true)}
+	if v, ok := lo.ErrorsAs[interface {
+		ID() string
+		Error() string
+	}](err); ok && v != nil {
+		attrs = append(attrs, slog.String(logfields.ErrorID, v.ID()))
+	}
+
 	message := messageFromMsgAndArgs(messageArgs...)
 	if message == "" {
-		message = err.Error()
+		if v, ok := lo.ErrorsAs[interface {
+			Proto() proto.Message
+			Error() string
+		}](err); ok && v != nil {
+			message = fmt.Sprintf("%s\n%s", err.Error(), prototext.Format(v.Proto()))
+		} else {
+			message = err.Error()
+		}
 	} else {
 		message = fmt.Sprintf("msg:%v err:%s", message, err.Error())
 	}
 
-	logErr(err, message, slog.Bool("panic", true))
+	logErr(err, message, attrs...)
 	panic(err)
 }
 
