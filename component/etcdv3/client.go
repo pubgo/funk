@@ -12,7 +12,7 @@ import (
 )
 
 func New(conf *Config) *Client {
-	conf = config.MergeR(DefaultCfg(), *conf).Unwrap()
+	conf = config.MergeR(DefaultCfg(), *conf).Must()
 	cfg := merge.Struct(new(client3.Config), conf).Unwrap()
 	cfg.DialOptions = append(
 		cfg.DialOptions,

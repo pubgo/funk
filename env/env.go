@@ -28,25 +28,26 @@ func Set(key, value string) result.Error {
 
 func MustSet(key, value string) { Set(key, value).Must() }
 
-func GetDefault(name string, defaultVal string) string {
-	val := Get(name)
-	return lo.If(val != "", val).Else(defaultVal)
-}
-
 func Get(names ...string) string {
 	var val string
-	GetVal(&val, names...)
+	getVal(&val, names...)
 	return val
 }
 
 func MustGet(names ...string) string {
-	var val string
-	GetVal(&val, names...)
+	val := Get(names...)
 	assert.If(val == "", "env not found, names=%q", names)
 	return val
 }
 
-func GetVal(val *string, names ...string) {
+func GetOr(name string, defaultVal string) string {
+	val := Get(name)
+	return lo.If(val != "", val).Else(defaultVal)
+}
+
+func GetWith(val *string, names ...string) { getVal(val, names...) }
+
+func getVal(val *string, names ...string) {
 	for _, name := range names {
 		env, ok := Lookup(name)
 		env = trim(env)
@@ -57,49 +58,52 @@ func GetVal(val *string, names ...string) {
 	}
 }
 
-func GetBoolVal(val *bool, names ...string) {
-	dt := Get(names...)
-	if dt == "" {
-		return
+func GetBool(names ...string) bool {
+	var val string
+	getVal(&val, names...)
+	if val == "" {
+		return false
 	}
 
-	v, err := strconv.ParseBool(dt)
+	v, err := strconv.ParseBool(val)
 	if err != nil {
-		slog.Error(fmt.Sprintf("env: failed to parse string to bool, keys=%q value=%s err=%v", names, dt, err))
-		return
+		slog.Error(fmt.Sprintf("env: failed to parse string to bool, keys=%q value=%s err=%v", names, val, err))
+		return false
 	}
 
-	*val = v
+	return v
 }
 
-func GetIntVal(val *int, names ...string) {
-	dt := Get(names...)
-	if dt == "" {
-		return
+func GetInt(names ...string) int {
+	var val string
+	getVal(&val, names...)
+	if val == "" {
+		return -1
 	}
 
-	v, err := strconv.Atoi(dt)
+	v, err := strconv.Atoi(val)
 	if err != nil {
-		slog.Error(fmt.Sprintf("env: failed to parse string to int, keys=%q value=%s err=%v", names, dt, err))
-		return
+		slog.Error(fmt.Sprintf("env: failed to parse string to int, keys=%q value=%s err=%v", names, val, err))
+		return -1
 	}
 
-	*val = v
+	return v
 }
 
-func GetFloatVal(val *float64, names ...string) {
-	dt := Get(names...)
-	if dt == "" {
-		return
+func GetFloat(names ...string) float64 {
+	var val string
+	getVal(&val, names...)
+	if val == "" {
+		return -1
 	}
 
-	v, err := strconv.ParseFloat(dt, 64)
+	v, err := strconv.ParseFloat(val, 64)
 	if err != nil {
-		slog.Error(fmt.Sprintf("env: failed to parse string to float, keys=%q value=%s err=%v", names, dt, err))
-		return
+		slog.Error(fmt.Sprintf("env: failed to parse string to float, keys=%q value=%s err=%v", names, val, err))
+		return -1
 	}
 
-	*val = v
+	return v
 }
 
 func Lookup(key string) (string, bool) { return os.LookupEnv(keyHandler(key)) }
@@ -110,6 +114,8 @@ func Delete(key string) result.Error {
 		e.Str(logfields.Msg, "env_delete_error")
 	})
 }
+
+func MustDelete(key string) { Delete(key).Must() }
 
 func Expand(value string) result.Result[string] {
 	return result.Wrap(envsubst.String(value)).Log(func(e *zerolog.Event) {

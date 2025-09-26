@@ -24,10 +24,6 @@ var (
 
 	Env = "debug"
 
-	// IsDebug
-	// Deprecated: use Debug
-	IsDebug = true
-
 	// InstanceID service id
 	InstanceID = xid.New().String()
 
@@ -66,13 +62,16 @@ var (
 	enableDebug = monster.Bool("debug", false, "enable debug")
 )
 
-func Debug() bool {
-	return IsDebug || enableDebug.Get()
-}
+func Debug() bool { return enableDebug.Get() }
 
 func init() {
-	env.GetBoolVal(&IsDebug, "enable_debug", "debug", "dev_mode")
-	env.GetVal(&Env, "env", "run_mode", "run_env")
+	if env.GetBool("enable_debug", "debug", "dev_mode") {
+		assert.Exit(enableDebug.Set(true))
+	}
+
+	if e := env.Get("env", "run_mode", "run_env"); e != "" {
+		Env = e
+	}
 
 	id, err := machineid.ID()
 	if err == nil {

@@ -58,7 +58,7 @@ type GoMigrate struct {
 
 // New returns a new GoMigrate.
 func New(db *entsql.Driver, cfg *Config, migrations []*Migration, tables []*schema.Table) *GoMigrate {
-	cfg = config.MergeR(generic.Ptr(DefaultConfig), cfg).Unwrap()
+	cfg = config.MergeR(generic.Ptr(DefaultConfig), cfg).Must()
 
 	orm := assert.Must1(gorm.Open(dp.New(dp.Config{
 		DriverName:           db.Dialect(),

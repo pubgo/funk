@@ -23,7 +23,7 @@ func NewClients(conf map[string]*Config, logs log.Logger) map[string]*Client {
 
 func New(conf *Config, logs log.Logger) *Client {
 	logs = logs.WithName(Name)
-	conf = config.MergeR(generic.Ptr(DefaultCfg()), conf).Unwrap()
+	conf = config.MergeR(generic.Ptr(DefaultCfg()), conf).Must()
 
 	ormCfg := merge.Copy(new(gorm.Config), conf).Unwrap()
 	ormCfg.NowFunc = func() time.Time { return time.Now().UTC() }
