@@ -2,14 +2,13 @@ package result
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"log/slog"
 	"reflect"
 	"runtime/debug"
 	"strings"
-	"sync"
 
-	"github.com/k0kubun/pp/v3"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/encoding/prototext"
@@ -268,23 +267,24 @@ func logErr(ctx context.Context, skip int, err error, events ...func(e *zerolog.
 	log.Error(ctx).
 		Func(func(e *zerolog.Event) {
 			e.Str(logfields.Module, "result2")
-			e.Str(logfields.ErrorStack, string(debug.Stack()))
+			e.Str(logfields.ErrorStack, base64.StdEncoding.EncodeToString(debug.Stack()))
 			e.Str(logfields.ErrorID, errors.GetErrorId(err))
-
+			e.Str(zerolog.ErrorFieldName, err.Error())
+			e.CallerSkipFrame(2 + skip)
+		}).
+		Func(func(e *zerolog.Event) {
 			for _, fn := range events {
 				fn(e)
 			}
 		}).
-		Str(zerolog.ErrorFieldName, err.Error()).
-		CallerSkipFrame(2+skip).
 		Msgf("%s\n%s", err.Error(), prototext.Format(errors.ParseErrToPb(err)))
 }
 
-var pretty = sync.OnceValue(func() *pp.PrettyPrinter {
-	printer := pp.New()
-	printer.SetColoringEnabled(false)
-	printer.SetExportedOnly(false)
-	printer.SetOmitEmpty(true)
-	printer.SetMaxDepth(5)
-	return printer
-})
+//var pretty = sync.OnceValue(func() *pp.PrettyPrinter {
+//	printer := pp.New()
+//	printer.SetColoringEnabled(false)
+//	printer.SetExportedOnly(false)
+//	printer.SetOmitEmpty(true)
+//	printer.SetMaxDepth(5)
+//	return printer
+//})
