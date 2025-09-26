@@ -39,7 +39,7 @@ func logErr(err error, message string, attrs ...slog.Attr) {
 		slog.String(logfields.Module, "assert"),
 		slog.String(logfields.Error, err.Error()),
 		slog.String(logfields.ErrorStack, base64.StdEncoding.EncodeToString(debug.Stack())),
-		slog.String(logfields.ErrorDetail, pretty().Sprint(err)),
+		slog.String(logfields.ErrorDetail, fmt.Sprintf("%v", err)),
 	)
 	slog.Error(message, lo.ToAnySlice(attrs)...)
 }
