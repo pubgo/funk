@@ -43,6 +43,8 @@ func (f *Frame) IsRuntime() bool {
 
 func GetGORoot() string { return goRoot }
 
+// Caller returns the Frame of the caller.
+// skip: skip frames, 0 means the current call, 1 means the parent call
 func Caller(skip int) *Frame {
 	var pcs [1]uintptr
 	n := runtime.Callers(skip+2, pcs[:])
@@ -53,6 +55,7 @@ func Caller(skip int) *Frame {
 	return stack(pcs[0] - 1)
 }
 
+// Callers returns the Frame of the callers.
 func Callers(depth int, skips ...int) []*Frame {
 	skip := 0
 	if len(skips) > 0 {
@@ -80,6 +83,8 @@ func CallerWithType(typ reflect.Type) *Frame {
 	return &Frame{Pkg: typ.PkgPath(), Name: typ.Name(), File: typ.PkgPath()}
 }
 
+// CallerWithFunc returns the Frame of the caller.
+// fn: function
 func CallerWithFunc(fn interface{}) *Frame {
 	if fn == nil {
 		panic("[fn] param is nil")

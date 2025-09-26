@@ -10,8 +10,11 @@ import (
 type EnvSpecMap map[string]*EnvSpec
 
 type EnvSpec struct {
-	Name        string `yaml:"name"`
+	Name string `yaml:"name"`
+
+	// Description Deprecated: use Desc instead.
 	Description string `yaml:"description"`
+	Desc        string `yaml:"desc"`
 	Default     string `yaml:"default"`
 	Value       string `yaml:"value"`
 	Required    bool   `yaml:"required"`
@@ -21,7 +24,7 @@ type EnvSpec struct {
 func initEnv(envMap EnvSpecMap) {
 	for name, cfg := range envMap {
 		cfg.Name = name
-		
+
 		envData := strings.TrimSpace(strutil.FirstNotEmpty(env.Get(name), cfg.Value, cfg.Default))
 		if cfg.Required && envData == "" {
 			panic("env " + cfg.Name + " is required")

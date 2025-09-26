@@ -69,7 +69,7 @@ func (m *Monster) VisitAll(fn func(*Entry)) {
 	}
 }
 
-func AddFunc(name string, get Getter, set Setter, usage string, tags ...map[string]any) {
+func Register(name string, get Getter, set Setter, usage string, tags ...map[string]any) {
 	defaultMonster.AddFunc(name, get, set, usage, tags...)
 }
 
