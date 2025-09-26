@@ -1,7 +1,6 @@
 package assert
 
 import (
-	"encoding/base64"
 	"fmt"
 	"log/slog"
 	"reflect"
@@ -14,6 +13,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/pubgo/funk/log/logfields"
+	"github.com/pubgo/funk/stack"
 )
 
 func messageFromMsgAndArgs(msgAndArgs ...any) string {
@@ -30,15 +30,20 @@ func messageFromMsgAndArgs(msgAndArgs ...any) string {
 	return pretty().Sprint(msgAndArgs...)
 }
 
+var assetFile = stack.Caller(0)
+
 func logErr(err error, message string, attrs ...slog.Attr) {
 	if err == nil {
 		return
 	}
 
+	traces := lo.Filter(stack.Trace(), func(item *stack.Frame, index int) bool {
+		return !item.IsRuntime() && item.Pkg != assetFile.Pkg
+	})
 	attrs = append(attrs,
 		slog.String(logfields.Module, "assert"),
 		slog.String(logfields.Error, err.Error()),
-		slog.String(logfields.ErrorStack, base64.StdEncoding.EncodeToString(debug.Stack())),
+		slog.Any(logfields.ErrorStack, lo.Map(traces, func(item *stack.Frame, index int) string { return item.String() })),
 		slog.String(logfields.ErrorDetail, fmt.Sprintf("%v", err)),
 	)
 	slog.Error(message, lo.ToAnySlice(attrs)...)

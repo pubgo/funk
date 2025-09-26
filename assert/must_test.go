@@ -2,12 +2,19 @@ package assert_test
 
 import (
 	"fmt"
+	"log/slog"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	assert1 "github.com/pubgo/funk/assert"
 	"github.com/pubgo/funk/errors"
-	"github.com/stretchr/testify/assert"
+	"github.com/pubgo/funk/log"
 )
+
+func init() {
+	slog.SetDefault(slog.New(log.NewSlog(log.GetLogger("fastcommit"))))
+}
 
 type errBase struct {
 	msg string
