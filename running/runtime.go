@@ -7,13 +7,13 @@ import (
 	"github.com/projectdiscovery/machineid"
 	"github.com/rs/xid"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/env"
-	"github.com/pubgo/funk/monster"
-	"github.com/pubgo/funk/netutil"
-	"github.com/pubgo/funk/pathutil"
-	"github.com/pubgo/funk/strutil"
-	"github.com/pubgo/funk/version"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/env"
+	"github.com/pubgo/funk/v2/monster"
+	"github.com/pubgo/funk/v2/netutil"
+	"github.com/pubgo/funk/v2/pathutil"
+	"github.com/pubgo/funk/v2/strutil"
+	"github.com/pubgo/funk/v2/version"
 )
 
 // default global variables

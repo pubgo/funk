@@ -3,11 +3,11 @@ package gormclient
 import (
 	"time"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/config"
-	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/merge"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/config"
+	"github.com/pubgo/funk/v2/generic"
+	"github.com/pubgo/funk/v2/log"
+	"github.com/pubgo/funk/v2/merge"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
@@ -25,7 +25,7 @@ func New(conf *Config, logs log.Logger) *Client {
 	logs = logs.WithName(Name)
 	conf = config.MergeR(generic.Ptr(DefaultCfg()), conf).Must()
 
-	ormCfg := merge.Copy(new(gorm.Config), conf).Unwrap()
+	ormCfg := merge.Copy(new(gorm.Config), conf).Must()
 	ormCfg.NowFunc = func() time.Time { return time.Now().UTC() }
 	ormCfg.NamingStrategy = schema.NamingStrategy{TablePrefix: conf.TablePrefix}
 

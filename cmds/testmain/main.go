@@ -7,11 +7,11 @@ import (
 	"sort"
 
 	"github.com/moby/term"
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/cliutils"
-	"github.com/pubgo/funk/cmds/versioncmd"
-	"github.com/pubgo/funk/ctxutil"
-	"github.com/pubgo/funk/version"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/cliutils"
+	"github.com/pubgo/funk/v2/cmds/versioncmd"
+	"github.com/pubgo/funk/v2/ctxutil"
+	"github.com/pubgo/funk/v2/version"
 	"github.com/urfave/cli/v3"
 )
 

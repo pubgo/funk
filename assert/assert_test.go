@@ -3,8 +3,8 @@ package assert_test
 import (
 	"testing"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/recovery"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/recovery"
 )
 
 func TestCheckNil(t *testing.T) {

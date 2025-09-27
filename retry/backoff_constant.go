@@ -3,7 +3,7 @@ package retry
 import (
 	"time"
 
-	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/v2/assert"
 )
 
 const DefaultConstant = time.Second

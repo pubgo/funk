@@ -1,7 +1,7 @@
 package protoutils
 
 import (
-	"github.com/pubgo/funk/log"
+	"github.com/pubgo/funk/v2/log"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"

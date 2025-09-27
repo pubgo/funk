@@ -1,7 +1,7 @@
 package errors
 
 import (
-	"github.com/pubgo/funk/stack"
+	"github.com/pubgo/funk/v2/stack"
 )
 
 var stackFilters []func(frame *stack.Frame) bool

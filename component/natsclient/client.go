@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/nats-io/nats.go"
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/component/lifecycle"
-	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/running"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/component/lifecycle"
+	"github.com/pubgo/funk/v2/log"
+	"github.com/pubgo/funk/v2/running"
 )
 
 type Param struct {

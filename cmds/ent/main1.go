@@ -13,7 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/schema"
 	"entgo.io/ent/entc"
 	"entgo.io/ent/entc/gen"
-	"github.com/pubgo/funk/recovery"
+	"github.com/pubgo/funk/v2/recovery"
 	// https://github.com/ent/ent/blob/master/cmd/internal/base/base.go
 )
 

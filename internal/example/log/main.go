@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/pubgo/funk/log"
+	"github.com/pubgo/funk/v2/log"
 )
 
 var dd = log.GetLogger("dd")

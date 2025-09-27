@@ -13,10 +13,11 @@ import (
 	"io"
 	"strings"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/result"
 	"golang.org/x/crypto/bcrypt"
+
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/result"
 )
 
 // SecureKey generates a random 256-bit key for Encrypt() and
@@ -67,7 +68,7 @@ func AesCBCEncrypt(orig, key string) result.Result[string] {
 	cryted := make([]byte, len(origData))
 	// 加密
 	blockMode.CryptBlocks(cryted, origData)
-	return val.WithVal(base64.StdEncoding.EncodeToString(cryted))
+	return val.WithValue(base64.StdEncoding.EncodeToString(cryted))
 }
 
 func AesCBCDecrypt(cryted, key string) result.Result[string] {
@@ -76,7 +77,7 @@ func AesCBCDecrypt(cryted, key string) result.Result[string] {
 	// 转成字节数组
 	crytedByte, err := base64.StdEncoding.DecodeString(cryted)
 	if err != nil {
-		return result.Err[string](err)
+		return result.Fail[string](err)
 	}
 
 	k := []byte(key)
@@ -96,7 +97,7 @@ func AesCBCDecrypt(cryted, key string) result.Result[string] {
 	blockMode.CryptBlocks(orig, crytedByte)
 	// 去补全码
 	orig = PKCS7UnPadding(orig)
-	return val.WithVal(string(orig))
+	return val.WithValue(string(orig))
 }
 
 // PKCS7Padding 补码

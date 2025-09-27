@@ -4,7 +4,7 @@ import (
 	"io/fs"
 	"time"
 
-	"github.com/pubgo/funk/merge"
+	"github.com/pubgo/funk/v2/merge"
 	bolt "go.etcd.io/bbolt"
 )
 
@@ -27,7 +27,7 @@ type Config struct {
 func (t *Config) getOpts() *bolt.Options {
 	options := bolt.DefaultOptions
 	options.Timeout = time.Second * 2
-	return merge.Struct(options, t).Unwrap()
+	return merge.Struct(options, t).Must()
 }
 
 func DefaultConfig() *Config {

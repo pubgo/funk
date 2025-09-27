@@ -3,7 +3,7 @@ package gormclient
 import (
 	"time"
 
-	"github.com/pubgo/funk/config"
+	"github.com/pubgo/funk/v2/config"
 	"gorm.io/gorm/logger"
 )
 

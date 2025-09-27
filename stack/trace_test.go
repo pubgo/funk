@@ -3,8 +3,8 @@ package stack_test
 import (
 	"testing"
 
-	"github.com/pubgo/funk/pretty"
-	"github.com/pubgo/funk/stack"
+	"github.com/pubgo/funk/v2/pretty"
+	"github.com/pubgo/funk/v2/stack"
 	"github.com/samber/lo"
 )
 

@@ -3,8 +3,8 @@ package config
 import (
 	"strings"
 
-	"github.com/pubgo/funk/env"
-	"github.com/pubgo/funk/strutil"
+	"github.com/pubgo/funk/v2/env"
+	"github.com/pubgo/funk/v2/strutil"
 )
 
 type EnvSpecMap map[string]*EnvSpec

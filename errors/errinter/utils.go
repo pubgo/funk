@@ -16,9 +16,9 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	"github.com/pubgo/funk"
-	"github.com/pubgo/funk/log/logutil"
-	"github.com/pubgo/funk/proto/errorpb"
+	"github.com/pubgo/funk/v2"
+	"github.com/pubgo/funk/v2/log/logutil"
+	"github.com/pubgo/funk/v2/proto/errorpb"
 )
 
 func ParseError(val interface{}) error {

@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/pubgo/funk/recovery"
+	"github.com/pubgo/funk/v2/recovery"
 )
 
 // 应用的集成开发, 在最后扑捉panic

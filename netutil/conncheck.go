@@ -8,7 +8,7 @@ import (
 	"net"
 	"syscall"
 
-	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/v2/errors"
 )
 
 var errUnexpectedRead = errors.New("unexpected read from socket")

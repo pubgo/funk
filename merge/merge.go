@@ -4,8 +4,8 @@ import (
 	"github.com/jinzhu/copier"
 	"github.com/mitchellh/mapstructure"
 
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/result"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/result"
 )
 
 type Option func(opts *copier.Option)
@@ -29,7 +29,7 @@ func Copy[A, B any](dst *A, src *B, opts ...Option) result.Result[*A] {
 
 	err := copier.CopyWithOption(dst, src, opt)
 	if err != nil {
-		return result.Err[*A](errH(err))
+		return result.Fail[*A](errH(err))
 	}
 
 	return result.OK(dst)

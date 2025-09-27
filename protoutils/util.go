@@ -9,8 +9,8 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/errors"
 	options "google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/descriptorpb"

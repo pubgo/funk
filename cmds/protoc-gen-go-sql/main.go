@@ -4,7 +4,7 @@ import (
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/types/pluginpb"
 
-	"github.com/pubgo/funk/cmds/protoc-gen-go-sql/internal"
+	"github.com/pubgo/funk/v2/cmds/protoc-gen-go-sql/internal"
 )
 
 func main() {

@@ -1,7 +1,7 @@
 package async
 
 import (
-	"github.com/pubgo/funk/result"
+	"github.com/pubgo/funk/v2/result"
 )
 
 func newFuture[T any]() *Future[T] {

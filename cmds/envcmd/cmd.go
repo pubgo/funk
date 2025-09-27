@@ -6,10 +6,10 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	"github.com/pubgo/funk/config"
-	"github.com/pubgo/funk/env"
-	"github.com/pubgo/funk/pretty"
-	"github.com/pubgo/funk/recovery"
+	"github.com/pubgo/funk/v2/config"
+	"github.com/pubgo/funk/v2/env"
+	"github.com/pubgo/funk/v2/pretty"
+	"github.com/pubgo/funk/v2/recovery"
 )
 
 func New() *cli.Command {

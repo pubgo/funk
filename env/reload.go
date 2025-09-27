@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/log/logfields"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/log/logfields"
 )
 
 func Reload() {

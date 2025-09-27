@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"runtime/debug"
 
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/internal/anyhow/aherrcheck"
-	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/stack"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/generic"
+	"github.com/pubgo/funk/v2/internal/anyhow/aherrcheck"
+	"github.com/pubgo/funk/v2/log"
+	"github.com/pubgo/funk/v2/stack"
 	"github.com/samber/lo"
 )
 

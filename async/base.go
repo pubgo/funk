@@ -1,6 +1,6 @@
 package async
 
-import "github.com/pubgo/funk/log"
+import "github.com/pubgo/funk/v2/log"
 
 const Name = "async"
 

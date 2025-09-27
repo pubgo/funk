@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/running"
-	"github.com/pubgo/funk/typex"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/running"
+	"github.com/pubgo/funk/v2/typex"
 	"google.golang.org/protobuf/proto"
 	yaml "gopkg.in/yaml.v3"
 )

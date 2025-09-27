@@ -3,7 +3,7 @@ package log_test
 import (
 	"testing"
 
-	"github.com/pubgo/funk/log"
+	"github.com/pubgo/funk/v2/log"
 )
 
 func TestStdLog(t *testing.T) {

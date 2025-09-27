@@ -7,8 +7,8 @@
 package testcodepb
 
 import (
-	errors "github.com/pubgo/funk/errors"
-	errorpb "github.com/pubgo/funk/proto/errorpb"
+	errors "github.com/pubgo/funk/v2/errors"
+	errorpb "github.com/pubgo/funk/v2/proto/errorpb"
 	grpc "google.golang.org/grpc"
 )
 

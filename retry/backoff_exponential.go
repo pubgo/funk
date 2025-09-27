@@ -4,7 +4,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/v2/assert"
 )
 
 // NewExponential creates a new exponential backoff using the starting value of

@@ -3,10 +3,10 @@ package async
 import (
 	"sync"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/recovery"
-	"github.com/pubgo/funk/stack"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/recovery"
+	"github.com/pubgo/funk/v2/stack"
 )
 
 func Promise[T any](fn func(resolve func(T), reject func(err error))) *Future[T] {

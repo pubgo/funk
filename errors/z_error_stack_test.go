@@ -3,9 +3,9 @@ package errors_test
 import (
 	"testing"
 
-	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/v2/errors"
 
-	"github.com/pubgo/funk/stack"
+	"github.com/pubgo/funk/v2/stack"
 )
 
 func TestStack(t *testing.T) {

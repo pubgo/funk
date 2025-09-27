@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	"github.com/pubgo/funk/env"
-	"github.com/pubgo/funk/pretty"
+	"github.com/pubgo/funk/v2/env"
+	"github.com/pubgo/funk/v2/pretty"
 )
 
 func main() {
