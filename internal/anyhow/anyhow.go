@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/v2/errors"
 )
 
 func All[T any](results ...Result[T]) Result[[]T] {

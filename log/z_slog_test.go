@@ -4,8 +4,8 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/log/slogutil"
+	"github.com/pubgo/funk/v2/log"
+	"github.com/pubgo/funk/v2/log/slogutil"
 	"github.com/rs/zerolog"
 )
 

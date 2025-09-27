@@ -10,9 +10,9 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"github.com/pubgo/funk/errors/errinter"
-	"github.com/pubgo/funk/proto/errorpb"
-	"github.com/pubgo/funk/stack"
+	"github.com/pubgo/funk/v2/errors/errinter"
+	"github.com/pubgo/funk/v2/proto/errorpb"
+	"github.com/pubgo/funk/v2/stack"
 )
 
 func IfErr(err error, fn func(err error) error) error {

@@ -3,7 +3,7 @@ package errinter
 import (
 	"strings"
 
-	"github.com/pubgo/funk/internal/color"
+	"github.com/pubgo/funk/v2/internal/color"
 )
 
 var width = 11

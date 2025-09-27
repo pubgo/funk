@@ -3,7 +3,7 @@ package utils
 import (
 	"io"
 
-	"github.com/pubgo/funk/log"
+	"github.com/pubgo/funk/v2/log"
 )
 
 func SafeClose(closer io.Closer) {

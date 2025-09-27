@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/pubgo/funk/ctxutil"
+	"github.com/pubgo/funk/v2/ctxutil"
 	"github.com/stretchr/testify/assert"
 )
 

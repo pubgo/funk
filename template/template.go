@@ -8,8 +8,8 @@ import (
 	"github.com/open2b/scriggo"
 	"github.com/open2b/scriggo/native"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/log"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/log"
 )
 
 type Template struct {

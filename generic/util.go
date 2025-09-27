@@ -1,7 +1,7 @@
 package generic
 
 import (
-	"github.com/pubgo/funk"
+	"github.com/pubgo/funk/v2"
 	"golang.org/x/exp/constraints"
 )
 

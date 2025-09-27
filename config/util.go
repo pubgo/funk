@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"github.com/pubgo/funk/v2/result"
 	"io"
 	"io/fs"
 	"os"
@@ -17,12 +18,11 @@ import (
 	"github.com/valyala/fasttemplate"
 	"gopkg.in/yaml.v3"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/env"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/pathutil"
-	"github.com/pubgo/funk/v2/result"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/env"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/log"
+	"github.com/pubgo/funk/v2/pathutil"
 )
 
 func GetConfigDir() string {

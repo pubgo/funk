@@ -4,9 +4,9 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/recovery"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/generic"
+	"github.com/pubgo/funk/v2/recovery"
 )
 
 var NotFound = new(struct{})

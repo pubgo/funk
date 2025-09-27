@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/errors/errutil"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/errors/errutil"
 )
 
 func TestJson(t *testing.T) {

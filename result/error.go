@@ -6,9 +6,9 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/errors/errutil"
-	"github.com/pubgo/funk/log/logfields"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/errors/errutil"
+	"github.com/pubgo/funk/v2/log/logfields"
 )
 
 var _ Catchable = new(Error)

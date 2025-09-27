@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/recovery"
-	"github.com/pubgo/funk/result"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/log"
+	"github.com/pubgo/funk/v2/recovery"
+	"github.com/pubgo/funk/v2/result"
 )
 
 func testExit1() {
@@ -40,9 +40,9 @@ func TestResult(t *testing.T) {
 	}
 
 	handler := func() (r result.Result[A]) {
-		defer recovery.Err(&r.E)
+		defer result.Recovery(&r)
 
-		r = r.WithVal(A{A: "hello"})
+		r = r.WithValue(A{A: "hello"})
 		panic("ok")
 	}
 

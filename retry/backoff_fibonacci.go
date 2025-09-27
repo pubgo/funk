@@ -5,7 +5,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/v2/assert"
 )
 
 // NewFibonacci creates a new Fibonacci backoff using the starting value of

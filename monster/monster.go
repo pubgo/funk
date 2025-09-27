@@ -1,6 +1,8 @@
 package monster
 
-import "sync"
+import (
+	"sync"
+)
 
 // Getter returns the current value as any
 type Getter func() any
@@ -19,8 +21,8 @@ type Entry struct {
 
 // Monster manages all registered values
 type Monster struct {
-	m  map[string]*Entry
-	mu sync.RWMutex
+	mutex sync.RWMutex
+	m     map[string]*Entry
 }
 
 var defaultMonster = NewMonster()
@@ -34,8 +36,8 @@ func NewMonster() *Monster {
 
 // AddFunc registers a new value with getter, setter, usage, and optional tags
 func (m *Monster) AddFunc(name string, get Getter, set Setter, usage string, tags ...map[string]any) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 
 	tagMap := make(map[string]any)
 	if len(tags) > 0 && tags[0] != nil {
@@ -55,15 +57,15 @@ func (m *Monster) AddFunc(name string, get Getter, set Setter, usage string, tag
 
 // Lookup returns the entry by name
 func (m *Monster) Lookup(name string) *Entry {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
 	return m.m[name]
 }
 
 // VisitAll calls fn for each entry
 func (m *Monster) VisitAll(fn func(*Entry)) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+	m.mutex.RLock()
+	defer m.mutex.RUnlock()
 	for _, e := range m.m {
 		fn(e)
 	}
@@ -77,6 +79,4 @@ func Lookup(name string) *Entry {
 	return defaultMonster.Lookup(name)
 }
 
-func VisitAll(fn func(*Entry)) {
-	defaultMonster.VisitAll(fn)
-}
+func VisitAll(fn func(*Entry)) { defaultMonster.VisitAll(fn) }

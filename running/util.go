@@ -6,9 +6,9 @@ import (
 
 	semver "github.com/hashicorp/go-version"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/recovery"
-	"github.com/pubgo/funk/version"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/recovery"
+	"github.com/pubgo/funk/v2/version"
 )
 
 func SetVersion(v string) { Version = v }

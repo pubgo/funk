@@ -3,7 +3,7 @@ package anyhow
 import (
 	"testing"
 
-	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/v2/errors"
 )
 
 func TestErrorLog(t *testing.T) {

@@ -12,8 +12,8 @@ import (
 	"google.golang.org/protobuf/encoding/prototext"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/pubgo/funk/log/logfields"
-	"github.com/pubgo/funk/stack"
+	"github.com/pubgo/funk/v2/log/logfields"
+	"github.com/pubgo/funk/v2/stack"
 )
 
 func messageFromMsgAndArgs(msgAndArgs ...any) string {

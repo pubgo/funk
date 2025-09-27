@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	assert1 "github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/log"
+	assert1 "github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/log"
 )
 
 func init() {

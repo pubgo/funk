@@ -3,7 +3,7 @@ package strutil
 import (
 	"io"
 
-	"github.com/pubgo/funk/convert"
+	"github.com/pubgo/funk/v2/convert"
 	"github.com/valyala/fasttemplate"
 )
 

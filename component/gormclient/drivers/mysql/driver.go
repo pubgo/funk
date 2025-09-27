@@ -1,12 +1,12 @@
 package mysql
 
 import (
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/component/gormclient"
-	"github.com/pubgo/funk/config"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/merge"
-	"github.com/pubgo/funk/recovery"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/component/gormclient"
+	"github.com/pubgo/funk/v2/config"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/merge"
+	"github.com/pubgo/funk/v2/recovery"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -32,7 +32,7 @@ func init() {
 		conf := DefaultCfg()
 		assert.Must(cfg.Decode(&conf))
 
-		ret := merge.Struct(new(mysql.Config), conf).Unwrap()
+		ret := merge.Struct(new(mysql.Config), conf).Must()
 		return mysql.New(*ret)
 	})
 }

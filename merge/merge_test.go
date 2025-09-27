@@ -3,7 +3,7 @@ package merge
 import (
 	"testing"
 
-	"github.com/pubgo/funk/pretty"
+	"github.com/pubgo/funk/v2/pretty"
 )
 
 type dst struct {
@@ -29,7 +29,7 @@ func TestStruct(t *testing.T) {
 
 	d1 := map[string]interface{}{"a": src{Name: "2", Hello: "2"}}
 	d2 := map[string]dst{"a": {Name: "1", Hello: "1"}, "b": {Name: "1", Hello: "1"}}
-	Copy(&d1, &d2).Unwrap()
+	Copy(&d1, &d2).Must()
 }
 
 func TestMapStruct(t *testing.T) {

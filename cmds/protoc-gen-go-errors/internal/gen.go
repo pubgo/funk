@@ -6,12 +6,12 @@ import (
 
 	"github.com/dave/jennifer/jen"
 	"github.com/iancoleman/strcase"
-	"github.com/pubgo/funk/proto/errorpb"
+	"github.com/pubgo/funk/v2/proto/errorpb"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 )
 
-const errorPbPkg = "github.com/pubgo/funk/proto/errorpb"
+const errorPbPkg = "github.com/pubgo/funk/v2/proto/errorpb"
 
 // GenerateFile generates a .errors.pb.go file containing service definitions.
 func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
@@ -93,7 +93,7 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 					jen.Id("Message"):    jen.Lit(rr),
 				})
 			genFile.Var().Id("_").Op("=").
-				Qual("github.com/pubgo/funk/errors", "RegisterErrCodes").
+				Qual("github.com/pubgo/funk/v2/errors", "RegisterErrCodes").
 				Call(jen.Id(errCodeName)).Line()
 		}
 	}

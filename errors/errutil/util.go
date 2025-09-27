@@ -13,12 +13,12 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/pretty"
-	"github.com/pubgo/funk/proto/errorpb"
-	"github.com/pubgo/funk/version"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/generic"
+	"github.com/pubgo/funk/v2/log"
+	"github.com/pubgo/funk/v2/pretty"
+	"github.com/pubgo/funk/v2/proto/errorpb"
+	"github.com/pubgo/funk/v2/version"
 )
 
 func Json(err error) []byte {

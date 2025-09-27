@@ -20,8 +20,9 @@ func mergeTags(maps ...map[string]any) map[string]any {
 }
 
 type StringValue struct {
-	p    string
-	name string
+	p     string
+	name  string
+	onset func(val string)
 }
 
 func (s *StringValue) Key() string { return s.name }
@@ -37,9 +38,10 @@ func (s *StringValue) set(val any) error {
 	}
 	return nil
 }
-func (s *StringValue) Get() string          { return s.p }
-func (s *StringValue) Set(val string) error { return s.set(val) }
-func (s *StringValue) String() string       { return s.p }
+func (s *StringValue) Get() string                               { return s.p }
+func (s *StringValue) Set(val string) error                      { return s.set(val) }
+func (s *StringValue) OnSet(onset func(val string)) *StringValue { s.onset = onset; return s }
+func (s *StringValue) String() string                            { return s.p }
 
 func String(name, value, usage string, tags ...map[string]any) *StringValue {
 	s := &StringValue{p: value, name: name}
@@ -233,8 +235,9 @@ func Time(name string, value time.Time, usage string, tags ...map[string]any) *T
 //
 
 type JsonValue[T any] struct {
-	p    T
-	name string
+	p     T
+	name  string
+	onset func(val T)
 }
 
 func (t *JsonValue[T]) Key() string { return t.name }
@@ -249,8 +252,9 @@ func (t *JsonValue[T]) get() any {
 func (t *JsonValue[T]) set(val any) error {
 	return json.Unmarshal(val.([]byte), &t.p)
 }
-func (t *JsonValue[T]) Get() T          { return t.p }
-func (t *JsonValue[T]) Set(val T) error { return t.set(val) }
+func (t *JsonValue[T]) Get() T                                { return t.p }
+func (t *JsonValue[T]) Set(val T) error                       { return t.set(val) }
+func (t *JsonValue[T]) OnSet(onset func(val T)) *JsonValue[T] { t.onset = onset; return t }
 func (t *JsonValue[T]) String() string {
 	data, err := json.Marshal(t.p)
 	if err != nil {

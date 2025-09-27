@@ -4,7 +4,7 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/pubgo/funk/stack"
+	"github.com/pubgo/funk/v2/stack"
 )
 
 var errChecks []ErrChecker

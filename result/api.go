@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/v2/errors"
 	"github.com/rs/zerolog"
 )
 

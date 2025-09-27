@@ -3,7 +3,7 @@ package log
 import (
 	"context"
 
-	"github.com/pubgo/funk/errors/errinter"
+	"github.com/pubgo/funk/v2/errors/errinter"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/encoding/prototext"
 )

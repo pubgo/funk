@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/encoding/prototext"
 
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/errors/errinter"
-	"github.com/pubgo/funk/proto/errorpb"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/errors/errinter"
+	"github.com/pubgo/funk/v2/proto/errorpb"
 )
 
 func TestGetErrorId(t *testing.T) {

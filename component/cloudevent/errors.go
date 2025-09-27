@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/v2/errors"
 )
 
 var errReject = errors.New("cloudevent: reject retry and discard msg")

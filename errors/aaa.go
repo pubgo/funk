@@ -1,7 +1,7 @@
 package errors
 
 import (
-	"github.com/pubgo/funk/errors/errinter"
+	"github.com/pubgo/funk/v2/errors/errinter"
 )
 
 type Maps = errinter.Maps

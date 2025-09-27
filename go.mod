@@ -1,4 +1,4 @@
-module github.com/pubgo/funk
+module github.com/pubgo/funk/v2
 
 go 1.23.0
 

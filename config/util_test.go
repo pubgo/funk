@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/a8m/envsubst"
-	"github.com/pubgo/funk/env"
+	"github.com/pubgo/funk/v2/env"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
 )

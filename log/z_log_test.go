@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/tidwall/gjson"
 
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/log/logutil"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/log"
+	"github.com/pubgo/funk/v2/log/logutil"
 )
 
 func TestLogLevel(t *testing.T) {

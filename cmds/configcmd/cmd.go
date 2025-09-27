@@ -7,9 +7,9 @@ import (
 	"github.com/urfave/cli/v3"
 	"gopkg.in/yaml.v3"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/config"
-	"github.com/pubgo/funk/recovery"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/config"
+	"github.com/pubgo/funk/v2/recovery"
 )
 
 func New[Cfg any]() *cli.Command {

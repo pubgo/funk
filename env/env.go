@@ -2,6 +2,7 @@ package env
 
 import (
 	"fmt"
+	result2 "github.com/pubgo/funk/v2/result"
 	"log/slog"
 	"os"
 	"strconv"
@@ -12,14 +13,13 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/log/logfields"
-	"github.com/pubgo/funk/pathutil"
-	"github.com/pubgo/funk/v2/result"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/log/logfields"
+	"github.com/pubgo/funk/v2/pathutil"
 )
 
-func Set(key, value string) result.Error {
-	return result.ErrOf(os.Setenv(keyHandler(key), value)).Log(func(e *zerolog.Event) {
+func Set(key, value string) result2.Error {
+	return result2.ErrOf(os.Setenv(keyHandler(key), value)).Log(func(e *zerolog.Event) {
 		e.Str("key", key)
 		e.Str("value", value)
 		e.Str(logfields.Msg, "env_set_error")
@@ -108,8 +108,8 @@ func GetFloat(names ...string) float64 {
 
 func Lookup(key string) (string, bool) { return os.LookupEnv(keyHandler(key)) }
 
-func Delete(key string) result.Error {
-	return result.ErrOf(os.Unsetenv(keyHandler(key))).Log(func(e *zerolog.Event) {
+func Delete(key string) result2.Error {
+	return result2.ErrOf(os.Unsetenv(keyHandler(key))).Log(func(e *zerolog.Event) {
 		e.Str("key", key)
 		e.Str(logfields.Msg, "env_delete_error")
 	})
@@ -117,8 +117,8 @@ func Delete(key string) result.Error {
 
 func MustDelete(key string) { Delete(key).Must() }
 
-func Expand(value string) result.Result[string] {
-	return result.Wrap(envsubst.String(value)).Log(func(e *zerolog.Event) {
+func Expand(value string) result2.Result[string] {
+	return result2.Wrap(envsubst.String(value)).Log(func(e *zerolog.Event) {
 		e.Str("value", value)
 		e.Str(logfields.Msg, "env_expand_error")
 	})
@@ -141,19 +141,19 @@ func Key(key string) string {
 	return keyHandler(key)
 }
 
-func LoadFiles(files ...string) (r result.Error) {
+func LoadFiles(files ...string) (r result2.Error) {
 	files = lo.Filter(files, func(item string, index int) bool { return pathutil.IsExist(item) })
 	if len(files) == 0 {
 		return
 	}
 
 	for _, file := range files {
-		data := result.Wrap(os.ReadFile(file)).Unwrap(&r)
+		data := result2.Wrap(os.ReadFile(file)).Unwrap(&r)
 		if r.IsErr() {
 			return
 		}
 
-		dataMap := result.Wrap(godotenv.UnmarshalBytes(data)).Unwrap(&r)
+		dataMap := result2.Wrap(godotenv.UnmarshalBytes(data)).Unwrap(&r)
 		if r.IsErr() {
 			return
 		}

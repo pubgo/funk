@@ -3,7 +3,7 @@ package retry
 import (
 	"time"
 
-	"github.com/pubgo/funk/recovery"
+	"github.com/pubgo/funk/v2/recovery"
 )
 
 type Retry func() Backoff

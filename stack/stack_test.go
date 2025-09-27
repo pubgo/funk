@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/pretty"
-	"github.com/pubgo/funk/stack"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/pretty"
+	"github.com/pubgo/funk/v2/stack"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -40,7 +40,7 @@ func TestCallerWithDepth(t *testing.T) {
 
 func TestCallType(t *testing.T) {
 	assert.Equal(t,
-		"github.com/pubgo/funk/errors",
+		"github.com/pubgo/funk/v2/errors",
 		stack.CallerWithType(reflect.TypeOf(errors.ErrMsg{})).Pkg,
 	)
 }
