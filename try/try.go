@@ -1,9 +1,9 @@
 package try
 
 import (
-	"github.com/pubgo/funk"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/stack"
+	"github.com/pubgo/funk/v2"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/stack"
 )
 
 func WithErr(gErr *error, fn func() error) {

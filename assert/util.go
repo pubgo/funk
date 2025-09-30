@@ -8,8 +8,12 @@ import (
 	"sync"
 
 	"github.com/k0kubun/pp/v3"
-	"github.com/pubgo/funk/log/logfields"
 	"github.com/samber/lo"
+	"google.golang.org/protobuf/encoding/prototext"
+	"google.golang.org/protobuf/proto"
+
+	"github.com/pubgo/funk/v2/log/logfields"
+	"github.com/pubgo/funk/v2/stack"
 )
 
 func messageFromMsgAndArgs(msgAndArgs ...any) string {
@@ -26,16 +30,21 @@ func messageFromMsgAndArgs(msgAndArgs ...any) string {
 	return pretty().Sprint(msgAndArgs...)
 }
 
+var assetFile = stack.Caller(0)
+
 func logErr(err error, message string, attrs ...slog.Attr) {
 	if err == nil {
 		return
 	}
 
+	traces := lo.Filter(stack.Trace(), func(item *stack.Frame, index int) bool {
+		return !item.IsRuntime() && item.Pkg != assetFile.Pkg
+	})
 	attrs = append(attrs,
 		slog.String(logfields.Module, "assert"),
 		slog.String(logfields.Error, err.Error()),
-		slog.String(logfields.ErrorStack, string(debug.Stack())),
-		slog.String(logfields.ErrorDetail, pretty().Sprint(err)),
+		slog.Any(logfields.ErrorStack, lo.Map(traces, func(item *stack.Frame, index int) string { return item.String() })),
+		slog.String(logfields.ErrorDetail, fmt.Sprintf("%v", err)),
 	)
 	slog.Error(message, lo.ToAnySlice(attrs)...)
 }
@@ -45,14 +54,29 @@ func must(err error, messageArgs ...any) {
 		return
 	}
 
+	var attrs = []slog.Attr{slog.Bool("panic", true)}
+	if v, ok := lo.ErrorsAs[interface {
+		ID() string
+		Error() string
+	}](err); ok && v != nil {
+		attrs = append(attrs, slog.String(logfields.ErrorID, v.ID()))
+	}
+
 	message := messageFromMsgAndArgs(messageArgs...)
 	if message == "" {
-		message = err.Error()
+		if v, ok := lo.ErrorsAs[interface {
+			Proto() proto.Message
+			Error() string
+		}](err); ok && v != nil {
+			message = fmt.Sprintf("%s\n%s", err.Error(), prototext.Format(v.Proto()))
+		} else {
+			message = err.Error()
+		}
 	} else {
 		message = fmt.Sprintf("msg:%v err:%s", message, err.Error())
 	}
 
-	logErr(err, message, slog.Bool("panic", true))
+	logErr(err, message, attrs...)
 	panic(err)
 }
 

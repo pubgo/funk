@@ -7,7 +7,7 @@
 package testcodepb
 
 import (
-	_ "github.com/pubgo/funk/proto/errorpb"
+	_ "github.com/pubgo/funk/v2/proto/errorpb"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	httpbody "google.golang.org/genproto/googleapis/api/httpbody"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"

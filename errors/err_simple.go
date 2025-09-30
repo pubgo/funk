@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/pubgo/funk/errors/errinter"
-	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/proto/errorpb"
+	"github.com/pubgo/funk/v2/errors/errinter"
+	"github.com/pubgo/funk/v2/generic"
+	"github.com/pubgo/funk/v2/proto/errorpb"
 	"github.com/rs/xid"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"

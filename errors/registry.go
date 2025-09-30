@@ -3,7 +3,7 @@ package errors
 import (
 	"fmt"
 
-	"github.com/pubgo/funk/proto/errorpb"
+	"github.com/pubgo/funk/v2/proto/errorpb"
 )
 
 var codes = make(map[string]*errorpb.ErrCode)

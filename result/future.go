@@ -3,7 +3,7 @@ package result
 import (
 	"context"
 
-	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/v2/errors"
 	"github.com/samber/lo"
 )
 

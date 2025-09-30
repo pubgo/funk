@@ -3,35 +3,35 @@ package shutil
 import (
 	"bytes"
 	"fmt"
+	result2 "github.com/pubgo/funk/v2/result"
 	"os"
 	"os/exec"
 	"strings"
 
-	"github.com/pubgo/funk/log/logfields"
-	"github.com/pubgo/funk/v2/result"
+	"github.com/pubgo/funk/v2/log/logfields"
 	"github.com/rs/zerolog"
 )
 
-func Run(args ...string) (r result.Result[string]) {
-	defer result.Recovery(&r)
+func Run(args ...string) (r result2.Result[string]) {
+	defer result2.Recovery(&r)
 
 	b := bytes.NewBufferString("")
 
 	cmd := Shell(args...)
 	cmd.Stdout = b
 
-	result.ErrOf(cmd.Run()).Must(func(e *zerolog.Event) {
+	result2.ErrOf(cmd.Run()).Must(func(e *zerolog.Event) {
 		e.Str(logfields.Msg, fmt.Sprintf("failed to execute: "+strings.Join(args, " ")))
 	})
 
 	return r.WithValue(strings.TrimSpace(b.String()))
 }
 
-func GoModGraph() result.Result[string] {
+func GoModGraph() result2.Result[string] {
 	return Run("go", "mod", "graph")
 }
 
-func GoList() result.Result[string] {
+func GoList() result2.Result[string] {
 	return Run("go", "list", "./...")
 }
 

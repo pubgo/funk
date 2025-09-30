@@ -8,8 +8,8 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/pubgo/funk/errors/errinter"
-	"github.com/pubgo/funk/log/logfields"
+	"github.com/pubgo/funk/v2/errors/errinter"
+	"github.com/pubgo/funk/v2/log/logfields"
 )
 
 var _ Logger = (*loggerImpl)(nil)

@@ -7,8 +7,8 @@ package cmux
 //	"os"
 //	"strings"
 //
-//	"github.com/pubgo/funk/config"
-//	"github.com/pubgo/funk/log"
+//	"github.com/pubgo/funk/v2/config"
+//	"github.com/pubgo/funk/v2/log"
 //	"github.com/soheilhy/cmux"
 //	"github.com/tmc/grpc-websocket-proxy/wsproxy"
 //	clientv3 "go.etcd.io/etcd/client/v3"

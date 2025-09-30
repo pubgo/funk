@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/pubgo/funk"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/log"
+	"github.com/pubgo/funk/v2"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/log"
 	"github.com/samber/lo"
 )
 

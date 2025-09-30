@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 
-	"github.com/pubgo/funk/log"
+	"github.com/pubgo/funk/v2/log"
 	"gopkg.in/yaml.v3"
 )
 

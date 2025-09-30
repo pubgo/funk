@@ -9,8 +9,8 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/errors"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/errors"
 	options "google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
@@ -205,7 +205,7 @@ func ExtractAPIOptions(mth *descriptorpb.MethodDescriptorProto) (*options.HttpRu
 	ext := proto.GetExtension(mth.GetOptions(), options.E_Http)
 	opts, ok := ext.(*options.HttpRule)
 	if !ok {
-		return nil, errors.Format("extension is %T; want an HttpRule", ext)
+		return nil, errors.Errorf("extension is %T; want an HttpRule", ext)
 	}
 
 	return opts, nil

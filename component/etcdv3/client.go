@@ -5,15 +5,15 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/config"
-	"github.com/pubgo/funk/merge"
-	"github.com/pubgo/funk/retry"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/config"
+	"github.com/pubgo/funk/v2/merge"
+	"github.com/pubgo/funk/v2/retry"
 )
 
 func New(conf *Config) *Client {
-	conf = config.MergeR(DefaultCfg(), *conf).Unwrap()
-	cfg := merge.Struct(new(client3.Config), conf).Unwrap()
+	conf = config.MergeR(DefaultCfg(), *conf).Must()
+	cfg := merge.Struct(new(client3.Config), conf).Must()
 	cfg.DialOptions = append(
 		cfg.DialOptions,
 		grpc.WithBlock(),

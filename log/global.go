@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/errors/errinter"
-	"github.com/pubgo/funk/generic"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/errors/errinter"
+	"github.com/pubgo/funk/v2/generic"
 
 	"github.com/rs/zerolog"
 	zlog "github.com/rs/zerolog/log"

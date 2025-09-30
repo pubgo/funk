@@ -3,7 +3,7 @@ package typex
 import (
 	"sync"
 
-	"github.com/pubgo/funk/generic"
+	"github.com/pubgo/funk/v2/generic"
 )
 
 var globalMutex sync.Mutex

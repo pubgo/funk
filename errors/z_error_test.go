@@ -6,9 +6,9 @@ import (
 
 	"google.golang.org/protobuf/encoding/protojson"
 
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/proto/errorpb"
-	"github.com/pubgo/funk/proto/testcodepb"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/proto/errorpb"
+	"github.com/pubgo/funk/v2/proto/testcodepb"
 )
 
 func TestFormat(t *testing.T) {

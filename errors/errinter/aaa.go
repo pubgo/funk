@@ -4,28 +4,38 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"golang.org/x/xerrors"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 )
 
 type Error interface {
+	error
 	ID() string
 	Kind() string
-	Error() string
 	String() string
 	MarshalJSON() ([]byte, error)
 }
 
-type ErrUnwrap interface {
-	Unwrap() error
-}
+type ErrUnwrap = xerrors.Wrapper
+type Formatter = xerrors.Formatter
+type Printer = xerrors.Printer
 
 type ErrorProto interface {
+	error
 	Proto() proto.Message
 }
 
 type GRPCStatus interface {
 	GRPCStatus() *status.Status
+}
+
+type ErrIs interface {
+	Is(error) bool
+}
+
+type ErrAs interface {
+	As(any) bool
 }
 
 var (
@@ -41,6 +51,14 @@ func (t Maps) Tags() Tags {
 		tags = append(tags, Tag{K: k, V: v})
 	}
 	return tags
+}
+
+func (t Maps) ToMapString() map[string]string {
+	var data = make(map[string]string, len(t))
+	for key, value := range t {
+		data[key] = fmt.Sprintf("%v", value)
+	}
+	return data
 }
 
 type Tags []Tag
@@ -82,12 +100,4 @@ type Tag struct {
 
 func (t Tag) String() string {
 	return fmt.Sprintf("%s: %v", t.K, t.V)
-}
-
-type ErrIs interface {
-	Is(error) bool
-}
-
-type ErrAs interface {
-	As(any) bool
 }

@@ -3,7 +3,7 @@ package entmigrates
 import (
 	_ "embed"
 
-	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/v2/assert"
 	"gopkg.in/yaml.v3"
 )
 

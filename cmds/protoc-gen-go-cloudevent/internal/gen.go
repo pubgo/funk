@@ -13,10 +13,10 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/component/cloudevent"
-	cloudeventpb "github.com/pubgo/funk/proto/cloudevent"
-	"github.com/pubgo/funk/stack"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/component/cloudevent"
+	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
+	"github.com/pubgo/funk/v2/stack"
 )
 
 var cloudeventPkg = reflect.TypeOf(cloudevent.Client{}).PkgPath()

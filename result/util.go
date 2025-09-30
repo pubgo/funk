@@ -2,7 +2,6 @@ package result
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"log/slog"
 	"reflect"
@@ -13,13 +12,13 @@ import (
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/encoding/prototext"
 
-	"github.com/pubgo/funk"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/log/logfields"
-	"github.com/pubgo/funk/stack"
+	"github.com/pubgo/funk/v2"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/generic"
+	"github.com/pubgo/funk/v2/log"
+	"github.com/pubgo/funk/v2/log/logfields"
 	"github.com/pubgo/funk/v2/result/resultchecker"
+	"github.com/pubgo/funk/v2/stack"
 )
 
 var errFnIsNil = errors.New("[fn] is nil")
@@ -259,16 +258,23 @@ func setError(setter ErrSetter, err error) {
 	}
 }
 
+var resultFile = stack.Caller(0)
+
 func logErr(ctx context.Context, skip int, err error, events ...func(e *zerolog.Event)) {
 	if err == nil {
 		return
 	}
 
+	traces := lo.Filter(stack.Trace(), func(item *stack.Frame, index int) bool {
+		return !item.IsRuntime() && item.Pkg != resultFile.Pkg
+	})
+
 	log.Error(ctx).
 		Func(func(e *zerolog.Event) {
 			e.Str(logfields.Module, "result2")
-			e.Str(logfields.ErrorStack, base64.StdEncoding.EncodeToString(debug.Stack()))
+			e.Strs(logfields.ErrorStack, lo.Map(traces, func(item *stack.Frame, index int) string { return item.String() }))
 			e.Str(logfields.ErrorID, errors.GetErrorId(err))
+			e.Str(logfields.ErrorDetail, fmt.Sprintf("%v", err))
 			e.Str(zerolog.ErrorFieldName, err.Error())
 			e.CallerSkipFrame(2 + skip)
 		}).
@@ -279,12 +285,3 @@ func logErr(ctx context.Context, skip int, err error, events ...func(e *zerolog.
 		}).
 		Msgf("%s\n%s", err.Error(), prototext.Format(errors.ParseErrToPb(err)))
 }
-
-//var pretty = sync.OnceValue(func() *pp.PrettyPrinter {
-//	printer := pp.New()
-//	printer.SetColoringEnabled(false)
-//	printer.SetExportedOnly(false)
-//	printer.SetOmitEmpty(true)
-//	printer.SetMaxDepth(5)
-//	return printer
-//})

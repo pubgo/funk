@@ -5,8 +5,8 @@ import (
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/pubgo/funk/log"
-	cloudeventpb "github.com/pubgo/funk/proto/cloudevent"
+	"github.com/pubgo/funk/v2/log"
+	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 )

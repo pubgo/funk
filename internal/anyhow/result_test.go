@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/internal/anyhow"
-	"github.com/pubgo/funk/internal/anyhow/aherrcheck"
-	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/recovery"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/internal/anyhow"
+	"github.com/pubgo/funk/v2/internal/anyhow/aherrcheck"
+	"github.com/pubgo/funk/v2/log"
+	"github.com/pubgo/funk/v2/recovery"
 )
 
 type hello struct {

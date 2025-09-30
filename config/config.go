@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"github.com/pubgo/funk/v2/result"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -14,15 +15,14 @@ import (
 	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/log/logfields"
-	"github.com/pubgo/funk/pathutil"
-	"github.com/pubgo/funk/pretty"
-	"github.com/pubgo/funk/recovery"
-	"github.com/pubgo/funk/typex"
-	"github.com/pubgo/funk/v2/result"
-	"github.com/pubgo/funk/vars"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/log"
+	"github.com/pubgo/funk/v2/log/logfields"
+	"github.com/pubgo/funk/v2/pathutil"
+	"github.com/pubgo/funk/v2/pretty"
+	"github.com/pubgo/funk/v2/recovery"
+	"github.com/pubgo/funk/v2/typex"
+	"github.com/pubgo/funk/v2/vars"
 )
 
 const (

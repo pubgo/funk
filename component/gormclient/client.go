@@ -3,8 +3,8 @@ package gormclient
 import (
 	"database/sql"
 
-	"github.com/pubgo/funk/result"
-	"github.com/pubgo/funk/vars"
+	"github.com/pubgo/funk/v2/result"
+	"github.com/pubgo/funk/v2/vars"
 	"gorm.io/gorm"
 )
 
@@ -47,5 +47,5 @@ func (c *Client) Stats() (r result.Result[sql.DBStats]) {
 	if err != nil {
 		return r.WithErr(err)
 	}
-	return r.WithVal(db.Stats())
+	return r.WithValue(db.Stats())
 }

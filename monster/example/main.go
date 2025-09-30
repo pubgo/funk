@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pubgo/funk/monster"
+	"github.com/pubgo/funk/v2/monster"
 )
 
 func main() {
