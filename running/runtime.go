@@ -8,19 +8,19 @@ import (
 	"github.com/rs/xid"
 
 	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/buildinfo"
 	"github.com/pubgo/funk/v2/env"
 	"github.com/pubgo/funk/v2/monster"
 	"github.com/pubgo/funk/v2/netutil"
 	"github.com/pubgo/funk/v2/pathutil"
 	"github.com/pubgo/funk/v2/strutil"
-	"github.com/pubgo/funk/v2/version"
 )
 
 // default global variables
 var (
 	HttpPort = 8080
 	GrpcPort = 50051
-	Project  = version.Project()
+	Project  = buildinfo.Project()
 
 	Env = "debug"
 
@@ -29,9 +29,9 @@ var (
 
 	DeviceID = InstanceID
 
-	Version = version.Version()
+	Version = buildinfo.Version()
 
-	CommitID = version.CommitID()
+	CommitID = buildinfo.CommitID()
 
 	Pwd = assert.Exit1(os.Getwd())
 
@@ -57,19 +57,22 @@ var (
 		},
 	)
 
-	Domain string
+	Domain = buildinfo.Domain()
 
 	enableDebug = monster.Bool("debug", false, "enable debug")
 )
 
 func Debug() bool { return enableDebug.Get() }
+func EnableDebug() {
+	assert.Exit(enableDebug.Set(true))
+}
 
 func init() {
 	if env.GetBool("enable_debug", "debug", "dev_mode") {
 		assert.Exit(enableDebug.Set(true))
 	}
 
-	if e := env.Get("env", "run_mode", "run_env"); e != "" {
+	if e := env.Get("env", "run_env"); e != "" {
 		Env = e
 	}
 

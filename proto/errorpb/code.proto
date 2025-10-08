@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package errors;
 
-option go_package = "github.com/pubgo/funk/proto/errorpb;errorpb";
+option go_package = "github.com/pubgo/funk/v2/proto/errorpb;errorpb";
 
 enum Code {
   OK = 0;

@@ -13,12 +13,6 @@ import (
 	"entgo.io/ent/dialect/sql/schema"
 	"github.com/dave/jennifer/jen"
 	mapset "github.com/deckarep/golang-set/v2"
-	"github.com/pubgo/funk/v2/assert"
-	"github.com/pubgo/funk/v2/config"
-	"github.com/pubgo/funk/v2/errors"
-	"github.com/pubgo/funk/v2/generic"
-	"github.com/pubgo/funk/v2/log"
-	"github.com/pubgo/funk/v2/version"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -26,6 +20,13 @@ import (
 	dp "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/buildinfo"
+	"github.com/pubgo/funk/v2/config"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/generic"
+	"github.com/pubgo/funk/v2/log"
 )
 
 type MigrationWrap struct {
@@ -148,7 +149,7 @@ func %s() *entmigrates.Migration {
 		DataMigrate:  nil,
 	}
 }
-`, name, name, fmt.Sprint(now.String(), " ", version.Version()), name))
+`, name, name, fmt.Sprint(now.String(), " ", buildinfo.Version()), name))
 
 	filename = filepath.Join(g.config.MigrationPath, fmt.Sprintf("%s.go", name))
 	err = os.WriteFile(filename, []byte(genFile.GoString()), 0o644)
