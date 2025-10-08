@@ -3,7 +3,6 @@ package result
 import (
 	"context"
 	"fmt"
-	resultchecker2 "github.com/pubgo/funk/v2/result/resultchecker"
 	"log/slog"
 	"reflect"
 	"runtime/debug"
@@ -18,6 +17,7 @@ import (
 	"github.com/pubgo/funk/v2/generic"
 	"github.com/pubgo/funk/v2/log"
 	"github.com/pubgo/funk/v2/log/logfields"
+	"github.com/pubgo/funk/v2/result/resultchecker"
 	"github.com/pubgo/funk/v2/stack"
 )
 
@@ -150,7 +150,7 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 		log.Err(err, ctx).Msgf("error setter has already set the error, err=%s", err.Error())
 	}
 
-	var checkers = append(resultchecker2.GetErrChecks(), resultchecker2.GetCheckersFromCtx(ctx)...)
+	var checkers = append(resultchecker.GetErrChecks(), resultchecker.GetCheckersFromCtx(ctx)...)
 	var err = r.getErr()
 	for _, fn := range checkers {
 		err = fn(ctx, err)
@@ -212,7 +212,7 @@ func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts .
 	}
 
 	var err = r.getErr()
-	var checkers = append(resultchecker2.GetErrChecks(), resultchecker2.GetCheckersFromCtx(ctx)...)
+	var checkers = append(resultchecker.GetErrChecks(), resultchecker.GetCheckersFromCtx(ctx)...)
 	for _, fn := range checkers {
 		err = fn(ctx, err)
 		if err == nil {

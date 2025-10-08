@@ -111,6 +111,6 @@ func (p *strOrJobConfig) UnmarshalYAML(value *yaml.Node) error {
 	default:
 		var val any
 		assert.Exit(value.Decode(&val))
-		return errors.Format("yaml kind type error,kind=%v data=%v", value.Kind, val)
+		return errors.Errorf("yaml kind type error,kind=%v data=%v", value.Kind, val)
 	}
 }

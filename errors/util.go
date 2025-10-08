@@ -106,24 +106,9 @@ func strFormat(f fmt.State, verb rune, err Error) {
 }
 
 func getStack() []*stack.Frame {
-	var ss []*stack.Frame
-	for i := 0; ; i++ {
-		cc := stack.Caller(1 + i)
-		if cc == nil {
-			break
-		}
-
-		if cc.IsRuntime() {
-			continue
-		}
-
-		if filterStack(cc) {
-			continue
-		}
-
-		ss = append(ss, cc)
-	}
-	return ss
+	return lo.Filter(stack.Trace(), func(item *stack.Frame, index int) bool {
+		return !item.IsRuntime() && !filterStack(item)
+	})
 }
 
 func newErrorId() *string {

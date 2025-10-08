@@ -205,7 +205,7 @@ func ExtractAPIOptions(mth *descriptorpb.MethodDescriptorProto) (*options.HttpRu
 	ext := proto.GetExtension(mth.GetOptions(), options.E_Http)
 	opts, ok := ext.(*options.HttpRule)
 	if !ok {
-		return nil, errors.Format("extension is %T; want an HttpRule", ext)
+		return nil, errors.Errorf("extension is %T; want an HttpRule", ext)
 	}
 
 	return opts, nil
