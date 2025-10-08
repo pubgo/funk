@@ -12,6 +12,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	ants "github.com/panjf2000/ants/v2"
 	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/buildinfo"
 	"github.com/pubgo/funk/v2/component/lifecycle"
 	"github.com/pubgo/funk/v2/component/natsclient"
 	"github.com/pubgo/funk/v2/errors"
@@ -23,7 +24,6 @@ import (
 	"github.com/pubgo/funk/v2/stack"
 	"github.com/pubgo/funk/v2/try"
 	"github.com/pubgo/funk/v2/typex"
-	"github.com/pubgo/funk/v2/version"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
@@ -85,7 +85,7 @@ func (c *Client) initStream() (r error) {
 
 		// add subject prefix
 		streamSubjects := lo.Map(cfg.Subjects, func(item string, index int) string { return c.subjectName(item) })
-		metadata := map[string]string{"creator": fmt.Sprintf("%s/%s/%s", version.Project(), version.Version(), running.InstanceID)}
+		metadata := map[string]string{"creator": fmt.Sprintf("%s/%s/%s", buildinfo.Project(), buildinfo.Version(), running.InstanceID)}
 		storageType := getStorageType(cfg.Storage)
 		streamCfg := jetstream.StreamConfig{
 			Name:     streamName,
@@ -137,7 +137,7 @@ func (c *Client) initConsumer() (r error) {
 				// A streaming consumer can only have one corresponding job handler
 				assert.If(c.consumers[streamName][consumerName] != nil, "consumer %s already exists", consumerName)
 
-				metadata := map[string]string{"version": fmt.Sprintf("%s/%s", version.Project(), version.Version())}
+				metadata := map[string]string{"version": fmt.Sprintf("%s/%s", buildinfo.Project(), buildinfo.Version())}
 				consumerCfg := jetstream.ConsumerConfig{
 					Name:     consumerName,
 					Durable:  consumerName,

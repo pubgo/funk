@@ -7,9 +7,9 @@ import (
 	"github.com/samber/lo"
 )
 
-func AsyncErr(fn func() Error) ErrFuture {
+func AsyncErr(fn func() Error) *ErrFuture {
 	if fn == nil {
-		return ErrFuture{e: errors.WrapCaller(errFnIsNil, 1)}
+		return &ErrFuture{e: errors.WrapCaller(errFnIsNil, 1)}
 	}
 
 	var future = newErrFuture()
@@ -17,18 +17,21 @@ func AsyncErr(fn func() Error) ErrFuture {
 	return future
 }
 
-func Async[T any](fn func() Result[T]) Future[T] {
+func Async[T any](fn func() Result[T]) *Future[T] {
 	if fn == nil {
-		return Future[T]{v: Fail[T](errors.WrapCaller(errFnIsNil, 1))}
+		return &Future[T]{v: Fail[T](errors.WrapCaller(errFnIsNil, 1))}
 	}
 
 	var future = newFuture[T]()
-	go func() { defer future.close(); future.setVal(tryResult(fn)) }()
+	go func() {
+		defer future.close()
+		future.setVal(tryResult(fn))
+	}()
 	return future
 }
 
-func newFuture[T any]() Future[T] {
-	return Future[T]{done: make(chan struct{})}
+func newFuture[T any]() *Future[T] {
+	return &Future[T]{done: make(chan struct{})}
 }
 
 type Future[T any] struct {
@@ -49,8 +52,8 @@ func (f *Future[T]) Await(ctxL ...context.Context) Result[T] {
 	}
 }
 
-func newErrFuture() ErrFuture {
-	return ErrFuture{done: make(chan struct{})}
+func newErrFuture() *ErrFuture {
+	return &ErrFuture{done: make(chan struct{})}
 }
 
 type ErrFuture struct {
