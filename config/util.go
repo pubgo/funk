@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"github.com/pubgo/funk/v2/result"
 	"io"
 	"io/fs"
 	"os"
@@ -23,6 +22,7 @@ import (
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/log"
 	"github.com/pubgo/funk/v2/pathutil"
+	"github.com/pubgo/funk/v2/result"
 )
 
 func GetConfigDir() string {
@@ -74,11 +74,6 @@ func getPathList() (paths []string) {
 		wd = filepath.Dir(wd)
 	}
 	return
-}
-
-func SetConfigPath(confPath string) {
-	assert.If(confPath == "", "config path is null")
-	configPath = confPath
 }
 
 func MergeR[A any, B any | *any](dst *A, src ...B) (r result.Result[*A]) {
@@ -206,7 +201,7 @@ func listAllPath(dirOrPath string) (ret result.Result[[]string]) {
 }
 
 func makeList(typ reflect.Type, data []reflect.Value) reflect.Value {
-	val := reflect.MakeSlice(reflect.SliceOf(typ), 0, 0)
+	val := reflect.MakeSlice(reflect.SliceOf(typ), 0, len(data))
 	return reflect.Append(val, data...)
 }
 

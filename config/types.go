@@ -4,8 +4,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 
-	"github.com/pubgo/funk/v2/log"
 	"gopkg.in/yaml.v3"
+
+	"github.com/pubgo/funk/v2/log"
 )
 
 var (

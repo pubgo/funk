@@ -3,7 +3,6 @@ package config
 import (
 	"bytes"
 	"fmt"
-	"github.com/pubgo/funk/v2/result"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -21,6 +20,7 @@ import (
 	"github.com/pubgo/funk/v2/pathutil"
 	"github.com/pubgo/funk/v2/pretty"
 	"github.com/pubgo/funk/v2/recovery"
+	"github.com/pubgo/funk/v2/result"
 	"github.com/pubgo/funk/v2/typex"
 	"github.com/pubgo/funk/v2/vars"
 )
@@ -45,6 +45,11 @@ func init() {
 			"config_dir":  configDir,
 		}
 	})
+}
+
+func SetConfigPath(confPath string) {
+	assert.If(confPath == "", "config path is null")
+	configPath = confPath
 }
 
 func GetConfigData(cfgPath string) (_ []byte, gErr error) {
