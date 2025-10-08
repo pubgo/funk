@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package common.v1;
-option go_package = "github.com/pubgo/funk/proto/commonpb;commonpb";
+option go_package = "github.com/pubgo/funk/v2/proto/commonpb;commonpb";
 
 import "google/protobuf/any.proto";
 

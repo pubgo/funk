@@ -13,12 +13,12 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	"github.com/pubgo/funk/v2"
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/generic"
 	"github.com/pubgo/funk/v2/log"
 	"github.com/pubgo/funk/v2/pretty"
 	"github.com/pubgo/funk/v2/proto/errorpb"
-	"github.com/pubgo/funk/v2/version"
 )
 
 func Json(err error) []byte {
@@ -173,22 +173,18 @@ func GrpcCodeToHTTP(code codes.Code) int {
 }
 
 // ConvertErr2Status 内部转换，为了让err=nil的时候，监控数据里有OK信息
-func ConvertErr2Status(err *errorpb.Error) *status.Status {
-	if generic.IsNil(err) {
+func ConvertErr2Status(errCode *errorpb.ErrCode) *status.Status {
+	if funk.IsNil(errCode) {
 		return status.New(codes.OK, "OK")
 	}
 
-	if err.Code == nil {
-		return status.New(codes.OK, "OK")
+	if (errCode.Name != "" || errCode.Code != 0) && errCode.StatusCode == 0 {
+		errCode.StatusCode = errorpb.Code_Internal
 	}
 
-	if (err.Code.Name != "" || err.Code.Code != 0) && err.Code.StatusCode == 0 {
-		err.Code.StatusCode = errorpb.Code_Internal
-	}
-
-	st := status.New(codes.Code(err.Code.StatusCode), err.Msg.Msg)
-	if st1, err1 := st.WithDetails(err); err1 != nil {
-		log.Err(err1).Any("lava-error", err).Msg("failed to convert error to grpc status")
+	st := status.New(codes.Code(errCode.StatusCode), errCode.Message)
+	if st1, err1 := st.WithDetails(errCode); err1 != nil {
+		log.Err(err1).Any("lava-error", errCode).Msg("failed to convert error to grpc status")
 		return st
 	} else {
 		return st1
@@ -197,7 +193,7 @@ func ConvertErr2Status(err *errorpb.Error) *status.Status {
 
 // ParseError try to convert an error to *Error.
 // It supports wrapped errors.
-func ParseError(err error) *errorpb.Error {
+func ParseError(err error) *errorpb.ErrCode {
 	if err == nil {
 		return nil
 	}
@@ -211,27 +207,17 @@ func ParseError(err error) *errorpb.Error {
 
 		details := gs.GRPCStatus().Details()
 		if len(details) > 0 && details[0] != nil {
-			if e, ok := details[0].(*errorpb.Error); ok && e != nil {
+			if e, ok := details[0].(*errorpb.ErrCode); ok && e != nil {
 				return e
 			}
 		}
 
-		return &errorpb.Error{
-			Code: &errorpb.ErrCode{
-				Message:    gs.GRPCStatus().Message(),
-				StatusCode: errorpb.Code(gs.GRPCStatus().Code()),
-				Code:       int32(GrpcCodeToHTTP(gs.GRPCStatus().Code())),
-				Name:       "lava.grpc.status",
-				Details:    gs.GRPCStatus().Proto().Details,
-			},
-			Trace: &errorpb.ErrTrace{
-				Service: version.Project(),
-				Version: version.Version(),
-			},
-			Msg: &errorpb.ErrMsg{
-				Msg:    err.Error(),
-				Detail: fmt.Sprintf("%v", gs.GRPCStatus().Details()),
-			},
+		return &errorpb.ErrCode{
+			Message:    gs.GRPCStatus().Message(),
+			StatusCode: errorpb.Code(gs.GRPCStatus().Code()),
+			Code:       int32(GrpcCodeToHTTP(gs.GRPCStatus().Code())),
+			Name:       "lava.grpc.status",
+			Details:    gs.GRPCStatus().Proto().Details,
 		}
 	}
 
@@ -242,34 +228,14 @@ func ParseError(err error) *errorpb.Error {
 			pb.Message = err.Error()
 		}
 
-		return &errorpb.Error{
-			Code: pb,
-			Trace: &errorpb.ErrTrace{
-				Service: version.Project(),
-				Version: version.Version(),
-			},
-			Msg: &errorpb.ErrMsg{
-				Msg:    err.Error(),
-				Detail: fmt.Sprintf("%v", err),
-			},
-		}
+		return pb
 	}
 
-	return &errorpb.Error{
-		Code: &errorpb.ErrCode{
-			Message:    err.Error(),
-			StatusCode: errorpb.Code_Unknown,
-			Code:       500,
-			Name:       "lava.error.unknown",
-			Details:    []*anypb.Any{errors.MustProtoToAny(errors.ParseErrToPb(err))},
-		},
-		Trace: &errorpb.ErrTrace{
-			Service: version.Project(),
-			Version: version.Version(),
-		},
-		Msg: &errorpb.ErrMsg{
-			Msg:    err.Error(),
-			Detail: fmt.Sprintf("%v", err),
-		},
+	return &errorpb.ErrCode{
+		Message:    err.Error(),
+		StatusCode: errorpb.Code_Unknown,
+		Code:       500,
+		Name:       "lava.error.unknown",
+		Details:    []*anypb.Any{errors.MustProtoToAny(errors.ParseErrToPb(err))},
 	}
 }

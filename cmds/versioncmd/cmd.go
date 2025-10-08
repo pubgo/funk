@@ -6,16 +6,16 @@ import (
 
 	"github.com/urfave/cli/v3"
 
+	"github.com/pubgo/funk/v2/buildinfo"
 	"github.com/pubgo/funk/v2/pretty"
 	"github.com/pubgo/funk/v2/recovery"
 	"github.com/pubgo/funk/v2/running"
-	"github.com/pubgo/funk/v2/version"
 )
 
 func New() *cli.Command {
 	return &cli.Command{
 		Name:  "version",
-		Usage: fmt.Sprintf("%s version info", version.Project()),
+		Usage: fmt.Sprintf("%s version info", buildinfo.Project()),
 		Commands: []*cli.Command{
 			{
 				Name:  "validate",

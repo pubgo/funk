@@ -1,20 +1,10 @@
 package funk
 
 import (
-	_ "embed"
-
+	"cmp"
 	"reflect"
 	"unsafe"
-
-	"golang.org/x/exp/constraints"
 )
-
-//go:embed .version
-var version string
-
-func GetReleaseVersion() string {
-	return version
-}
 
 func AppendOf[T any](v T, vv ...T) []T {
 	return append(append(make([]T, 0, len(vv)+1), v), vv...)
@@ -81,8 +71,8 @@ func Map[T, V any](data []T, handle func(i int, d T) V) []V {
 	return vv
 }
 
-// Contains returns whether `vs` contains the element `e` by comparing vs[i] == e.
-func Contains[T comparable](vs []T, e T) bool {
+// Contain returns whether `vs` contains the element `e` by comparing vs[i] == e.
+func Contain[T comparable](vs []T, e T) bool {
 	for _, v := range vs {
 		if v == e {
 			return true
@@ -129,7 +119,7 @@ func DeleteAll[T comparable](set []T, value T) []T {
 }
 
 // Max returns the max of the 2 passed values.
-func Max[T constraints.Ordered](a, b T) (r T) {
+func Max[T cmp.Ordered](a, b T) (r T) {
 	if a < b {
 		r = b
 	} else {
@@ -140,7 +130,7 @@ func Max[T constraints.Ordered](a, b T) (r T) {
 }
 
 // Min returns the min of the 2 passed values.
-func Min[T constraints.Ordered](a, b T) (r T) {
+func Min[T cmp.Ordered](a, b T) (r T) {
 	if a < b {
 		r = a
 	} else {
@@ -173,11 +163,18 @@ func IsNil(err interface{}) bool {
 	}
 }
 
-func Init(fn func()) error {
+func Init(fn func()) Void {
 	fn()
-	return nil
+	return Void{}
 }
 
 func DoFunc[T any](fn func() T) T {
 	return fn()
 }
+
+func DoSelf[T any](t T, fn func(t T)) T {
+	fn(t)
+	return t
+}
+
+type Void struct{}

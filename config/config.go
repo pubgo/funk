@@ -47,6 +47,12 @@ func init() {
 	})
 }
 
+func GetConfigDir() string {
+	return configDir
+}
+func GetConfigPath() string {
+	return configPath
+}
 func SetConfigPath(confPath string) {
 	assert.If(confPath == "", "config path is null")
 	configPath = confPath
@@ -88,6 +94,10 @@ func loadEnvConfigMap(cfgPath string) EnvSpecMap {
 
 		pathList := listAllPath(envPath).Expect("failed to list env config path: %s", envPath)
 		for _, p := range pathList {
+			if !strings.HasSuffix(p, "."+defaultConfigType) {
+				continue
+			}
+
 			envConfigBytes := result.Wrap(os.ReadFile(p)).
 				Map(bytes.TrimSpace).
 				Must(func(e *zerolog.Event) {
