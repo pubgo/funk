@@ -9,7 +9,7 @@ import "google/api/client.proto";
 import "google/api/httpbody.proto";
 import "google/protobuf/empty.proto";
 
-option go_package = "github.com/pubgo/funk/proto/testcodepb;testcodepb";
+option go_package = "github.com/pubgo/funk/v2/proto/testcodepb;testcodepb";
 
 enum Code {
   option (errors.opts).gen = true;

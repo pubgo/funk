@@ -4,19 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	result2 "github.com/pubgo/funk/v2/result"
-	"github.com/pubgo/funk/v2/result/resultchecker"
 	"testing"
 
 	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/log"
 	"github.com/pubgo/funk/v2/recovery"
+	"github.com/pubgo/funk/v2/result"
+	"github.com/pubgo/funk/v2/result/resultchecker"
 )
 
 func TestMust(t *testing.T) {
 	defer recovery.Testing(t)
-	result2.Must(fmt.Errorf("test must"))
+	result.Must(fmt.Errorf("test must"))
 }
 
 type hello struct {
@@ -26,7 +26,7 @@ type hello struct {
 func TestName(t *testing.T) {
 	defer recovery.DebugPrint()
 	ok := &hello{Name: "abc"}
-	okBytes := result2.Wrap(json.Marshal(&ok))
+	okBytes := result.Wrap(json.Marshal(&ok))
 	data := string(okBytes.Expect("failed to encode json data"))
 	t.Log(data)
 	if data != `{"name":"abc"}` {
@@ -36,7 +36,7 @@ func TestName(t *testing.T) {
 }
 
 func TestResultDo(t *testing.T) {
-	ok := result2.OK(&hello{Name: "abc"})
+	ok := result.OK(&hello{Name: "abc"})
 	ok.Inspect(func(v *hello) {
 		assert.If(v.Name != "abc", "not match")
 	}).Inspect(func(v *hello) {
@@ -51,13 +51,13 @@ func TestErrOf(t *testing.T) {
 	var ctx = log.UpdateEventCtx(context.Background(), log.Map{"test": "ok"})
 	resultchecker.RegisterErrCheck(log.RecordErr())
 
-	var err result2.Error
+	var err result.Error
 	if fn1().Catch(&err, ctx) {
 		errors.Debug(err.GetErr())
 	}
 }
 
-func fn1() (r result2.Result[string]) {
+func fn1() (r result.Result[string]) {
 	if fn3().Catch(&r) {
 		return
 	}
@@ -70,7 +70,7 @@ func fn1() (r result2.Result[string]) {
 	return r.WithValue(val)
 }
 
-func fn2() (r result2.Result[string]) {
+func fn2() (r result.Result[string]) {
 	fn3().
 		InspectErr(func(err error) {
 			log.Err(err).Msg("test error")
@@ -83,8 +83,8 @@ func fn2() (r result2.Result[string]) {
 	return r.WithValue("ok")
 }
 
-func fn3() result2.Error {
-	return result2.ErrOf(fmt.Errorf("error test, this is error")).
+func fn3() result.Error {
+	return result.ErrOf(fmt.Errorf("error test, this is error")).
 		InspectErr(func(err error) {
 			log.Err(err).Msg("ddd")
 		}).

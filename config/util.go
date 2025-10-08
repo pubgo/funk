@@ -25,14 +25,6 @@ import (
 	"github.com/pubgo/funk/v2/result"
 )
 
-func GetConfigDir() string {
-	return configDir
-}
-
-func GetConfigPath() string {
-	return configPath
-}
-
 func getConfigPath(name, typ string, configDir ...string) (string, string) {
 	if len(configDir) == 0 {
 		configDir = append(configDir, "./", defaultConfigPath)
@@ -221,9 +213,6 @@ func RegisterExpr(name string, expr any) {
 func getEnvData(cfg *config) map[string]any {
 	exprEnv := map[string]any{
 		"env": env.Map(),
-		"get_path_dir": func() string {
-			return cfg.workDir
-		},
 		"config_dir": func() string {
 			return cfg.workDir
 		},

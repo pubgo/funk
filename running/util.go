@@ -7,17 +7,13 @@ import (
 	semver "github.com/hashicorp/go-version"
 
 	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/buildinfo"
 	"github.com/pubgo/funk/v2/recovery"
-	"github.com/pubgo/funk/v2/version"
 )
-
-func SetVersion(v string) { Version = v }
-func SetProject(p string) { Project = p }
-func SetDomain(d string)  { Domain = d }
 
 func GetSysInfo() map[string]string {
 	return map[string]string{
-		"main_path":     version.MainPath(),
+		"main_path":     buildinfo.MainPath(),
 		"grpc_port":     fmt.Sprintf("%v", GrpcPort),
 		"http_post":     fmt.Sprintf("%v", HttpPort),
 		"debug":         fmt.Sprintf("%v", Debug()),
@@ -28,7 +24,7 @@ func GetSysInfo() map[string]string {
 		"device_id":     DeviceID,
 		"project":       Project,
 		"hostname":      Hostname,
-		"build_time":    version.BuildTime(),
+		"build_time":    buildinfo.BuildTime(),
 		"version":       Version,
 		"domain":        Domain,
 		"commit_id":     CommitID,
@@ -43,15 +39,15 @@ func GetSysInfo() map[string]string {
 
 func CheckVersion() {
 	defer recovery.Exit()
+	assert.If(buildinfo.Project() == "", "project is null")
+	assert.If(buildinfo.Version() == "", "version is null")
+	assert.If(buildinfo.CommitID() == "", "commitID is null")
+	assert.If(buildinfo.BuildTime() == "", "buildTime is null")
 	assert.MustFn(func() error {
-		_, err := semver.NewVersion(version.Version())
+		_, err := semver.NewVersion(buildinfo.Version())
 		if err != nil {
-			return fmt.Errorf("version(%s) error: %w", version.Version(), err)
+			return fmt.Errorf("version(%s) error: %w", buildinfo.Version(), err)
 		}
 		return nil
 	})
-	assert.If(version.Project() == "", "project is null")
-	assert.If(version.Version() == "", "version is null")
-	assert.If(version.CommitID() == "", "commitID is null")
-	assert.If(version.BuildTime() == "", "buildTime is null")
 }

@@ -2,9 +2,10 @@ syntax = "proto3";
 
 package errors;
 
-option go_package = "github.com/pubgo/funk/proto/errorpb;errorpb";
-import "google/protobuf/descriptor.proto";
 import "errorpb/code.proto";
+import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/pubgo/funk/v2/proto/errorpb;errorpb";
 
 message Options {
   bool gen = 1;

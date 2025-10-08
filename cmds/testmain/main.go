@@ -7,12 +7,13 @@ import (
 	"sort"
 
 	"github.com/moby/term"
+	"github.com/urfave/cli/v3"
+
 	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/buildinfo"
 	"github.com/pubgo/funk/v2/cliutils"
 	"github.com/pubgo/funk/v2/cmds/versioncmd"
 	"github.com/pubgo/funk/v2/ctxutil"
-	"github.com/pubgo/funk/v2/version"
-	"github.com/urfave/cli/v3"
 )
 
 func main() {
@@ -21,7 +22,7 @@ func main() {
 		Suggest:                true,
 		UseShortOptionHandling: true,
 		ShellComplete:          cli.DefaultAppComplete,
-		Version:                version.Version(),
+		Version:                buildinfo.Version(),
 		Commands: []*cli.Command{
 			versioncmd.New(),
 		},

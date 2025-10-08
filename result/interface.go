@@ -1,6 +1,10 @@
 package result
 
-import "context"
+import (
+	"context"
+
+	"github.com/pubgo/funk/v2"
+)
 
 // Checkable defines types that can be checked for Ok/Error state
 type Checkable interface {
@@ -24,3 +28,5 @@ type UnWrapper[T any] interface {
 	UnwrapErr(setter *error, contexts ...context.Context) T
 	Unwrap(setter ErrSetter, contexts ...context.Context) T
 }
+
+type Void = funk.Void

@@ -7,12 +7,13 @@ import (
 	"os"
 	"time"
 
+	"github.com/rs/zerolog"
+	zlog "github.com/rs/zerolog/log"
+
+	"github.com/pubgo/funk/v2"
 	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/errors/errinter"
 	"github.com/pubgo/funk/v2/generic"
-
-	"github.com/rs/zerolog"
-	zlog "github.com/rs/zerolog/log"
 )
 
 var (
@@ -36,7 +37,7 @@ var (
 		e.Discard()
 	})
 
-	_ = generic.Init(func() {
+	_ = funk.Init(func() {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 		zerolog.ErrorMarshalFunc = func(err error) any {
 			if err == nil {
@@ -65,7 +66,7 @@ var (
 			})).Hook(logGlobalHook),
 	)
 
-	_ = generic.Init(func() {
+	_ = funk.Init(func() {
 		zlog.Logger = generic.FromPtr(stdZeroLog)
 	})
 

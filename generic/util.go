@@ -157,7 +157,4 @@ func IsNil(err interface{}) bool {
 	return funk.IsNil(err)
 }
 
-func Init(fn func()) any {
-	fn()
-	return nil
-}
+func Init(fn func()) funk.Void { return funk.Init(fn) }
