@@ -1,9 +1,12 @@
 package buildinfo
 
 import (
-	"github.com/samber/lo"
 	"runtime/debug"
 	"strings"
+	"time"
+
+	"github.com/samber/lo"
+	"golang.org/x/mod/module"
 )
 
 func CommitID() string  { return commitID }
@@ -43,6 +46,21 @@ func init() {
 
 	if version == "" {
 		version = bi.Main.Version
+	}
+
+	if module.IsPseudoVersion(bi.Main.Version) {
+		ver := bi.Main.Version
+		if a, err := module.PseudoVersionTime(ver); err == nil {
+			buildTime = a.Format(time.RFC3339)
+		}
+
+		if b, err := module.PseudoVersionRev(ver); err == nil {
+			commitID = b
+		}
+
+		if c, err := module.PseudoVersionBase(ver); err == nil {
+			version = c
+		}
 	}
 
 	if version == "" {

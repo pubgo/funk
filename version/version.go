@@ -7,6 +7,8 @@ import (
 //go:embed .version
 var version string
 
+// ReleaseVersion v2.0.0
 func ReleaseVersion() string { return version }
 
-func ReleaseDate() string { return "2025-10-08" }
+// ReleaseDate 2025-10-10T12:01:46Z
+func ReleaseDate() int64 { return 1760097706 }
