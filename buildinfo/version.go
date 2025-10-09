@@ -1,17 +1,23 @@
 package buildinfo
 
 import (
-	"github.com/samber/lo"
 	"runtime/debug"
 	"strings"
+	"time"
+
+	"github.com/samber/lo"
+	"golang.org/x/mod/module"
+
+	v "github.com/pubgo/funk/v2/buildinfo/version"
 )
 
-func CommitID() string  { return commitID }
-func MainPath() string  { return mainPath }
-func Version() string   { return version }
-func BuildTime() string { return buildTime }
-func Project() string   { return project }
-func Domain() string    { return domain }
+func CommitID() string       { return commitID }
+func MainPath() string       { return mainPath }
+func Version() string        { return version }
+func ReleaseVersion() string { return release }
+func BuildTime() string      { return buildTime }
+func Project() string        { return project }
+func Domain() string         { return domain }
 
 var domain string
 var mainPath string
@@ -19,15 +25,26 @@ var mainPath string
 // git rev-parse HEAD
 // git describe --always --abbrev=7 --dirty
 var (
-	commitID  string
+	// commitID, git commit id
+	commitID string
+
+	// buildTime, build time, rfc3339
 	buildTime string
 )
 
 // git describe --tags --abbrev=0
 // git tag --sort=committerdate | tail -n 1
 var (
+	// version, git tag
 	version string
+
+	// project, project name
 	project string
+)
+
+var (
+	// release tag
+	release string
 )
 
 func init() {
@@ -45,6 +62,21 @@ func init() {
 		version = bi.Main.Version
 	}
 
+	if module.IsPseudoVersion(bi.Main.Version) {
+		ver := bi.Main.Version
+		if a, err := module.PseudoVersionTime(ver); err == nil {
+			buildTime = a.Format(time.RFC3339)
+		}
+
+		if b, err := module.PseudoVersionRev(ver); err == nil {
+			commitID = b
+		}
+
+		if c, err := module.PseudoVersionBase(ver); err == nil {
+			version = c
+		}
+	}
+
 	if version == "" {
 		version = "v0.0.1-dev-99"
 	}
@@ -58,4 +90,12 @@ func init() {
 			buildTime = setting.Value
 		}
 	}
+
+	_ = v.SetBuildTime(buildTime)
+	_ = v.SetCommitID(commitID)
+	_ = v.SetProject(project)
+	_ = v.SetReleaseVersion(release)
+	_ = v.SetMainPath(mainPath)
+	_ = v.SetVersion(version)
+	_ = v.SetDomain(domain)
 }
