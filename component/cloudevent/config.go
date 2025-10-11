@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/buildinfo/version"
 	"github.com/pubgo/funk/v2/errors"
-	"github.com/pubgo/funk/v2/running"
 	"github.com/pubgo/funk/v2/typex"
 	"google.golang.org/protobuf/proto"
 	yaml "gopkg.in/yaml.v3"
@@ -24,7 +24,7 @@ const DefaultConcurrent = 100
 const DefaultMaxConcurrent = 1000
 const DefaultMinConcurrent = 1
 
-var senderValue = fmt.Sprintf("%s/%s", running.Project, running.Version)
+var senderValue = fmt.Sprintf("%s/%s", version.Project(), version.Version())
 
 type Config struct {
 	// Streams: nats stream config
