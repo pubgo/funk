@@ -18,6 +18,8 @@ import (
 	"github.com/pubgo/funk/v2/result"
 )
 
+const Name = "env"
+
 func Set(key, value string) result.Error {
 	return result.ErrOf(os.Setenv(keyHandler(key), value)).Log(func(e *zerolog.Event) {
 		e.Str("key", key)
@@ -49,12 +51,13 @@ func GetWith(val *string, names ...string) { getVal(val, names...) }
 
 func getVal(val *string, names ...string) {
 	for _, name := range names {
-		env, ok := Lookup(name)
-		env = trim(env)
-		if ok && env != "" {
-			*val = env
-			break
+		env := trim(os.Getenv(keyHandler(name)))
+		if env == "" {
+			continue
 		}
+
+		*val = env
+		break
 	}
 }
 

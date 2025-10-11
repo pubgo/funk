@@ -3,7 +3,6 @@ package cloudevent
 import (
 	"context"
 	"fmt"
-	"github.com/pubgo/funk/v2/result"
 	"net/http"
 	"strings"
 	"time"
@@ -13,6 +12,7 @@ import (
 	ants "github.com/panjf2000/ants/v2"
 	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/buildinfo"
+	"github.com/pubgo/funk/v2/buildinfo/version"
 	"github.com/pubgo/funk/v2/component/lifecycle"
 	"github.com/pubgo/funk/v2/component/natsclient"
 	"github.com/pubgo/funk/v2/errors"
@@ -20,6 +20,7 @@ import (
 	"github.com/pubgo/funk/v2/log"
 	"github.com/pubgo/funk/v2/log/logfields"
 	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
+	"github.com/pubgo/funk/v2/result"
 	"github.com/pubgo/funk/v2/running"
 	"github.com/pubgo/funk/v2/stack"
 	"github.com/pubgo/funk/v2/try"
@@ -85,7 +86,7 @@ func (c *Client) initStream() (r error) {
 
 		// add subject prefix
 		streamSubjects := lo.Map(cfg.Subjects, func(item string, index int) string { return c.subjectName(item) })
-		metadata := map[string]string{"creator": fmt.Sprintf("%s/%s/%s", buildinfo.Project(), buildinfo.Version(), running.InstanceID)}
+		metadata := map[string]string{"creator": fmt.Sprintf("%s/%s/%s", version.Project(), version.Version(), running.InstanceID)}
 		storageType := getStorageType(cfg.Storage)
 		streamCfg := jetstream.StreamConfig{
 			Name:     streamName,

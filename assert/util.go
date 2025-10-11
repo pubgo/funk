@@ -41,7 +41,7 @@ func logErr(err error, message string, attrs ...slog.Attr) {
 		return !item.IsRuntime() && item.Pkg != assetFile.Pkg
 	})
 	attrs = append(attrs,
-		slog.String(logfields.Module, "assert"),
+		slog.String(logfields.Module, Name),
 		slog.String(logfields.Error, err.Error()),
 		slog.Any(logfields.ErrorStack, lo.Map(traces, func(item *stack.Frame, index int) string { return item.String() })),
 		slog.String(logfields.ErrorDetail, fmt.Sprintf("%v", err)),
