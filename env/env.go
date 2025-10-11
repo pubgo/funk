@@ -49,12 +49,13 @@ func GetWith(val *string, names ...string) { getVal(val, names...) }
 
 func getVal(val *string, names ...string) {
 	for _, name := range names {
-		env, ok := Lookup(name)
-		env = trim(env)
-		if ok && env != "" {
-			*val = env
-			break
+		env := trim(os.Getenv(keyHandler(name)))
+		if env == "" {
+			continue
 		}
+
+		*val = env
+		break
 	}
 }
 

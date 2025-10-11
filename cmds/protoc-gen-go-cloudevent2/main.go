@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"github.com/pubgo/funk/v2/cmds/protoc-gen-go-cloudevent/internal"
+	"github.com/pubgo/funk/v2/cmds/protoc-gen-go-cloudevent2/internal"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/types/pluginpb"
 )
