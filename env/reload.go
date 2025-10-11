@@ -14,16 +14,10 @@ func Reload() {
 	loadEnv()
 }
 
-// Init reload env
-// Deprecated: use Reload instead.
-func Init() {
-	loadEnv()
-}
-
 // 环境变量处理, key转大写, 同时把`-./`转换为`_`
 // a-b=>a_b, a.b=>a_b, a/b=>a_b
 func loadEnv() {
-	logger := slog.With(slog.String(logfields.Module, "env"), slog.String(logfields.Operation, "reload_env"))
+	var logger = slog.With(slog.String(logfields.Module, Name))
 	logger.Info("reload env")
 
 	for _, env := range os.Environ() {

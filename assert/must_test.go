@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	slog.SetDefault(slog.New(log.NewSlog(log.GetLogger("fastcommit"))))
+	slog.SetDefault(slog.New(log.NewSlog(log.GetLogger(assert1.Name))))
 }
 
 type errBase struct {
