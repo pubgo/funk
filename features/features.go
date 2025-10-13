@@ -1,12 +1,40 @@
 package features
 
 import (
+	"fmt"
 	"sync"
+)
+
+type ValueType string
+
+func (typ ValueType) String() string {
+	switch typ {
+	case StringType:
+		return "string"
+	case IntType:
+		return "int"
+	case FloatType:
+		return "float"
+	case BoolType:
+		return "bool"
+	case JsonType:
+		return "json"
+	default:
+		return "unknown"
+	}
+}
+
+const (
+	StringType ValueType = "string"
+	IntType    ValueType = "int"
+	FloatType  ValueType = "float"
+	BoolType   ValueType = "bool"
+	JsonType   ValueType = "json"
 )
 
 type Value interface {
 	String() string
-	Type() string
+	Type() ValueType
 	Set(string) error
 	Get() any
 }
@@ -21,15 +49,13 @@ type Flag struct {
 
 type Feature struct {
 	mutex sync.RWMutex
-	m     map[string]*Flag
+	flags map[string]*Flag
 }
-
-var defaultFeature = NewFeature()
 
 // NewFeature creates a new Feature instance
 func NewFeature() *Feature {
 	return &Feature{
-		m: make(map[string]*Flag),
+		flags: make(map[string]*Flag),
 	}
 }
 
@@ -38,8 +64,12 @@ func (m *Feature) AddFunc(name string, usage string, value Value, tags ...map[st
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
+	if m.flags[name] != nil {
+		panic(fmt.Sprintf("flag already exists, name:%s", name))
+	}
+
 	ff := &Flag{Name: name, Usage: usage, Value: value, Tags: mergeTags(tags...)}
-	m.m[name] = ff
+	m.flags[name] = ff
 	return ff
 }
 
@@ -47,17 +77,19 @@ func (m *Feature) AddFunc(name string, usage string, value Value, tags ...map[st
 func (m *Feature) Lookup(name string) *Flag {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	return m.m[name]
+	return m.flags[name]
 }
 
 // VisitAll calls fn for each entry
 func (m *Feature) VisitAll(fn func(*Flag)) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
-	for _, e := range m.m {
+	for _, e := range m.flags {
 		fn(e)
 	}
 }
+
+var defaultFeature = NewFeature()
 
 func Register(name string, usage string, value Value, tags ...map[string]any) {
 	defaultFeature.AddFunc(name, usage, value, tags...)

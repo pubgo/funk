@@ -10,7 +10,7 @@ import (
 	"github.com/urfave/cli/v3"
 
 	"github.com/pubgo/funk/v2/assert"
-	"github.com/pubgo/funk/v2/buildinfo"
+	"github.com/pubgo/funk/v2/buildinfo/version"
 	"github.com/pubgo/funk/v2/cliutils"
 	"github.com/pubgo/funk/v2/cmds/versioncmd"
 	"github.com/pubgo/funk/v2/ctxutil"
@@ -22,7 +22,7 @@ func main() {
 		Suggest:                true,
 		UseShortOptionHandling: true,
 		ShellComplete:          cli.DefaultAppComplete,
-		Version:                buildinfo.Version(),
+		Version:                version.Version(),
 		Commands: []*cli.Command{
 			versioncmd.New(),
 		},

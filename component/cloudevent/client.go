@@ -138,7 +138,7 @@ func (c *Client) initConsumer() (r error) {
 				// A streaming consumer can only have one corresponding job handler
 				assert.If(c.consumers[streamName][consumerName] != nil, "consumer %s already exists", consumerName)
 
-				metadata := map[string]string{"version": fmt.Sprintf("%s/%s", buildinfo.Project(), buildinfo.Version())}
+				metadata := map[string]string{"version": fmt.Sprintf("%s/%s", version.Project(), version.Version())}
 				consumerCfg := jetstream.ConsumerConfig{
 					Name:     consumerName,
 					Durable:  consumerName,

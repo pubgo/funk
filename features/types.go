@@ -4,116 +4,157 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/k0kubun/pp/v3"
 )
 
-type StringValue struct {
-	val string
-	ff  *Flag
+var _ Value = (*baseValue[any])(nil)
+
+func newBase[T any](f *Feature, name string, value T, usage string, typ ValueType, tags []map[string]any, set func(s string) (T, error), getString func(val T) string) *baseValue[T] {
+	base := &baseValue[T]{val: value, set: set, getString: getString, typ: typ}
+	base.ff = f.AddFunc(name, usage, base, tags...)
+	return base
 }
 
-func (s *StringValue) Type() string         { return "string" }
-func (s *StringValue) Name() string         { return s.ff.Name }
-func (s *StringValue) Get() any             { return s.val }
-func (s *StringValue) GetValue() string     { return s.val }
-func (s *StringValue) Set(val string) error { s.val = val; return nil }
-func (s *StringValue) String() string       { return s.val }
+type baseValue[T any] struct {
+	ff        *Flag
+	typ       ValueType
+	val       T
+	set       func(s string) (T, error)
+	getString func(val T) string
+}
 
-func String(name, value, usage string, tags ...map[string]any) *StringValue {
-	s := &StringValue{val: value}
-	s.ff = defaultFeature.AddFunc(name, usage, s, tags...)
-	return s
+func (b *baseValue[T]) Name() string    { return b.ff.Name }
+func (b *baseValue[T]) Type() ValueType { return b.typ }
+func (b *baseValue[T]) Get() any        { return b.val }
+func (b *baseValue[T]) GetValue() T     { return b.val }
+func (b *baseValue[T]) Set(s string) error {
+	val, err := b.set(s)
+	if err != nil {
+		return fmt.Errorf("faield to set value, value=%s err=%w", s, err)
+	}
+
+	b.val = val
+	return nil
+}
+func (b *baseValue[T]) String() string {
+	if b.getString == nil {
+		return fmt.Sprintf("%v", b.val)
+	}
+
+	return b.getString(b.val)
+}
+
+type StringValue struct {
+	*baseValue[string]
+}
+
+func String(name, value, usage string, tags ...map[string]any) StringValue {
+	base := newBase(
+		defaultFeature,
+		name,
+		value,
+		usage,
+		StringType,
+		tags,
+		func(s string) (string, error) { return s, nil },
+		func(val string) string { return val },
+	)
+	return StringValue{baseValue: base}
 }
 
 type IntValue struct {
-	val int64
-	ff  *Flag
+	*baseValue[int64]
 }
 
-func (i *IntValue) Type() string    { return "int" }
-func (i *IntValue) Name() string    { return i.ff.Name }
-func (i *IntValue) Get() any        { return i.val }
-func (i *IntValue) GetValue() int64 { return i.val }
-func (i *IntValue) String() string  { return fmt.Sprintf("%d", i.val) }
-func (i *IntValue) Set(val string) error {
-	_, err := fmt.Sscanf(val, "%d", &i.val)
-	return err
-}
-
-func Int(name string, value int64, usage string, tags ...map[string]any) *IntValue {
-	i := &IntValue{val: value}
-	i.ff = defaultFeature.AddFunc(name, usage, i, tags...)
-	return i
+func Int(name string, value int64, usage string, tags ...map[string]any) IntValue {
+	base := newBase(
+		defaultFeature,
+		name,
+		value,
+		usage,
+		IntType,
+		tags,
+		func(s string) (val int64, err error) {
+			_, err = fmt.Sscanf(s, "%d", &val)
+			return
+		},
+		nil,
+	)
+	return IntValue{baseValue: base}
 }
 
 type FloatValue struct {
-	val float64
-	ff  *Flag
+	*baseValue[float64]
 }
 
-func (f *FloatValue) Type() string   { return "float" }
-func (f *FloatValue) Name() string   { return f.ff.Name }
-func (f *FloatValue) Get() any       { return f.val }
-func (f *FloatValue) String() string { return fmt.Sprintf("%f", f.val) }
-func (f *FloatValue) Set(val string) error {
-	_, err := fmt.Sscanf(val, "%f", &f.val)
-	return err
-}
-
-func Float(name string, value float64, usage string, tags ...map[string]any) *FloatValue {
-	f := &FloatValue{val: value}
-	f.ff = defaultFeature.AddFunc(name, usage, f, tags...)
-	return f
+func Float(name string, value float64, usage string, tags ...map[string]any) FloatValue {
+	base := newBase(
+		defaultFeature,
+		name,
+		value,
+		usage,
+		FloatType,
+		tags,
+		func(s string) (val float64, err error) {
+			_, err = fmt.Sscanf(s, "%f", &val)
+			return
+		},
+		func(val float64) string { return fmt.Sprintf("%f", val) },
+	)
+	return FloatValue{baseValue: base}
 }
 
 type BoolValue struct {
-	val bool
-	ff  *Flag
+	*baseValue[bool]
 }
 
-func (b *BoolValue) Type() string   { return "bool" }
-func (b *BoolValue) Name() string   { return b.ff.Name }
-func (b *BoolValue) Get() any       { return b.val }
-func (b *BoolValue) GetValue() bool { return b.val }
-func (b *BoolValue) String() string { return fmt.Sprintf("%v", b.val) }
-func (b *BoolValue) Set(val string) error {
-	switch strings.ToLower(val) {
-	case "true", "1", "on", "yes":
-		b.val = true
-	case "false", "0", "off", "no":
-		b.val = false
-	default:
-		b.val = len(val) > 0
-	}
-	return nil
-}
-
-func Bool(name string, value bool, usage string, tags ...map[string]any) *BoolValue {
-	b := &BoolValue{val: value}
-	b.ff = defaultFeature.AddFunc(name, usage, b, tags...)
-	return b
+func Bool(name string, value bool, usage string, tags ...map[string]any) BoolValue {
+	base := newBase(
+		defaultFeature,
+		name,
+		value,
+		usage,
+		BoolType,
+		tags,
+		func(s string) (val bool, err error) {
+			switch strings.ToLower(s) {
+			case "true", "1", "on", "yes":
+				return true, nil
+			case "false", "0", "off", "no":
+				return false, nil
+			default:
+				return len(s) > 0, nil
+			}
+		},
+		func(val bool) string { return fmt.Sprintf("%v", val) },
+	)
+	return BoolValue{baseValue: base}
 }
 
 type JsonValue[T any] struct {
-	val T
-	ff  *Flag
+	*baseValue[T]
 }
 
-func (t *JsonValue[T]) Type() string { return "json" }
-func (t *JsonValue[T]) Name() string { return t.ff.Name }
-func (t *JsonValue[T]) GetValue() T  { return t.val }
-func (t *JsonValue[T]) Get() any     { return t.val }
-func (t *JsonValue[T]) String() string {
-	data, err := json.Marshal(t.val)
-	if err != nil {
-		return err.Error()
-	}
-	return string(data)
-}
-func (t *JsonValue[T]) Set(val string) error {
-	return json.Unmarshal([]byte(val), &t.val)
-}
-func Json[T any](name string, value T, usage string, tags ...map[string]any) *JsonValue[T] {
-	t := &JsonValue[T]{val: value}
-	t.ff = defaultFeature.AddFunc(name, usage, t, tags...)
-	return t
+func Json[T any](name string, value T, usage string, tags ...map[string]any) JsonValue[T] {
+	base := newBase[T](
+		defaultFeature,
+		name,
+		value,
+		usage,
+		JsonType,
+		tags,
+		func(s string) (val T, err error) {
+			return val, json.Unmarshal([]byte(s), &val)
+		},
+		func(val T) string {
+			data, err := json.Marshal(val)
+			if err != nil {
+				_, _ = pp.Println(val)
+				return err.Error()
+			}
+			return string(data)
+		},
+	)
+	return JsonValue[T]{baseValue: base}
 }

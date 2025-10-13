@@ -12,9 +12,7 @@ import (
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/encoding/prototext"
 
-	"github.com/pubgo/funk/v2"
 	"github.com/pubgo/funk/v2/errors"
-	"github.com/pubgo/funk/v2/generic"
 	"github.com/pubgo/funk/v2/log"
 	"github.com/pubgo/funk/v2/log/logfields"
 	"github.com/pubgo/funk/v2/result/resultchecker"
@@ -30,12 +28,13 @@ func try(fn func() error) (gErr error) {
 	}
 
 	defer func() {
-		if err := errors.Parse(recover()); !generic.IsNil(err) {
+		if err := errors.Parse(recover()); err != nil {
 			gErr = errors.WrapStack(err)
-			errors.Debug(gErr)
 		}
 
-		gErr = errors.WrapKV(gErr, "fn_stack", stack.CallerWithFunc(fn).String())
+		if gErr != nil {
+			gErr = errors.WrapKV(gErr, "fn_stack", stack.CallerWithFunc(fn).String())
+		}
 	}()
 
 	gErr = fn()
@@ -49,7 +48,7 @@ func tryResult[T any](fn func() Result[T]) (r Result[T]) {
 
 	defer func() {
 		var gErr error
-		if err := errors.Parse(recover()); !funk.IsNil(err) {
+		if err := errors.Parse(recover()); err != nil {
 			gErr = errors.WrapStack(err)
 		}
 
@@ -69,9 +68,8 @@ func try1[T any](fn func() (T, error)) (t T, gErr error) {
 	}
 
 	defer func() {
-		if err := errors.Parse(recover()); !generic.IsNil(err) {
+		if err := errors.Parse(recover()); err != nil {
 			gErr = errors.WrapStack(err)
-			errors.Debug(gErr)
 		}
 
 		if gErr != nil {
@@ -181,7 +179,7 @@ func errRecovery(getErr func() error, callbacks ...func(err error) error) error 
 		}
 	}
 
-	debug.PrintStack()
+	stack.PrintStack()
 	return err
 }
 
