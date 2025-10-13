@@ -18,6 +18,8 @@ import (
 	"github.com/pubgo/funk/v2/result"
 )
 
+const Name = "env"
+
 func Set(key, value string) result.Error {
 	return result.ErrOf(os.Setenv(keyHandler(key), value)).Log(func(e *zerolog.Event) {
 		e.Str("key", key)

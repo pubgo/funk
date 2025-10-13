@@ -3,35 +3,40 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 
-	"github.com/pubgo/funk/v2/monster"
+	"github.com/pubgo/funk/v2/features"
 )
+
+type Data struct {
+	Name string
+}
 
 func main() {
 	// 创建带 Tags 的元数据
-	status := monster.String("app_status", "ok", "Current application status",
+	status := features.String("app_status", "ok", "Current application status",
 		map[string]any{
 			"group":   "health",
 			"mutable": true,
 		})
 
-	replicas := monster.Int("replicas", 1, "Number of replicas",
+	replicas := features.Int("replicas", 1, "Number of replicas",
 		map[string]any{
 			"group": "scaling",
 			"min":   1,
 			"max":   10,
 		})
 
-	_ = monster.Duration("http_timeout", 5*time.Second, "HTTP request timeout",
+	_ = features.String("api_key", "sk-xxxx", "API authentication key",
 		map[string]any{
-			"unit":  "seconds",
-			"group": "network",
+			"sensitive": true,
+			"group":     "security",
 		})
 
-	_ = monster.String("api_key", "sk-xxxx", "API authentication key",
+	_ = features.Json("json_key", &Data{}, "API authentication key",
 		map[string]any{
 			"sensitive": true,
 			"group":     "security",
@@ -43,7 +48,7 @@ func main() {
 		status.Set("degraded")
 
 		time.Sleep(2 * time.Second)
-		replicas.Set(replicas.Get() + 2)
+		replicas.Set(fmt.Sprintf("%v", replicas.GetValue()+2))
 
 		time.Sleep(2 * time.Second)
 	}()
@@ -55,20 +60,20 @@ func main() {
 		json.NewEncoder(w).Encode(data)
 	})
 
-	log.Println("Monster server listening on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Println("Feature server listening on :8181")
+	log.Fatal(http.ListenAndServe(":8181", nil))
 }
 
 // extractPublicMetadata 导出所有非敏感元数据
 func extractPublicMetadata() map[string]any {
 	m := make(map[string]any)
-	monster.VisitAll(func(e *monster.Entry) {
+	features.VisitAll(func(e *features.Flag) {
 		// 跳过敏感字段
 		if sensitive, ok := e.Tags["sensitive"].(bool); ok && sensitive {
 			m[e.Name] = "******"
 			return
 		}
-		m[e.Name] = e.Getter()
+		m[e.Name] = e
 	})
 	return m
 }

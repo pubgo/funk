@@ -3,13 +3,13 @@ package stack
 import (
 	"runtime/debug"
 
-	"github.com/pubgo/funk/v2/monster"
+	"github.com/pubgo/funk/v2/features"
 )
 
-var EnablePrintStack = monster.Bool("stack.enable_print_stack", false, "stack enable print stack data")
+var EnablePrintStack = features.Bool("stack.enable_print_stack", false, "stack enable print stack data")
 
 func PrintStack() {
-	if !EnablePrintStack.Get() {
+	if !EnablePrintStack.GetValue() {
 		return
 	}
 
