@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/k0kubun/pp/v3"
 )
 
 var _ Value = (*baseValue[any])(nil)
@@ -24,18 +26,17 @@ type baseValue[T any] struct {
 
 func (b *baseValue[T]) Name() string    { return b.ff.Name }
 func (b *baseValue[T]) Type() ValueType { return b.typ }
+func (b *baseValue[T]) Get() any        { return b.val }
+func (b *baseValue[T]) GetValue() T     { return b.val }
 func (b *baseValue[T]) Set(s string) error {
 	val, err := b.set(s)
 	if err != nil {
-		return err
+		return fmt.Errorf("faield to set value, value=%s err=%w", s, err)
 	}
 
 	b.val = val
 	return nil
 }
-
-func (b *baseValue[T]) Get() any    { return b.val }
-func (b *baseValue[T]) GetValue() T { return b.val }
 func (b *baseValue[T]) String() string {
 	if b.getString == nil {
 		return fmt.Sprintf("%v", b.val)
@@ -149,6 +150,7 @@ func Json[T any](name string, value T, usage string, tags ...map[string]any) Jso
 		func(val T) string {
 			data, err := json.Marshal(val)
 			if err != nil {
+				_, _ = pp.Println(val)
 				return err.Error()
 			}
 			return string(data)

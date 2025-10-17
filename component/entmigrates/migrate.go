@@ -22,7 +22,7 @@ import (
 	"gorm.io/gorm/logger"
 
 	"github.com/pubgo/funk/v2/assert"
-	"github.com/pubgo/funk/v2/buildinfo"
+	"github.com/pubgo/funk/v2/buildinfo/version"
 	"github.com/pubgo/funk/v2/config"
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/generic"
@@ -149,7 +149,7 @@ func %s() *entmigrates.Migration {
 		DataMigrate:  nil,
 	}
 }
-`, name, name, fmt.Sprint(now.String(), " ", buildinfo.Version()), name))
+`, name, name, fmt.Sprint(now.String(), " ", version.Version()), name))
 
 	filename = filepath.Join(g.config.MigrationPath, fmt.Sprintf("%s.go", name))
 	err = os.WriteFile(filename, []byte(genFile.GoString()), 0o644)

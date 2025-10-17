@@ -52,8 +52,6 @@ type Feature struct {
 	flags map[string]*Flag
 }
 
-var defaultFeature = NewFeature()
-
 // NewFeature creates a new Feature instance
 func NewFeature() *Feature {
 	return &Feature{
@@ -90,6 +88,8 @@ func (m *Feature) VisitAll(fn func(*Flag)) {
 		fn(e)
 	}
 }
+
+var defaultFeature = NewFeature()
 
 func Register(name string, usage string, value Value, tags ...map[string]any) {
 	defaultFeature.AddFunc(name, usage, value, tags...)

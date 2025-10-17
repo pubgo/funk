@@ -28,7 +28,7 @@ func New(p Param) *Client {
 
 	nc := assert.Must1(nats.Connect(p.Cfg.Url, func(o *nats.Options) error {
 		o.AllowReconnect = true
-		o.Name = fmt.Sprintf("%s/%s/%s", running.Hostname, running.Project, running.InstanceID)
+		o.Name = fmt.Sprintf("%s/%s/%s", running.Hostname, running.Project(), running.InstanceID)
 		return nil
 	}))
 

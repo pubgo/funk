@@ -1,4 +1,4 @@
 plugins:
   - name: go
   - name: go-enum
-  - name: go-errors
+  - name: go-errors2

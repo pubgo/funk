@@ -22,7 +22,7 @@ func Run(args ...string) (r result.Result[string]) {
 	cmd.Stdout = b
 
 	result.ErrOf(cmd.Run()).Must(func(e *zerolog.Event) {
-		e.Str(logfields.Msg, fmt.Sprintf("failed to execute: "+strings.Join(args, " ")))
+		e.Str(logfields.Msg, fmt.Sprintf("failed to execute: %q", args))
 	})
 
 	return r.WithValue(strings.TrimSpace(b.String()))
