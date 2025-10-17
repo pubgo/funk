@@ -10,12 +10,16 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/nats-io/nats.go/jetstream"
 	ants "github.com/panjf2000/ants/v2"
+	"github.com/rs/zerolog"
+	"github.com/samber/lo"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
+
 	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/buildinfo/version"
 	"github.com/pubgo/funk/v2/component/lifecycle"
 	"github.com/pubgo/funk/v2/component/natsclient"
 	"github.com/pubgo/funk/v2/errors"
-	"github.com/pubgo/funk/v2/internal/anyhow"
 	"github.com/pubgo/funk/v2/log"
 	"github.com/pubgo/funk/v2/log/logfields"
 	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
@@ -24,10 +28,6 @@ import (
 	"github.com/pubgo/funk/v2/stack"
 	"github.com/pubgo/funk/v2/try"
 	"github.com/pubgo/funk/v2/typex"
-	"github.com/rs/zerolog"
-	"github.com/samber/lo"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type Params struct {
@@ -346,7 +346,7 @@ func (c *Client) doErrHandler(streamName, consumerName string) jetstream.PullCon
 	})
 }
 
-func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *jobEventHandler, cfg *JobEventConfig) (gErr anyhow.Error) {
+func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *jobEventHandler, cfg *JobEventConfig) (gErr result.Error) {
 	var timeout = lo.FromPtr(cfg.Timeout)
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
@@ -388,31 +388,31 @@ func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *
 	}()
 
 	var pb anypb.Any
-	err := anyhow.ErrOf(proto.Unmarshal(msg.Data(), &pb)).
+	err := result.ErrOf(proto.Unmarshal(msg.Data(), &pb)).
 		Map(func(err error) error {
 			return errors.WrapTag(err,
 				errors.T("msg", "failed to unmarshal stream msg data to any proto"),
 				errors.T("args", string(msg.Data())),
 			)
 		})
-	if err.CatchErr(&gErr) {
+	if err.Catch(&gErr) {
 		return
 	}
 	args = &pb
 
-	dst := anyhow.Wrap(anypb.UnmarshalNew(args.(*anypb.Any), proto.UnmarshalOptions{})).
+	dst := result.Wrap(anypb.UnmarshalNew(args.(*anypb.Any), proto.UnmarshalOptions{})).
 		MapErr(func(err error) error {
 			return errors.WrapTag(err,
 				errors.T("msg", "failed to unmarshal any proto to proto msg"),
 				errors.T("args", args),
 			)
 		})
-	if dst.CatchErr(&gErr) {
+	if dst.Catch(&gErr) {
 		return
 	}
 
 	ctx = createCtxWithContext(ctx, msgCtx)
-	err = anyhow.ErrOf(job.handler(ctx, dst.GetValue())).
+	err = result.ErrOf(job.handler(ctx, dst.GetValue())).
 		Map(func(err error) error {
 			return errors.WrapTag(err,
 				errors.T("msg", "failed to do cloud job handler"),
