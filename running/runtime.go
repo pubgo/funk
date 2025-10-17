@@ -24,8 +24,8 @@ import (
 var (
 	Env      = sync.OnceValue(func() string { return EnvFlag.Get().(string) })
 	Debug    = sync.OnceValue(func() bool { return DebugFlag.Get().(bool) })
-	HttpPort = sync.OnceValue(func() int { return GrpcPortFlag.Get().(int) })
-	GrpcPort = sync.OnceValue(func() int { return HttpPortFlag.Get().(int) })
+	HttpPort = sync.OnceValue(func() int { return HttpPortFlag.Get().(int) })
+	GrpcPort = sync.OnceValue(func() int { return GrpcPortFlag.Get().(int) })
 	Project  = version.Project
 
 	// InstanceID service id

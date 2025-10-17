@@ -57,6 +57,11 @@ func init1Next() (err error) {
 	return nil
 }
 
+func TestDebugMode(t *testing.T) {
+	assert1.Exit(assert1.FeatureDebugMode.Set("true"))
+	assert1.Must(fmt.Errorf("test next"))
+}
+
 func BenchmarkNoPanic(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_ = func() (err error) {

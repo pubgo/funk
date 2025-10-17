@@ -7,7 +7,6 @@ import (
 
 	"github.com/rs/xid"
 	"github.com/samber/lo"
-	"golang.org/x/xerrors"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -26,17 +25,6 @@ func IfErr(err error, fn func(err error) error) error {
 
 func New(msg string, tags ...Tag) error {
 	return WrapCaller(&Err{Msg: msg, id: xid.New().String(), Tags: tags}, 1)
-}
-
-func XErrorf(msg string, args ...interface{}) error {
-	err := xerrors.Errorf(msg, args)
-	return &ErrMsg{
-		err: WrapCaller(err, 1),
-		pb: &errorpb.ErrMsg{
-			Id:  lo.ToPtr(getErrorId(err)),
-			Msg: fmt.Sprintf("%v", err),
-		},
-	}
 }
 
 func Errorf(msg string, args ...interface{}) error {

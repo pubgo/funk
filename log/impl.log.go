@@ -213,19 +213,24 @@ func (l *loggerImpl) getLog() *zerolog.Logger {
 }
 
 func (l *loggerImpl) newEvent(ctx context.Context, e *zerolog.Event) *zerolog.Event {
-	if l.name != "" {
-		e = e.Str(logfields.Logger, l.name)
+	name := l.name
+	if m, ok := l.fields[logfields.Module].(string); ok {
+		name = m
+	}
+
+	if name != "" {
+		e = e.Str(logfields.Logger, name)
 	}
 
 	if l.callerSkip != 0 {
 		e = e.CallerSkipFrame(l.callerSkip)
 	}
 
-	if l.fields != nil && len(l.fields) > 0 {
+	if len(l.fields) > 0 {
 		e = e.Fields(l.fields)
 	}
 
-	e = e.Ctx(createFieldCtx(ctx, &fieldMap{name: l.name, fields: l.fields}))
+	e = e.Ctx(createFieldCtx(ctx, &fieldMap{name: name, fields: l.fields}))
 
 	return mergeEvent(e, getEventFromCtx(ctx), l.content)
 }
