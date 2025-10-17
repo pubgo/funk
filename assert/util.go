@@ -77,6 +77,12 @@ func must(err error, messageArgs ...any) {
 	}
 
 	logErr(err, message, attrs...)
+
+	if FeatureDebugMode.GetValue() {
+		_, _ = pp.Println(err)
+		debug.PrintStack()
+	}
+
 	panic(err)
 }
 
