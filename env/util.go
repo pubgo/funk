@@ -1,9 +1,11 @@
 package env
 
 import (
+	"log/slog"
 	"strings"
 
 	"github.com/ettle/strcase"
+	"github.com/pubgo/funk/v2/log/logfields"
 )
 
 var trim = strings.TrimSpace
@@ -20,4 +22,8 @@ var replacer = strcase.NewCaser(
 func keyHandler(key string) string {
 	key = strings.ReplaceAll(replacer.ToSNAKE(key), "__", "_")
 	return strings.ToUpper(trim(key))
+}
+
+func getLog() *slog.Logger {
+	return slog.With(slog.String(logfields.Module, Name))
 }

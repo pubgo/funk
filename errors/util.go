@@ -22,7 +22,9 @@ func cloneAndCheck(code *errorpb.ErrCode) *errorpb.ErrCode {
 	}
 
 	code = proto.Clone(code).(*errorpb.ErrCode)
-	if code.Name != "" && code.StatusCode == 0 {
+	if code.Code == 0 {
+		code.StatusCode = errorpb.Code_OK
+	} else if code.StatusCode == errorpb.Code_OK {
 		code.StatusCode = errorpb.Code_Internal
 	}
 
@@ -106,9 +108,7 @@ func strFormat(f fmt.State, verb rune, err Error) {
 }
 
 func getStack() []*stack.Frame {
-	return lo.Filter(stack.Trace(), func(item *stack.Frame, index int) bool {
-		return !item.IsRuntime() && !filterStack(item)
-	})
+	return lo.Filter(stack.Trace(), func(item *stack.Frame, index int) bool { return !item.IsRuntime() })
 }
 
 func newErrorId() *string {

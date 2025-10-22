@@ -2,7 +2,6 @@ package env
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 	"strconv"
 	"strings"
@@ -21,11 +20,12 @@ import (
 const Name = "env"
 
 func Set(key, value string) result.Error {
-	return result.ErrOf(os.Setenv(keyHandler(key), value)).Log(func(e *zerolog.Event) {
-		e.Str("key", key)
-		e.Str("value", value)
-		e.Str(logfields.Msg, "env_set_error")
-	})
+	return result.ErrOf(os.Setenv(keyHandler(key), value)).
+		Log(func(e *zerolog.Event) {
+			e.Str("key", key)
+			e.Str("value", value)
+			e.Str(logfields.Msg, "env_set_error")
+		})
 }
 
 func MustSet(key, value string) { Set(key, value).Must() }
@@ -38,7 +38,7 @@ func Get(names ...string) string {
 
 func MustGet(names ...string) string {
 	val := Get(names...)
-	assert.If(val == "", "env not found, names=%q", names)
+	assert.If(val == "", "env value not set, names=%q", names)
 	return val
 }
 
@@ -70,7 +70,7 @@ func GetBool(names ...string) bool {
 
 	v, err := strconv.ParseBool(val)
 	if err != nil {
-		slog.Error(fmt.Sprintf("env: failed to parse string to bool, keys=%q value=%s err=%v", names, val, err))
+		getLog().Error("failed to parse string to bool", "keys", names, "value", val, "err", err)
 		return false
 	}
 
@@ -86,7 +86,7 @@ func GetInt(names ...string) int {
 
 	v, err := strconv.Atoi(val)
 	if err != nil {
-		slog.Error(fmt.Sprintf("env: failed to parse string to int, keys=%q value=%s err=%v", names, val, err))
+		getLog().Error("failed to parse string to int", "keys", names, "value", val, "err", err)
 		return -1
 	}
 
@@ -102,7 +102,7 @@ func GetFloat(names ...string) float64 {
 
 	v, err := strconv.ParseFloat(val, 64)
 	if err != nil {
-		slog.Error(fmt.Sprintf("env: failed to parse string to float, keys=%q value=%s err=%v", names, val, err))
+		getLog().Error("failed to parse string to float", "keys", names, "value", val, "err", err)
 		return -1
 	}
 
@@ -112,19 +112,21 @@ func GetFloat(names ...string) float64 {
 func Lookup(key string) (string, bool) { return os.LookupEnv(keyHandler(key)) }
 
 func Delete(key string) result.Error {
-	return result.ErrOf(os.Unsetenv(keyHandler(key))).Log(func(e *zerolog.Event) {
-		e.Str("key", key)
-		e.Str(logfields.Msg, "env_delete_error")
-	})
+	return result.ErrOf(os.Unsetenv(keyHandler(key))).
+		Log(func(e *zerolog.Event) {
+			e.Str("key", key)
+			e.Str(logfields.Msg, "env_delete_error")
+		})
 }
 
 func MustDelete(key string) { Delete(key).Must() }
 
 func Expand(value string) result.Result[string] {
-	return result.Wrap(envsubst.String(value)).Log(func(e *zerolog.Event) {
-		e.Str("value", value)
-		e.Str(logfields.Msg, "env_expand_error")
-	})
+	return result.Wrap(envsubst.String(value)).
+		Log(func(e *zerolog.Event) {
+			e.Str("value", value)
+			e.Str(logfields.Msg, "env_expand_error")
+		})
 }
 
 func Map() map[string]string {
@@ -150,13 +152,22 @@ func LoadFiles(files ...string) (r result.Error) {
 		return
 	}
 
+	var needReloadEnv bool
 	for _, file := range files {
-		data := result.Wrap(os.ReadFile(file)).Unwrap(&r)
+		data := result.Wrap(os.ReadFile(file)).
+			Log(func(e *zerolog.Event) {
+				e.Str(logfields.Msg, fmt.Sprintf("failed to read file:%s", file))
+			}).
+			Unwrap(&r)
 		if r.IsErr() {
 			return
 		}
 
-		dataMap := result.Wrap(godotenv.UnmarshalBytes(data)).Unwrap(&r)
+		dataMap := result.Wrap(godotenv.UnmarshalBytes(data)).
+			Log(func(e *zerolog.Event) {
+				e.Str(logfields.Msg, fmt.Sprintf("failed to parse env file:%s", file))
+			}).
+			Unwrap(&r)
 		if r.IsErr() {
 			return
 		}
@@ -169,10 +180,15 @@ func LoadFiles(files ...string) (r result.Error) {
 			if Set(k, v).Catch(&r) {
 				return
 			}
+
+			needReloadEnv = true
 		}
 	}
 
-	loadEnv()
+	if needReloadEnv {
+		loadEnv()
+	}
+
 	return
 }
 

@@ -11,11 +11,18 @@ import (
 
 func TestWrapCaller(t *testing.T) {
 	err := fmt.Errorf("test")
+	assert.Contains(t, fmt.Sprint(err), "test")
+
 	var ff = func() error {
 		return errors.WrapCaller(err, 1)
 	}
 
-	assert.Contains(t, fmt.Sprint(ff()), "z_code_test.go:18 TestWrapCaller")
+	err = ff()
+	assert.Contains(t, fmt.Sprint(err), "z_code_test.go:20 TestWrapCaller")
+
+	err = errors.WrapKV(err, "key", "value")
+	errors.Debug(err)
+	assert.Contains(t, fmt.Sprint(err), "z_code_test.go:20 TestWrapCaller")
 }
 
 func TestCodeErr(t *testing.T) {

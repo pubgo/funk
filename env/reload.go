@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/pubgo/funk/v2/assert"
-	"github.com/pubgo/funk/v2/log/logfields"
 )
 
 func Reload() {
@@ -17,7 +16,7 @@ func Reload() {
 // 环境变量处理, key转大写, 同时把`-./`转换为`_`
 // a-b=>a_b, a.b=>a_b, a/b=>a_b
 func loadEnv() {
-	var logger = slog.With(slog.String(logfields.Module, Name))
+	var logger = getLog()
 	logger.Info("reload env")
 
 	for _, env := range os.Environ() {

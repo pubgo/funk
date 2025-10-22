@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"golang.org/x/xerrors"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 )
@@ -17,9 +16,9 @@ type Error interface {
 	MarshalJSON() ([]byte, error)
 }
 
-type ErrUnwrap = xerrors.Wrapper
-type Formatter = xerrors.Formatter
-type Printer = xerrors.Printer
+type ErrUnwrapper interface {
+	Unwrap() error
+}
 
 type ErrorProto interface {
 	error

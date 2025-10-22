@@ -51,7 +51,7 @@ func GetErrorId(err error) string {
 }
 
 func Unwrap(err error) error {
-	u, ok := err.(ErrUnwrap)
+	u, ok := err.(ErrUnwrapper)
 	if !ok {
 		return nil
 	}

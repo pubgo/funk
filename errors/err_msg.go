@@ -9,7 +9,6 @@ import (
 	"github.com/pubgo/funk/v2/errors/errinter"
 	"github.com/pubgo/funk/v2/generic"
 	"github.com/pubgo/funk/v2/proto/errorpb"
-	"github.com/pubgo/funk/v2/stack"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
 )
@@ -39,13 +38,10 @@ func WrapMsg(err error, msg *errorpb.ErrMsg) error {
 		msg.Id = lo.ToPtr(getErrorId(err))
 	}
 
-	return &ErrWrap{
-		err: &ErrMsg{pb: msg, err: handleGrpcError(err)},
-		pb: &errorpb.ErrWrap{
-			Caller: stack.Caller(1).String(),
-			Error:  MustProtoToAny(msg),
-		},
-	}
+	return newErrWrap(
+		&ErrMsg{pb: msg, err: handleGrpcError(err)},
+		Tags{Kv("msg", err.Error())},
+	)
 }
 
 var (

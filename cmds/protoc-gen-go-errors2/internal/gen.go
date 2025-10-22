@@ -93,7 +93,7 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 					jen.Id("Message"):    jen.Lit(rr),
 				})
 			genFile.Var().Id("_").Op("=").
-				Qual("github.com/pubgo/funk/v2/errors", "RegisterErrCodes").
+				Qual("github.com/pubgo/funk/v2/errors/errorcodes", "RegisterErrCodes").
 				Call(jen.Id(errCodeName)).Line()
 		}
 	}

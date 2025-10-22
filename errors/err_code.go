@@ -7,13 +7,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pubgo/funk/v2/errors/errinter"
-	"github.com/pubgo/funk/v2/generic"
-	"github.com/pubgo/funk/v2/proto/errorpb"
-	"github.com/pubgo/funk/v2/stack"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"
+
+	"github.com/pubgo/funk/v2/errors/errinter"
+	"github.com/pubgo/funk/v2/generic"
+	"github.com/pubgo/funk/v2/proto/errorpb"
 )
 
 func NewCodeErrWithMap(code *errorpb.ErrCode, details ...map[string]any) error {
@@ -91,13 +91,10 @@ func WrapCode(err error, code *errorpb.ErrCode) error {
 	}
 
 	code.Details = append(code.Details, MustProtoToAny(ParseErrToPb(err)))
-	return &ErrWrap{
-		err: &ErrCode{pb: code, err: errors.New(code.Message)},
-		pb: &errorpb.ErrWrap{
-			Caller: stack.Caller(1).String(),
-			Error:  MustProtoToAny(code),
-		},
-	}
+	return newErrWrap(
+		&ErrCode{pb: code, err: errors.New(code.Message)},
+		Tags{Kv("msg", err.Error())},
+	)
 }
 
 var (
@@ -126,10 +123,9 @@ func (t *ErrCode) Is(err error) bool {
 		return true
 	}
 
-	var check = func(err2 *ErrCode) bool {
-		return err2.pb.Code == t.pb.Code && err2.pb.Name == t.pb.Name
+	var check = func(errCode *ErrCode) bool {
+		return errCode.pb.Code == t.pb.Code && errCode.pb.Name == t.pb.Name
 	}
-
 	if err1, ok := err.(*ErrCode); ok && check(err1) {
 		return true
 	}
