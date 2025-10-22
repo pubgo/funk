@@ -33,12 +33,10 @@ func Errorf(msg string, args ...interface{}) error {
 
 func Parse(val interface{}) error { return errinter.ParseError(val) }
 func Debug(err error)             { errinter.Debug(err) }
-
 func Is(err, target error) bool {
 	return errors.Is(err, target)
 }
 func Join(errs ...error) error { return errors.Join(errs...) }
-
 func UnwrapEach(err error, call func(e error) bool) {
 	if err == nil {
 		return
@@ -49,7 +47,7 @@ func UnwrapEach(err error, call func(e error) bool) {
 			return
 		}
 
-		err1, ok := err.(ErrUnwrap)
+		err1, ok := err.(ErrUnwrapper)
 		if !ok {
 			return
 		}
@@ -91,7 +89,7 @@ func As(err error, target any) bool {
 }
 
 func Unwrap(err error) error {
-	u, ok := err.(ErrUnwrap)
+	u, ok := err.(ErrUnwrapper)
 	if !ok {
 		return nil
 	}
@@ -104,14 +102,7 @@ func WrapStack(err error) error {
 	}
 
 	stack.PrintStack()
-	return &ErrWrap{
-		err: handleGrpcError(err),
-		pb: &errorpb.ErrWrap{
-			Caller: stack.Caller(1).String(),
-			Stacks: lo.Map(getStack(), func(item *stack.Frame, index int) string { return item.String() }),
-			Error:  MustProtoToAny(ParseErrToPb(err)),
-		},
-	}
+	return newErrWrapStack(err, Tags{T("msg", err.Error())})
 }
 
 func WrapCaller(err error, skip ...int) error {
@@ -119,18 +110,7 @@ func WrapCaller(err error, skip ...int) error {
 		return nil
 	}
 
-	depth := 1
-	if len(skip) > 0 {
-		depth += skip[0]
-	}
-
-	return &ErrWrap{
-		err: handleGrpcError(err),
-		pb: &errorpb.ErrWrap{
-			Caller: stack.Caller(depth).String(),
-			Error:  MustProtoToAny(ParseErrToPb(err)),
-		},
-	}
+	return newErrWrap(err, Tags{T("msg", err.Error())}, lo.FirstOrEmpty(skip))
 }
 
 func Wrapf(err error, format string, args ...interface{}) error {
@@ -138,14 +118,7 @@ func Wrapf(err error, format string, args ...interface{}) error {
 		return nil
 	}
 
-	return &ErrWrap{
-		err: handleGrpcError(err),
-		pb: &errorpb.ErrWrap{
-			Caller: stack.Caller(1).String(),
-			Error:  MustProtoToAny(ParseErrToPb(err)),
-			Tags:   Tags{T("msg", fmt.Sprintf(format, args...))}.ToMap(),
-		},
-	}
+	return newErrWrap(err, Tags{T("msg", fmt.Sprintf(format, args...))})
 }
 
 func Wrap(err error, msg string) error {
@@ -153,14 +126,7 @@ func Wrap(err error, msg string) error {
 		return nil
 	}
 
-	return &ErrWrap{
-		err: handleGrpcError(err),
-		pb: &errorpb.ErrWrap{
-			Caller: stack.Caller(1).String(),
-			Error:  MustProtoToAny(ParseErrToPb(err)),
-			Tags:   Tags{T("msg", msg)}.ToMap(),
-		},
-	}
+	return newErrWrap(err, Tags{T("msg", msg)})
 }
 
 func WrapMapTag(err error, tags Maps) error {
@@ -172,14 +138,7 @@ func WrapMapTag(err error, tags Maps) error {
 		return err
 	}
 
-	return &ErrWrap{
-		err: handleGrpcError(err),
-		pb: &errorpb.ErrWrap{
-			Caller: stack.Caller(1).String(),
-			Error:  MustProtoToAny(ParseErrToPb(err)),
-			Tags:   tags.Tags().ToMap(),
-		},
-	}
+	return newErrWrap(err, tags.Tags())
 }
 
 func WrapTag(err error, tags ...Tag) error {
@@ -187,14 +146,7 @@ func WrapTag(err error, tags ...Tag) error {
 		return nil
 	}
 
-	return &ErrWrap{
-		err: handleGrpcError(err),
-		pb: &errorpb.ErrWrap{
-			Caller: stack.Caller(1).String(),
-			Error:  MustProtoToAny(ParseErrToPb(err)),
-			Tags:   Tags(tags).ToMap(),
-		},
-	}
+	return newErrWrap(err, tags)
 }
 
 func WrapFn(err error, fn func() Tags) error {
@@ -202,14 +154,7 @@ func WrapFn(err error, fn func() Tags) error {
 		return nil
 	}
 
-	return &ErrWrap{
-		err: handleGrpcError(err),
-		pb: &errorpb.ErrWrap{
-			Caller: stack.Caller(1).String(),
-			Error:  MustProtoToAny(ParseErrToPb(err)),
-			Tags:   fn().ToMap(),
-		},
-	}
+	return newErrWrap(err, fn())
 }
 
 func WrapKV(err error, key string, value any, kvs ...any) error {
@@ -222,20 +167,11 @@ func WrapKV(err error, key string, value any, kvs ...any) error {
 		tags = append(tags, Tag{K: kvs[i].(string), V: kvs[i+1]})
 	}
 
-	return &ErrWrap{
-		err: handleGrpcError(err),
-		pb: &errorpb.ErrWrap{
-			Caller: stack.Caller(1).String(),
-			Error:  MustProtoToAny(ParseErrToPb(err)),
-			Tags:   Tags{T(key, value)}.ToMap(),
-		},
-	}
+	return newErrWrap(err, tags)
 }
 
-func T(k string, v any) Tag {
-	return Tag{K: k, V: v}
-}
-
+func Kv(k string, v any) Tag                          { return Tag{K: k, V: v} }
+func T(k string, v any) Tag                           { return Tag{K: k, V: v} }
 func MustTagsToAny(tags ...*errorpb.Tag) []*anypb.Any { return errinter.MustTagsToAny(tags...) }
 func MustStructToAny(p map[string]any) *anypb.Any     { return errinter.MustStructToAny(p) }
 func MustProtoToAny(p proto.Message) *anypb.Any       { return errinter.MustProtoToAny(p) }

@@ -26,9 +26,13 @@ type Options struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Gen         bool   `protobuf:"varint,1,opt,name=gen,proto3" json:"gen,omitempty"`
-	DefaultCode Code   `protobuf:"varint,2,opt,name=default_code,json=defaultCode,proto3,enum=errors.Code" json:"default_code,omitempty"`
-	Name        string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	// gen 是否生成 error code
+	Gen bool `protobuf:"varint,1,opt,name=gen,proto3" json:"gen,omitempty"`
+	// default_code 默认的 error code, 可能是 Internal
+	DefaultCode Code `protobuf:"varint,2,opt,name=default_code,json=defaultCode,proto3,enum=errors.Code" json:"default_code,omitempty"`
+	// name 是生成的 error code 的变量名前缀
+	// 如果 name = Test, 那么 生成的 error code 变量名可能为 `TestErrCodeNotFound`
+	Name string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
 }
 
 func (x *Options) Reset() {

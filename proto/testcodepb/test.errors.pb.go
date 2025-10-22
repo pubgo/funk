@@ -7,7 +7,7 @@
 package testcodepb
 
 import (
-	errors "github.com/pubgo/funk/v2/errors"
+	errorcodes "github.com/pubgo/funk/v2/errors/errorcodes"
 	errorpb "github.com/pubgo/funk/v2/proto/errorpb"
 	grpc "google.golang.org/grpc"
 )
@@ -23,7 +23,7 @@ var TestErrCodeOK = &errorpb.ErrCode{
 	Name:       "demo.test.v1.ok",
 	StatusCode: errorpb.Code_OK,
 }
-var _ = errors.RegisterErrCodes(TestErrCodeOK)
+var _ = errorcodes.RegisterErrCodes(TestErrCodeOK)
 
 var TestErrCodeNotFound = &errorpb.ErrCode{
 	Code:       int32(100000),
@@ -31,7 +31,7 @@ var TestErrCodeNotFound = &errorpb.ErrCode{
 	Name:       "demo.test.v1.not_found",
 	StatusCode: errorpb.Code_NotFound,
 }
-var _ = errors.RegisterErrCodes(TestErrCodeNotFound)
+var _ = errorcodes.RegisterErrCodes(TestErrCodeNotFound)
 
 var TestErrCodeUnknown = &errorpb.ErrCode{
 	Code:       int32(100001),
@@ -39,7 +39,7 @@ var TestErrCodeUnknown = &errorpb.ErrCode{
 	Name:       "demo.test.v1.unknown",
 	StatusCode: errorpb.Code_NotFound,
 }
-var _ = errors.RegisterErrCodes(TestErrCodeUnknown)
+var _ = errorcodes.RegisterErrCodes(TestErrCodeUnknown)
 
 var TestErrCodeDbConn = &errorpb.ErrCode{
 	Code:       int32(100003),
@@ -47,7 +47,7 @@ var TestErrCodeDbConn = &errorpb.ErrCode{
 	Name:       "demo.test.v1.db_conn",
 	StatusCode: errorpb.Code_Internal,
 }
-var _ = errors.RegisterErrCodes(TestErrCodeDbConn)
+var _ = errorcodes.RegisterErrCodes(TestErrCodeDbConn)
 
 var TestErrCodeUnknownCode = &errorpb.ErrCode{
 	Code:       int32(100004),
@@ -55,7 +55,7 @@ var TestErrCodeUnknownCode = &errorpb.ErrCode{
 	Name:       "demo.test.v1.unknown_code",
 	StatusCode: errorpb.Code_Internal,
 }
-var _ = errors.RegisterErrCodes(TestErrCodeUnknownCode)
+var _ = errorcodes.RegisterErrCodes(TestErrCodeUnknownCode)
 
 var TestErrCodeCustomCode = &errorpb.ErrCode{
 	Code:       int32(100005),
@@ -63,4 +63,4 @@ var TestErrCodeCustomCode = &errorpb.ErrCode{
 	Name:       "demo.custom.code",
 	StatusCode: errorpb.Code_OK,
 }
-var _ = errors.RegisterErrCodes(TestErrCodeCustomCode)
+var _ = errorcodes.RegisterErrCodes(TestErrCodeCustomCode)

@@ -1,7 +1,9 @@
 package env
 
 import (
+	"log/slog"
 	"strings"
+	"sync"
 
 	"github.com/ettle/strcase"
 )
@@ -21,3 +23,7 @@ func keyHandler(key string) string {
 	key = strings.ReplaceAll(replacer.ToSNAKE(key), "__", "_")
 	return strings.ToUpper(trim(key))
 }
+
+var getLog = sync.OnceValue(func() *slog.Logger {
+	return slog.Default().WithGroup(Name)
+})

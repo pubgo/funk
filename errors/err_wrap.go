@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/samber/lo"
+	"google.golang.org/protobuf/proto"
+
 	"github.com/pubgo/funk/v2/errors/errinter"
 	"github.com/pubgo/funk/v2/proto/errorpb"
-	"google.golang.org/protobuf/proto"
+	"github.com/pubgo/funk/v2/stack"
 )
 
 var (
@@ -15,23 +18,44 @@ var (
 	_ fmt.Formatter = (*ErrWrap)(nil)
 )
 
+func newErrWrapStack(err error, tags Tags) *ErrWrap {
+	if err == nil {
+		return nil
+	}
+
+	pb := &errorpb.ErrWrap{
+		Caller: stack.Caller(2).String(),
+		Stacks: lo.Map(getStack(), func(item *stack.Frame, index int) string { return item.String() }),
+		Error:  MustProtoToAny(ParseErrToPb(err)),
+		Tags:   tags.ToMap(),
+		Id:     lo.ToPtr(getErrorId(err)),
+	}
+
+	return &ErrWrap{err: err, pb: pb}
+}
+
+func newErrWrap(err error, tags Tags, callers ...int) *ErrWrap {
+	if err == nil {
+		return nil
+	}
+
+	pb := &errorpb.ErrWrap{
+		Caller: stack.Caller(2 + lo.FirstOrEmpty(callers)).String(),
+		Error:  MustProtoToAny(ParseErrToPb(err)),
+		Tags:   tags.ToMap(),
+		Id:     lo.ToPtr(getErrorId(err)),
+	}
+
+	return &ErrWrap{err: handleGrpcError(err), pb: pb}
+}
+
 type ErrWrap struct {
 	err error
-	id  string
 	pb  *errorpb.ErrWrap
 }
 
-func (e *ErrWrap) ID() string {
-	if e.id != "" {
-		return e.id
-	}
-
-	e.id = getErrorId(e.err)
-	return e.id
-}
-func (e *ErrWrap) Proto() proto.Message {
-	return e.pb
-}
+func (e *ErrWrap) ID() string                    { return e.pb.GetId() }
+func (e *ErrWrap) Proto() proto.Message          { return e.pb }
 func (e *ErrWrap) Format(f fmt.State, verb rune) { strFormat(f, verb, e) }
 func (e *ErrWrap) Unwrap() error                 { return e.err }
 func (e *ErrWrap) Kind() string                  { return "err_wrap" }
