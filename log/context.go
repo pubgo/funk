@@ -53,7 +53,7 @@ func UpdateEventCtx(ctx context.Context, fields Map) context.Context {
 		return ctx
 	}
 
-	var evt = NewEvent()
+	evt := NewEvent()
 	if e := getEventFromCtx(ctx); e != nil {
 		evt = e
 	} else {

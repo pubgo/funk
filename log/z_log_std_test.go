@@ -7,6 +7,7 @@ import (
 )
 
 func TestStdLog(t *testing.T) {
-	evt := log.NewEvent().Str("hello", "world").Int("int", 100)
-	log.NewStd(log.GetLogger("with_event").WithEvent(evt)).Print("dddd")
+	log.NewStd(log.GetLogger("with_event").
+		WithFields(log.Map{"hello": "world", "int": 100})).
+		Print("dddd")
 }

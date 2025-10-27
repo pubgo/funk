@@ -65,7 +65,7 @@ func getPathList() (paths []string) {
 		paths = append(paths, wd)
 		wd = filepath.Dir(wd)
 	}
-	return
+	return paths
 }
 
 func MergeR[A any, B any | *any](dst *A, src ...B) (r result.Result[*A]) {
@@ -125,7 +125,7 @@ func (s *transformer) Transformer(t reflect.Type) func(dst, src reflect.Value) e
 
 		for i := 0; i < src.Len(); i++ {
 			c := src.Index(i).Interface()
-			var uniqueName = c.(NamedConfig).ConfigUniqueName()
+			uniqueName := c.(NamedConfig).ConfigUniqueName()
 			if dstMap[uniqueName] == nil {
 				dstMap[uniqueName] = c
 				continue
@@ -145,7 +145,7 @@ func (s *transformer) Transformer(t reflect.Type) func(dst, src reflect.Value) e
 			}
 		}
 
-		var data = lo.MapToSlice(dstMap, func(key string, value any) reflect.Value { return reflect.ValueOf(value) })
+		data := lo.MapToSlice(dstMap, func(key string, value any) reflect.Value { return reflect.ValueOf(value) })
 		dst.Set(makeList(dst.Type().Elem(), data))
 		return nil
 	}
@@ -173,7 +173,7 @@ func listAllPath(dirOrPath string) (ret result.Result[[]string]) {
 	}
 
 	var paths []string
-	var walk = func(path string, info fs.FileInfo, err error) error {
+	walk := func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -221,8 +221,8 @@ func getEnvData(cfg *config) map[string]any {
 				return ""
 			}
 
-			var path = filepath.Join(cfg.workDir, name)
-			var d, err = os.ReadFile(path)
+			path := filepath.Join(cfg.workDir, name)
+			d, err := os.ReadFile(path)
 			if err != nil {
 				log.Panic().Err(err).
 					Str("path", path).

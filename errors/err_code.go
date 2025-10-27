@@ -11,8 +11,9 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	"github.com/pubgo/funk/v2/errors/errinter"
-	"github.com/pubgo/funk/v2/generic"
+	"github.com/pubgo/funk/v2/internal/errors/errinter"
+
+	"github.com/pubgo/funk/v2"
 	"github.com/pubgo/funk/v2/proto/errorpb"
 )
 
@@ -22,7 +23,7 @@ func NewCodeErrWithMap(code *errorpb.ErrCode, details ...map[string]any) error {
 		return nil
 	}
 
-	var detailMaps = make(map[string]any)
+	detailMaps := make(map[string]any)
 	for _, detail := range details {
 		for k, v := range detail {
 			detailMaps[k] = v
@@ -51,7 +52,7 @@ func NewCodeErrWithMsg(code *errorpb.ErrCode, msg string, details ...proto.Messa
 
 func NewCodeErr(code *errorpb.ErrCode, details ...proto.Message) error {
 	code = cloneAndCheck(code)
-	if generic.IsNil(code) {
+	if funk.IsNil(code) {
 		return nil
 	}
 
@@ -61,7 +62,7 @@ func NewCodeErr(code *errorpb.ErrCode, details ...proto.Message) error {
 
 	if len(details) > 0 {
 		for _, p := range details {
-			if p == nil || generic.IsNil(p) {
+			if p == nil || funk.IsNil(p) {
 				continue
 			}
 
@@ -123,7 +124,7 @@ func (t *ErrCode) Is(err error) bool {
 		return true
 	}
 
-	var check = func(errCode *ErrCode) bool {
+	check := func(errCode *ErrCode) bool {
 		return errCode.pb.Code == t.pb.Code && errCode.pb.Name == t.pb.Name
 	}
 	if err1, ok := err.(*ErrCode); ok && check(err1) {

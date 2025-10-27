@@ -10,7 +10,7 @@ import (
 // type, in string form, for optional logging and metrics use.
 func IsRetryableHTTP(err error) (retryType string, isRetryable bool) {
 	if retryType, isRetryable = IsRetryableNetwork(err); isRetryable {
-		return
+		return retryType, isRetryable
 	}
 
 	errStr := err.Error()

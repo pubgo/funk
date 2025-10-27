@@ -19,11 +19,13 @@ import (
 	"github.com/pubgo/funk/v2/stack"
 )
 
-var cloudeventPkg = reflect.TypeOf(cloudevent.Client{}).PkgPath()
-var jobTypesPkg = reflect.TypeOf(cloudeventpb.PushEventOptions{}).PkgPath()
-var ctxPkg = stack.CallerWithFunc(context.WithTimeout).Pkg
-var assertPkt = stack.CallerWithFunc(assert.Assert).Pkg
-var protojsonPkt = stack.CallerWithFunc(protojson.Marshal).Pkg
+var (
+	cloudeventPkg = reflect.TypeOf(cloudevent.Client{}).PkgPath()
+	jobTypesPkg   = reflect.TypeOf(cloudeventpb.PushEventOptions{}).PkgPath()
+	ctxPkg        = stack.CallerWithFunc(context.WithTimeout).Pkg
+	assertPkt     = stack.CallerWithFunc(assert.Assert).Pkg
+	protojsonPkt  = stack.CallerWithFunc(protojson.Marshal).Pkg
+)
 
 type eventInfo struct {
 	srv            *protogen.Service
@@ -54,7 +56,7 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 		return g
 	}
 
-	var events = make(map[string]map[string]*eventInfo)
+	events := make(map[string]map[string]*eventInfo)
 	for _, srv := range file.Services {
 		job, ok := proto.GetExtension(srv.Desc.Options(), cloudeventpb.E_Job).(*cloudeventpb.CloudEventServiceOptions)
 		if !ok || job == nil {
@@ -118,7 +120,7 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 
 		for _, subName := range subjectNames {
 			info := subjects[subName]
-			var keyName = fmt.Sprintf("%sCloudEventKey", info.mth.GoName)
+			keyName := fmt.Sprintf("%sCloudEventKey", info.mth.GoName)
 			genFile.Commentf("%s /%s/%s", keyName, info.srv.Desc.FullName(), info.mth.GoName)
 			genFile.Comment(strings.TrimSpace(info.mth.Comments.Leading.String()))
 			genFile.Const().
@@ -147,7 +149,7 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 		//}
 
 		subjectValues := lo.Values(subjects)
-		var cloudEventName = fmt.Sprintf("%sCloudEvent", subjectValues[0].srv.GoName)
+		cloudEventName := fmt.Sprintf("%sCloudEvent", subjectValues[0].srv.GoName)
 		genFile.Type().Id(cloudEventName).StructFunc(func(group *jen.Group) {
 			for _, ss := range subjectValues {
 				group.Id("On"+ss.mth.GoName).Func().Params(
@@ -165,27 +167,27 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 				jen.Id("opts").Op("...").Op("*").Qual(jobTypesPkg, "RegisterJobOptions"),
 			).BlockFunc(func(group *jen.Group) {
 			for _, ss := range subjectValues {
-				var keyName = fmt.Sprintf("%sCloudEventKey", ss.mth.GoName)
+				keyName := fmt.Sprintf("%sCloudEventKey", ss.mth.GoName)
 				group.If(jen.Id("event").Dot("On" + ss.mth.GoName)).Op("!=").Nil().BlockFunc(func(group *jen.Group) {
 					group.Qual(cloudeventPkg, "RegisterJobHandler").Call(
 						jen.Id("jobCli"),
 						jen.Id(jobKeyName),
 						jen.Id(keyName),
 						jen.Id("event").Dot("On"+ss.mth.GoName),
-						//jen.Qual(cloudeventPkg, "WrapHandler").Call(jen.Id("event").Dot(ss.mth.GoName)),
+						// jen.Qual(cloudeventPkg, "WrapHandler").Call(jen.Id("event").Dot(ss.mth.GoName)),
 						jen.Id("opts").Op("..."),
 					)
 				}).Line()
 			}
 		})
 
-		var publisher = fmt.Sprintf("%sPublisher", cloudEventName)
+		publisher := fmt.Sprintf("%sPublisher", cloudEventName)
 		genFile.Type().Id(publisher).StructFunc(func(group *jen.Group) {
 			group.Id("Client").Op("*").Qual(cloudeventPkg, "Client")
 		})
 		for _, ss := range subjectValues {
-			var mthName = fmt.Sprintf("Push%sEvent", ss.mth.GoName)
-			var keyName = fmt.Sprintf("%sCloudEventKey", ss.mth.GoName)
+			mthName := fmt.Sprintf("Push%sEvent", ss.mth.GoName)
+			keyName := fmt.Sprintf("%sCloudEventKey", ss.mth.GoName)
 			genFile.Func().
 				Params(jen.Id(fmt.Sprintf("a %s", publisher))).
 				Id(mthName).
@@ -223,7 +225,7 @@ func getSrv(data map[string]*eventInfo) *protogen.Service {
 }
 
 func getPkg(file *protogen.File, goIdent protogen.GoIdent) *jen.Statement {
-	var pkgName = ""
+	pkgName := ""
 	if file.GoImportPath != goIdent.GoImportPath {
 		pkgName = string(goIdent.GoImportPath)
 	}

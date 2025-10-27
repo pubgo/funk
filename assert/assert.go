@@ -7,7 +7,7 @@ import (
 	"github.com/k0kubun/pp/v3"
 )
 
-func Assert(b bool, format string, a ...interface{}) {
+func Assert(b bool, format string, a ...any) {
 	if b {
 		must(fmt.Errorf(format, a...))
 	}
@@ -21,13 +21,13 @@ func MustEqual[T any](a, b T) {
 	}
 }
 
-func If(b bool, format string, a ...interface{}) {
+func If(b bool, format string, a ...any) {
 	if b {
 		must(fmt.Errorf(format, a...))
 	}
 }
 
-func T(b bool, format string, a ...interface{}) {
+func T(b bool, format string, a ...any) {
 	if b {
 		must(fmt.Errorf(format, a...))
 	}

@@ -70,7 +70,7 @@ func errToString(err error) string {
 }
 
 func toString(dt any) (r string) {
-	var jsonStr = func(data any) string {
+	jsonStr := func(data any) string {
 		ret, err := json.Marshal(data)
 		if err != nil {
 			return errToString(err)

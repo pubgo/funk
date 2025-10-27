@@ -85,7 +85,7 @@ func CallerWithType(typ reflect.Type) *Frame {
 
 // CallerWithFunc returns the Frame of the caller.
 // fn: function
-func CallerWithFunc(fn interface{}) *Frame {
+func CallerWithFunc(fn any) *Frame {
 	if fn == nil {
 		panic("[fn] param is nil")
 	}

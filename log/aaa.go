@@ -18,9 +18,6 @@ type Logger interface {
 	WithName(name string) Logger
 	WithFields(m Map) Logger
 	WithCallerSkip(skip int) Logger
-
-	// WithEvent Deprecated, use WithFields instead
-	WithEvent(evt *Event) Logger
 	WithLevel(lvl Level) Logger
 
 	Debug(ctx ...context.Context) *Event

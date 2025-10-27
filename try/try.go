@@ -26,7 +26,7 @@ func WithErr(gErr *error, fn func() error) {
 func Try(fn func() error) (gErr error) {
 	if fn == nil {
 		gErr = errors.WrapStack(errors.New("[fn] is nil"))
-		return
+		return gErr
 	}
 
 	defer func() {
@@ -38,5 +38,5 @@ func Try(fn func() error) (gErr error) {
 	}()
 
 	gErr = fn()
-	return
+	return gErr
 }

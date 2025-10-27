@@ -3,8 +3,9 @@ package entmigrates
 import (
 	_ "embed"
 
-	"github.com/pubgo/funk/v2/assert"
 	"gopkg.in/yaml.v3"
+
+	"github.com/pubgo/funk/v2/assert"
 )
 
 //go:embed config.yaml

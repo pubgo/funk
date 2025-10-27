@@ -3,8 +3,9 @@ package strutil
 import (
 	"io"
 
-	"github.com/pubgo/funk/v2/convert"
 	"github.com/valyala/fasttemplate"
+
+	"github.com/pubgo/funk/v2/convert"
 )
 
 func Format(template string, data map[string]string) string {

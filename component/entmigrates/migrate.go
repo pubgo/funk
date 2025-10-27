@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/schema"
 	"github.com/dave/jennifer/jen"
 	mapset "github.com/deckarep/golang-set/v2"
+	"github.com/samber/lo"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -25,7 +26,6 @@ import (
 	"github.com/pubgo/funk/v2/buildinfo/version"
 	"github.com/pubgo/funk/v2/config"
 	"github.com/pubgo/funk/v2/errors"
-	"github.com/pubgo/funk/v2/generic"
 	"github.com/pubgo/funk/v2/log"
 )
 
@@ -59,7 +59,7 @@ type GoMigrate struct {
 
 // New returns a new GoMigrate.
 func New(db *entsql.Driver, cfg *Config, migrations []*Migration, tables []*schema.Table) *GoMigrate {
-	cfg = config.MergeR(generic.Ptr(DefaultConfig), cfg).Must()
+	cfg = config.MergeR(lo.ToPtr(DefaultConfig), cfg).Must()
 
 	orm := assert.Must1(gorm.Open(dp.New(dp.Config{
 		DriverName:           db.Dialect(),

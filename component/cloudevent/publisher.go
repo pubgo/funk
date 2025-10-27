@@ -3,11 +3,18 @@ package cloudevent
 import (
 	"context"
 	"fmt"
-	result2 "github.com/pubgo/funk/v2/result"
 	"time"
+
+	result2 "github.com/pubgo/funk/v2/result"
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
+	"github.com/rs/xid"
+	"github.com/rs/zerolog"
+	"github.com/samber/lo"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
+
 	"github.com/pubgo/funk/v2/ctxutil"
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/log/logfields"
@@ -15,11 +22,6 @@ import (
 	"github.com/pubgo/funk/v2/stack"
 	"github.com/pubgo/funk/v2/try"
 	"github.com/pubgo/funk/v2/typex"
-	"github.com/rs/xid"
-	"github.com/rs/zerolog"
-	"github.com/samber/lo"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func PushEvent[T any](handler func(*Client, context.Context, T, ...*cloudeventpb.PushEventOptions) (*PubAckInfo, error), jobCli *Client, ctx context.Context, t T, opts ...*cloudeventpb.PushEventOptions) chan result2.Result[*PubAckInfo] {
@@ -31,12 +33,12 @@ func PushEvent[T any](handler func(*Client, context.Context, T, ...*cloudeventpb
 	// clone ctx and recalculate timeout
 	ctx = lo.T2(ctxutil.Clone(ctx, DefaultTimeout)).A
 	go func() {
-		var getPubAck = func() (pubAck *PubAckInfo, err error) {
+		getPubAck := func() (pubAck *PubAckInfo, err error) {
 			err = try.Try(func() error {
 				pubAck, err = handler(jobCli, ctx, t, opts...)
 				return err
 			})
-			return
+			return pubAck, err
 		}
 		pubAck, err := getPubAck()
 		err = errors.IfErr(err, func(err error) error {
@@ -69,7 +71,7 @@ func PushRpcEvent[T proto.Message](handler RpcEventHandler[T], ctx context.Conte
 	timeout := ctxutil.GetTimeout(ctx)
 	now := time.Now()
 
-	var pushEventBasic = func(handler RpcEventHandler[T], ctx context.Context) error {
+	pushEventBasic := func(handler RpcEventHandler[T], ctx context.Context) error {
 		err := try.Try(func() error { return lo.T2(handler(ctx, t)).B })
 		if err == nil {
 			return nil
@@ -99,14 +101,14 @@ func (c *Client) Publish(ctx context.Context, topic string, args proto.Message, 
 
 func (c *Client) publish(ctx context.Context, topic string, args proto.Message, opts ...*cloudeventpb.PushEventOptions) (_ *PubAckInfo, gErr error) {
 	defer result2.RecoveryErr(&gErr)
-	var timeout = ctxutil.GetTimeout(ctx)
-	var now = time.Now()
-	var msgId = xid.New().String()
+	timeout := ctxutil.GetTimeout(ctx)
+	now := time.Now()
+	msgId := xid.New().String()
 	var pushEventOpt *cloudeventpb.PushEventOptions
 	var pubActInfo *jetstream.PubAck
 
 	defer func() {
-		var msgFn = func(e *zerolog.Event) {
+		msgFn := func(e *zerolog.Event) {
 			e.Str("pub_topic", topic)
 			e.Str("pub_start", now.String())
 			e.Any("pub_args", args)

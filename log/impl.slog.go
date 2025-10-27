@@ -4,9 +4,10 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/pubgo/funk/v2/log/slogutil"
 	"github.com/rs/zerolog"
 	slogcommon "github.com/samber/slog-common"
+
+	"github.com/pubgo/funk/v2/log/slogutil"
 )
 
 func NewSlog(log Logger) slog.Handler {

@@ -1,15 +1,17 @@
 package errors
 
 import (
-	"github.com/pubgo/funk/v2/errors/errinter"
+	"github.com/pubgo/funk/v2/internal/errors/errinter"
 )
 
-type Maps = errinter.Maps
-type Tags = errinter.Tags
-type Tag = errinter.Tag
-type ErrIs = errinter.ErrIs
-type ErrAs = errinter.ErrAs
-type ErrUnwrapper = errinter.ErrUnwrapper
-type Error = errinter.Error
-type ErrorProto = errinter.ErrorProto
-type GRPCStatus = errinter.GRPCStatus
+type (
+	Maps         = errinter.Maps
+	Tags         = errinter.Tags
+	Tag          = errinter.Tag
+	ErrIs        = errinter.ErrIs
+	ErrAs        = errinter.ErrAs
+	ErrUnwrapper = errinter.ErrUnwrapper
+	Error        = errinter.Error
+	ErrorProto   = errinter.ErrorProto
+	GRPCStatus   = errinter.GRPCStatus
+)

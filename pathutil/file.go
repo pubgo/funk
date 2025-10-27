@@ -34,7 +34,7 @@ func IsNotExistMkDir(src string) (err error) {
 		assert.Must(MkDir(src), "MkDir Error")
 	}
 
-	return
+	return err
 }
 
 // MkDir create a directory
@@ -78,7 +78,7 @@ func CopyFile(source, dest string) (err error) {
 	sourceinfo := assert.Must1(os.Stat(source))
 	assert.Must(os.Chmod(dest, sourceinfo.Mode()))
 
-	return
+	return err
 }
 
 // CopyDir copies the source directory to the dest directory.
@@ -105,7 +105,7 @@ func CopyDir(source, dest string) (err error) {
 		}
 	}
 
-	return
+	return err
 }
 
 // GrepFile like command grep -E
@@ -114,12 +114,12 @@ func CopyDir(source, dest string) (err error) {
 func GrepFile(patten, filename string) (lines []string, err error) {
 	re, err := regexp.Compile(patten)
 	if err != nil {
-		return
+		return lines, err
 	}
 
 	fd, err := os.Open(filename)
 	if err != nil {
-		return
+		return lines, err
 	}
 	lines = make([]string, 0)
 	reader := bufio.NewReader(fd)
@@ -181,7 +181,7 @@ func GetPathDirs(absDir string) (re []string) {
 			}
 		}
 	}
-	return
+	return re
 }
 
 // GetPathFiles 获取目录所有文件
@@ -194,7 +194,7 @@ func GetPathFiles(absDir string) (re []string) {
 			}
 		}
 	}
-	return
+	return re
 }
 
 // GetModelPath 获取目录地址

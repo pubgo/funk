@@ -37,6 +37,7 @@ func (b *baseValue[T]) Set(s string) error {
 	b.val = val
 	return nil
 }
+
 func (b *baseValue[T]) String() string {
 	if b.getString == nil {
 		return fmt.Sprintf("%v", b.val)
@@ -77,7 +78,7 @@ func Int(name string, value int64, usage string, tags ...map[string]any) IntValu
 		tags,
 		func(s string) (val int64, err error) {
 			_, err = fmt.Sscanf(s, "%d", &val)
-			return
+			return val, err
 		},
 		nil,
 	)
@@ -98,7 +99,7 @@ func Float(name string, value float64, usage string, tags ...map[string]any) Flo
 		tags,
 		func(s string) (val float64, err error) {
 			_, err = fmt.Sscanf(s, "%f", &val)
-			return
+			return val, err
 		},
 		func(val float64) string { return fmt.Sprintf("%f", val) },
 	)

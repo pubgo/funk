@@ -2,8 +2,9 @@ package bbolt
 
 import (
 	"context"
-	result2 "github.com/pubgo/funk/v2/result"
 	"path/filepath"
+
+	result2 "github.com/pubgo/funk/v2/result"
 
 	bolt "go.etcd.io/bbolt"
 

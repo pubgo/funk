@@ -5,10 +5,11 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/pretty"
 	"github.com/pubgo/funk/v2/stack"
-	"github.com/stretchr/testify/assert"
 )
 
 func init1() {

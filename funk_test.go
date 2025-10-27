@@ -1,4 +1,4 @@
-package generic
+package funk
 
 import (
 	"strconv"
@@ -7,8 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type err1 struct {
-}
+type err1 struct{}
 
 func (e err1) Error() string {
 	return ""
@@ -17,7 +16,7 @@ func (e err1) Error() string {
 func TestMap(t *testing.T) {
 	data := []int{1, 2, 3, 4}
 	t.Log(Map(data, func(i int) string {
-		return strconv.Itoa(data[i])
+		return strconv.Itoa(i)
 	}))
 }
 

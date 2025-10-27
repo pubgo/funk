@@ -11,9 +11,11 @@ import (
 	"github.com/pubgo/funk/v2/log/logfields"
 )
 
-var _ Catchable = new(Error)
-var _ Checkable = new(Error)
-var _ ErrSetter = new(Error)
+var (
+	_ Catchable = new(Error)
+	_ Checkable = new(Error)
+	_ ErrSetter = new(Error)
+)
 
 func newError(err error) Error {
 	return Error{err: err}
@@ -56,6 +58,7 @@ func (e Error) WithFn(fn func() error) Error {
 func (e Error) WithErr(err error) Error {
 	return Error{err: errors.WrapCaller(err, 1)}
 }
+
 func (e Error) WithErrorf(format string, args ...any) Error {
 	return Error{err: errors.WrapCaller(fmt.Errorf(format, args...), 1)}
 }

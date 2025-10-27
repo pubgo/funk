@@ -3,7 +3,7 @@ package typex
 import "container/heap"
 
 type PriorityQueueItem struct {
-	Value    interface{}
+	Value    any
 	Priority int64
 	Index    int
 }
@@ -28,7 +28,7 @@ func (pq *PriorityQueue) PushItem(x *PriorityQueueItem) { pq.Push(x) }
 
 // Push implements the heap.Interface.Push.
 // Adds x as element Len().
-func (pq *PriorityQueue) Push(x interface{}) {
+func (pq *PriorityQueue) Push(x any) {
 	n := len(*pq)
 	item := x.(*PriorityQueueItem)
 	item.Index = n
@@ -46,7 +46,7 @@ func (pq *PriorityQueue) PopItem() *PriorityQueueItem {
 
 // Pop implements the heap.Interface.Pop.
 // Removes and returns element Len() - 1.
-func (pq *PriorityQueue) Pop() interface{} {
+func (pq *PriorityQueue) Pop() any {
 	old := *pq
 	n := len(old)
 	if n == 0 {
@@ -63,4 +63,4 @@ func (pq *PriorityQueue) Pop() interface{} {
 func (pq *PriorityQueue) Head() *PriorityQueueItem { return (*pq)[0] }
 
 // Remove removes and returns the element at Index i from the PriorityQueue.
-func (pq *PriorityQueue) Remove(i int) interface{} { return heap.Remove(pq, i) }
+func (pq *PriorityQueue) Remove(i int) any { return heap.Remove(pq, i) }

@@ -66,7 +66,7 @@ func BenchmarkNoPanic(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_ = func() (err error) {
 			assert1.Must(nil)
-			return
+			return err
 		}()
 	}
 }

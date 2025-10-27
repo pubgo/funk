@@ -7,11 +7,17 @@ import (
 	"github.com/dave/jennifer/jen"
 	"github.com/iancoleman/strcase"
 	"github.com/pubgo/funk/v2/proto/errorpb"
+	"github.com/samber/lo"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 )
 
 const errorPbPkg = "github.com/pubgo/funk/v2/proto/errorpb"
+
+var (
+	registerErrCodes         = lo.T2("github.com/pubgo/funk/v2/errors/errorcodes", "RegisterErrCodes")
+	supportPackageIsVersion7 = lo.T2("google.golang.org/grpc", "SupportPackageIsVersion7")
+)
 
 // GenerateFile generates a .errors.pb.go file containing service definitions.
 func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.GeneratedFile {
@@ -32,7 +38,7 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 	genFile.Comment("This is a compile-time assertion to ensure that this generated file")
 	genFile.Comment("is compatible with the grpc package it is being compiled against.")
 	genFile.Comment("Requires gRPC-Go v1.32.0 or later.")
-	genFile.Id("const _ =").Qual("google.golang.org/grpc", "SupportPackageIsVersion7")
+	genFile.Id("const _ =").Qual(supportPackageIsVersion7.Unpack())
 	g.Skip()
 
 	for i := range file.Enums {
@@ -93,7 +99,7 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 					jen.Id("Message"):    jen.Lit(rr),
 				})
 			genFile.Var().Id("_").Op("=").
-				Qual("github.com/pubgo/funk/v2/errors/errorcodes", "RegisterErrCodes").
+				Qual(registerErrCodes.Unpack()).
 				Call(jen.Id(errCodeName)).Line()
 		}
 	}

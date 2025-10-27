@@ -5,10 +5,11 @@ import (
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/pubgo/funk/v2/log"
-	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
+
+	"github.com/pubgo/funk/v2/log"
+	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
 )
 
 var logger = log.GetLogger("cloudevent")
@@ -17,8 +18,10 @@ type EventRegister interface {
 	RegisterCloudEvent(jobCli *Client)
 }
 
-type EventHandler[T proto.Message] func(ctx context.Context, args T) error
-type RpcEventHandler[T proto.Message] func(ctx context.Context, args T) (*emptypb.Empty, error)
+type (
+	EventHandler[T proto.Message]    func(ctx context.Context, args T) error
+	RpcEventHandler[T proto.Message] func(ctx context.Context, args T) (*emptypb.Empty, error)
+)
 
 type Options = cloudeventpb.PushEventOptions
 

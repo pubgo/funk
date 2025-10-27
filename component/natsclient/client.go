@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/nats-io/nats.go"
+
 	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/component/lifecycle"
 	"github.com/pubgo/funk/v2/log"

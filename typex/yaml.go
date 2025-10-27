@@ -1,9 +1,10 @@
 package typex
 
 import (
+	yaml "gopkg.in/yaml.v3"
+
 	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/errors"
-	yaml "gopkg.in/yaml.v3"
 )
 
 type YamlListType[T any] []T

@@ -5,8 +5,9 @@ import (
 	"runtime/debug"
 	"testing"
 
-	"github.com/pubgo/funk/v2/errors/errinter"
 	"github.com/samber/lo"
+
+	"github.com/pubgo/funk/v2/internal/errors/errinter"
 )
 
 func Err(gErr *error, callbacks ...func(err error) error) {

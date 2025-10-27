@@ -54,7 +54,7 @@ func must(err error, messageArgs ...any) {
 		return
 	}
 
-	var attrs = []slog.Attr{slog.Bool("panic", true)}
+	attrs := []slog.Attr{slog.Bool("panic", true)}
 	if v, ok := lo.ErrorsAs[interface {
 		ID() string
 		Error() string
@@ -100,7 +100,7 @@ func try(fn func() error) (gErr error) {
 		gErr = fmt.Errorf("assert: [fn] is nil")
 		logErr(gErr, gErr.Error())
 		debug.PrintStack()
-		return
+		return gErr
 	}
 
 	defer func() {
@@ -116,5 +116,5 @@ func try(fn func() error) (gErr error) {
 	}()
 
 	gErr = fn()
-	return
+	return gErr
 }

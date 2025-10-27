@@ -9,11 +9,11 @@ import (
 
 	"github.com/rs/zerolog"
 	zlog "github.com/rs/zerolog/log"
+	"github.com/samber/lo"
 
 	"github.com/pubgo/funk/v2"
 	"github.com/pubgo/funk/v2/assert"
-	"github.com/pubgo/funk/v2/errors/errinter"
-	"github.com/pubgo/funk/v2/generic"
+	"github.com/pubgo/funk/v2/internal/errors/errinter"
 )
 
 var (
@@ -55,7 +55,7 @@ var (
 	})
 
 	// stdZeroLog default zerolog for debug
-	stdZeroLog = generic.Ptr(
+	stdZeroLog = lo.ToPtr(
 		zerolog.New(os.Stderr).
 			Level(zerolog.DebugLevel).
 			With().Timestamp().
@@ -67,7 +67,7 @@ var (
 	)
 
 	_ = funk.Init(func() {
-		zlog.Logger = generic.FromPtr(stdZeroLog)
+		zlog.Logger = lo.FromPtr(stdZeroLog)
 	})
 
 	// stdLog is the global logger.
@@ -86,7 +86,7 @@ func GetLogger(names ...string) Logger {
 func SetLogger(log *zerolog.Logger) {
 	assert.If(log == nil, "[log] should not be nil")
 
-	log = generic.Ptr(log.Hook(logGlobalHook))
+	log = lo.ToPtr(log.Hook(logGlobalHook))
 
 	stdZeroLog = log
 	zlog.Logger = *log
@@ -165,7 +165,7 @@ func Printf(format string, v ...any) {
 }
 
 func Output(w io.Writer) Logger {
-	return New(generic.Ptr(stdZeroLog.Output(w)))
+	return New(lo.ToPtr(stdZeroLog.Output(w)))
 }
 
 type writerFunc func(p []byte) (n int, err error)
@@ -175,5 +175,5 @@ func (w writerFunc) Write(p []byte) (n int, err error) {
 }
 
 func OutputWriter(w func(p []byte) (n int, err error)) Logger {
-	return New(generic.Ptr(stdZeroLog.Output(writerFunc(w))))
+	return New(lo.ToPtr(stdZeroLog.Output(writerFunc(w))))
 }

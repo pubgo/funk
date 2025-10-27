@@ -1,7 +1,9 @@
 package buildinfo
 
-var domain string
-var mainPath string
+var (
+	domain   string
+	mainPath string
+)
 
 // git rev-parse HEAD
 // git describe --always --abbrev=7 --dirty
@@ -23,7 +25,5 @@ var (
 	project string
 )
 
-var (
-	// release tag
-	release string
-)
+// release tag
+var release string

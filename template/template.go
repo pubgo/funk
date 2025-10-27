@@ -37,7 +37,7 @@ func Build[Data any](t *Template, name string, data *Data) (string, error) {
 
 	tt, _ := t.templates.Load(name)
 	var buf bytes.Buffer
-	err := tt.(*scriggo.Template).Run(&buf, map[string]interface{}{"data": data}, nil)
+	err := tt.(*scriggo.Template).Run(&buf, map[string]any{"data": data}, nil)
 	if err != nil {
 		return "", err
 	}

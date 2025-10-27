@@ -15,18 +15,16 @@ import (
 
 	"github.com/pubgo/funk/v2"
 	"github.com/pubgo/funk/v2/errors"
-	"github.com/pubgo/funk/v2/generic"
 	"github.com/pubgo/funk/v2/log"
 	"github.com/pubgo/funk/v2/pretty"
 	"github.com/pubgo/funk/v2/proto/errorpb"
 )
 
 func Json(err error) []byte {
-	if generic.IsNil(err) {
+	if err == nil {
 		return nil
 	}
 
-	err = errors.Parse(err)
 	data, err := json.Marshal(err)
 	if err != nil {
 		log.Err(err).Stack().Str("err_stack", pretty.SimplePrint(err)).Msg("failed to marshal error")
@@ -36,7 +34,7 @@ func Json(err error) []byte {
 }
 
 func JsonPretty(err error) []byte {
-	if generic.IsNil(err) {
+	if err == nil {
 		return nil
 	}
 

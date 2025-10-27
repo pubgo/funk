@@ -23,7 +23,7 @@ func (c *Node) YamlNode() *yaml.Node {
 	return c.value
 }
 
-func (c *Node) MarshalYAML() (interface{}, error) {
+func (c *Node) MarshalYAML() (any, error) {
 	return c.value, nil
 }
 
@@ -88,7 +88,7 @@ var (
 
 type Base64File string
 
-func (b *Base64File) MarshalYAML() (interface{}, error) {
+func (b *Base64File) MarshalYAML() (any, error) {
 	if b == nil || len(*b) == 0 {
 		return nil, nil
 	}

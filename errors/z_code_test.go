@@ -4,16 +4,17 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/proto/errorpb"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestWrapCaller(t *testing.T) {
 	err := fmt.Errorf("test")
 	assert.Contains(t, fmt.Sprint(err), "test")
 
-	var ff = func() error {
+	ff := func() error {
 		return errors.WrapCaller(err, 1)
 	}
 

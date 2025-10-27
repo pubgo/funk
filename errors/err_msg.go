@@ -6,15 +6,16 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/pubgo/funk/v2/errors/errinter"
-	"github.com/pubgo/funk/v2/generic"
-	"github.com/pubgo/funk/v2/proto/errorpb"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/pubgo/funk/v2"
+	"github.com/pubgo/funk/v2/internal/errors/errinter"
+	"github.com/pubgo/funk/v2/proto/errorpb"
 )
 
 func NewMsgErr(msg *errorpb.ErrMsg) error {
-	if generic.IsNil(msg) {
+	if funk.IsNil(msg) {
 		return nil
 	}
 

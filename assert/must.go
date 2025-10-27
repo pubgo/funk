@@ -7,7 +7,7 @@ import (
 	"runtime/debug"
 )
 
-func Must(err error, args ...interface{}) {
+func Must(err error, args ...any) {
 	if err == nil {
 		return
 	}
@@ -15,7 +15,7 @@ func Must(err error, args ...interface{}) {
 	must(err, args...)
 }
 
-func MustFn(errFn func() error, args ...interface{}) {
+func MustFn(errFn func() error, args ...any) {
 	err := try(errFn)
 	if err == nil {
 		return
@@ -24,7 +24,7 @@ func MustFn(errFn func() error, args ...interface{}) {
 	must(err, args...)
 }
 
-func MustF(err error, msg string, args ...interface{}) {
+func MustF(err error, msg string, args ...any) {
 	if err == nil {
 		return
 	}
@@ -40,7 +40,7 @@ func Must1[T any](ret T, err error) T {
 	return ret
 }
 
-func Exit(err error, args ...interface{}) {
+func Exit(err error, args ...any) {
 	if err == nil {
 		return
 	}
@@ -50,7 +50,7 @@ func Exit(err error, args ...interface{}) {
 	os.Exit(1)
 }
 
-func ExitFn(errFn func() error, args ...interface{}) {
+func ExitFn(errFn func() error, args ...any) {
 	err := try(errFn)
 	if err == nil {
 		return
@@ -61,7 +61,7 @@ func ExitFn(errFn func() error, args ...interface{}) {
 	os.Exit(1)
 }
 
-func ExitF(err error, msg string, args ...interface{}) {
+func ExitF(err error, msg string, args ...any) {
 	if err == nil {
 		return
 	}

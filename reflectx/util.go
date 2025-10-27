@@ -17,7 +17,7 @@ func Indirect(v reflect.Value) reflect.Value {
 	}
 }
 
-func New(val interface{}) reflect.Value {
+func New(val any) reflect.Value {
 	if val == nil {
 		panic("[val] is nil")
 	}
