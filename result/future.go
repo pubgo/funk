@@ -3,8 +3,9 @@ package result
 import (
 	"context"
 
-	"github.com/pubgo/funk/v2/errors"
 	"github.com/samber/lo"
+
+	"github.com/pubgo/funk/v2/errors"
 )
 
 func AsyncErr(fn func() Error) *ErrFuture {
@@ -12,7 +13,7 @@ func AsyncErr(fn func() Error) *ErrFuture {
 		return &ErrFuture{e: errors.WrapCaller(errFnIsNil, 1)}
 	}
 
-	var future = newErrFuture()
+	future := newErrFuture()
 	go func() { defer future.close(); future.setErr(try(func() error { return fn().getErr() })) }()
 	return future
 }
@@ -22,7 +23,7 @@ func Async[T any](fn func() Result[T]) *Future[T] {
 		return &Future[T]{v: Fail[T](errors.WrapCaller(errFnIsNil, 1))}
 	}
 
-	var future = newFuture[T]()
+	future := newFuture[T]()
 	go func() {
 		defer future.close()
 		future.setVal(tryResult(fn))

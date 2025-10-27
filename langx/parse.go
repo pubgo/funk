@@ -1,8 +1,9 @@
 package langx
 
 import (
-	"github.com/pubgo/funk/v2/log"
 	"golang.org/x/text/language"
+
+	"github.com/pubgo/funk/v2/log"
 )
 
 func ParseTags(lang string) []language.Tag {

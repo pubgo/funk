@@ -5,16 +5,17 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/pubgo/funk/v2/errors/errinter"
-	"github.com/pubgo/funk/v2/generic"
-	"github.com/pubgo/funk/v2/proto/errorpb"
 	"github.com/rs/xid"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/pubgo/funk/v2"
+	"github.com/pubgo/funk/v2/internal/errors/errinter"
+	"github.com/pubgo/funk/v2/proto/errorpb"
 )
 
 func NewErr(msg *Err) error {
-	if generic.IsNil(msg) {
+	if funk.IsNil(msg) {
 		return nil
 	}
 

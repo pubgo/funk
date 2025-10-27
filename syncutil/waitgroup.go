@@ -3,10 +3,11 @@ package syncutil
 import (
 	"sync"
 
+	"github.com/rs/zerolog"
+
 	"github.com/pubgo/funk/v2/log"
 	"github.com/pubgo/funk/v2/stack"
 	"github.com/pubgo/funk/v2/try"
-	"github.com/rs/zerolog"
 )
 
 type WaitGroup struct {

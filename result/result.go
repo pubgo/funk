@@ -13,9 +13,11 @@ import (
 	"github.com/pubgo/funk/v2/log/logfields"
 )
 
-var _ Catchable = new(Result[any])
-var _ Checkable = new(Result[any])
-var _ ErrSetter = new(Result[any])
+var (
+	_ Catchable = new(Result[any])
+	_ Checkable = new(Result[any])
+	_ ErrSetter = new(Result[any])
+)
 
 type Result[T any] struct {
 	_ [0]func() // disallow ==
@@ -26,7 +28,7 @@ type Result[T any] struct {
 
 func (r Result[T]) GetValue() (t T) {
 	if r.IsErr() {
-		return
+		return t
 	}
 
 	return r.getValue()

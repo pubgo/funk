@@ -10,7 +10,7 @@ import (
 )
 
 func TestCalcTimeout(t *testing.T) {
-	var ctx = context.Background()
+	ctx := context.Background()
 	deadline, ok := ctx.Deadline()
 	assert.Equal(t, ok, false)
 

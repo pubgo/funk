@@ -1,9 +1,8 @@
 package funk
 
 import (
-	_ "embed"
-
 	"cmp"
+	_ "embed"
 	"reflect"
 	"unsafe"
 )
@@ -22,7 +21,7 @@ func ListOf[T any](args ...T) []T {
 }
 
 func Zero[T any]() (ret T) {
-	return
+	return ret
 }
 
 // Equals wraps the '==' operator for comparable types.
@@ -31,13 +30,13 @@ func Equals[T comparable](a, b T) bool {
 }
 
 func Nil[T any]() (t *T) {
-	return
+	return t
 }
 
 //go:inline
 func FromPtr[T any](v *T) (r T) {
 	if v == nil {
-		return
+		return r
 	}
 
 	return *v
@@ -50,7 +49,7 @@ func ToPtr[T any](v T) *T {
 
 func Last[T any](args []T) (t T) {
 	if len(args) == 0 {
-		return
+		return t
 	}
 
 	return args[len(args)-1]
@@ -70,16 +69,16 @@ func TernaryFn[T any](ok bool, a, b func() T) T {
 	return b()
 }
 
-func Map[T, V any](data []T, handle func(i int, d T) V) []V {
+func Map[T, V any](data []T, handle func(d T) V) []V {
 	vv := make([]V, 0, len(data))
 	for i := range data {
-		vv = append(vv, handle(i, data[i]))
+		vv = append(vv, handle(data[i]))
 	}
 	return vv
 }
 
-// Contain returns whether `vs` contains the element `e` by comparing vs[i] == e.
-func Contain[T comparable](vs []T, e T) bool {
+// Contains returns whether `vs` contains the element `e` by comparing vs[i] == e.
+func Contains[T comparable](vs []T, e T) bool {
 	for _, v := range vs {
 		if v == e {
 			return true
@@ -133,7 +132,7 @@ func Max[T cmp.Ordered](a, b T) (r T) {
 		r = a
 	}
 
-	return
+	return r
 }
 
 // Min returns the min of the 2 passed values.
@@ -144,15 +143,15 @@ func Min[T cmp.Ordered](a, b T) (r T) {
 		r = b
 	}
 
-	return
+	return r
 }
 
 // isNilValue copy from <github.com/rs/zerolog.isNilValue>
-func isNilValue(i interface{}) bool {
+func isNilValue(i any) bool {
 	return (*[2]uintptr)(unsafe.Pointer(&i))[1] == 0
 }
 
-func IsNil(err interface{}) bool {
+func IsNil(err any) bool {
 	if err == nil {
 		return true
 	}
@@ -175,9 +174,8 @@ func Init(fn func()) Void {
 	return Void{}
 }
 
-func DoFunc[T any](fn func() T) T {
-	return fn()
-}
+func DoFunc[T any](fn func() T) T { return fn() }
+func Call[T any](fn func() T) T   { return fn() }
 
 func DoSelf[T any](t T, fn func(t T)) T {
 	fn(t)
@@ -185,3 +183,31 @@ func DoSelf[T any](t T, fn func(t T)) T {
 }
 
 type Void struct{}
+
+type Ctx[T any] map[string]T
+
+func (c Ctx[T]) ToTuple() Tuple[T] {
+	tt := make(Tuple[T], 0, len(c))
+	for k := range c {
+		tt = append(tt, KV[T]{K: k, V: c[k]})
+	}
+	return tt
+}
+
+type (
+	List[T any]  []T
+	Tuple[T any] []KV[T]
+)
+
+func (t Tuple[T]) ToCtx() Ctx[T] {
+	ctx := make(Ctx[T], len(t))
+	for i := range t {
+		ctx[t[i].K] = t[i].V
+	}
+	return ctx
+}
+
+type KV[T any] struct {
+	K string `json:"key"`
+	V T      `json:"value"`
+}

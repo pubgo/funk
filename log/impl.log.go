@@ -8,7 +8,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/pubgo/funk/v2/errors/errinter"
+	"github.com/pubgo/funk/v2/internal/errors/errinter"
 	"github.com/pubgo/funk/v2/log/logfields"
 )
 
@@ -153,7 +153,7 @@ func (l *loggerImpl) Err(err error, ctxL ...context.Context) *zerolog.Event {
 		return nil
 	}
 
-	var fn = func(e *zerolog.Event) {
+	fn := func(e *zerolog.Event) {
 		if err == nil {
 			return
 		}

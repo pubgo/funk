@@ -8,7 +8,8 @@ import (
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/pubgo/funk/v2/errors/errinter"
+	"github.com/pubgo/funk/v2/internal/errors/errinter"
+
 	"github.com/pubgo/funk/v2/proto/errorpb"
 	"github.com/pubgo/funk/v2/stack"
 )

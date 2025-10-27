@@ -28,9 +28,9 @@ type expr struct {
 	expr *clause.Expr
 }
 
-func RawCond(sql string, args ...interface{}) gen.Condition {
+func RawCond(sql string, args ...any) gen.Condition {
 	return expr{expr: &clause.Expr{SQL: sql, Vars: args}}
 }
 
-func (s expr) BeCond() interface{} { return s.expr }
-func (s expr) CondError() error    { return nil }
+func (s expr) BeCond() any      { return s.expr }
+func (s expr) CondError() error { return nil }

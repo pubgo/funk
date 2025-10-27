@@ -3,9 +3,10 @@ package stack_test
 import (
 	"testing"
 
+	"github.com/samber/lo"
+
 	"github.com/pubgo/funk/v2/pretty"
 	"github.com/pubgo/funk/v2/stack"
-	"github.com/samber/lo"
 )
 
 func TestTrace(t *testing.T) {

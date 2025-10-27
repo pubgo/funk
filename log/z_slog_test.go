@@ -4,9 +4,10 @@ import (
 	"log/slog"
 	"testing"
 
+	"github.com/rs/zerolog"
+
 	"github.com/pubgo/funk/v2/log"
 	"github.com/pubgo/funk/v2/log/slogutil"
-	"github.com/rs/zerolog"
 )
 
 func TestSlog(t *testing.T) {

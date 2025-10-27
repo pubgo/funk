@@ -13,7 +13,7 @@ const (
 
 type (
 	Migrate    func() *Migration
-	Generation func(g *gen.Generator) []interface{}
+	Generation func(g *gen.Generator) []any
 )
 
 // MigrateFunc is the func signature for migrating.

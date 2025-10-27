@@ -7,7 +7,7 @@ import (
 )
 
 // Memviz 对象内存转化为graphviz
-func Memviz(is ...interface{}) []byte {
+func Memviz(is ...any) []byte {
 	data := bytes.NewBuffer(nil)
 	memviz.Map(data, is...)
 	return data.Bytes()

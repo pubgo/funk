@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pubgo/funk/v2/errors"
 	"github.com/rs/zerolog"
+
+	"github.com/pubgo/funk/v2/errors"
 )
 
 func Run(executors ...func() error) Error {
@@ -74,7 +75,7 @@ func ErrOf(err error) Error {
 }
 
 func ErrOfFn(fn func() error) Error {
-	var err = try(fn)
+	err := try(fn)
 	if err == nil {
 		return Error{}
 	}

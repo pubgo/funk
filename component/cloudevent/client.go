@@ -92,7 +92,7 @@ func (c *Client) initStream() (r error) {
 			Subjects: streamSubjects,
 			Metadata: metadata,
 			Storage:  storageType,
-			//Retention: jetstream.InterestPolicy,
+			// Retention: jetstream.InterestPolicy,
 
 			// Duplicates is the window within which to track duplicate messages.
 			// If not set, server default is 2 minutes.
@@ -104,7 +104,7 @@ func (c *Client) initStream() (r error) {
 		})
 		c.streams[streamName] = stream
 	}
-	return
+	return r
 }
 
 func (c *Client) initConsumer() (r error) {
@@ -195,13 +195,13 @@ func (c *Client) initConsumer() (r error) {
 			})
 		}
 	}
-	return
+	return r
 }
 
 func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects map[string]*jobEventHandler, concurrent int) func(msg jetstream.Msg) {
-	var handler = func(msg jetstream.Msg) {
-		var now = time.Now()
-		var addMsgInfo = func(e *zerolog.Event) {
+	handler := func(msg jetstream.Msg) {
+		now := time.Now()
+		addMsgInfo := func(e *zerolog.Event) {
 			e.Str("stream", streamName)
 			e.Str("consumer", consumerName)
 			e.Any("header", msg.Headers())
@@ -216,7 +216,7 @@ func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects m
 			e.Msg("received cloud job event")
 		})
 
-		var handlerDelayJob = func() (_ bool, gErr error) {
+		handlerDelayJob := func() (_ bool, gErr error) {
 			delayDur := strings.TrimSpace(msg.Headers().Get(DefaultCloudEventDelayKey))
 			if delayDur == "" {
 				return false, nil
@@ -261,8 +261,8 @@ func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects m
 			return
 		}
 
-		var cfg = handler.cfg
-		var checkErrAndLog = func(err error, msg string) {
+		cfg := handler.cfg
+		checkErrAndLog := func(err error, msg string) {
 			if err == nil {
 				return
 			}
@@ -289,8 +289,8 @@ func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects m
 			return
 		}
 
-		var backoff = lo.FromPtr(cfg.RetryBackoff)
-		var maxRetries = lo.FromPtr(cfg.MaxRetry)
+		backoff := lo.FromPtr(cfg.RetryBackoff)
+		maxRetries := lo.FromPtr(cfg.MaxRetry)
 
 		// If the error is a redelivery error, then the backoff duration is the error duration
 		if err1 := isRedeliveryErr(err); err1 != nil {
@@ -347,7 +347,7 @@ func (c *Client) doErrHandler(streamName, consumerName string) jetstream.PullCon
 }
 
 func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *jobEventHandler, cfg *JobEventConfig) (gErr result.Error) {
-	var timeout = lo.FromPtr(cfg.Timeout)
+	timeout := lo.FromPtr(cfg.Timeout)
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
@@ -370,7 +370,7 @@ func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *
 		Config:       cfg,
 	}
 
-	var now = time.Now()
+	now := time.Now()
 	var args any
 	defer func() {
 		if gErr.IsOK() {
@@ -396,7 +396,7 @@ func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *
 			)
 		})
 	if err.Catch(&gErr) {
-		return
+		return gErr
 	}
 	args = &pb
 
@@ -408,7 +408,7 @@ func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *
 			)
 		})
 	if dst.Catch(&gErr) {
-		return
+		return gErr
 	}
 
 	ctx = createCtxWithContext(ctx, msgCtx)
@@ -454,7 +454,7 @@ func (c *Client) doConsume() (r error) {
 			c.p.Lc.BeforeStop(lifecycle.WrapNoCtxErr(con.Stop))
 		}
 	}
-	return
+	return r
 }
 
 func (c *Client) Start() error {

@@ -10,7 +10,8 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"github.com/pubgo/funk/v2/errors/errinter"
+	"github.com/pubgo/funk/v2/internal/errors/errinter"
+
 	"github.com/pubgo/funk/v2/proto/errorpb"
 	"github.com/pubgo/funk/v2/stack"
 )
@@ -27,35 +28,16 @@ func New(msg string, tags ...Tag) error {
 	return WrapCaller(&Err{Msg: msg, id: xid.New().String(), Tags: tags}, 1)
 }
 
-func Errorf(msg string, args ...interface{}) error {
+func Errorf(msg string, args ...any) error {
 	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...), id: xid.New().String()}, 1)
 }
 
-func Parse(val interface{}) error { return errinter.ParseError(val) }
-func Debug(err error)             { errinter.Debug(err) }
+func Parse(val any) error { return errinter.ParseError(val) }
+func Debug(err error)     { errinter.Debug(err) }
 func Is(err, target error) bool {
 	return errors.Is(err, target)
 }
 func Join(errs ...error) error { return errors.Join(errs...) }
-func UnwrapEach(err error, call func(e error) bool) {
-	if err == nil {
-		return
-	}
-
-	for {
-		if !call(err) {
-			return
-		}
-
-		err1, ok := err.(ErrUnwrapper)
-		if !ok {
-			return
-		}
-
-		err = err1.Unwrap()
-	}
-}
-
 func AsA[T any](err error) (*T, bool) {
 	var target T
 	return &target, As(err, &target)
@@ -113,7 +95,7 @@ func WrapCaller(err error, skip ...int) error {
 	return newErrWrap(err, Tags{T("msg", err.Error())}, lo.FirstOrEmpty(skip))
 }
 
-func Wrapf(err error, format string, args ...interface{}) error {
+func Wrapf(err error, format string, args ...any) error {
 	if err == nil {
 		return nil
 	}
@@ -162,7 +144,7 @@ func WrapKV(err error, key string, value any, kvs ...any) error {
 		return nil
 	}
 
-	var tags = Tags{T(key, value)}
+	tags := Tags{T(key, value)}
 	for i := 0; i < len(kvs); i += 2 {
 		tags = append(tags, Tag{K: kvs[i].(string), V: kvs[i+1]})
 	}

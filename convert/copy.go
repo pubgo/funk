@@ -39,7 +39,7 @@ func BtoU4(b []byte) (i []uint32) {
 	I.Data = B.Data
 	I.Len = B.Len >> 2
 	I.Cap = I.Len
-	return
+	return i
 }
 
 // U4toB converts integer slice to byte slice
@@ -49,7 +49,7 @@ func U4toB(i []uint32) (b []byte) {
 	B.Data = I.Data
 	B.Len = I.Len << 2
 	B.Cap = B.Len
-	return
+	return b
 }
 
 // U4toU8 converts uint32 slice to uint64 slice
@@ -59,7 +59,7 @@ func U4toU8(i []uint32) (k []uint64) {
 	K.Data = I.Data
 	K.Len = I.Len >> 1
 	K.Cap = K.Len
-	return
+	return k
 }
 
 // U8toU4 converts uint64 slice to uint32 slice
@@ -69,7 +69,7 @@ func U8toU4(i []uint64) (k []uint32) {
 	K.Data = I.Data
 	K.Len = I.Len << 1
 	K.Cap = K.Len
-	return
+	return k
 }
 
 // BtoU8 converts byte slice to integer slice
@@ -79,7 +79,7 @@ func BtoU8(b []byte) (i []uint64) {
 	I.Data = B.Data
 	I.Len = B.Len >> 3
 	I.Cap = I.Len
-	return
+	return i
 }
 
 // U8toB converts integer slice to byte slice
@@ -89,7 +89,7 @@ func U8toB(i []uint64) (b []byte) {
 	B.Data = I.Data
 	B.Len = I.Len << 3
 	B.Cap = B.Len
-	return
+	return b
 }
 
 // StoU4 converts string to integer slice
@@ -99,7 +99,7 @@ func StoU4(s string) (i []uint32) {
 	I.Data = S.Data
 	I.Len = S.Len >> 2
 	I.Cap = I.Len
-	return
+	return i
 }
 
 // U4toS converts integer slice to string
@@ -108,7 +108,7 @@ func U4toS(i []uint32) (s string) {
 	S := (*String)(unsafe.Pointer(&s))
 	S.Data = I.Data
 	S.Len = I.Len << 2
-	return
+	return s
 }
 
 // StoU8 converts string to integer slice
@@ -118,7 +118,7 @@ func StoU8(s string) (i []uint64) {
 	I.Data = S.Data
 	I.Len = S.Len >> 3
 	I.Cap = I.Len
-	return
+	return i
 }
 
 // U8toS converts integer slice to string
@@ -127,5 +127,5 @@ func U8toS(i []uint64) (s string) {
 	S := (*String)(unsafe.Pointer(&s))
 	S.Data = I.Data
 	S.Len = I.Len << 3
-	return
+	return s
 }

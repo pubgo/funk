@@ -6,9 +6,9 @@ import (
 	"runtime/debug"
 	"time"
 
+	"github.com/pubgo/funk/v2"
 	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/errors"
-	"github.com/pubgo/funk/v2/generic"
 	"github.com/pubgo/funk/v2/recovery"
 	"github.com/pubgo/funk/v2/running"
 	"github.com/pubgo/funk/v2/stack"
@@ -46,7 +46,7 @@ func GoSafe(fn func() error, cb ...func(err error)) {
 
 	go func() {
 		err := try.Try(fn)
-		if generic.IsNil(err) {
+		if funk.IsNil(err) {
 			return
 		}
 
@@ -119,8 +119,8 @@ func Timeout(dur time.Duration, fn func() error) error {
 	}
 }
 
-func logErr(fn interface{}, err error) {
-	if generic.IsNil(err) {
+func logErr(fn any, err error) {
+	if funk.IsNil(err) {
 		return
 	}
 

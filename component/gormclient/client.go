@@ -3,9 +3,10 @@ package gormclient
 import (
 	"database/sql"
 
+	"gorm.io/gorm"
+
 	"github.com/pubgo/funk/v2/result"
 	"github.com/pubgo/funk/v2/vars"
-	"gorm.io/gorm"
 )
 
 const Name = "orm"
@@ -24,7 +25,7 @@ func (c *Client) Ping() error {
 }
 
 func (c *Client) Vars() vars.Func {
-	return func() interface{} {
+	return func() any {
 		_db, err := c.DB.DB()
 		if err != nil {
 			return err.Error()

@@ -2,6 +2,7 @@ package resultchecker
 
 import (
 	"context"
+
 	"github.com/pubgo/funk/v2/stack"
 )
 
@@ -12,7 +13,7 @@ func RegisterErrCheck(f ErrChecker) bool {
 		return false
 	}
 
-	var checkFrame = stack.CallerWithFunc(f).String()
+	checkFrame := stack.CallerWithFunc(f).String()
 	for _, errFunc := range errChecks {
 		if checkFrame == stack.CallerWithFunc(errFunc).String() {
 			return false
@@ -34,8 +35,8 @@ func GetErrCheckStacks() []*stack.Frame {
 }
 
 func RemoveErrCheck(f func(context.Context, error) error) {
-	var checkFrame = stack.CallerWithFunc(f).String()
-	var index = -1
+	checkFrame := stack.CallerWithFunc(f).String()
+	index := -1
 	for idx, errFunc := range errChecks {
 		if checkFrame == stack.CallerWithFunc(errFunc).String() {
 			index = idx

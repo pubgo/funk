@@ -5,16 +5,17 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/rs/zerolog"
+	"github.com/samber/lo"
+	"google.golang.org/protobuf/proto"
+
 	"github.com/pubgo/funk/v2/assert"
 	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
 	"github.com/pubgo/funk/v2/stack"
 	"github.com/pubgo/funk/v2/vars"
-	"github.com/rs/zerolog"
-	"github.com/samber/lo"
-	"google.golang.org/protobuf/proto"
 )
 
-func WrapHandler[Req proto.Message, Rsp proto.Message](handler func(ctx context.Context, req Req) (Rsp, error)) func(ctx context.Context, req Req) error {
+func WrapHandler[Req, Rsp proto.Message](handler func(ctx context.Context, req Req) (Rsp, error)) func(ctx context.Context, req Req) error {
 	return func(ctx context.Context, req Req) error {
 		_, err := handler(ctx, req)
 		return err
@@ -34,7 +35,7 @@ func init() {
 	})
 }
 
-func RegisterJobHandler[T proto.Message](jobCli *Client, jobName string, topic string, handler EventHandler[T], opts ...*cloudeventpb.RegisterJobOptions) {
+func RegisterJobHandler[T proto.Message](jobCli *Client, jobName, topic string, handler EventHandler[T], opts ...*cloudeventpb.RegisterJobOptions) {
 	assert.Fn(reflect.TypeOf(jobCli.subjects[topic]) != reflect.TypeOf(lo.Empty[T]()), func() error {
 		return fmt.Errorf("type not match, topic-type=%s handler-input-type=%s", reflect.TypeOf(jobCli.subjects[topic]).String(), reflect.TypeOf(lo.Empty[T]()).String())
 	})
@@ -46,11 +47,11 @@ func RegisterJobHandler[T proto.Message](jobCli *Client, jobName string, topic s
 	jobCli.registerJobHandler(jobName, topic, func(ctx context.Context, args proto.Message) error { return handler(ctx, args.(T)) }, opts...)
 }
 
-func (c *Client) registerJobHandler(jobName string, topic string, handler EventHandler[proto.Message], opts ...*cloudeventpb.RegisterJobOptions) {
+func (c *Client) registerJobHandler(jobName, topic string, handler EventHandler[proto.Message], opts ...*cloudeventpb.RegisterJobOptions) {
 	assert.If(handler == nil, "job handler is nil")
 	assert.If(c.subjects[topic] == nil, "topic:%s not found", topic)
 
-	var evtOpt = new(cloudeventpb.RegisterJobOptions)
+	evtOpt := new(cloudeventpb.RegisterJobOptions)
 	for _, o := range opts {
 		proto.Merge(evtOpt, o)
 	}

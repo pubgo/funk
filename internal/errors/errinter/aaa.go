@@ -53,7 +53,7 @@ func (t Maps) Tags() Tags {
 }
 
 func (t Maps) ToMapString() map[string]string {
-	var data = make(map[string]string, len(t))
+	data := make(map[string]string, len(t))
 	for key, value := range t {
 		data[key] = fmt.Sprintf("%v", value)
 	}
@@ -77,7 +77,7 @@ func (t Tags) Format(f fmt.State, verb rune) {
 }
 
 func (t Tags) ToMap() map[string]string {
-	var data = make(map[string]string, len(t))
+	data := make(map[string]string, len(t))
 	for _, tag := range t {
 		data[tag.K] = fmt.Sprintf("%v", tag.V)
 	}

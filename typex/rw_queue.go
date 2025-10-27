@@ -4,7 +4,7 @@ import (
 	"sync"
 )
 
-func QueueOf(val ...interface{}) *Queue {
+func QueueOf(val ...any) *Queue {
 	q := &Queue{}
 	for i := range val {
 		q.Push(val[i])
@@ -14,27 +14,27 @@ func QueueOf(val ...interface{}) *Queue {
 
 type Queue struct {
 	mu   sync.RWMutex
-	data []interface{}
+	data []any
 }
 
-func (t *Queue) Push(val interface{}) {
+func (t *Queue) Push(val any) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
 	t.data = append(t.data, val)
 }
 
-func (t *Queue) Pop() interface{} {
+func (t *Queue) Pop() any {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
-	data := make([]interface{}, len(t.data)-1)
+	data := make([]any, len(t.data)-1)
 	copy(data, t.data[:len(t.data)-2])
 	t.data = data
 	return t.data[len(t.data)-1]
 }
 
-func (t *Queue) PopFirst() interface{} {
+func (t *Queue) PopFirst() any {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
@@ -42,7 +42,7 @@ func (t *Queue) PopFirst() interface{} {
 		return nil
 	}
 
-	data := make([]interface{}, len(t.data)-1)
+	data := make([]any, len(t.data)-1)
 	copy(data, t.data[1:])
 	t.data = data
 	return t.data[0]
@@ -59,7 +59,7 @@ func (t *Queue) Del(index uint32) {
 	copy(t.data[:index], t.data[index+1:])
 }
 
-func (t *Queue) Get(index uint32) interface{} {
+func (t *Queue) Get(index uint32) any {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 
@@ -70,20 +70,20 @@ func (t *Queue) Get(index uint32) interface{} {
 	return t.data[index]
 }
 
-func (t *Queue) List() []interface{} {
-	data := make([]interface{}, len(t.data))
+func (t *Queue) List() []any {
+	data := make([]any, len(t.data))
 	copy(data, t.data)
 	return data
 }
 
-func (t *Queue) First() interface{} {
+func (t *Queue) First() any {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 
 	return t.data[0]
 }
 
-func (t *Queue) Last() interface{} {
+func (t *Queue) Last() any {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 

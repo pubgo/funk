@@ -7,11 +7,13 @@ import (
 	"github.com/pubgo/funk/v2/errors"
 )
 
-var errReject = errors.New("cloudevent: reject retry and discard msg")
-var errRedeliveryStr = "cloudevent: redelivery message with custom delay duration"
+var (
+	errReject        = errors.New("cloudevent: reject retry and discard msg")
+	errRedeliveryStr = "cloudevent: redelivery message with custom delay duration"
+)
 
 func Reject(errs ...error) error {
-	var reason = "reject"
+	reason := "reject"
 	if len(errs) > 0 {
 		reason = errs[0].Error()
 	}
@@ -35,7 +37,7 @@ func (err errRedelivery) Error() string {
 }
 
 func Redelivery(delay time.Duration, errs ...error) error {
-	var reason = "redelivery"
+	reason := "redelivery"
 	if len(errs) > 0 {
 		reason = errs[0].Error()
 	}

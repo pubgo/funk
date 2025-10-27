@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/urfave/cli/v3"
+
 	"github.com/pubgo/funk/v2/env"
 	"github.com/pubgo/funk/v2/features"
-	"github.com/urfave/cli/v3"
 )
 
 func GetFlags() []cli.Flag {

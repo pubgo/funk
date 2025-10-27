@@ -4,7 +4,7 @@ import "sync"
 
 type RwMap struct {
 	rw   sync.RWMutex
-	data map[string]interface{}
+	data map[string]any
 }
 
 func (t *RwMap) Has(key string) bool {
@@ -15,11 +15,11 @@ func (t *RwMap) Has(key string) bool {
 	return ok
 }
 
-func (t *RwMap) Map() map[string]interface{} {
+func (t *RwMap) Map() map[string]any {
 	t.rw.RLock()
 	defer t.rw.RUnlock()
 
-	dt := make(map[string]interface{}, len(t.data))
+	dt := make(map[string]any, len(t.data))
 	for k, v := range t.data {
 		dt[k] = v
 	}
@@ -27,7 +27,7 @@ func (t *RwMap) Map() map[string]interface{} {
 	return dt
 }
 
-func (t *RwMap) Get(key string) interface{} {
+func (t *RwMap) Get(key string) any {
 	t.rw.RLock()
 	val, ok := t.data[key]
 	defer t.rw.RUnlock()
@@ -39,7 +39,7 @@ func (t *RwMap) Get(key string) interface{} {
 	return NotFound
 }
 
-func (t *RwMap) Load(key string) (interface{}, bool) {
+func (t *RwMap) Load(key string) (any, bool) {
 	t.rw.RLock()
 	val, ok := t.data[key]
 	t.rw.RUnlock()
@@ -58,7 +58,7 @@ func (t *RwMap) Keys() []string {
 	return keys
 }
 
-func (t *RwMap) Each(fn func(name string, val interface{})) {
+func (t *RwMap) Each(fn func(name string, val any)) {
 	t.rw.RLock()
 	defer t.rw.RUnlock()
 
@@ -67,7 +67,7 @@ func (t *RwMap) Each(fn func(name string, val interface{})) {
 	}
 }
 
-func (t *RwMap) Range(fn func(name string, val interface{}) bool) {
+func (t *RwMap) Range(fn func(name string, val any) bool) {
 	t.rw.RLock()
 	defer t.rw.RUnlock()
 
@@ -78,12 +78,12 @@ func (t *RwMap) Range(fn func(name string, val interface{}) bool) {
 	}
 }
 
-func (t *RwMap) Set(key string, val interface{}) {
+func (t *RwMap) Set(key string, val any) {
 	t.rw.Lock()
 	defer t.rw.Unlock()
 
 	if t.data == nil {
-		t.data = make(map[string]interface{}, 8)
+		t.data = make(map[string]any, 8)
 	}
 
 	t.data[key] = val

@@ -21,9 +21,9 @@ type TestingTB interface {
 	// Name Returns current test name.
 	Name() string
 	Cleanup(f func())
-	Logf(fmt string, args ...interface{})
-	Fatalf(format string, args ...interface{})
-	Errorf(message string, args ...interface{})
+	Logf(fmt string, args ...any)
+	Fatalf(format string, args ...any)
+	Errorf(message string, args ...any)
 }
 
 func NewResult(lastInsertID, rowsAffected int64) driver.Result {
@@ -38,7 +38,7 @@ func AnyArgs(n int) (args []driver.Value) {
 	for i := 0; i < n; i++ {
 		args = append(args, sqlmock.AnyArg())
 	}
-	return
+	return args
 }
 
 type AnyTime struct{}

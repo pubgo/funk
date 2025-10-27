@@ -5,8 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pubgo/funk/v2/result"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/pubgo/funk/v2/result"
 )
 
 func TestFuture_ConcurrentAwait(t *testing.T) {

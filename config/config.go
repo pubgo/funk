@@ -50,9 +50,11 @@ func init() {
 func GetConfigDir() string {
 	return configDir
 }
+
 func GetConfigPath() string {
 	return configPath
 }
+
 func SetConfigPath(confPath string) {
 	assert.If(confPath == "", "config path is null")
 	configPath = confPath
@@ -141,7 +143,7 @@ func LoadFromPath[T any](val *T, cfgPath string) EnvSpecMap {
 			Msg("config type not correct")
 	}
 
-	var envCfgMap = loadEnvConfigMap(cfgPath)
+	envCfgMap := loadEnvConfigMap(cfgPath)
 
 	configBytes := result.Wrap(GetConfigData(cfgPath)).Expect("failed to handler config data")
 	defer recovery.Exit(func(err error) error {
@@ -172,7 +174,7 @@ func LoadFromPath[T any](val *T, cfgPath string) EnvSpecMap {
 		}
 
 		// skip .*.yaml and cfg.other
-		var cfgFilter = func(item string, index int) bool {
+		cfgFilter := func(item string, index int) bool {
 			return strings.HasSuffix(item, "."+defaultConfigType) && !strings.HasPrefix(item, ".")
 		}
 		resPaths = lo.Filter(resPaths, cfgFilter)
@@ -185,7 +187,7 @@ func LoadFromPath[T any](val *T, cfgPath string) EnvSpecMap {
 		result.ErrOf(yaml.Unmarshal(resBytes, &cfg1)).Must(func(e *zerolog.Event) {
 			fmt.Println("res_path", resPath)
 			fmt.Println("config_data", string(resBytes))
-			assert.Exit(os.WriteFile(resPath+".err.yml", resBytes, 0666))
+			assert.Exit(os.WriteFile(resPath+".err.yml", resBytes, 0o666))
 			e.Str(logfields.Msg, "failed to unmarshal config")
 		})
 
@@ -197,7 +199,7 @@ func LoadFromPath[T any](val *T, cfgPath string) EnvSpecMap {
 
 	var cfgList []T
 	cfgList = append(cfgList, typex.DoBlock1(func() []T {
-		var resPathList = getRealPath(res.Resources)
+		resPathList := getRealPath(res.Resources)
 		sort.Strings(resPathList)
 
 		var pathList []T
@@ -212,7 +214,7 @@ func LoadFromPath[T any](val *T, cfgPath string) EnvSpecMap {
 		return pathList
 	})...)
 	cfgList = append(cfgList, typex.DoBlock1(func() []T {
-		var patchResPathList = getRealPath(res.PatchResources)
+		patchResPathList := getRealPath(res.PatchResources)
 		sort.Strings(patchResPathList)
 
 		var pathList []T

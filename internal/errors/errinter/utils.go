@@ -21,7 +21,7 @@ import (
 	"github.com/pubgo/funk/v2/proto/errorpb"
 )
 
-func ParseError(val interface{}) error {
+func ParseError(val any) error {
 	if funk.IsNil(val) {
 		return nil
 	}

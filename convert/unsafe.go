@@ -18,7 +18,7 @@ func BtoS(b []byte) (s string) {
 	S := (*String)(unsafe.Pointer(&s))
 	S.Data = B.Data
 	S.Len = B.Len
-	return
+	return s
 }
 
 // StoB converts string to byte slice
@@ -28,5 +28,5 @@ func StoB(s string) (b []byte) {
 	B.Data = S.Data
 	B.Len = S.Len
 	B.Cap = B.Len
-	return
+	return b
 }

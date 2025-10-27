@@ -42,7 +42,7 @@ func MustGet(names ...string) string {
 	return val
 }
 
-func GetOr(name string, defaultVal string) string {
+func GetOr(name, defaultVal string) string {
 	val := Get(name)
 	return lo.If(val != "", val).Else(defaultVal)
 }
@@ -149,7 +149,7 @@ func Key(key string) string {
 func LoadFiles(files ...string) (r result.Error) {
 	files = lo.Filter(files, func(item string, index int) bool { return pathutil.IsExist(item) })
 	if len(files) == 0 {
-		return
+		return r
 	}
 
 	var needReloadEnv bool
@@ -160,7 +160,7 @@ func LoadFiles(files ...string) (r result.Error) {
 			}).
 			Unwrap(&r)
 		if r.IsErr() {
-			return
+			return r
 		}
 
 		dataMap := result.Wrap(godotenv.UnmarshalBytes(data)).
@@ -169,7 +169,7 @@ func LoadFiles(files ...string) (r result.Error) {
 			}).
 			Unwrap(&r)
 		if r.IsErr() {
-			return
+			return r
 		}
 
 		for k, v := range dataMap {
@@ -178,7 +178,7 @@ func LoadFiles(files ...string) (r result.Error) {
 			}
 
 			if Set(k, v).Catch(&r) {
-				return
+				return r
 			}
 
 			needReloadEnv = true
@@ -189,7 +189,7 @@ func LoadFiles(files ...string) (r result.Error) {
 		loadEnv()
 	}
 
-	return
+	return r
 }
 
 // Normalize a-b=>a_b, a.b=>a_b, a/b=>a_b

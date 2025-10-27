@@ -60,7 +60,7 @@ func NewFeature() *Feature {
 }
 
 // AddFunc registers a new value with getter, setter, usage, and optional tags
-func (m *Feature) AddFunc(name string, usage string, value Value, tags ...map[string]any) *Flag {
+func (m *Feature) AddFunc(name, usage string, value Value, tags ...map[string]any) *Flag {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -91,7 +91,7 @@ func (m *Feature) VisitAll(fn func(*Flag)) {
 
 var defaultFeature = NewFeature()
 
-func Register(name string, usage string, value Value, tags ...map[string]any) {
+func Register(name, usage string, value Value, tags ...map[string]any) {
 	defaultFeature.AddFunc(name, usage, value, tags...)
 }
 

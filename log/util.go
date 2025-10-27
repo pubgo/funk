@@ -3,9 +3,10 @@ package log
 import (
 	"context"
 
-	"github.com/pubgo/funk/v2/errors/errinter"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/encoding/prototext"
+
+	"github.com/pubgo/funk/v2/internal/errors/errinter"
 )
 
 func errDetail(err error) string {
@@ -20,7 +21,7 @@ func RecordErr(logs ...Logger) func(ctx context.Context, err error) error {
 	return func(ctx context.Context, err error) error {
 		ctx = lo.If(ctx != nil, ctx).ElseF(context.Background)
 
-		var logger = stdLog
+		logger := stdLog
 		if len(logs) > 0 {
 			logger = logs[0]
 		}

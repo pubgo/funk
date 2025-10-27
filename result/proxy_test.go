@@ -8,7 +8,7 @@ import (
 
 func TestProxy(t *testing.T) {
 	var gErr error
-	var err = ErrProxyOf(&gErr)
+	err := ErrProxyOf(&gErr)
 	Errorf("test proxy error").Log().Catch(&err)
 	assert.NotNil(t, gErr)
 	assert.NotNil(t, err.GetErr())

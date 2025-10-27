@@ -24,7 +24,7 @@ var errFnIsNil = errors.New("[fn] is nil")
 func try(fn func() error) (gErr error) {
 	if fn == nil {
 		gErr = errors.WrapStack(errFnIsNil)
-		return
+		return gErr
 	}
 
 	defer func() {
@@ -38,7 +38,7 @@ func try(fn func() error) (gErr error) {
 	}()
 
 	gErr = fn()
-	return
+	return gErr
 }
 
 func tryResult[T any](fn func() Result[T]) (r Result[T]) {
@@ -78,7 +78,7 @@ func try1[T any](fn func() (T, error)) (t T, gErr error) {
 	}()
 
 	t, gErr = fn()
-	return
+	return t, gErr
 }
 
 func errNilOrPanic(err error, events ...func(e *zerolog.Event)) {
@@ -99,7 +99,7 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 		return false
 	}
 
-	var isErr = func() bool {
+	isErr := func() bool {
 		if setter != nil {
 			return setter.IsErr()
 		}
@@ -111,7 +111,7 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 		return false
 	}
 
-	var getErr = func() error {
+	getErr := func() error {
 		if setter != nil {
 			return setter.GetErr()
 		}
@@ -123,7 +123,7 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 		return nil
 	}
 
-	var setErr = func(err error) {
+	setErr := func(err error) {
 		if setter != nil {
 			setError(setter, err)
 		}
@@ -133,7 +133,7 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 		}
 	}
 
-	var ctx = context.Background()
+	ctx := context.Background()
 	for i := range contexts {
 		if contexts[i] == nil {
 			continue
@@ -148,8 +148,8 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 		log.Err(err, ctx).Msgf("error setter has already set the error, err=%s", err.Error())
 	}
 
-	var checkers = append(resultchecker.GetErrChecks(), resultchecker.GetCheckersFromCtx(ctx)...)
-	var err = r.getErr()
+	checkers := append(resultchecker.GetErrChecks(), resultchecker.GetCheckersFromCtx(ctx)...)
+	err := r.getErr()
 	for _, fn := range checkers {
 		err = fn(ctx, err)
 		if err == nil {
@@ -188,12 +188,12 @@ func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts .
 		errNilOrPanic(fmt.Errorf("error setter is nil"))
 	}
 
-	var ret = r.getValue()
+	ret := r.getValue()
 	if r.IsOK() {
 		return ret, nil
 	}
 
-	var ctx = context.Background()
+	ctx := context.Background()
 	if len(contexts) > 0 {
 		ctx = contexts[0]
 	}
@@ -209,8 +209,8 @@ func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts .
 		log.Err(preErr, ctx).Msgf("error setter has already set the error, err=%v", preErr)
 	}
 
-	var err = r.getErr()
-	var checkers = append(resultchecker.GetErrChecks(), resultchecker.GetCheckersFromCtx(ctx)...)
+	err := r.getErr()
+	checkers := append(resultchecker.GetErrChecks(), resultchecker.GetCheckersFromCtx(ctx)...)
 	for _, fn := range checkers {
 		err = fn(ctx, err)
 		if err == nil {

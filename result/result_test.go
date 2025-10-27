@@ -48,7 +48,7 @@ func TestResultDo(t *testing.T) {
 }
 
 func TestErrOf(t *testing.T) {
-	var ctx = log.UpdateEventCtx(context.Background(), log.Map{"test": "ok"})
+	ctx := log.UpdateEventCtx(context.Background(), log.Map{"test": "ok"})
 	resultchecker.RegisterErrCheck(log.RecordErr())
 
 	var err result.Error
@@ -59,12 +59,12 @@ func TestErrOf(t *testing.T) {
 
 func fn1() (r result.Result[string]) {
 	if fn3().Catch(&r) {
-		return
+		return r
 	}
 
 	val := fn2().Unwrap(&r)
 	if r.IsErr() {
-		return
+		return r
 	}
 
 	return r.WithValue(val)
@@ -77,7 +77,7 @@ func fn2() (r result.Result[string]) {
 		}).
 		Catch(&r)
 	if r.IsErr() {
-		return
+		return r
 	}
 
 	return r.WithValue("ok")

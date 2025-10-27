@@ -9,8 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/encoding/prototext"
 
+	"github.com/pubgo/funk/v2/internal/errors/errinter"
+
 	"github.com/pubgo/funk/v2/errors"
-	"github.com/pubgo/funk/v2/errors/errinter"
 	"github.com/pubgo/funk/v2/proto/errorpb"
 )
 

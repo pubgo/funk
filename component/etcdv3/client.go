@@ -21,7 +21,7 @@ func New(conf *Config) *Client {
 	)
 
 	// 创建etcd client对象
-	return &Client{Client: assert.Must1(retry.Default().DoVal(func(i int) (interface{}, error) {
+	return &Client{Client: assert.Must1(retry.Default().DoVal(func(i int) (any, error) {
 		return client3.New(*cfg)
 	})).(*client3.Client)}
 }

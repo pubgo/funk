@@ -25,7 +25,7 @@ func TestWithName(t *testing.T) {
 	log.GetLogger("log1").
 		Debug().
 		Func(func(e *zerolog.Event) {
-			var buf = gjson.ParseBytes(log.GetEventBuf(e))
+			buf := gjson.ParseBytes(log.GetEventBuf(e))
 			assert.Equal(t, buf.Get("logger").String(), "log1")
 		}).Msg("hello")
 
@@ -33,13 +33,13 @@ func TestWithName(t *testing.T) {
 		WithName("log2").
 		Debug().
 		Func(func(e *zerolog.Event) {
-			var buf = gjson.ParseBytes(log.GetEventBuf(e))
+			buf := gjson.ParseBytes(log.GetEventBuf(e))
 			assert.Equal(t, buf.Get("logger").String(), "log1.log2")
 		}).Msg("hello")
 
 	log.Debug().
 		Func(func(e *zerolog.Event) {
-			var buf = gjson.ParseBytes(log.GetEventBuf(e))
+			buf := gjson.ParseBytes(log.GetEventBuf(e))
 			assert.Equal(t, buf.Get("logger").String(), "")
 		}).Msg("hello")
 }
@@ -85,11 +85,11 @@ func TestName(t *testing.T) {
 }
 
 func TestEvent(t *testing.T) {
-	var getEvt = func() *log.Event {
+	getEvt := func() *log.Event {
 		return log.NewEvent().Str("hello", "world").Int("int", 100).Dict("ddd", log.NewEvent())
 	}
 
-	var getCtx = func(evt *log.Event) context.Context {
+	getCtx := func(evt *log.Event) context.Context {
 		return log.CreateEventCtx(context.Background(), evt)
 	}
 
@@ -107,8 +107,10 @@ func TestEvent(t *testing.T) {
 }
 
 func TestWithEvent(t *testing.T) {
-	evt := log.NewEvent().Str("hello", "hello world").Int("int", 100)
-	ee := log.GetLogger("with_event").WithEvent(evt).Info().Str("info", "abcd")
+	ee := log.GetLogger("with_event").
+		WithFields(log.Map{"hello": "hello world", "int": 100}).
+		Info().
+		Str("info", "abcd")
 	ee.Msg("dddd")
 }
 

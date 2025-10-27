@@ -19,7 +19,7 @@ const (
 )
 
 // P adds the coloring to the given string.
-func (c Color) P(s string, args ...interface{}) string {
+func (c Color) P(s string, args ...any) string {
 	return fmt.Sprintf("\x1b[%dm%s\x1b[0m", uint8(c), fmt.Sprintf(s, args...))
 }
 

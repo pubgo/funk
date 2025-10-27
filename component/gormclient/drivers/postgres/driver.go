@@ -3,13 +3,14 @@ package sqlite
 import (
 	"fmt"
 
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+
 	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/component/gormclient"
 	"github.com/pubgo/funk/v2/config"
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/recovery"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 func init() {
