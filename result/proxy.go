@@ -6,31 +6,31 @@ import (
 	"github.com/samber/lo"
 )
 
-var _ ErrSetter = new(ErrProxy)
+var _ ErrSetter = new(ProxyErr)
 
-type ErrProxy struct {
+type ProxyErr struct {
 	err *error
 }
 
-func (e ErrProxy) IsOK() bool {
+func (e ProxyErr) IsOK() bool {
 	return lo.FromPtr(e.err) == nil
 }
 
-func (e ErrProxy) IsErr() bool {
+func (e ProxyErr) IsErr() bool {
 	return lo.FromPtr(e.err) != nil
 }
 
-func (e ErrProxy) GetErr() error {
+func (e ProxyErr) GetErr() error {
 	return lo.FromPtr(e.err)
 }
 
-func (e ErrProxy) String() string {
+func (e ProxyErr) String() string {
 	if e.IsOK() {
-		return "Ok"
+		return "OK"
 	}
 
 	return fmt.Sprintf("Error(%v)", lo.FromPtr(e.err))
 }
 
-func (e ErrProxy) setErrorInner() {
+func (e ProxyErr) setErrorInner() {
 }

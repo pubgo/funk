@@ -115,7 +115,7 @@ func (e Error) Expect(format string, args ...any) {
 
 func (e Error) String() string {
 	if e.IsOK() {
-		return "Ok"
+		return "OK"
 	}
 
 	return fmt.Sprintf("Error(%v)", e.err)

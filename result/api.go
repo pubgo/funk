@@ -57,12 +57,12 @@ func Errorf(msg string, args ...any) Error {
 	return newError(errors.WrapCaller(fmt.Errorf(msg, args...), 1))
 }
 
-func ErrProxyOf(err *error) ErrProxy {
+func ErrProxyOf(err *error) ProxyErr {
 	if err == nil {
 		errNilOrPanic(errors.Errorf("err param is nil"))
-		return ErrProxy{}
+		return ProxyErr{}
 	}
-	return ErrProxy{err: err}
+	return ProxyErr{err: err}
 }
 
 func ErrOf(err error) Error {
