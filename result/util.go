@@ -234,9 +234,9 @@ func setError(setter ErrSetter, err error) {
 	switch errSet := setter.(type) {
 	case *Error:
 		errSet.err = err
-	case *ErrProxy:
+	case *ProxyErr:
 		*errSet.err = err
-	case ErrProxy:
+	case ProxyErr:
 		*errSet.err = err
 	default:
 		rv := reflect.ValueOf(setter)
@@ -269,7 +269,7 @@ func logErr(ctx context.Context, skip int, err error, events ...func(e *zerolog.
 
 	log.Error(ctx).
 		Func(func(e *zerolog.Event) {
-			e.Str(logfields.Module, "result2")
+			e.Str(logfields.Module, "result")
 			e.Strs(logfields.ErrorStack, lo.Map(traces, func(item *stack.Frame, index int) string { return item.String() }))
 			e.Str(logfields.ErrorID, errors.GetErrorId(err))
 			e.Str(logfields.ErrorDetail, fmt.Sprintf("%v", err))

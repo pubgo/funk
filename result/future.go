@@ -8,13 +8,16 @@ import (
 	"github.com/pubgo/funk/v2/errors"
 )
 
-func AsyncErr(fn func() Error) *ErrFuture {
+func AsyncErr(fn func() Error) *FutureErr {
 	if fn == nil {
-		return &ErrFuture{e: errors.WrapCaller(errFnIsNil, 1)}
+		return &FutureErr{e: errors.WrapCaller(errFnIsNil, 1)}
 	}
 
 	future := newErrFuture()
-	go func() { defer future.close(); future.setErr(try(func() error { return fn().getErr() })) }()
+	go func() {
+		defer future.close()
+		future.setErr(try(func() error { return fn().getErr() }))
+	}()
 	return future
 }
 
@@ -53,19 +56,19 @@ func (f *Future[T]) Await(ctxL ...context.Context) Result[T] {
 	}
 }
 
-func newErrFuture() *ErrFuture {
-	return &ErrFuture{done: make(chan struct{})}
+func newErrFuture() *FutureErr {
+	return &FutureErr{done: make(chan struct{})}
 }
 
-type ErrFuture struct {
+type FutureErr struct {
 	e    error
 	done chan struct{}
 }
 
-func (f *ErrFuture) close()           { close(f.done) }
-func (f *ErrFuture) setErr(err error) { f.e = err }
+func (f *FutureErr) close()           { close(f.done) }
+func (f *FutureErr) setErr(err error) { f.e = err }
 
-func (f *ErrFuture) Await(ctxL ...context.Context) Error {
+func (f *FutureErr) Await(ctxL ...context.Context) Error {
 	ctx := lo.FirstOr(ctxL, context.Background())
 	select {
 	case <-f.done:

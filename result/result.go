@@ -177,7 +177,7 @@ func (r Result[T]) GetErr() error {
 
 func (r Result[T]) String() string {
 	if r.IsOK() {
-		return fmt.Sprintf("Ok(%v)", r.getValue())
+		return fmt.Sprintf("OK(%v)", r.getValue())
 	}
 	return fmt.Sprintf("Error(%v)", r.getErr())
 }

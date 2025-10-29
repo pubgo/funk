@@ -22,7 +22,7 @@ func New() *cli.Command {
 			env.Reload()
 
 			fmt.Println("config path:", config.GetConfigPath())
-			envs := config.LoadEnvConfigMap(config.GetConfigPath())
+			envs := config.LoadEnvMap(config.GetConfigPath())
 			for name, cfg := range envs {
 				envData := env.Get(name)
 				if envData != "" {
