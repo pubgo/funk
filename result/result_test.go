@@ -48,7 +48,7 @@ func TestResultDo(t *testing.T) {
 }
 
 func TestErrOf(t *testing.T) {
-	ctx := log.UpdateEventCtx(context.Background(), log.Map{"test": "ok"})
+	ctx := log.UpdateFieldsCtx(context.Background(), log.Fields{"test": "ok"})
 	resultchecker.RegisterErrCheck(log.RecordErr())
 
 	var err result.Error

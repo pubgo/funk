@@ -23,8 +23,7 @@ func New(log *zerolog.Logger) Logger {
 type loggerImpl struct {
 	name       string
 	log        *zerolog.Logger
-	fields     Map
-	content    *Event
+	fields     Fields
 	callerSkip int
 	lvl        Level
 }
@@ -32,17 +31,6 @@ type loggerImpl struct {
 func (l *loggerImpl) WithLevel(lvl Level) Logger {
 	log := l.copy()
 	log.lvl = lvl
-	return log
-}
-
-func (l *loggerImpl) WithEvent(evt *Event) Logger {
-	if evt == nil {
-		return l
-	}
-
-	log := l.copy()
-	log.content = mergeEvent(l.content, evt)
-
 	return log
 }
 
@@ -64,7 +52,7 @@ func (l *loggerImpl) nameWithCaller(name string, caller int) Logger {
 
 	log := l.copy()
 	if log.fields == nil {
-		log.fields = make(Map, 1)
+		log.fields = make(Fields, 1)
 	}
 
 	if log.name == "" {
@@ -81,13 +69,13 @@ func (l *loggerImpl) WithName(name string) Logger {
 	return l.nameWithCaller(name, 0)
 }
 
-func (l *loggerImpl) WithFields(m Map) Logger {
+func (l *loggerImpl) WithFields(m Fields) Logger {
 	if len(m) == 0 {
 		return l
 	}
 
 	log := l.copy()
-	logFields := make(Map, len(m)+len(log.fields))
+	logFields := make(Fields, len(m)+len(log.fields))
 	for k, v := range m {
 		logFields[k] = v
 	}
@@ -197,7 +185,6 @@ func (l *loggerImpl) enabled(ctx context.Context, lvl zerolog.Level) bool {
 func (l *loggerImpl) copy() *loggerImpl {
 	return &loggerImpl{
 		log:        l.log,
-		content:    cloneEvent(l.content),
 		fields:     maps.Clone(l.fields),
 		lvl:        l.lvl,
 		name:       l.name,
@@ -214,7 +201,9 @@ func (l *loggerImpl) getLog() *zerolog.Logger {
 
 func (l *loggerImpl) newEvent(ctx context.Context, e *zerolog.Event) *zerolog.Event {
 	name := l.name
-	if m, ok := l.fields[logfields.Module].(string); ok {
+	fields := l.fields
+
+	if m, ok := fields[logfields.Module].(string); ok {
 		name = m
 	}
 
@@ -226,11 +215,14 @@ func (l *loggerImpl) newEvent(ctx context.Context, e *zerolog.Event) *zerolog.Ev
 		e = e.CallerSkipFrame(l.callerSkip)
 	}
 
-	if len(l.fields) > 0 {
-		e = e.Fields(l.fields)
+	for k, v := range GetFieldsFromCtx(ctx) {
+		fields[k] = v
 	}
 
-	e = e.Ctx(createFieldCtx(ctx, &fieldMap{name: name, fields: l.fields}))
+	if len(fields) > 0 {
+		e = e.Fields(fields)
+	}
 
-	return mergeEvent(e, getEventFromCtx(ctx), l.content)
+	e = e.Ctx(createFieldCtx(ctx, &fieldMap{name: name, fields: fields}))
+	return e
 }

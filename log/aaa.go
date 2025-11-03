@@ -7,16 +7,16 @@ import (
 )
 
 type (
-	Map           = map[string]any
+	Fields        = map[string]any
 	Hook          = zerolog.Hook
 	Event         = zerolog.Event
 	Level         = zerolog.Level
-	EnableChecker = func(ctx context.Context, lvl Level, name, message string, fields Map) bool
+	EnableChecker = func(ctx context.Context, lvl Level, name, message string, fields Fields) bool
 )
 
 type Logger interface {
 	WithName(name string) Logger
-	WithFields(m Map) Logger
+	WithFields(m Fields) Logger
 	WithCallerSkip(skip int) Logger
 	WithLevel(lvl Level) Logger
 

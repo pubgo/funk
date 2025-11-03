@@ -59,7 +59,6 @@ func (s slogImpl) Handle(ctx context.Context, r slog.Record) error {
 	default:
 		evt = logger.Error(ctx)
 	}
-
 	if evt == nil {
 		return nil
 	}

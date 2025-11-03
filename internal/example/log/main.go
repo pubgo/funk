@@ -14,7 +14,7 @@ func main() {
 }
 
 func demo(base log.Logger) {
-	l := base.WithName("MyName").WithName("dd").WithFields(log.Map{"user": "you"})
+	l := base.WithName("MyName").WithName("dd").WithFields(log.Fields{"user": "you"})
 	l.Info().Fields(map[string]any{"val1": 1, "val2": map[string]int{"k": 1}}).Msg("hello")
 	l.Err(nil).Fields(map[string]any{"trouble": true, "reasons": []float64{0.1, 0.11, 3.14}}).Msg("uh oh")
 	l.Err(fmt.Errorf("an error occurred")).Int("code", -1).Msg("goodbye")

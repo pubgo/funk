@@ -77,7 +77,7 @@ func TestName(t *testing.T) {
 	log.GetLogger("test_app").Info().Str("hello", "world world").Msg("ok ok")
 	log.GetLogger("test_app").Info().Str("hello", "world world").Msg("ok ok")
 	log.GetLogger("test_app").
-		WithFields(log.Map{"module": "pkg"}).
+		WithFields(log.Fields{"module": "pkg"}).
 		Info().
 		Str("hello", "world world").
 		Func(logutil.WithNotice()).
@@ -85,30 +85,30 @@ func TestName(t *testing.T) {
 }
 
 func TestEvent(t *testing.T) {
-	getEvt := func() *log.Event {
-		return log.NewEvent().Str("hello", "world").Int("int", 100).Dict("ddd", log.NewEvent())
+	getEvt := func() log.Fields {
+		return log.Fields{
+			"hello": "world",
+			"int":   100,
+			"float": 1.23,
+		}
 	}
 
-	getCtx := func(evt *log.Event) context.Context {
-		return log.CreateEventCtx(context.Background(), evt)
+	getCtx := func(evt log.Fields) context.Context {
+		return log.CreateFieldsCtx(context.Background(), evt)
 	}
 
 	t.Run("event ctx", func(t *testing.T) {
 		log.Info(getCtx(getEvt())).Send()
 	})
 
-	t.Run("event func", func(t *testing.T) {
-		log.Info().Func(log.WithEvent(getEvt())).Send()
-	})
-
 	t.Run("update event ctx", func(t *testing.T) {
-		log.Info(log.UpdateEventCtx(getCtx(getEvt()), log.Map{"add-update-event": "ok"})).Send()
+		log.Info(log.UpdateFieldsCtx(getCtx(getEvt()), log.Fields{"add-update-event": "ok"})).Send()
 	})
 }
 
 func TestWithEvent(t *testing.T) {
 	ee := log.GetLogger("with_event").
-		WithFields(log.Map{"hello": "hello world", "int": 100}).
+		WithFields(log.Fields{"hello": "hello world", "int": 100}).
 		Info().
 		Str("info", "abcd")
 	ee.Msg("dddd")
@@ -126,7 +126,7 @@ func TestChecker(t *testing.T) {
 	l := log.GetLogger("test-checker")
 	l.Info().Msg("hello")
 
-	log.SetEnableChecker(func(ctx context.Context, lvl log.Level, name, message string, fields log.Map) bool {
+	log.SetEnableChecker(func(ctx context.Context, lvl log.Level, name, message string, fields log.Fields) bool {
 		fmt.Println(lvl, name, fields)
 		return true
 	})

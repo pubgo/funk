@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	logEnableChecker EnableChecker
-	logGlobalHook    = zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, message string) {
+	logEnableChecker    EnableChecker
+	logGlobalFilterHook = zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, message string) {
 		if logEnableChecker == nil {
 			return
 		}
@@ -63,7 +63,7 @@ var (
 			Output(zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
 				w.Out = os.Stderr
 				w.TimeFormat = time.RFC3339
-			})).Hook(logGlobalHook),
+			})).Hook(logGlobalFilterHook),
 	)
 
 	_ = funk.Init(func() {
@@ -86,7 +86,7 @@ func GetLogger(names ...string) Logger {
 func SetLogger(log *zerolog.Logger) {
 	assert.If(log == nil, "[log] should not be nil")
 
-	log = lo.ToPtr(log.Hook(logGlobalHook))
+	log = lo.ToPtr(log.Hook(logGlobalFilterHook))
 
 	stdZeroLog = log
 	zlog.Logger = *log

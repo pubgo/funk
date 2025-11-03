@@ -351,7 +351,7 @@ func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	ctx = log.UpdateEventCtx(ctx, log.Map{
+	ctx = log.UpdateFieldsCtx(ctx, log.Fields{
 		"sub_subject":                 msg.Subject(),
 		"sub_stream":                  meta.Stream,
 		"sub_consumer":                meta.Consumer,
