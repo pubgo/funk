@@ -141,7 +141,7 @@ func FlatMapTo[T, U any](r Result[T], fn func(T) Result[U]) Result[U] {
 }
 
 func LogErr(err error, events ...func(e *zerolog.Event)) {
-	logErr(nil, 0, err, events...)
+	logErr(context.Background(), 0, err, events...)
 }
 
 func LogErrCtx(ctx context.Context, err error, events ...func(e *zerolog.Event)) {
@@ -162,4 +162,16 @@ func Must1[T any](ret T, err error) T {
 	}
 
 	return ret
+}
+
+// FromGo converts a standard Go (value, error) pair to a Result.
+// This adapter makes it easy to integrate Result with existing Go code.
+func FromGo[T any](val T, err error) Result[T] {
+	return Wrap(val, err)
+}
+
+// ToGo converts a Result to a standard Go (value, error) pair.
+// This adapter makes it easy to use Result with existing Go code that expects (T, error).
+func ToGo[T any](r Result[T]) (T, error) {
+	return r.UnwrapGo()
 }

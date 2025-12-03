@@ -43,7 +43,7 @@ func (e Error) LogCtx(ctx context.Context, events ...func(e *zerolog.Event)) Err
 }
 
 func (e Error) Log(events ...func(e *zerolog.Event)) Error {
-	logErr(nil, 0, e.err, events...)
+	logErr(context.Background(), 0, e.err, events...)
 	return e
 }
 
@@ -52,7 +52,14 @@ func (e Error) WrapErr(err *errors.Err, tags ...errors.Tag) Error {
 }
 
 func (e Error) WithFn(fn func() error) Error {
-	return Error{err: errors.WrapCaller(fn(), 1)}
+	if fn == nil {
+		return Error{err: errors.WrapCaller(errFnIsNil, 1)}
+	}
+	err := fn()
+	if err == nil {
+		return Error{}
+	}
+	return Error{err: errors.WrapCaller(err, 1)}
 }
 
 func (e Error) WithErr(err error) Error {

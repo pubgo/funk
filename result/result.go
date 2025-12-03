@@ -69,7 +69,25 @@ func (r Result[T]) OrElse(v T) T {
 	if r.IsErr() {
 		return v
 	}
-	return lo.FromPtr(r.v)
+	return r.getValue()
+}
+
+// UnwrapOr returns the value if OK, otherwise returns the default value.
+// This is a simpler alternative to Unwrap that doesn't require a setter.
+func (r Result[T]) UnwrapOr(defaultVal T) T {
+	if r.IsErr() {
+		return defaultVal
+	}
+	return r.getValue()
+}
+
+// UnwrapOrElse returns the value if OK, otherwise returns the result of calling fn.
+// This is useful when the default value needs to be computed lazily.
+func (r Result[T]) UnwrapOrElse(fn func() T) T {
+	if r.IsErr() {
+		return fn()
+	}
+	return r.getValue()
 }
 
 func (r Result[T]) Expect(format string, args ...any) T {
@@ -117,13 +135,31 @@ func (r Result[T]) Inspect(fn func(val T)) Result[T] {
 	return r
 }
 
+// IfErr executes fn if the result is an error, then returns the result unchanged.
+// This is similar to InspectErr but allows chaining with other operations.
+func (r Result[T]) IfErr(fn func(error)) Result[T] {
+	if r.IsErr() {
+		fn(r.getErr())
+	}
+	return r
+}
+
+// IfOK executes fn if the result is OK, then returns the result unchanged.
+// This is similar to Inspect but allows chaining with other operations.
+func (r Result[T]) IfOK(fn func(T)) Result[T] {
+	if r.IsOK() {
+		fn(r.getValue())
+	}
+	return r
+}
+
 func (r Result[T]) LogCtx(ctx context.Context, events ...func(e *zerolog.Event)) Result[T] {
 	logErr(ctx, 0, r.err, events...)
 	return r
 }
 
 func (r Result[T]) Log(events ...func(e *zerolog.Event)) Result[T] {
-	logErr(nil, 0, r.err, events...)
+	logErr(context.Background(), 0, r.err, events...)
 	return r
 }
 
@@ -146,11 +182,12 @@ func (r Result[T]) Validate(fn func(val T) error) Result[T] {
 		return r
 	}
 
-	err := fn(r.getValue())
+	val := r.getValue()
+	err := fn(val)
 	if err != nil {
 		return Fail[T](errors.WrapCaller(err, 1))
 	}
-	return OK(r.getValue())
+	return OK(val)
 }
 
 func (r Result[T]) MapErr(fn func(err error) error) Result[T] {
@@ -215,6 +252,18 @@ func (r Result[T]) Unwrap(setter ErrSetter, contexts ...context.Context) T {
 		setError(setter, errors.WrapCaller(err, 1))
 	}
 	return ret
+}
+
+// UnwrapGo returns the value and error in the standard Go style (val, err).
+// This is more idiomatic for Go developers and doesn't require a setter.
+// If the result is OK, returns (value, nil).
+// If the result is an error, returns (zero value, error).
+func (r Result[T]) UnwrapGo() (T, error) {
+	if r.IsErr() {
+		var zero T
+		return zero, r.getErr()
+	}
+	return r.getValue(), nil
 }
 
 func (r Result[T]) MarshalJSON() ([]byte, error) {

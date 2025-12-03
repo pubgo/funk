@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"runtime/debug"
 	"strings"
+	"unsafe"
 
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
@@ -86,7 +87,7 @@ func errNilOrPanic(err error, events ...func(e *zerolog.Event)) {
 		return
 	}
 
-	logErr(nil, 1, err, events...)
+	logErr(context.Background(), 1, err, events...)
 	panic(err)
 }
 
@@ -133,13 +134,9 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 		}
 	}
 
-	ctx := context.Background()
-	for i := range contexts {
-		if contexts[i] == nil {
-			continue
-		}
-		ctx = contexts[i]
-		break
+	ctx := lo.FirstOr(contexts, context.Background())
+	if ctx == nil {
+		ctx = context.Background()
 	}
 
 	// err No checking, repeat setting
@@ -193,9 +190,9 @@ func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts .
 		return ret, nil
 	}
 
-	ctx := context.Background()
-	if len(contexts) > 0 {
-		ctx = contexts[0]
+	ctx := lo.FirstOr(contexts, context.Background())
+	if ctx == nil {
+		ctx = context.Background()
 	}
 
 	getErr := func() error {
@@ -239,20 +236,55 @@ func setError(setter ErrSetter, err error) {
 	case ProxyErr:
 		*errSet.err = err
 	default:
+		// Use reflection for generic Result[T] types
 		rv := reflect.ValueOf(setter)
-		t := rv.Type()
-
-		if !strings.Contains(t.String(), "Result[") {
-			slog.Error("error setter type error, type is not Result",
+		if !rv.IsValid() || rv.IsNil() {
+			slog.Error("error setter is invalid or nil",
 				slog.String("type", fmt.Sprintf("%T", setter)),
-				slog.String("type-string", t.String()),
 				slog.String("stack", string(debug.Stack())),
 			)
 			return
 		}
 
-		ret := (*Result[any])(rv.UnsafePointer())
-		ret.err = err
+		t := rv.Type()
+		typeStr := t.String()
+
+		// Check if it's a Result type (pointer or value)
+		if !strings.Contains(typeStr, "Result[") {
+			slog.Error("error setter type error, type is not Result",
+				slog.String("type", fmt.Sprintf("%T", setter)),
+				slog.String("type-string", typeStr),
+				slog.String("stack", string(debug.Stack())),
+			)
+			return
+		}
+
+		// Handle both *Result[T] and Result[T]
+		var resultPtr *Result[any]
+		if rv.Kind() == reflect.Ptr {
+			if rv.IsNil() {
+				slog.Error("error setter is nil pointer",
+					slog.String("type", typeStr),
+					slog.String("stack", string(debug.Stack())),
+				)
+				return
+			}
+			resultPtr = (*Result[any])(rv.UnsafePointer())
+		} else {
+			// For value types, get address
+			if !rv.CanAddr() {
+				slog.Error("error setter cannot get address",
+					slog.String("type", typeStr),
+					slog.String("stack", string(debug.Stack())),
+				)
+				return
+			}
+			resultPtr = (*Result[any])(unsafe.Pointer(rv.UnsafeAddr()))
+		}
+
+		if resultPtr != nil {
+			resultPtr.err = err
+		}
 	}
 }
 
