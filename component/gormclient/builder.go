@@ -24,9 +24,9 @@ func NewClients(conf map[string]*Config, logs log.Logger) map[string]*Client {
 
 func New(conf *Config, logs log.Logger) *Client {
 	logs = logs.WithName(Name)
-	conf = config.MergeR(lo.ToPtr(DefaultCfg()), conf).Must()
+	conf = config.MergeR(lo.ToPtr(DefaultCfg()), conf).Unwrap()
 
-	ormCfg := merge.Copy(new(gorm.Config), conf).Must()
+	ormCfg := merge.Copy(new(gorm.Config), conf).Unwrap()
 	ormCfg.NowFunc = func() time.Time { return time.Now().UTC() }
 	ormCfg.NamingStrategy = schema.NamingStrategy{TablePrefix: conf.TablePrefix}
 

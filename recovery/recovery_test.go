@@ -47,7 +47,7 @@ func TestResult(t *testing.T) {
 	}
 
 	t.Log(handler())
-	t.Log(handler().OrElse(A{A: "error"}).A)
+	t.Log(handler().UnwrapOr(A{A: "error"}).A)
 }
 
 func TestName(t *testing.T) {

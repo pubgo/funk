@@ -29,7 +29,7 @@ func TestStruct(t *testing.T) {
 
 	d1 := map[string]any{"a": src{Name: "2", Hello: "2"}}
 	d2 := map[string]dst{"a": {Name: "1", Hello: "1"}, "b": {Name: "1", Hello: "1"}}
-	Copy(&d1, &d2).Must()
+	Copy(&d1, &d2).Unwrap()
 }
 
 func TestMapStruct(t *testing.T) {

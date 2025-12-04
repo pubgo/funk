@@ -5,52 +5,26 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 
+	"github.com/k0kubun/pp/v3"
 	"github.com/rs/xid"
 	"github.com/samber/lo"
-	"google.golang.org/protobuf/proto"
 
 	"github.com/pubgo/funk/v2/internal/errors/errinter"
-	"github.com/pubgo/funk/v2/pretty"
-	"github.com/pubgo/funk/v2/proto/errorpb"
 	"github.com/pubgo/funk/v2/stack"
 )
 
-func cloneAndCheck(code *errorpb.ErrCode) *errorpb.ErrCode {
-	if code == nil {
-		return nil
-	}
+var debugPretty = sync.OnceValue(func() *pp.PrettyPrinter {
+	printer := pp.New()
+	printer.SetColoringEnabled(true)
+	printer.SetExportedOnly(false)
+	printer.SetOmitEmpty(true)
+	printer.SetMaxDepth(5)
+	return printer
+})
 
-	code = proto.Clone(code).(*errorpb.ErrCode)
-	if code.Code == 0 {
-		code.StatusCode = errorpb.Code_OK
-	} else if code.StatusCode == errorpb.Code_OK {
-		code.StatusCode = errorpb.Code_Internal
-	}
-
-	return code
-}
-
-func handleGrpcError(err error) error {
-	switch v := err.(type) {
-	case nil:
-		return nil
-	case *ErrWrap:
-		return v
-
-	case GRPCStatus:
-		return NewCodeErr(&errorpb.ErrCode{
-			Message:    v.GRPCStatus().Message(),
-			StatusCode: errorpb.Code(v.GRPCStatus().Code()),
-			Name:       "lava.grpc.status",
-			Details:    v.GRPCStatus().Proto().Details,
-		})
-	default:
-		return err
-	}
-}
-
-func errStringify(buf *bytes.Buffer, err error) {
+func ErrStringify(buf *bytes.Buffer, err error) {
 	if err == nil {
 		return
 	}
@@ -66,10 +40,10 @@ func errStringify(buf *bytes.Buffer, err error) {
 
 	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorErrMsg, strings.TrimSpace(err.Error())))
 	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorErrDetail, strings.TrimSpace(fmt.Sprintf("%v", err))))
-	errStringify(buf, Unwrap(err))
+	ErrStringify(buf, Unwrap(err))
 }
 
-func errJsonify(err error) map[string]any {
+func ErrJsonify(err error) map[string]any {
 	if err == nil {
 		return make(map[string]any)
 	}
@@ -82,26 +56,21 @@ func errJsonify(err error) map[string]any {
 		data["err_detail"] = fmt.Sprintf("%v", err)
 		err = Unwrap(err)
 		if err != nil {
-			data["cause"] = errJsonify(err)
+			data["cause"] = ErrJsonify(err)
 		}
 	}
 	return data
 }
 
-func strFormat(f fmt.State, verb rune, err Error) {
+func PrintFormat(f fmt.State, verb rune, err Error) {
 	switch verb {
 	case 'v':
-		if f.Flag('#') {
-			fmt.Fprint(f, pretty.SimplePrint(err))
+		data, err := err.MarshalJSON()
+		if err != nil {
+			fmt.Fprintln(f, err.Error())
 		} else {
-			data, err := err.MarshalJSON()
-			if err != nil {
-				fmt.Fprintln(f, err.Error())
-			} else {
-				fmt.Fprintln(f, string(data))
-			}
+			fmt.Fprintln(f, string(data))
 		}
-
 	case 's', 'q':
 		fmt.Fprintln(f, err.String())
 	}
@@ -111,22 +80,17 @@ func getStack() []*stack.Frame {
 	return lo.Filter(stack.Trace(), func(item *stack.Frame, index int) bool { return !item.IsRuntime() })
 }
 
-func newErrorId() *string {
-	return lo.ToPtr(xid.New().String())
-}
+func NewErrorId() string { return xid.New().String() }
 
 func getErrorId(err error) string {
 	if err == nil {
 		return ""
 	}
 
-	for err != nil {
-		if v, ok := err.(Error); ok {
-			return v.ID()
-		}
-
-		err = Unwrap(err)
+	errId, ok := lo.ErrorsAs[ErrorID](err)
+	if ok {
+		return errId.ID()
 	}
 
-	return xid.New().String()
+	return NewErrorId()
 }

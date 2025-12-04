@@ -33,7 +33,7 @@ func init() {
 		conf := DefaultCfg()
 		assert.Must(cfg.Decode(&conf))
 
-		ret := merge.Struct(new(mysql.Config), conf).Must()
+		ret := merge.Struct(new(mysql.Config), conf).Unwrap()
 		return mysql.New(*ret)
 	})
 }

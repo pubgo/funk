@@ -8,9 +8,8 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
-	"google.golang.org/protobuf/encoding/prototext"
 
-	"github.com/pubgo/funk/v2/internal/errors/errinter"
+	"github.com/pubgo/funk/v2/errors"
 )
 
 func errDetail(err error) string {
@@ -18,7 +17,7 @@ func errDetail(err error) string {
 		return ""
 	}
 
-	return prototext.Format(errinter.ParseErrToPb(err))
+	return string(errors.JsonPrint(err))
 }
 
 func RecordErr(logs ...Logger) func(ctx context.Context, err error) error {

@@ -28,7 +28,7 @@ func Set(key, value string) result.Error {
 		})
 }
 
-func MustSet(key, value string) { Set(key, value).Must() }
+func MustSet(key, value string) { Set(key, value).MustWithLog() }
 
 func Get(names ...string) string {
 	var val string
@@ -119,7 +119,7 @@ func Delete(key string) result.Error {
 		})
 }
 
-func MustDelete(key string) { Delete(key).Must() }
+func MustDelete(key string) { Delete(key).MustWithLog() }
 
 func Expand(value string) result.Result[string] {
 	return result.Wrap(envsubst.String(value)).
@@ -158,7 +158,7 @@ func LoadFiles(files ...string) (r result.Error) {
 			Log(func(e *zerolog.Event) {
 				e.Str(logfields.Msg, fmt.Sprintf("failed to read file:%s", file))
 			}).
-			Unwrap(&r)
+			UnwrapOrThrow(&r)
 		if r.IsErr() {
 			return r
 		}
@@ -167,7 +167,7 @@ func LoadFiles(files ...string) (r result.Error) {
 			Log(func(e *zerolog.Event) {
 				e.Str(logfields.Msg, fmt.Sprintf("failed to parse env file:%s", file))
 			}).
-			Unwrap(&r)
+			UnwrapOrThrow(&r)
 		if r.IsErr() {
 			return r
 		}
@@ -177,7 +177,7 @@ func LoadFiles(files ...string) (r result.Error) {
 				continue
 			}
 
-			if Set(k, v).Catch(&r) {
+			if Set(k, v).ThrowErr(&r) {
 				return r
 			}
 

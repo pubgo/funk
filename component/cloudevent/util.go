@@ -93,7 +93,7 @@ func decodeDelayTime(delayTime string) (r result.Result[time.Duration]) {
 		})
 
 	return result.MapTo(tt, func(t int) time.Duration {
-		return time.Until(time.UnixMilli(int64(tt.GetValue())))
+		return time.Until(time.UnixMilli(int64(t)))
 	})
 }
 

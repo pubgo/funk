@@ -71,7 +71,7 @@ func TestName(t *testing.T) {
 
 	err := errors.WrapCaller(fmt.Errorf("test error"))
 	err = errors.Wrap(err, "next error")
-	err = errors.WrapTag(err, errors.T("event", "test event"), errors.T("test123", 123), errors.T("test", "hello"))
+	err = errors.WrapTags(err, errors.Tags{"event": "test event", "test123": 123, "test": "hello"})
 	err = errors.Wrapf(err, "next error name=%s", "wrapf")
 	log.Err(err).Str("hello", "world world").Msg("ok ok")
 	log.GetLogger("test_app").Info().Str("hello", "world world").Msg("ok ok")

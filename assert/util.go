@@ -9,8 +9,6 @@ import (
 
 	"github.com/k0kubun/pp/v3"
 	"github.com/samber/lo"
-	"google.golang.org/protobuf/encoding/prototext"
-	"google.golang.org/protobuf/proto"
 
 	"github.com/pubgo/funk/v2/log/logfields"
 	"github.com/pubgo/funk/v2/stack"
@@ -64,21 +62,14 @@ func must(err error, messageArgs ...any) {
 
 	message := messageFromMsgAndArgs(messageArgs...)
 	if message == "" {
-		if v, ok := lo.ErrorsAs[interface {
-			Proto() proto.Message
-			Error() string
-		}](err); ok && v != nil {
-			message = fmt.Sprintf("%s\n%s", err.Error(), prototext.Format(v.Proto()))
-		} else {
-			message = err.Error()
-		}
+		message = fmt.Sprintf("%s: %v", err.Error(), err)
 	} else {
 		message = fmt.Sprintf("msg:%v err:%s", message, err.Error())
 	}
 
 	logErr(err, message, attrs...)
 
-	if FeatureDebugMode.GetValue() {
+	if FeatureDebugMode.Value() {
 		_, _ = pp.Println(err)
 		debug.PrintStack()
 	}

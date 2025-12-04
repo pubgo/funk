@@ -14,7 +14,7 @@ func TestAsync(t *testing.T) {
 		return http.Get("https://httpbin.org")
 	}).Await()
 	assert.NoError(t, ret.GetErr())
-	rsp := ret.Must()
+	rsp := ret.Unwrap()
 	if b := rsp.Body; b != nil {
 		defer b.Close()
 	}
@@ -36,9 +36,9 @@ func TestGoChan(t *testing.T) {
 	val2 := Async(func() (string, error) {
 		time.Sleep(time.Millisecond * 10)
 		fmt.Println("2")
-		ret := val1.Await().Must()
+		ret := val1.Await().Unwrap()
 		return ret + " hello2", nil
 	})
 
-	assert.Equal(t, "hello1 hello2", val2.Await().Must())
+	assert.Equal(t, "hello1 hello2", val2.Await().Unwrap())
 }

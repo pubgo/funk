@@ -15,7 +15,7 @@ import (
 const errorPbPkg = "github.com/pubgo/funk/v2/proto/errorpb"
 
 var (
-	registerErrCodes         = lo.T2("github.com/pubgo/funk/v2/errors/errorcodes", "RegisterErrCodes")
+	registerErrCodes         = lo.T2("github.com/pubgo/funk/v2/errors/errcode", "RegisterErrCodes")
 	supportPackageIsVersion7 = lo.T2("google.golang.org/grpc", "SupportPackageIsVersion7")
 )
 

@@ -42,6 +42,6 @@ func TestCallerWithDepth(t *testing.T) {
 func TestCallType(t *testing.T) {
 	assert.Equal(t,
 		"github.com/pubgo/funk/v2/errors",
-		stack.CallerWithType(reflect.TypeOf(errors.ErrMsg{})).Pkg,
+		stack.CallerWithType(reflect.TypeOf(errors.Err{})).Pkg,
 	)
 }

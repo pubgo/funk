@@ -48,7 +48,7 @@ func main() {
 		status.Set("degraded")
 
 		time.Sleep(2 * time.Second)
-		replicas.Set(fmt.Sprintf("%v", replicas.GetValue()+2))
+		replicas.Set(fmt.Sprintf("%v", replicas.Value()+2))
 
 		time.Sleep(2 * time.Second)
 	}()

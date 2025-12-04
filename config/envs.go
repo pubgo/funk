@@ -41,6 +41,6 @@ func initEnv(envMap EnvSpecMap) {
 		cfg.Name = name
 
 		lo.Must0(cfg.Validate())
-		env.Set(name, cfg.GetValue()).Must()
+		env.Set(name, cfg.GetValue()).MustWithLog()
 	}
 }

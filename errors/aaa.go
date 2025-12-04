@@ -1,17 +1,38 @@
 package errors
 
 import (
-	"github.com/pubgo/funk/v2/internal/errors/errinter"
+	"fmt"
 )
 
-type (
-	Maps         = errinter.Maps
-	Tags         = errinter.Tags
-	Tag          = errinter.Tag
-	ErrIs        = errinter.ErrIs
-	ErrAs        = errinter.ErrAs
-	ErrUnwrapper = errinter.ErrUnwrapper
-	Error        = errinter.Error
-	ErrorProto   = errinter.ErrorProto
-	GRPCStatus   = errinter.GRPCStatus
-)
+type ErrorID interface {
+	error
+	ID() string
+}
+
+type Error interface {
+	ErrorID
+	String() string
+	MarshalJSON() ([]byte, error)
+}
+
+type ErrUnwrapper interface {
+	Unwrap() error
+}
+
+type ErrIs interface {
+	Is(error) bool
+}
+
+type ErrAs interface {
+	As(any) bool
+}
+
+type Tags map[string]any
+
+func (t Tags) ToMapString() map[string]string {
+	data := make(map[string]string, len(t))
+	for key, value := range t {
+		data[key] = fmt.Sprintf("%v", value)
+	}
+	return data
+}

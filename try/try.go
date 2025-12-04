@@ -3,6 +3,7 @@ package try
 import (
 	"github.com/pubgo/funk/v2"
 	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/errors/errparser"
 	"github.com/pubgo/funk/v2/stack"
 )
 
@@ -13,7 +14,7 @@ func WithErr(gErr *error, fn func() error) {
 	}
 
 	defer func() {
-		if err := errors.Parse(recover()); !funk.IsNil(err) {
+		if err := errparser.Parse(recover()); !funk.IsNil(err) {
 			*gErr = errors.WrapStack(err)
 		}
 
@@ -30,7 +31,7 @@ func Try(fn func() error) (gErr error) {
 	}
 
 	defer func() {
-		if err := errors.Parse(recover()); !funk.IsNil(err) {
+		if err := errparser.Parse(recover()); !funk.IsNil(err) {
 			gErr = errors.WrapStack(err)
 		}
 

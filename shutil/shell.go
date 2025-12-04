@@ -21,9 +21,10 @@ func Run(args ...string) (r result.Result[string]) {
 	cmd := Shell(args...)
 	cmd.Stdout = b
 
-	result.ErrOf(cmd.Run()).Must(func(e *zerolog.Event) {
-		e.Str(logfields.Msg, fmt.Sprintf("failed to execute: %q", args))
-	})
+	result.ErrOf(cmd.Run()).
+		MustWithLog(func(e *zerolog.Event) {
+			e.Str(logfields.Msg, fmt.Sprintf("failed to execute: %q", args))
+		})
 
 	return r.WithValue(strings.TrimSpace(b.String()))
 }
@@ -42,7 +43,7 @@ func GraphViz(in, out string) (err error) {
 		return ret.GetErr()
 	}
 
-	return os.WriteFile(out, []byte(ret.GetValue()), 0o600)
+	return os.WriteFile(out, []byte(ret.Unwrap()), 0o600)
 }
 
 func Shell(args ...string) *exec.Cmd {

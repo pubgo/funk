@@ -13,7 +13,7 @@ import (
 
 	"github.com/pubgo/funk/v2"
 	"github.com/pubgo/funk/v2/assert"
-	"github.com/pubgo/funk/v2/internal/errors/errinter"
+	"github.com/pubgo/funk/v2/errors"
 )
 
 var (
@@ -45,7 +45,7 @@ var (
 			}
 
 			errDetail := errDetail(err)
-			id := errinter.GetErrorId(err)
+			id := errors.GetErrorId(err)
 			if id != "" {
 				return fmt.Sprintf("%s, error_id:%s error_detail:%s", err.Error(), id, errDetail)
 			}

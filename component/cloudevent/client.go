@@ -99,7 +99,7 @@ func (c *Client) initStream() (r error) {
 			Duplicates: time.Minute * 5,
 		}
 
-		stream := result.Wrap(c.js.CreateOrUpdateStream(ctx, streamCfg)).Must(func(e *zerolog.Event) {
+		stream := result.Wrap(c.js.CreateOrUpdateStream(ctx, streamCfg)).UnwrapOrLog(func(e *zerolog.Event) {
 			e.Str(logfields.Msg, fmt.Sprintf("failed to create stream:%s", streamName))
 		})
 		c.streams[streamName] = stream
@@ -216,31 +216,35 @@ func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects m
 			e.Msg("received cloud job event")
 		})
 
-		handlerDelayJob := func() (_ bool, gErr error) {
+		handlerDelayJob := func() (r result.Result[bool]) {
 			delayDur := strings.TrimSpace(msg.Headers().Get(DefaultCloudEventDelayKey))
 			if delayDur == "" {
-				return false, nil
+				return r.WithValue(false)
 			}
 
 			dur := decodeDelayTime(delayDur).
 				MapErr(func(err error) error {
 					return errors.Wrap(err, "failed to parse cloud job delay time")
 				}).
-				UnwrapErr(&gErr)
-			if gErr != nil {
+				UnwrapOrThrow(&r)
+			if r.IsErr() {
 				return
 			}
 
-			durVal := dur
 			// ignore negative delay
-			if durVal < 0 {
-				return false, nil
+			if dur < 0 {
+				return r.WithValue(false)
 			}
 
-			return true, msg.NakWithDelay(durVal)
+			r = r.WithErr(msg.NakWithDelay(dur))
+			if r.IsErr() {
+				return
+			}
+
+			return r.WithValue(true)
 		}
 
-		if ok, err := handlerDelayJob(); err != nil {
+		if ok, err := handlerDelayJob().UnwrapErr(); err != nil {
 			logger.Err(err).Func(addMsgInfo).Msg("failed to handle cloud delay job and no ack")
 			return
 		} else if ok {
@@ -389,36 +393,36 @@ func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *
 
 	var pb anypb.Any
 	err := result.ErrOf(proto.Unmarshal(msg.Data(), &pb)).
-		Map(func(err error) error {
-			return errors.WrapTag(err,
-				errors.T("msg", "failed to unmarshal stream msg data to any proto"),
-				errors.T("args", string(msg.Data())),
-			)
+		MapErr(func(err error) error {
+			return errors.WrapTags(err, errors.Tags{
+				"msg":  "failed to unmarshal stream msg data to any proto",
+				"args": string(msg.Data()),
+			})
 		})
-	if err.Catch(&gErr) {
-		return gErr
+	if err.ThrowErr(&gErr) {
+		return
 	}
 	args = &pb
 
 	dst := result.Wrap(anypb.UnmarshalNew(args.(*anypb.Any), proto.UnmarshalOptions{})).
 		MapErr(func(err error) error {
-			return errors.WrapTag(err,
-				errors.T("msg", "failed to unmarshal any proto to proto msg"),
-				errors.T("args", args),
-			)
+			return errors.WrapTags(err, errors.Tags{
+				"msg":  "failed to unmarshal any proto to proto msg",
+				"args": args,
+			})
 		})
-	if dst.Catch(&gErr) {
-		return gErr
+	if dst.ThrowErr(&gErr) {
+		return
 	}
 
 	ctx = createCtxWithContext(ctx, msgCtx)
-	err = result.ErrOf(job.handler(ctx, dst.GetValue())).
-		Map(func(err error) error {
-			return errors.WrapTag(err,
-				errors.T("msg", "failed to do cloud job handler"),
-				errors.T("args", dst),
-				errors.T("any_pb", dst),
-			)
+	err = result.ErrOf(job.handler(ctx, dst.Unwrap())).
+		MapErr(func(err error) error {
+			return errors.WrapTags(err, errors.Tags{
+				"msg":    "failed to do cloud job handler",
+				"args":   dst,
+				"any_pb": dst,
+			})
 		})
 	return err
 }

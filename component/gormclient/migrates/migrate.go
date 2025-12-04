@@ -48,7 +48,7 @@ func (e *DuplicatedIDError) Error() string {
 
 // New returns a new GoMigrate.
 func New(db *gorm.DB, config *Config, migrations []*Migration) *GoMigrate {
-	config = merge.Struct(lo.ToPtr(DefaultConfig), config).Must()
+	config = merge.Struct(lo.ToPtr(DefaultConfig), config).Unwrap()
 	return &GoMigrate{
 		db:         db,
 		options:    config,

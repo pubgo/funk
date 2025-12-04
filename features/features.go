@@ -7,8 +7,8 @@ import (
 
 type ValueType string
 
-func (typ ValueType) String() string {
-	switch typ {
+func (vt ValueType) String() string {
+	switch vt {
 	case StringType:
 		return "string"
 	case IntType:
@@ -65,7 +65,7 @@ func (m *Feature) AddFunc(name, usage string, value Value, tags ...map[string]an
 	defer m.mutex.Unlock()
 
 	if m.flags[name] != nil {
-		panic(fmt.Sprintf("flag already exists, name:%s", name))
+		panic(fmt.Sprintf("feature flag already exists, name:%s", name))
 	}
 
 	ff := &Flag{Name: name, Usage: usage, Value: value, Tags: mergeTags(tags...)}
@@ -103,14 +103,12 @@ func VisitAll(fn func(*Flag)) { defaultFeature.VisitAll(fn) }
 
 // mergeTags safely copies optional tags
 func mergeTags(maps ...map[string]any) map[string]any {
-	if len(maps) == 0 || maps[0] == nil {
-		return make(map[string]any)
-	}
-
 	m := make(map[string]any)
 	for _, mm := range maps {
-		for k, v := range mm {
-			m[k] = v
+		if mm != nil { // Skip nil maps to prevent panics
+			for k, v := range mm {
+				m[k] = v
+			}
 		}
 	}
 	return m

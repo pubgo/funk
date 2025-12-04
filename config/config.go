@@ -102,7 +102,7 @@ func loadEnvConfigMap(cfgPath string) EnvSpecMap {
 
 			envConfigBytes := result.Wrap(os.ReadFile(p)).
 				Map(bytes.TrimSpace).
-				Must(func(e *zerolog.Event) {
+				UnwrapOrLog(func(e *zerolog.Event) {
 					e.Str("env_path", p)
 					e.Str(logfields.Msg, "failed to handler env config data")
 				})
@@ -112,13 +112,13 @@ func loadEnvConfigMap(cfgPath string) EnvSpecMap {
 
 			envConfigBytes = cfgFormat(envConfigBytes, &config{workDir: filepath.Dir(cfgPath)})
 			envConfigBytes = result.Wrap(envsubst.Bytes(envConfigBytes)).
-				Must(func(e *zerolog.Event) {
+				UnwrapOrLog(func(e *zerolog.Event) {
 					e.Str("env_path", p)
 					e.Str("env_data", string(envConfigBytes))
 					e.Str(logfields.Msg, "failed to handler config env")
 				})
 			result.ErrOf(yaml.Unmarshal(envConfigBytes, &envSpecMap)).
-				Must(func(e *zerolog.Event) {
+				MustWithLog(func(e *zerolog.Event) {
 					e.Str("env_data", string(envConfigBytes))
 					e.Str("env_path", p)
 					e.Str(logfields.Msg, "failed to unmarshal env config")
@@ -191,7 +191,7 @@ func LoadFromPath[T any](val *T, cfgPath string) EnvSpecMap {
 		resBytes := result.Wrap(GetConfigData(resPath)).Expect("failed to handler config data")
 
 		var cfg1 T
-		result.ErrOf(yaml.Unmarshal(resBytes, &cfg1)).Must(func(e *zerolog.Event) {
+		result.ErrOf(yaml.Unmarshal(resBytes, &cfg1)).MustWithLog(func(e *zerolog.Event) {
 			fmt.Println("res_path", resPath)
 			fmt.Println("config_data", string(resBytes))
 			assert.Exit(os.WriteFile(resPath+".err.yml", resBytes, 0o666))

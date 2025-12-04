@@ -7,11 +7,13 @@ import (
 
 	"github.com/samber/lo"
 
-	"github.com/pubgo/funk/v2/internal/errors/errinter"
+	"github.com/pubgo/funk/v2/errors/errparser"
+
+	"github.com/pubgo/funk/v2/errors"
 )
 
 func Err(gErr *error, callbacks ...func(err error) error) {
-	err := errinter.ParseError(recover())
+	err := errparser.Parse(recover())
 	if err == nil {
 		return
 	}
@@ -28,7 +30,7 @@ func Err(gErr *error, callbacks ...func(err error) error) {
 }
 
 func Raise(callbacks ...func(err error) error) {
-	err := errinter.ParseError(recover())
+	err := errparser.Parse(recover())
 	if err == nil {
 		return
 	}
@@ -47,7 +49,7 @@ func Raise(callbacks ...func(err error) error) {
 func Recovery(fn func(err error)) {
 	lo.Assert(fn != nil, "[fn] should not be nil")
 
-	err := errinter.ParseError(recover())
+	err := errparser.Parse(recover())
 	if err == nil {
 		return
 	}
@@ -57,7 +59,7 @@ func Recovery(fn func(err error)) {
 }
 
 func Exit(handlers ...func(err error) error) {
-	err := errinter.ParseError(recover())
+	err := errparser.Parse(recover())
 	if err == nil {
 		return
 	}
@@ -70,26 +72,26 @@ func Exit(handlers ...func(err error) error) {
 	}
 
 	debug.PrintStack()
-	errinter.Debug(err)
+	errors.DebugPrint(err)
 	os.Exit(1)
 }
 
 func DebugPrint() {
-	err := errinter.ParseError(recover())
+	err := errparser.Parse(recover())
 	if err == nil {
 		return
 	}
 
 	debug.PrintStack()
-	errinter.Debug(err)
+	errors.DebugPrint(err)
 }
 
 func Testing(t *testing.T) {
-	err := errinter.ParseError(recover())
+	err := errparser.Parse(recover())
 	if err == nil {
 		return
 	}
 
-	errinter.Debug(err)
+	errors.DebugPrint(err)
 	t.Fatal(err)
 }

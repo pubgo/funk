@@ -34,7 +34,7 @@ func TestFuture_ConcurrentAwait(t *testing.T) {
 	// All results should be the same
 	for _, r := range results {
 		assert.True(t, r.IsOK())
-		assert.Equal(t, 42, r.GetValue())
+		assert.Equal(t, 42, r.UnwrapOrEmpty())
 	}
 }
 

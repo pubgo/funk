@@ -3,13 +3,15 @@ package stack
 import (
 	"runtime/debug"
 
+	"github.com/samber/lo"
+
 	"github.com/pubgo/funk/v2/features"
 )
 
-var EnablePrintStack = features.Bool("stack.enable_print_stack", false, "stack enable print stack data")
+var EnablePrintStack = features.Bool("stack.enable_print_stack", false, "stack enable print stack trace")
 
-func PrintStack() {
-	if !EnablePrintStack.GetValue() {
+func Print(forces ...bool) {
+	if !(EnablePrintStack.Value() || lo.FirstOrEmpty(forces)) {
 		return
 	}
 

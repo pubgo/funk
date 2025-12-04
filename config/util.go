@@ -90,12 +90,12 @@ func Merge[A any, B any | *any](dst *A, src ...B) error {
 			mergo.WithTransformers(new(transformer)),
 		)
 		if err != nil {
-			return errors.WrapTag(err,
-				errors.T("dst_type", reflect.TypeOf(dst).String()),
-				errors.T("dst", dst),
-				errors.T("src_type", reflect.TypeOf(src[i]).String()),
-				errors.T("src", src[i]),
-			)
+			return errors.WrapTags(err, errors.Tags{
+				"dst_type": reflect.TypeOf(dst).String(),
+				"src_type": reflect.TypeOf(src[i]).String(),
+				"dst":      dst,
+				"src":      src[i],
+			})
 		}
 	}
 	return nil
@@ -136,10 +136,10 @@ func (s *transformer) Transformer(t reflect.Type) func(dst, src reflect.Value) e
 			if err != nil {
 				return errors.WrapFn(err, func() errors.Tags {
 					return errors.Tags{
-						errors.T("dst", d),
-						errors.T("src", c),
-						errors.T("dst-type", reflect.TypeOf(d).String()),
-						errors.T("src-type", reflect.TypeOf(c).String()),
+						"dst":      d,
+						"src":      c,
+						"src-type": reflect.TypeOf(c).String(),
+						"dst-type": reflect.TypeOf(d).String(),
 					}
 				})
 			}

@@ -28,7 +28,7 @@ type Config struct {
 func (t *Config) getOpts() *bolt.Options {
 	options := bolt.DefaultOptions
 	options.Timeout = time.Second * 2
-	return merge.Struct(options, t).Must()
+	return merge.Struct(options, t).Unwrap()
 }
 
 func DefaultConfig() *Config {

@@ -8,7 +8,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/pubgo/funk/v2/internal/errors/errinter"
+	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/log/logfields"
 )
 
@@ -146,7 +146,7 @@ func (l *loggerImpl) Err(err error, ctxL ...context.Context) *zerolog.Event {
 			return
 		}
 
-		if id := errinter.GetErrorId(err); id != "" {
+		if id := errors.GetErrorId(err); id != "" {
 			e.Str("error_id", id)
 		}
 

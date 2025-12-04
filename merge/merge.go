@@ -20,11 +20,11 @@ func Copy[A, B any](dst *A, src *B, opts ...Option) result.Result[*A] {
 	}
 
 	errH := func(err error) error {
-		return errors.WrapTag(err,
-			errors.T("dst", dst),
-			errors.T("src", src),
-			errors.T("decoder_config", opt),
-		)
+		return errors.WrapTags(err, errors.Tags{
+			"dst":            dst,
+			"src":            src,
+			"decoder_config": opt,
+		})
 	}
 
 	err := copier.CopyWithOption(dst, src, opt)
@@ -59,11 +59,11 @@ func MapStruct[A, B any](dst A, src B, opts ...func(cfg *mapstructure.DecoderCon
 	}
 
 	errH := func(err error) error {
-		return errors.WrapTag(err,
-			errors.T("dst", dst),
-			errors.T("src", src),
-			errors.T("decoder_config", cfg),
-		)
+		return errors.WrapTags(err, errors.Tags{
+			"dst":            dst,
+			"src":            src,
+			"decoder_config": cfg,
+		})
 	}
 
 	decoder, err := mapstructure.NewDecoder(cfg)

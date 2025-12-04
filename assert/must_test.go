@@ -7,6 +7,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/pubgo/funk/v2/errors/errparser"
+
 	assert1 "github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/log"
@@ -43,7 +45,7 @@ func TestPanicErr(t *testing.T) {
 
 func TestRespTest(t *testing.T) {
 	defer func() {
-		errors.Debug(errors.Parse(recover()))
+		errors.DebugPrint(errparser.Parse(recover()))
 	}()
 	assert1.Must(init1Next())
 }

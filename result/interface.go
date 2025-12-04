@@ -1,8 +1,6 @@
 package result
 
 import (
-	"context"
-
 	"github.com/pubgo/funk/v2"
 )
 
@@ -17,16 +15,6 @@ type Checkable interface {
 type ErrSetter interface {
 	Checkable
 	setErrorInner()
-}
-
-type Catchable interface {
-	CatchErr(err *error, contexts ...context.Context) bool
-	Catch(err ErrSetter, contexts ...context.Context) bool
-}
-
-type UnWrapper[T any] interface {
-	UnwrapErr(setter *error, contexts ...context.Context) T
-	Unwrap(setter ErrSetter, contexts ...context.Context) T
 }
 
 type Void = funk.Void

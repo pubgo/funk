@@ -6,6 +6,8 @@ import (
 
 	"github.com/rs/zerolog"
 
+	"github.com/pubgo/funk/v2/errors/errparser"
+
 	"github.com/pubgo/funk/v2/errors"
 )
 
@@ -31,7 +33,7 @@ func All[T any](results ...Result[T]) Result[[]T] {
 
 func RecoveryErr(setter *error, callbacks ...func(err error) error) {
 	if setter == nil {
-		errNilOrPanic(errors.Errorf("setter is nil"))
+		panicIfError(errors.Errorf("setter is nil"))
 		return
 	}
 
@@ -43,7 +45,7 @@ func RecoveryErr(setter *error, callbacks ...func(err error) error) {
 
 func Recovery(setter ErrSetter, callbacks ...func(err error) error) {
 	if setter == nil {
-		errNilOrPanic(errors.Errorf("setter is nil"))
+		panicIfError(errors.Errorf("setter is nil"))
 		return
 	}
 
@@ -59,7 +61,7 @@ func Errorf(msg string, args ...any) Error {
 
 func ErrProxyOf(err *error) ProxyErr {
 	if err == nil {
-		errNilOrPanic(errors.Errorf("err param is nil"))
+		panicIfError(errors.Errorf("err param is nil"))
 		return ProxyErr{}
 	}
 	return ProxyErr{err: err}
@@ -116,11 +118,11 @@ func WrapFn[T any](fn func() (T, error)) Result[T] {
 	return Result[T]{err: err}
 }
 
-func Catch(setter ErrSetter, err error, contexts ...context.Context) bool {
+func Throw(setter ErrSetter, err error, contexts ...context.Context) bool {
 	return catchErr(newError(err), setter, nil, contexts...)
 }
 
-func CatchErr(rawSetter *error, err error, contexts ...context.Context) bool {
+func ThrowErr(rawSetter *error, err error, contexts ...context.Context) bool {
 	return catchErr(newError(err), nil, rawSetter, contexts...)
 }
 
@@ -153,25 +155,86 @@ func Must(err error, events ...func(e *zerolog.Event)) {
 		return
 	}
 
-	errNilOrPanic(errors.WrapCaller(err, 1), events...)
+	panicIfError(errors.WrapCaller(err, 1), events...)
 }
 
 func Must1[T any](ret T, err error) T {
 	if err != nil {
-		errNilOrPanic(errors.WrapCaller(err, 1))
+		panicIfError(errors.WrapCaller(err, 1))
 	}
 
 	return ret
 }
 
-// FromGo converts a standard Go (value, error) pair to a Result.
-// This adapter makes it easy to integrate Result with existing Go code.
-func FromGo[T any](val T, err error) Result[T] {
-	return Wrap(val, err)
+// Try converts a function that may panic into a Result
+// This function wraps a potentially panicking function and converts panics
+// into error Results, providing a safer way to call functions that might panic.
+//
+// Example:
+//
+//	result := result.Try(func() int {
+//	    // Some operation that might panic
+//	    return riskyOperation()
+//	})
+//	if value, ok := result.TryUnwrap(); ok {
+//	    fmt.Printf("Success: %d\n", value)
+//	}
+func Try[T any](fn func() T) (r Result[T]) {
+	defer func() {
+		if err := recover(); err != nil {
+			r = Fail[T](fmt.Errorf("panic occurred: %w", errparser.Parse(err)))
+		}
+	}()
+	return OK(fn())
 }
 
-// ToGo converts a Result to a standard Go (value, error) pair.
-// This adapter makes it easy to use Result with existing Go code that expects (T, error).
-func ToGo[T any](r Result[T]) (T, error) {
-	return r.UnwrapGo()
+// Partition separates a slice of Results into values and errors
+// This function takes a slice of Results and separates them into two slices:
+// one containing all successful values and another containing all errors.
+// This is useful when you want to process all successes and handle all errors
+// separately rather than stopping at the first error.
+//
+// Example:
+//
+//	results := []result.Result[int]{result.OK(1), result.Fail[int](err1), result.OK(2)}
+//	values, errors := result.Partition(results)
+//	fmt.Printf("Values: %v, Errors: %v\n", values, errors)
+func Partition[T any](results []Result[T]) ([]T, []error) {
+	var values []T
+	var errs []error
+
+	for _, result := range results {
+		if result.IsOK() {
+			values = append(values, result.getValue())
+		} else {
+			errs = append(errs, result.GetErr())
+		}
+	}
+
+	return values, errs
+}
+
+// Collect takes a slice of Results and returns either all values or the first error
+// This function processes a slice of Results and collects all successful values
+// into a single Result containing a slice of values. If any Result contains an error,
+// the function stops and returns that error in a Result.
+//
+// Example:
+//
+//	results := []result.Result[int]{result.OK(1), result.OK(2), result.OK(3)}
+//	collected := result.Collect(results)
+//	if vals, ok := collected.TryUnwrap(); ok {
+//	    fmt.Printf("Collected values: %v\n", vals)
+//	}
+func Collect[T any](results []Result[T]) Result[[]T] {
+	var values []T
+
+	for _, result := range results {
+		if result.IsErr() {
+			return Fail[[]T](result.GetErr())
+		}
+		values = append(values, result.getValue())
+	}
+
+	return OK(values)
 }

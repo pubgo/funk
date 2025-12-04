@@ -1,18 +1,15 @@
 package errors
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
+	"os"
 	"reflect"
 
-	"github.com/rs/xid"
 	"github.com/samber/lo"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 
-	"github.com/pubgo/funk/v2/internal/errors/errinter"
-
-	"github.com/pubgo/funk/v2/proto/errorpb"
 	"github.com/pubgo/funk/v2/stack"
 )
 
@@ -24,20 +21,16 @@ func IfErr(err error, fn func(err error) error) error {
 	return fn(err)
 }
 
-func New(msg string, tags ...Tag) error {
-	return WrapCaller(&Err{Msg: msg, id: xid.New().String(), Tags: tags}, 1)
+func New(msg string, tags ...Tags) error {
+	return WrapCaller(newSimpleErr(&Err{Msg: msg, id: NewErrorId(), Tags: lo.FirstOrEmpty(tags)}), 1)
 }
 
 func Errorf(msg string, args ...any) error {
-	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...), id: xid.New().String()}, 1)
+	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...), id: NewErrorId()}, 1)
 }
 
-func Parse(val any) error { return errinter.ParseError(val) }
-func Debug(err error)     { errinter.Debug(err) }
-func Is(err, target error) bool {
-	return errors.Is(err, target)
-}
-func Join(errs ...error) error { return errors.Join(errs...) }
+func Is(err, target error) bool { return errors.Is(err, target) }
+func Join(errs ...error) error  { return errors.Join(errs...) }
 func AsA[T any](err error) (*T, bool) {
 	var target T
 	return &target, As(err, &target)
@@ -83,8 +76,16 @@ func WrapStack(err error) error {
 		return nil
 	}
 
-	stack.PrintStack()
-	return newErrWrapStack(err, Tags{T("msg", err.Error())})
+	stack.Print()
+	return newErrWrapStack(err, Tags{"msg": err.Error()})
+}
+
+func WrapTagsCaller(err error, tags Tags, skip ...int) error {
+	if err == nil {
+		return nil
+	}
+
+	return newErrWrap(err, tags, lo.FirstOrEmpty(skip))
 }
 
 func WrapCaller(err error, skip ...int) error {
@@ -92,7 +93,7 @@ func WrapCaller(err error, skip ...int) error {
 		return nil
 	}
 
-	return newErrWrap(err, Tags{T("msg", err.Error())}, lo.FirstOrEmpty(skip))
+	return newErrWrap(err, Tags{"msg": err.Error()}, lo.FirstOrEmpty(skip))
 }
 
 func Wrapf(err error, format string, args ...any) error {
@@ -100,7 +101,7 @@ func Wrapf(err error, format string, args ...any) error {
 		return nil
 	}
 
-	return newErrWrap(err, Tags{T("msg", fmt.Sprintf(format, args...))})
+	return newErrWrap(err, Tags{"msg": fmt.Sprintf(format, args...)})
 }
 
 func Wrap(err error, msg string) error {
@@ -108,22 +109,10 @@ func Wrap(err error, msg string) error {
 		return nil
 	}
 
-	return newErrWrap(err, Tags{T("msg", msg)})
+	return newErrWrap(err, Tags{"msg": msg})
 }
 
-func WrapMapTag(err error, tags Maps) error {
-	if err == nil {
-		return nil
-	}
-
-	if tags == nil {
-		return err
-	}
-
-	return newErrWrap(err, tags.Tags())
-}
-
-func WrapTag(err error, tags ...Tag) error {
+func WrapTags(err error, tags Tags) error {
 	if err == nil {
 		return nil
 	}
@@ -139,23 +128,38 @@ func WrapFn(err error, fn func() Tags) error {
 	return newErrWrap(err, fn())
 }
 
-func WrapKV(err error, key string, value any, kvs ...any) error {
+func WrapKV(err error, key string, value any) error {
 	if err == nil {
 		return nil
 	}
 
-	tags := Tags{T(key, value)}
-	for i := 0; i < len(kvs); i += 2 {
-		tags = append(tags, Tag{K: kvs[i].(string), V: kvs[i+1]})
-	}
-
-	return newErrWrap(err, tags)
+	return newErrWrap(err, Tags{key: value})
 }
 
-func Kv(k string, v any) Tag                          { return Tag{K: k, V: v} }
-func T(k string, v any) Tag                           { return Tag{K: k, V: v} }
-func MustTagsToAny(tags ...*errorpb.Tag) []*anypb.Any { return errinter.MustTagsToAny(tags...) }
-func MustStructToAny(p map[string]any) *anypb.Any     { return errinter.MustStructToAny(p) }
-func MustProtoToAny(p proto.Message) *anypb.Any       { return errinter.MustProtoToAny(p) }
-func ParseErrToPb(err error) proto.Message            { return errinter.ParseErrToPb(err) }
-func GetErrorId(err error) string                     { return errinter.GetErrorId(err) }
+func JsonPrint(err error) []byte {
+	if err == nil {
+		return nil
+	}
+
+	data, err := json.Marshal(err)
+	if err != nil {
+		slog.Error("failed to marshal error", "err", err)
+		panic(fmt.Errorf("failed to marshal error, err=%w", err))
+	}
+	return data
+}
+
+func DebugPrint(err error) {
+	if err == nil {
+		return
+	}
+
+	if _err, ok := err.(fmt.Stringer); ok {
+		_, _ = fmt.Fprintln(os.Stderr, _err.String())
+		return
+	}
+
+	debugPretty().Println(err)
+}
+
+func GetErrorId(err error) string { return getErrorId(err) }

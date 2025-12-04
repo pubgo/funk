@@ -126,7 +126,7 @@ func logErr(fn any, err error) {
 
 	if running.Debug() {
 		debug.PrintStack()
-		errors.Debug(err)
+		errors.DebugPrint(err)
 	}
 
 	logs.Err(err).

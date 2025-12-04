@@ -11,7 +11,8 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
-	"google.golang.org/protobuf/encoding/prototext"
+
+	"github.com/pubgo/funk/v2/errors/errparser"
 
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/log"
@@ -29,7 +30,7 @@ func try(fn func() error) (gErr error) {
 	}
 
 	defer func() {
-		if err := errors.Parse(recover()); err != nil {
+		if err := errparser.Parse(recover()); err != nil {
 			gErr = errors.WrapStack(err)
 		}
 
@@ -49,7 +50,7 @@ func tryResult[T any](fn func() Result[T]) (r Result[T]) {
 
 	defer func() {
 		var gErr error
-		if err := errors.Parse(recover()); err != nil {
+		if err := errparser.Parse(recover()); err != nil {
 			gErr = errors.WrapStack(err)
 		}
 
@@ -69,7 +70,7 @@ func try1[T any](fn func() (T, error)) (t T, gErr error) {
 	}
 
 	defer func() {
-		if err := errors.Parse(recover()); err != nil {
+		if err := errparser.Parse(recover()); err != nil {
 			gErr = errors.WrapStack(err)
 		}
 
@@ -82,7 +83,9 @@ func try1[T any](fn func() (T, error)) (t T, gErr error) {
 	return t, gErr
 }
 
-func errNilOrPanic(err error, events ...func(e *zerolog.Event)) {
+// panicIfError logs the error and panics
+// This maintains backward compatibility with existing code that expects panics
+func panicIfError(err error, events ...func(e *zerolog.Event)) {
 	if err == nil {
 		return
 	}
@@ -91,9 +94,24 @@ func errNilOrPanic(err error, events ...func(e *zerolog.Event)) {
 	panic(err)
 }
 
+// catchErr handles error propagation from a Result Error to an error setter
+// This function is responsible for propagating errors from a Result Error
+// to various types of error setters (ErrSetter or raw error pointers).
+// It applies error checkers and wraps the error before setting it.
+//
+// Parameters:
+//
+//	r - The Result Error containing the error to propagate
+//	setter - An ErrSetter interface implementation
+//	rawSetter - A raw error pointer
+//	contexts - Optional context for error checking
+//
+// Returns:
+//
+//	bool - true if an error was set, false otherwise
 func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.Context) bool {
 	if setter == nil && rawSetter == nil {
-		errNilOrPanic(errors.Errorf("error setter is nil"))
+		panicIfError(errors.Errorf("error setter is nil"))
 	}
 
 	if r.IsOK() {
@@ -159,8 +177,20 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 	return true
 }
 
+// errRecovery handles error recovery from panics
+// This function is used to recover from panics and convert them to errors.
+// It applies callback functions to transform the error if needed.
+//
+// Parameters:
+//
+//	getErr - A function that returns the current error (if any)
+//	callbacks - Optional functions to transform the error
+//
+// Returns:
+//
+//	error - The recovered error, or nil if no error occurred
 func errRecovery(getErr func() error, callbacks ...func(err error) error) error {
-	err := errors.Parse(recover())
+	err := errparser.Parse(recover())
 	if err == nil {
 		err = getErr()
 	}
@@ -176,13 +206,28 @@ func errRecovery(getErr func() error, callbacks ...func(err error) error) error 
 		}
 	}
 
-	stack.PrintStack()
+	stack.Print()
 	return err
 }
 
+// unwrapErr unwraps a Result and handles error propagation
+// This function extracts the value from a Result while handling error propagation
+// to error setters. It applies error checkers and returns the value or error.
+//
+// Parameters:
+//
+//	r - The Result to unwrap
+//	setter1 - A raw error pointer
+//	setter2 - An ErrSetter interface implementation
+//	contexts - Optional context for error checking
+//
+// Returns:
+//
+//	T - The unwrapped value
+//	error - Any error that occurred during unwrapping
 func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts ...context.Context) (T, error) {
 	if setter1 == nil && setter2 == nil {
-		errNilOrPanic(fmt.Errorf("error setter is nil"))
+		panicIfError(fmt.Errorf("error setter is nil"))
 	}
 
 	ret := r.getValue()
@@ -218,13 +263,21 @@ func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts .
 	return ret, err
 }
 
+// setError sets an error on an ErrSetter
+// This function handles setting an error on various types of error setters,
+// including Error, ProxyErr, and generic Result types using reflection.
+//
+// Parameters:
+//
+//	setter - The ErrSetter to set the error on
+//	err - The error to set
 func setError(setter ErrSetter, err error) {
 	if err == nil {
 		return
 	}
 
 	if setter == nil {
-		errNilOrPanic(errors.Errorf("error setter is nil"))
+		panicIfError(errors.Errorf("error setter is nil"))
 		return
 	}
 
@@ -290,6 +343,16 @@ func setError(setter ErrSetter, err error) {
 
 var resultFile = stack.Caller(0)
 
+// logErr logs an error with detailed context and stack trace
+// This function provides comprehensive error logging with stack traces,
+// error IDs, and other contextual information.
+//
+// Parameters:
+//
+//	ctx - The context for logging
+//	skip - Number of stack frames to skip
+//	err - The error to log
+//	events - Optional functions to add additional log fields
 func logErr(ctx context.Context, skip int, err error, events ...func(e *zerolog.Event)) {
 	if err == nil {
 		return
@@ -313,5 +376,5 @@ func logErr(ctx context.Context, skip int, err error, events ...func(e *zerolog.
 				fn(e)
 			}
 		}).
-		Msgf("%s\n%s", err.Error(), prototext.Format(errors.ParseErrToPb(err)))
+		Msgf("%s\n%s", err.Error(), errors.JsonPrint(err))
 }

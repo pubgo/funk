@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	result2 "github.com/pubgo/funk/v2/result"
-
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/rs/xid"
@@ -19,13 +17,14 @@ import (
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/log/logfields"
 	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
+	"github.com/pubgo/funk/v2/result"
 	"github.com/pubgo/funk/v2/stack"
 	"github.com/pubgo/funk/v2/try"
 	"github.com/pubgo/funk/v2/typex"
 )
 
-func PushEvent[T any](handler func(*Client, context.Context, T, ...*cloudeventpb.PushEventOptions) (*PubAckInfo, error), jobCli *Client, ctx context.Context, t T, opts ...*cloudeventpb.PushEventOptions) chan result2.Result[*PubAckInfo] {
-	errChan := make(chan result2.Result[*PubAckInfo])
+func PushEvent[T any](handler func(*Client, context.Context, T, ...*cloudeventpb.PushEventOptions) (*PubAckInfo, error), jobCli *Client, ctx context.Context, t T, opts ...*cloudeventpb.PushEventOptions) chan result.Result[*PubAckInfo] {
+	errChan := make(chan result.Result[*PubAckInfo])
 	timeout := ctxutil.GetTimeout(ctx)
 	now := time.Now()
 	fnCaller := stack.Caller(1).String()
@@ -55,7 +54,7 @@ func PushEvent[T any](handler func(*Client, context.Context, T, ...*cloudeventpb
 			})
 			return err
 		})
-		errChan <- result2.Wrap(pubAck, err)
+		errChan <- result.Wrap(pubAck, err)
 	}()
 	return errChan
 }
@@ -100,7 +99,7 @@ func (c *Client) Publish(ctx context.Context, topic string, args proto.Message, 
 }
 
 func (c *Client) publish(ctx context.Context, topic string, args proto.Message, opts ...*cloudeventpb.PushEventOptions) (_ *PubAckInfo, gErr error) {
-	defer result2.RecoveryErr(&gErr)
+	defer result.RecoveryErr(&gErr)
 	timeout := ctxutil.GetTimeout(ctx)
 	now := time.Now()
 	msgId := xid.New().String()
@@ -131,22 +130,23 @@ func (c *Client) publish(ctx context.Context, topic string, args proto.Message, 
 		msgId = pushEventOpt.GetMsgId()
 	}
 
-	pb := result2.Wrap(anypb.New(args)).
+	proxy := result.ErrProxyOf(&gErr)
+	pb := result.Wrap(anypb.New(args)).
 		Log(func(e *zerolog.Event) {
 			e.Str(logfields.Msg, "failed to marshal args to any proto")
 		}).
-		UnwrapErr(&gErr)
-	if gErr != nil {
+		UnwrapOrThrow(&proxy)
+	if proxy.IsErr() {
 		return
 	}
 
 	// TODO get parent event info from ctx
-	data := result2.Wrap(proto.Marshal(pb)).
+	data := result.Wrap(proto.Marshal(pb)).
 		Log(func(e *zerolog.Event) {
 			e.Str(logfields.Msg, "failed to marshal any proto to bytes")
 		}).
-		UnwrapErr(&gErr)
-	if gErr != nil {
+		UnwrapOrThrow(&proxy)
+	if proxy.IsErr() {
 		return
 	}
 
@@ -165,11 +165,11 @@ func (c *Client) publish(ctx context.Context, topic string, args proto.Message, 
 
 	msg := &nats.Msg{Subject: topic, Data: data, Header: header}
 	jetOpts := append([]jetstream.PublishOpt{}, jetstream.WithMsgID(msgId))
-	pubActInfo = result2.Wrap(c.js.PublishMsg(ctx, msg, jetOpts...)).
+	pubActInfo = result.Wrap(c.js.PublishMsg(ctx, msg, jetOpts...)).
 		Log(func(e *zerolog.Event) {
 			e.Str(logfields.Msg, fmt.Sprintf("failed to publish msg to stream, topic=%s msg_id=%s", topic, msgId))
 		}).
-		UnwrapErr(&gErr)
+		UnwrapOrThrow(&proxy)
 	if gErr != nil {
 		return
 	}

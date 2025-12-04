@@ -4,10 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-
-	"github.com/k0kubun/pp/v3"
 )
 
+// Ensure baseValue implements Value interface
 var _ Value = (*baseValue[any])(nil)
 
 func newBase[T any](f *Feature, name string, value T, usage string, typ ValueType, tags []map[string]any, set func(s string) (T, error), getString func(val T) string) *baseValue[T] {
@@ -27,11 +26,11 @@ type baseValue[T any] struct {
 func (b *baseValue[T]) Name() string    { return b.ff.Name }
 func (b *baseValue[T]) Type() ValueType { return b.typ }
 func (b *baseValue[T]) Get() any        { return b.val }
-func (b *baseValue[T]) GetValue() T     { return b.val }
+func (b *baseValue[T]) Value() T        { return b.val }
 func (b *baseValue[T]) Set(s string) error {
 	val, err := b.set(s)
 	if err != nil {
-		return fmt.Errorf("faield to set value, value=%s err=%w", s, err)
+		return fmt.Errorf("failed to set value, value=%s err=%w", s, err)
 	}
 
 	b.val = val
@@ -80,7 +79,7 @@ func Int(name string, value int64, usage string, tags ...map[string]any) IntValu
 			_, err = fmt.Sscanf(s, "%d", &val)
 			return val, err
 		},
-		nil,
+		func(val int64) string { return fmt.Sprintf("%d", val) },
 	)
 	return IntValue{baseValue: base}
 }
@@ -151,8 +150,7 @@ func Json[T any](name string, value T, usage string, tags ...map[string]any) Jso
 		func(val T) string {
 			data, err := json.Marshal(val)
 			if err != nil {
-				_, _ = pp.Println(val)
-				return err.Error()
+				return fmt.Sprintf("failed to marshal json, val=%v err=%s", val, err.Error())
 			}
 			return string(data)
 		},
