@@ -27,7 +27,30 @@ type ErrAs interface {
 	As(any) bool
 }
 
+func mergeTags(tags ...Tags) Tags {
+	tagList := make(Tags)
+	for _, t := range tags {
+		for key, value := range t {
+			tagList[key] = value
+		}
+	}
+	return tagList
+}
+
 type Tags map[string]any
+
+func (t Tags) Merge(tags Tags) Tags {
+	tagList := make(Tags, len(t)+len(tags))
+
+	for key, value := range tags {
+		tagList[key] = value
+	}
+
+	for key, value := range t {
+		tagList[key] = value
+	}
+	return tagList
+}
 
 func (t Tags) ToMapString() map[string]string {
 	data := make(map[string]string, len(t))
