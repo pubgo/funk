@@ -29,6 +29,12 @@ import (
 	"github.com/pubgo/funk/v2"
 )
 
+func MustTagsToAny(tags errors.Tags) []*anypb.Any {
+	return lo.MapToSlice(tags, func(key string, value any) *anypb.Any {
+		return MustProtoToAny(&errorpb.Tag{Key: key, Value: fmt.Sprintf("%v", value)})
+	})
+}
+
 func MustStructToAny(p map[string]any) *anypb.Any {
 	if p == nil {
 		return nil
