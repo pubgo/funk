@@ -112,20 +112,21 @@ func Wrap(err error, msg string) error {
 	return newErrWrap(err, Tags{"msg": msg})
 }
 
-func WrapTags(err error, tags Tags) error {
+func WrapTags(err error, tags ...Tags) error {
 	if err == nil {
 		return nil
 	}
 
-	return newErrWrap(err, tags)
+	return newErrWrap(err, mergeTags(tags...))
 }
 
-func WrapFn(err error, fn func() Tags) error {
+func WrapFn(err error, tagsFn ...func() Tags) error {
 	if err == nil {
 		return nil
 	}
 
-	return newErrWrap(err, fn())
+	tags := lo.Map(tagsFn, func(item func() Tags, index int) Tags { return item() })
+	return newErrWrap(err, mergeTags(tags...))
 }
 
 func WrapKV(err error, key string, value any) error {
