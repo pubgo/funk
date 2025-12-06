@@ -17,21 +17,13 @@ import (
 	"github.com/valyala/fasttemplate"
 	"gopkg.in/yaml.v3"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/env"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/pathutil"
-	"github.com/pubgo/funk/result"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/env"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/log"
+	"github.com/pubgo/funk/v2/pathutil"
+	"github.com/pubgo/funk/v2/result"
 )
-
-func GetConfigDir() string {
-	return configDir
-}
-
-func GetConfigPath() string {
-	return configPath
-}
 
 func getConfigPath(name, typ string, configDir ...string) (string, string) {
 	if len(configDir) == 0 {
@@ -73,24 +65,19 @@ func getPathList() (paths []string) {
 		paths = append(paths, wd)
 		wd = filepath.Dir(wd)
 	}
-	return
+	return paths
 }
 
-func SetConfigPath(confPath string) {
-	assert.If(confPath == "", "config path is null")
-	configPath = confPath
-}
-
-func MergeR[A any, B any | *any](dst *A, src ...B) (ret result.Result[*A]) {
+func MergeR[A any, B any | *any](dst *A, src ...B) (r result.Result[*A]) {
 	if len(src) == 0 {
-		return ret.WithVal(dst)
+		return r.WithValue(dst)
 	}
 
 	err := Merge(dst, src...)
 	if err != nil {
-		return ret.WithErr(err)
+		return r.WithErr(err)
 	}
-	return ret.WithVal(dst)
+	return r.WithValue(dst)
 }
 
 func Merge[A any, B any | *any](dst *A, src ...B) error {
@@ -103,12 +90,12 @@ func Merge[A any, B any | *any](dst *A, src ...B) error {
 			mergo.WithTransformers(new(transformer)),
 		)
 		if err != nil {
-			return errors.WrapTag(err,
-				errors.T("dst_type", reflect.TypeOf(dst).String()),
-				errors.T("dst", dst),
-				errors.T("src_type", reflect.TypeOf(src[i]).String()),
-				errors.T("src", src[i]),
-			)
+			return errors.WrapTags(err, errors.Tags{
+				"dst_type": reflect.TypeOf(dst).String(),
+				"src_type": reflect.TypeOf(src[i]).String(),
+				"dst":      dst,
+				"src":      src[i],
+			})
 		}
 	}
 	return nil
@@ -138,7 +125,7 @@ func (s *transformer) Transformer(t reflect.Type) func(dst, src reflect.Value) e
 
 		for i := 0; i < src.Len(); i++ {
 			c := src.Index(i).Interface()
-			var uniqueName = c.(NamedConfig).ConfigUniqueName()
+			uniqueName := c.(NamedConfig).ConfigUniqueName()
 			if dstMap[uniqueName] == nil {
 				dstMap[uniqueName] = c
 				continue
@@ -149,16 +136,16 @@ func (s *transformer) Transformer(t reflect.Type) func(dst, src reflect.Value) e
 			if err != nil {
 				return errors.WrapFn(err, func() errors.Tags {
 					return errors.Tags{
-						errors.T("dst", d),
-						errors.T("src", c),
-						errors.T("dst-type", reflect.TypeOf(d).String()),
-						errors.T("src-type", reflect.TypeOf(c).String()),
+						"dst":      d,
+						"src":      c,
+						"src-type": reflect.TypeOf(c).String(),
+						"dst-type": reflect.TypeOf(d).String(),
 					}
 				})
 			}
 		}
 
-		var data = lo.MapToSlice(dstMap, func(key string, value any) reflect.Value { return reflect.ValueOf(value) })
+		data := lo.MapToSlice(dstMap, func(key string, value any) reflect.Value { return reflect.ValueOf(value) })
 		dst.Set(makeList(dst.Type().Elem(), data))
 		return nil
 	}
@@ -177,16 +164,16 @@ func unmarshalOneOrList[T any](list *[]T, value *yaml.Node) error {
 	if value.Kind == yaml.SequenceNode {
 		return value.Decode(list)
 	}
-	return errors.Format("unmarshalled node: %v", value.Value)
+	return errors.Errorf("unmarshalled node: %v", value.Value)
 }
 
 func listAllPath(dirOrPath string) (ret result.Result[[]string]) {
 	if !pathutil.IsDir(dirOrPath) {
-		return ret.WithVal([]string{dirOrPath})
+		return ret.WithValue([]string{dirOrPath})
 	}
 
 	var paths []string
-	var walk = func(path string, info fs.FileInfo, err error) error {
+	walk := func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -202,11 +189,11 @@ func listAllPath(dirOrPath string) (ret result.Result[[]string]) {
 	if err != nil {
 		return ret.WithErr(err)
 	}
-	return ret.WithVal(paths)
+	return ret.WithValue(paths)
 }
 
 func makeList(typ reflect.Type, data []reflect.Value) reflect.Value {
-	val := reflect.MakeSlice(reflect.SliceOf(typ), 0, 0)
+	val := reflect.MakeSlice(reflect.SliceOf(typ), 0, len(data))
 	return reflect.Append(val, data...)
 }
 
@@ -214,10 +201,19 @@ type config struct {
 	workDir string
 }
 
+var registerMap = make(map[string]any)
+
+func RegisterExpr(name string, expr any) {
+	if registerMap[name] != nil {
+		panic(fmt.Sprintf("expr:%s has existed", name))
+	}
+	registerMap[name] = expr
+}
+
 func getEnvData(cfg *config) map[string]any {
-	return map[string]any{
+	exprEnv := map[string]any{
 		"env": env.Map(),
-		"get_path_dir": func() string {
+		"config_dir": func() string {
 			return cfg.workDir
 		},
 		"embed": func(name string) string {
@@ -225,8 +221,8 @@ func getEnvData(cfg *config) map[string]any {
 				return ""
 			}
 
-			var path = filepath.Join(cfg.workDir, name)
-			var d, err = os.ReadFile(path)
+			path := filepath.Join(cfg.workDir, name)
+			d, err := os.ReadFile(path)
 			if err != nil {
 				log.Panic().Err(err).
 					Str("path", path).
@@ -237,11 +233,19 @@ func getEnvData(cfg *config) map[string]any {
 			return strings.TrimSpace(base64.StdEncoding.EncodeToString(d))
 		},
 	}
+
+	for k, v := range registerMap {
+		if exprEnv[k] != nil {
+			panic(fmt.Sprintf("expr:%s has existed", k))
+		}
+		exprEnv[k] = v
+	}
+	return exprEnv
 }
 
-func cfgFormat(template string, cfg *config) string {
-	tpl := fasttemplate.New(template, "${{", "}}")
-	return tpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
+func cfgFormat(template []byte, cfg *config) []byte {
+	tpl := fasttemplate.New(string(template), "${{", "}}")
+	return []byte(tpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
 		tag = strings.TrimSpace(tag)
 		evalData, err := eval(tag, cfg)
 		if err != nil {
@@ -257,14 +261,14 @@ func cfgFormat(template string, cfg *config) string {
 		}
 
 		return w.Write(bytes.TrimSpace(data))
-	})
+	}))
 }
 
 func eval(code string, cfg *config) (any, error) {
 	envData := getEnvData(cfg)
 	data, err := expr.Eval(strings.TrimSpace(code), envData)
 	if err != nil {
-		return nil, errors.WrapCaller(err)
+		return nil, errors.Wrapf(err, "failed to eval expr:%q", code)
 	}
 	return data, nil
 }

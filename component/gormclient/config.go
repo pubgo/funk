@@ -3,8 +3,9 @@ package gormclient
 import (
 	"time"
 
-	"github.com/pubgo/funk/config"
 	"gorm.io/gorm/logger"
+
+	"github.com/pubgo/funk/v2/config"
 )
 
 type Config struct {

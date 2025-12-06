@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/recovery"
-	"github.com/pubgo/funk/result"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/log"
+	"github.com/pubgo/funk/v2/recovery"
+	"github.com/pubgo/funk/v2/result"
 )
 
 func testExit1() {
@@ -31,11 +30,7 @@ func TestErr(t *testing.T) {
 
 		panic("ok")
 	}
-
-	err := handler()
-	if generic.IsNil(err) {
-		t.Log(err)
-	}
+	t.Log("error:", handler())
 }
 
 func TestResult(t *testing.T) {
@@ -45,14 +40,14 @@ func TestResult(t *testing.T) {
 	}
 
 	handler := func() (r result.Result[A]) {
-		defer recovery.Err(&r.E)
+		defer result.Recovery(&r)
 
-		r = r.WithVal(A{A: "hello"})
+		r = r.WithValue(A{A: "hello"})
 		panic("ok")
 	}
 
 	t.Log(handler())
-	t.Log(handler().OrElse(A{A: "error"}).A)
+	t.Log(handler().UnwrapOr(A{A: "error"}).A)
 }
 
 func TestName(t *testing.T) {

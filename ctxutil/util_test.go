@@ -4,8 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/pubgo/funk/ctxutil"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/pubgo/funk/v2/ctxutil"
 )
 
 func TestClone(t *testing.T) {

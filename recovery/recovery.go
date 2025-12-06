@@ -2,14 +2,18 @@ package recovery
 
 import (
 	"os"
+	"runtime/debug"
 	"testing"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/errors"
+	"github.com/samber/lo"
+
+	"github.com/pubgo/funk/v2/errors/errparser"
+
+	"github.com/pubgo/funk/v2/errors"
 )
 
 func Err(gErr *error, callbacks ...func(err error) error) {
-	err := errors.Parse(recover())
+	err := errparser.Parse(recover())
 	if err == nil {
 		return
 	}
@@ -21,11 +25,12 @@ func Err(gErr *error, callbacks ...func(err error) error) {
 		}
 	}
 
-	*gErr = errors.WrapStack(err)
+	debug.PrintStack()
+	*gErr = err
 }
 
 func Raise(callbacks ...func(err error) error) {
-	err := errors.Parse(recover())
+	err := errparser.Parse(recover())
 	if err == nil {
 		return
 	}
@@ -37,22 +42,24 @@ func Raise(callbacks ...func(err error) error) {
 		}
 	}
 
-	panic(errors.WrapStack(err))
+	debug.PrintStack()
+	panic(err)
 }
 
 func Recovery(fn func(err error)) {
-	assert.If(fn == nil, "[fn] should not be nil")
+	lo.Assert(fn != nil, "[fn] should not be nil")
 
-	err := errors.Parse(recover())
+	err := errparser.Parse(recover())
 	if err == nil {
 		return
 	}
 
-	fn(errors.WrapStack(err))
+	debug.PrintStack()
+	fn(err)
 }
 
 func Exit(handlers ...func(err error) error) {
-	err := errors.Parse(recover())
+	err := errparser.Parse(recover())
 	if err == nil {
 		return
 	}
@@ -64,25 +71,27 @@ func Exit(handlers ...func(err error) error) {
 		}
 	}
 
-	errors.Debug(errors.WrapStack(err))
+	debug.PrintStack()
+	errors.DebugPrint(err)
 	os.Exit(1)
 }
 
 func DebugPrint() {
-	err := errors.Parse(recover())
+	err := errparser.Parse(recover())
 	if err == nil {
 		return
 	}
 
-	errors.Debug(errors.WrapStack(err))
+	debug.PrintStack()
+	errors.DebugPrint(err)
 }
 
 func Testing(t *testing.T) {
-	err := errors.Parse(recover())
+	err := errparser.Parse(recover())
 	if err == nil {
 		return
 	}
 
-	errors.Debug(errors.WrapStack(err))
+	errors.DebugPrint(err)
 	t.Fatal(err)
 }

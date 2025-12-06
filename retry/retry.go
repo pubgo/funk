@@ -3,7 +3,7 @@ package retry
 import (
 	"time"
 
-	"github.com/pubgo/funk/recovery"
+	"github.com/pubgo/funk/v2/recovery"
 )
 
 type Retry func() Backoff
@@ -22,15 +22,15 @@ func (d Retry) Do(f func(i int) error) (err error) {
 
 		dur, stop := b.Next()
 		if stop {
-			return
+			return err
 		}
 
 		time.Sleep(dur)
 	}
 }
 
-func (d Retry) DoVal(f func(i int) (interface{}, error)) (val interface{}, err error) {
-	wrap := func(i int) (val interface{}, err error) {
+func (d Retry) DoVal(f func(i int) (any, error)) (val any, err error) {
+	wrap := func(i int) (val any, err error) {
 		defer recovery.Err(&err)
 		return f(i)
 	}
@@ -43,7 +43,7 @@ func (d Retry) DoVal(f func(i int) (interface{}, error)) (val interface{}, err e
 
 		dur, stop := b.Next()
 		if stop {
-			return
+			return val, err
 		}
 
 		time.Sleep(dur)

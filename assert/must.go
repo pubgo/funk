@@ -2,80 +2,78 @@ package assert
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"runtime/debug"
-
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/try"
 )
 
-func Must(err error, args ...interface{}) {
+func Must(err error, args ...any) {
 	if err == nil {
 		return
 	}
 
-	panic(errors.WrapStack(errors.Wrap(err, fmt.Sprint(args...))))
+	must(err, args...)
 }
 
-func MustFn(errFn func() error, args ...interface{}) {
-	err := try.Try(errFn)
+func MustFn(errFn func() error, args ...any) {
+	err := try(errFn)
 	if err == nil {
 		return
 	}
 
-	panic(errors.WrapStack(errors.Wrap(err, fmt.Sprint(args...))))
+	must(err, args...)
 }
 
-func MustF(err error, msg string, args ...interface{}) {
+func MustF(err error, msg string, args ...any) {
 	if err == nil {
 		return
 	}
 
-	panic(errors.WrapStack(errors.Wrap(err, fmt.Sprintf(msg, args...))))
+	must(err, fmt.Sprintf(msg, args...))
 }
 
 func Must1[T any](ret T, err error) T {
 	if err != nil {
-		panic(errors.WrapStack(err))
+		must(err)
 	}
 
 	return ret
 }
 
-func Exit(err error, args ...interface{}) {
+func Exit(err error, args ...any) {
 	if err == nil {
 		return
 	}
 
-	errors.Debug(errors.WrapStack(errors.Wrap(err, fmt.Sprint(args...))))
+	logErr(err, "os exit with error", slog.String("log-msg", fmt.Sprint(args...)))
 	debug.PrintStack()
 	os.Exit(1)
 }
 
-func ExitFn(errFn func() error, args ...interface{}) {
-	err := try.Try(errFn)
+func ExitFn(errFn func() error, args ...any) {
+	err := try(errFn)
 	if err == nil {
 		return
 	}
 
-	errors.Debug(errors.WrapStack(errors.Wrap(err, fmt.Sprint(args...))))
+	logErr(err, "os exit with error func", slog.String("log-msg", fmt.Sprint(args...)))
 	debug.PrintStack()
 	os.Exit(1)
 }
 
-func ExitF(err error, msg string, args ...interface{}) {
+func ExitF(err error, msg string, args ...any) {
 	if err == nil {
 		return
 	}
 
-	errors.Debug(errors.WrapStack(errors.Wrapf(err, msg, args...)))
+	logErr(err, "os exit with error format", slog.String("log-msg", fmt.Sprintf(msg, args...)))
 	debug.PrintStack()
 	os.Exit(1)
 }
 
 func Exit1[T any](ret T, err error) T {
 	if err != nil {
-		errors.Debug(errors.WrapStack(err))
+		logErr(err, "os exit with error unwrap")
 		debug.PrintStack()
 		os.Exit(1)
 	}

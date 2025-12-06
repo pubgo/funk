@@ -3,21 +3,27 @@ package log
 import (
 	"context"
 	"fmt"
+	"maps"
 	"strings"
 
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/stack"
 	"github.com/rs/zerolog"
-	"google.golang.org/protobuf/encoding/prototext"
+
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/log/logfields"
 )
 
 var _ Logger = (*loggerImpl)(nil)
 
+func New(log *zerolog.Logger) Logger {
+	return &loggerImpl{
+		log: log,
+	}
+}
+
 type loggerImpl struct {
 	name       string
 	log        *zerolog.Logger
-	fields     Map
-	content    *Event
+	fields     Fields
 	callerSkip int
 	lvl        Level
 }
@@ -25,17 +31,6 @@ type loggerImpl struct {
 func (l *loggerImpl) WithLevel(lvl Level) Logger {
 	log := l.copy()
 	log.lvl = lvl
-	return log
-}
-
-func (l *loggerImpl) WithEvent(evt *Event) Logger {
-	if evt == nil {
-		return l
-	}
-
-	log := l.copy()
-	log.content = mergeEvent(l.content, evt)
-
 	return log
 }
 
@@ -57,29 +52,30 @@ func (l *loggerImpl) nameWithCaller(name string, caller int) Logger {
 
 	log := l.copy()
 	if log.fields == nil {
-		log.fields = make(Map, 1)
+		log.fields = make(Fields, 1)
 	}
-	log.fields[ModuleName] = stack.Caller(caller + 1).Pkg
 
 	if log.name == "" {
 		log.name = name
 	} else {
 		log.name = fmt.Sprintf("%s.%s", log.name, name)
 	}
+
+	log.callerSkip += caller
 	return log
 }
 
 func (l *loggerImpl) WithName(name string) Logger {
-	return l.nameWithCaller(name, 1)
+	return l.nameWithCaller(name, 0)
 }
 
-func (l *loggerImpl) WithFields(m Map) Logger {
+func (l *loggerImpl) WithFields(m Fields) Logger {
 	if len(m) == 0 {
 		return l
 	}
 
 	log := l.copy()
-	logFields := make(Map, len(m)+len(log.fields))
+	logFields := make(Fields, len(m)+len(log.fields))
 	for k, v := range m {
 		logFields[k] = v
 	}
@@ -94,8 +90,11 @@ func (l *loggerImpl) WithFields(m Map) Logger {
 
 func (l *loggerImpl) getCtx(ctxL ...context.Context) context.Context {
 	ctx := context.Background()
-	if len(ctxL) > 0 {
-		ctx = ctxL[0]
+	for i := range ctxL {
+		if ctxL[i] != nil {
+			ctx = ctxL[i]
+			break
+		}
 	}
 	return ctx
 }
@@ -142,22 +141,18 @@ func (l *loggerImpl) Err(err error, ctxL ...context.Context) *zerolog.Event {
 		return nil
 	}
 
-	var fn = func(e *zerolog.Event) {
+	fn := func(e *zerolog.Event) {
+		if err == nil {
+			return
+		}
+
 		if id := errors.GetErrorId(err); id != "" {
 			e.Str("error_id", id)
 		}
+
+		e.Str("error_detail", errDetail(err))
+		e.Str(zerolog.ErrorFieldName, err.Error())
 	}
-
-	if err != nil {
-		if errStr, ok := err.(errors.ErrorProto); ok {
-			return l.newEvent(ctx, l.getLog().Error().Func(fn).
-				Str(zerolog.ErrorFieldName, err.Error()).
-				Str("error_detail", prototext.Format(errStr.Proto())))
-		}
-
-		return l.newEvent(ctx, l.getLog().Error().Func(fn).Str(zerolog.ErrorFieldName, err.Error()))
-	}
-
 	return l.newEvent(ctx, l.getLog().Err(err).Func(fn))
 }
 
@@ -184,16 +179,17 @@ func (l *loggerImpl) enabled(ctx context.Context, lvl zerolog.Level) bool {
 		return false
 	}
 
-	enabled := true
-	if logEnableChecker != nil {
-		enabled = logEnableChecker(ctx, lvl, l.name, l.fields)
-	}
-	return enabled && lvl >= l.lvl && lvl >= zerolog.GlobalLevel()
+	return lvl >= l.lvl && lvl >= zerolog.GlobalLevel()
 }
 
 func (l *loggerImpl) copy() *loggerImpl {
-	log := *l
-	return &log
+	return &loggerImpl{
+		log:        l.log,
+		fields:     maps.Clone(l.fields),
+		lvl:        l.lvl,
+		name:       l.name,
+		callerSkip: l.callerSkip,
+	}
 }
 
 func (l *loggerImpl) getLog() *zerolog.Logger {
@@ -204,22 +200,29 @@ func (l *loggerImpl) getLog() *zerolog.Logger {
 }
 
 func (l *loggerImpl) newEvent(ctx context.Context, e *zerolog.Event) *zerolog.Event {
-	if l.name != "" {
-		e = e.Str("logger", l.name)
+	name := l.name
+	fields := l.fields
+
+	if m, ok := fields[logfields.Module].(string); ok {
+		name = m
+	}
+
+	if name != "" {
+		e = e.Str(logfields.Logger, name)
 	}
 
 	if l.callerSkip != 0 {
 		e = e.CallerSkipFrame(l.callerSkip)
 	}
 
-	if l.fields != nil && len(l.fields) > 0 {
-		e = e.Fields(l.fields)
+	for k, v := range GetFieldsFromCtx(ctx) {
+		fields[k] = v
 	}
 
-	if ctx != nil {
-		ctx = createFieldCtx(ctx, l.fields)
-		e = e.Ctx(ctx)
+	if len(fields) > 0 {
+		e = e.Fields(fields)
 	}
 
-	return mergeEvent(e, getEventFromCtx(ctx), l.content)
+	e = e.Ctx(createFieldCtx(ctx, &fieldMap{name: name, fields: fields}))
+	return e
 }

@@ -2,6 +2,7 @@ package log
 
 import (
 	"context"
+	"log"
 )
 
 type (
@@ -11,7 +12,7 @@ type (
 	ctxMapFieldKey struct{}
 )
 
-func LoggerFromCtx(ctx context.Context, loggers ...Logger) Logger {
+func GetFromCtx(ctx context.Context, loggers ...Logger) Logger {
 	defaultLog := stdLog
 	if len(loggers) > 0 {
 		defaultLog = loggers[0]
@@ -28,23 +29,23 @@ func LoggerFromCtx(ctx context.Context, loggers ...Logger) Logger {
 	return defaultLog
 }
 
-func CreateLoggerCtx(ctx context.Context, ll Logger) context.Context {
+func CreateCtx(ctx context.Context, ll Logger) context.Context {
 	if ll == nil || ctx == nil {
-		panic("ctx or log param is nil")
+		log.Panicln("ctx or log param is nil")
 	}
 
 	return context.WithValue(ctx, ctxLoggerKey{}, ll)
 }
 
-func CreateEventCtx(ctx context.Context, evt *Event) context.Context {
+func CreateFieldsCtx(ctx context.Context, evt Fields) context.Context {
 	if evt == nil || ctx == nil {
-		panic("ctx or log event is nil")
+		log.Panicln("ctx or log event is nil")
 	}
 
 	return context.WithValue(ctx, ctxEventKey{}, evt)
 }
 
-func UpdateEventCtx(ctx context.Context, fields Map) context.Context {
+func UpdateFieldsCtx(ctx context.Context, fields Fields) context.Context {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -53,22 +54,20 @@ func UpdateEventCtx(ctx context.Context, fields Map) context.Context {
 		return ctx
 	}
 
-	var evt = NewEvent()
-	if e := getEventFromCtx(ctx); e != nil {
+	evt := make(Fields)
+	if e := GetFieldsFromCtx(ctx); e != nil {
 		evt = e
-	} else {
-		ctx = context.WithValue(ctx, ctxEventKey{}, evt)
 	}
 
 	for k, v := range fields {
-		evt.Any(k, v)
+		evt[k] = v
 	}
 
-	return ctx
+	return context.WithValue(ctx, ctxEventKey{}, evt)
 }
 
-func getEventFromCtx(ctx context.Context) *Event {
-	evt, ok := ctx.Value(ctxEventKey{}).(*Event)
+func GetFieldsFromCtx(ctx context.Context) Fields {
+	evt, ok := ctx.Value(ctxEventKey{}).(Fields)
 	if ok {
 		return evt
 	}
@@ -88,26 +87,27 @@ func isLogDisabled(ctx context.Context) bool {
 	return b && ok
 }
 
-func createFieldCtx(ctx context.Context, mm Map) context.Context {
+type fieldMap struct {
+	fields Fields
+	name   string
+}
+
+func createFieldCtx(ctx context.Context, field *fieldMap) context.Context {
 	if ctx == nil {
 		panic("ctx is nil")
 	}
 
-	if len(mm) == 0 {
-		return ctx
-	}
-
-	return context.WithValue(ctx, ctxMapFieldKey{}, mm)
+	return context.WithValue(ctx, ctxMapFieldKey{}, field)
 }
 
-func getFieldFromCtx(ctx context.Context) Map {
+func getFieldFromCtx(ctx context.Context) *fieldMap {
 	if ctx == nil {
-		return make(Map)
+		return nil
 	}
 
-	field, ok := ctx.Value(ctxMapFieldKey{}).(Map)
+	field, ok := ctx.Value(ctxMapFieldKey{}).(*fieldMap)
 	if ok {
 		return field
 	}
-	return make(Map)
+	return nil
 }

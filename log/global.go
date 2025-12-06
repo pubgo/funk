@@ -9,54 +9,53 @@ import (
 
 	"github.com/rs/zerolog"
 	zlog "github.com/rs/zerolog/log"
-	"google.golang.org/protobuf/encoding/prototext"
+	"github.com/samber/lo"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/generic"
+	"github.com/pubgo/funk/v2"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/errors"
 )
 
 var (
-	logEnableChecker = func(ctx context.Context, lvl Level, nameOrMessage string, fields Map) bool { return true }
-	logGlobalHook    = zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, message string) {
+	logEnableChecker    EnableChecker
+	logGlobalFilterHook = zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, message string) {
 		if logEnableChecker == nil {
 			return
 		}
 
 		ctx := e.GetCtx()
-		if logEnableChecker(ctx, level, message, getFieldFromCtx(ctx)) {
+		field := getFieldFromCtx(ctx)
+
+		if field == nil {
+			return
+		}
+
+		if logEnableChecker(ctx, level, field.name, message, field.fields) {
 			return
 		}
 
 		e.Discard()
 	})
 
-	_ = generic.Init(func() {
+	_ = funk.Init(func() {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 		zerolog.ErrorMarshalFunc = func(err error) any {
 			if err == nil {
 				return nil
 			}
 
-			var errDetail string
-			switch errData := err.(type) {
-			case errors.ErrorProto:
-				errDetail = prototext.Format(errData.Proto())
-			default:
-				errDetail = fmt.Sprintf("%#v", err)
-			}
-
+			errDetail := errDetail(err)
 			id := errors.GetErrorId(err)
 			if id != "" {
-				return fmt.Sprintf("%s(%s): %s", err.Error(), id, errDetail)
+				return fmt.Sprintf("%s, error_id:%s error_detail:%s", err.Error(), id, errDetail)
 			}
 
-			return fmt.Sprintf("%s: %v", err.Error(), errDetail)
+			return fmt.Sprintf("%s: %s", err.Error(), errDetail)
 		}
 	})
 
 	// stdZeroLog default zerolog for debug
-	stdZeroLog = generic.Ptr(
+	stdZeroLog = lo.ToPtr(
 		zerolog.New(os.Stderr).
 			Level(zerolog.DebugLevel).
 			With().Timestamp().
@@ -64,11 +63,11 @@ var (
 			Output(zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
 				w.Out = os.Stderr
 				w.TimeFormat = time.RFC3339
-			})).Hook(new(hookImpl), logGlobalHook),
+			})).Hook(logGlobalFilterHook),
 	)
 
-	_ = generic.Init(func() {
-		zlog.Logger = generic.FromPtr(stdZeroLog)
+	_ = funk.Init(func() {
+		zlog.Logger = lo.FromPtr(stdZeroLog)
 	})
 
 	// stdLog is the global logger.
@@ -80,14 +79,14 @@ func GetLogger(names ...string) Logger {
 	if len(names) == 0 || names[0] == "" {
 		return stdLog
 	}
-	return stdLog.nameWithCaller(names[0], 1)
+	return stdLog.nameWithCaller(names[0], 0)
 }
 
 // SetLogger set global log
 func SetLogger(log *zerolog.Logger) {
 	assert.If(log == nil, "[log] should not be nil")
 
-	log = generic.Ptr(log.Hook(logGlobalHook))
+	log = lo.ToPtr(log.Hook(logGlobalFilterHook))
 
 	stdZeroLog = log
 	zlog.Logger = *log
@@ -166,7 +165,7 @@ func Printf(format string, v ...any) {
 }
 
 func Output(w io.Writer) Logger {
-	return New(generic.Ptr(stdZeroLog.Output(w)))
+	return New(lo.ToPtr(stdZeroLog.Output(w)))
 }
 
 type writerFunc func(p []byte) (n int, err error)
@@ -176,5 +175,5 @@ func (w writerFunc) Write(p []byte) (n int, err error) {
 }
 
 func OutputWriter(w func(p []byte) (n int, err error)) Logger {
-	return New(generic.Ptr(stdZeroLog.Output(writerFunc(w))))
+	return New(lo.ToPtr(stdZeroLog.Output(writerFunc(w))))
 }

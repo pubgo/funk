@@ -2,16 +2,19 @@ package shutil
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
 
-	"github.com/pubgo/funk/log"
+	"github.com/rs/zerolog"
+
+	"github.com/pubgo/funk/v2/log/logfields"
 	"github.com/pubgo/funk/v2/result"
 )
 
 func Run(args ...string) (r result.Result[string]) {
-	defer result.RecoveryErr(&r)
+	defer result.Recovery(&r)
 
 	b := bytes.NewBufferString("")
 
@@ -19,13 +22,9 @@ func Run(args ...string) (r result.Result[string]) {
 	cmd.Stdout = b
 
 	result.ErrOf(cmd.Run()).
-		Inspect(func(err error) {
-			log.Err(err).Msg("failed to execute: " + strings.Join(args, " "))
-		}).
-		CatchErr(&r)
-	if r.IsErr() {
-		return
-	}
+		MustWithLog(func(e *zerolog.Event) {
+			e.Str(logfields.Msg, fmt.Sprintf("failed to execute: %q", args))
+		})
 
 	return r.WithValue(strings.TrimSpace(b.String()))
 }
@@ -44,7 +43,7 @@ func GraphViz(in, out string) (err error) {
 		return ret.GetErr()
 	}
 
-	return os.WriteFile(out, []byte(ret.GetValue()), 0o600)
+	return os.WriteFile(out, []byte(ret.Unwrap()), 0o600)
 }
 
 func Shell(args ...string) *exec.Cmd {

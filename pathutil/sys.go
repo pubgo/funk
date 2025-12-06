@@ -29,9 +29,9 @@ func PathExists(path string) (bool, error) {
 func Search(fileName string, paths ...string) (fullpath string, err error) {
 	for _, path := range paths {
 		if fullpath = filepath.Join(path, fileName); Exist(fullpath) {
-			return
+			return fullpath, err
 		}
 	}
 	err = errors.New(fullpath + " not found in paths")
-	return
+	return fullpath, err
 }

@@ -4,10 +4,11 @@ import (
 	"fmt"
 
 	"github.com/nats-io/nats.go"
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/running"
-	"github.com/pubgo/lava/core/lifecycle"
+
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/component/lifecycle"
+	"github.com/pubgo/funk/v2/log"
+	"github.com/pubgo/funk/v2/running"
 )
 
 type Param struct {
@@ -28,7 +29,7 @@ func New(p Param) *Client {
 
 	nc := assert.Must1(nats.Connect(p.Cfg.Url, func(o *nats.Options) error {
 		o.AllowReconnect = true
-		o.Name = fmt.Sprintf("%s/%s/%s", running.Hostname, running.Project, running.InstanceID)
+		o.Name = fmt.Sprintf("%s/%s/%s", running.Hostname, running.Project(), running.InstanceID)
 		return nil
 	}))
 
@@ -50,7 +51,7 @@ func New(p Param) *Client {
 
 	log.Info().Bool("is_connected", nc.IsConnected()).Msg("nats connection ...")
 
-	p.Lc.BeforeStop(func() { nc.Close() })
+	p.Lc.BeforeStop(lifecycle.WrapNoCtxErr(nc.Close))
 
 	return &Client{Param: p, logger: logger, Conn: nc}
 }

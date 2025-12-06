@@ -1,32 +1,31 @@
 package env
 
 import (
+	"log/slog"
 	"strings"
+	"sync"
 
-	strcase "github.com/ettle/strcase"
+	"github.com/ettle/strcase"
 )
 
-var replacer = strcase.NewCaser(
-	true,
-	map[string]bool{"SSL": true, "HTML": false},
-	strcase.NewSplitFn(
-		[]rune{'*', '.', ',', '-', '/'},
-		strcase.SplitCase,
-		strcase.SplitAcronym,
-		strcase.PreserveNumberFormatting,
-	))
-var trim = strings.TrimSpace
+var (
+	trim     = strings.TrimSpace
+	replacer = strcase.NewCaser(
+		true,
+		map[string]bool{"SSL": true, "HTML": false},
+		strcase.NewSplitFn(
+			[]rune{'*', '.', ',', '-', '/'},
+			strcase.SplitCase,
+			strcase.SplitAcronym,
+			strcase.PreserveNumberFormatting,
+		))
+)
 
-func KeyHandler(key string) string {
-	return strings.ToUpper(trim(strings.ReplaceAll(replacer.ToSNAKE(key), "__", "_")))
+func keyHandler(key string) string {
+	key = strings.ReplaceAll(replacer.ToSNAKE(key), "__", "_")
+	return strings.ToUpper(trim(key))
 }
 
-// Normalize a-b=>a_b, a.b=>a_b, a/b=>a_b
-func Normalize(key string) (string, bool) {
-	key = trim(key)
-	if key == "" || strings.HasPrefix(key, "_") || strings.HasPrefix(key, "=") {
-		return key, false
-	}
-
-	return KeyHandler(key), true
-}
+var getLog = sync.OnceValue(func() *slog.Logger {
+	return slog.Default().WithGroup(Name)
+})

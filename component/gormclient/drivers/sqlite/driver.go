@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/component/gormclient"
-	"github.com/pubgo/funk/config"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/pathutil"
-	"github.com/pubgo/funk/recovery"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/component/gormclient"
+	"github.com/pubgo/funk/v2/config"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/pathutil"
+	"github.com/pubgo/funk/v2/recovery"
 )
 
 func init() {

@@ -5,7 +5,12 @@ package errors;
 import "errorpb/code.proto";
 import "google/protobuf/any.proto";
 
-option go_package = "github.com/pubgo/funk/proto/errorpb;errorpb";
+option go_package = "github.com/pubgo/funk/v2/proto/errorpb;errorpb";
+
+//message Tag {
+//  string key = 1;
+//  string value = 2;
+//}
 
 message ErrMsg {
   string msg = 1;
@@ -31,25 +36,23 @@ message ErrCode {
 
   // Error detail include request or other user defined information
   repeated google.protobuf.Any details = 5;
+
+  // Error id, which can be used to trace error
   optional string id = 6;
 }
 
-message ErrTrace {
-  string id = 2;
-  string operation = 3;
-  string service = 4;
-  string version = 5;
-}
+//message ErrTrace {
+//  string id = 2;
+//  string operation = 3;
+//  string service = 4;
+//  string version = 5;
+//}
 
-message Error {
-  ErrCode code = 1;
-  ErrTrace trace = 2;
-  ErrMsg msg = 3;
-}
-
-message ErrWrap {
-  map<string, string> tags = 1;
-  string caller = 2;
-  repeated string stacks = 3;
-  google.protobuf.Any error = 4;
-}
+//message ErrWrap {
+//  map<string, string> tags = 1;
+//  string caller = 2;
+//  repeated string stacks = 3;
+//  google.protobuf.Any error = 4;
+//  // Error id, which can be used to trace error
+//  optional string id = 5;
+//}

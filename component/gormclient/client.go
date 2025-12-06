@@ -3,9 +3,10 @@ package gormclient
 import (
 	"database/sql"
 
-	"github.com/pubgo/funk/result"
-	"github.com/pubgo/funk/vars"
 	"gorm.io/gorm"
+
+	"github.com/pubgo/funk/v2/result"
+	"github.com/pubgo/funk/v2/vars"
 )
 
 const Name = "orm"
@@ -23,8 +24,8 @@ func (c *Client) Ping() error {
 	return _db.Ping()
 }
 
-func (c *Client) Vars() vars.Value {
-	return func() interface{} {
+func (c *Client) Vars() vars.Func {
+	return func() any {
 		_db, err := c.DB.DB()
 		if err != nil {
 			return err.Error()
@@ -47,5 +48,5 @@ func (c *Client) Stats() (r result.Result[sql.DBStats]) {
 	if err != nil {
 		return r.WithErr(err)
 	}
-	return r.WithVal(db.Stats())
+	return r.WithValue(db.Stats())
 }

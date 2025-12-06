@@ -1,10 +1,11 @@
 package gormclient
 
 import (
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/config"
-	"github.com/pubgo/funk/recovery"
 	"gorm.io/gorm"
+
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/config"
+	"github.com/pubgo/funk/v2/recovery"
 )
 
 type Factory func(cfg config.Node) gorm.Dialector

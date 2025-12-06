@@ -1,21 +1,16 @@
 package errors
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"reflect"
-	"runtime/debug"
 
-	"github.com/pubgo/funk/pretty"
-	"github.com/pubgo/funk/proto/errorpb"
-	"github.com/pubgo/funk/stack"
-	"github.com/rs/xid"
-	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
-	"google.golang.org/protobuf/encoding/prototext"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
+
+	"github.com/pubgo/funk/v2/stack"
 )
 
 func IfErr(err error, fn func(err error) error) error {
@@ -26,71 +21,19 @@ func IfErr(err error, fn func(err error) error) error {
 	return fn(err)
 }
 
-func New(msg string) error {
-	return WrapCaller(&Err{Msg: msg, id: xid.New().String()}, 1)
+func New(msg string, tags ...Tags) error {
+	return WrapCaller(newSimpleErr(&Err{Msg: msg, id: NewErrorId(), Tags: lo.FirstOrEmpty(tags)}), 1)
 }
 
-// NewFmt
-// Deprecated: use Errorf instead
-func NewFmt(msg string, args ...interface{}) error {
-	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...), id: xid.New().String()}, 1)
+func Errorf(msg string, args ...any) error {
+	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...), id: NewErrorId()}, 1)
 }
 
-// Format
-// Deprecated: use Errorf instead
-func Format(msg string, args ...interface{}) error {
-	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...), id: xid.New().String()}, 1)
-}
-
-func Errorf(msg string, args ...interface{}) error {
-	return WrapCaller(&Err{Msg: fmt.Sprintf(msg, args...), id: xid.New().String()}, 1)
-}
-
-func NewTags(msg string, tags ...Tag) error {
-	return WrapCaller(&Err{Msg: msg, Tags: tags, id: xid.New().String()}, 1)
-}
-
-func Parse(val interface{}) error {
-	return parseError(val)
-}
-
-func Debug(err error) {
-	if err == nil {
-		return
-	}
-
-	err = parseError(err)
-	if _err, ok := err.(fmt.Stringer); ok {
-		_, _ = fmt.Fprintln(os.Stderr, _err.String())
-		return
-	}
-
-	pretty.SetDefaultMaxDepth(20)
-	pretty.Println(err)
-}
-
-func Is(err, target error) bool {
-	return errors.Is(err, target)
-}
-func Join(errs ...error) error { return errors.Join(errs...) }
-
-func UnwrapEach(err error, call func(e error) bool) {
-	if err == nil {
-		return
-	}
-
-	for {
-		if !call(err) {
-			return
-		}
-
-		err1, ok := err.(ErrUnwrap)
-		if !ok {
-			return
-		}
-
-		err = err1.Unwrap()
-	}
+func Is(err, target error) bool { return errors.Is(err, target) }
+func Join(errs ...error) error  { return errors.Join(errs...) }
+func AsA[T any](err error) (*T, bool) {
+	var target T
+	return &target, As(err, &target)
 }
 
 func As(err error, target any) bool {
@@ -121,7 +64,7 @@ func As(err error, target any) bool {
 }
 
 func Unwrap(err error) error {
-	u, ok := err.(ErrUnwrap)
+	u, ok := err.(ErrUnwrapper)
 	if !ok {
 		return nil
 	}
@@ -133,15 +76,16 @@ func WrapStack(err error) error {
 		return nil
 	}
 
-	debug.PrintStack()
-	return &ErrWrap{
-		err: handleGrpcError(err),
-		pb: &errorpb.ErrWrap{
-			Caller: stack.Caller(1).String(),
-			Stacks: lo.Map(getStack(), func(item *stack.Frame, index int) string { return item.String() }),
-			Error:  MustProtoToAny(ParseErrToPb(err)),
-		},
+	stack.Print()
+	return newErrWrapStack(err, Tags{"msg": err.Error()})
+}
+
+func WrapTagsCaller(err error, tags Tags, skip ...int) error {
+	if err == nil {
+		return nil
 	}
+
+	return newErrWrap(err, tags, lo.FirstOrEmpty(skip))
 }
 
 func WrapCaller(err error, skip ...int) error {
@@ -149,33 +93,15 @@ func WrapCaller(err error, skip ...int) error {
 		return nil
 	}
 
-	depth := 1
-	if len(skip) > 0 {
-		depth += skip[0]
-	}
-
-	return &ErrWrap{
-		err: handleGrpcError(err),
-		pb: &errorpb.ErrWrap{
-			Caller: stack.Caller(depth).String(),
-			Error:  MustProtoToAny(ParseErrToPb(err)),
-		},
-	}
+	return newErrWrap(err, Tags{"msg": err.Error()}, lo.FirstOrEmpty(skip))
 }
 
-func Wrapf(err error, format string, args ...interface{}) error {
+func Wrapf(err error, format string, args ...any) error {
 	if err == nil {
 		return nil
 	}
 
-	return &ErrWrap{
-		err: handleGrpcError(err),
-		pb: &errorpb.ErrWrap{
-			Caller: stack.Caller(1).String(),
-			Error:  MustProtoToAny(ParseErrToPb(err)),
-			Tags:   Tags{T("msg", fmt.Sprintf(format, args...))}.ToMap(),
-		},
-	}
+	return newErrWrap(err, Tags{"msg": fmt.Sprintf(format, args...)})
 }
 
 func Wrap(err error, msg string) error {
@@ -183,48 +109,15 @@ func Wrap(err error, msg string) error {
 		return nil
 	}
 
-	return &ErrWrap{
-		err: handleGrpcError(err),
-		pb: &errorpb.ErrWrap{
-			Caller: stack.Caller(1).String(),
-			Error:  MustProtoToAny(ParseErrToPb(err)),
-			Tags:   Tags{T("msg", msg)}.ToMap(),
-		},
-	}
+	return newErrWrap(err, Tags{"msg": msg})
 }
 
-func WrapMapTag(err error, tags Maps) error {
+func WrapTags(err error, tags Tags) error {
 	if err == nil {
 		return nil
 	}
 
-	if tags == nil {
-		return err
-	}
-
-	return &ErrWrap{
-		err: handleGrpcError(err),
-		pb: &errorpb.ErrWrap{
-			Caller: stack.Caller(1).String(),
-			Error:  MustProtoToAny(ParseErrToPb(err)),
-			Tags:   tags.Tags().ToMap(),
-		},
-	}
-}
-
-func WrapTag(err error, tags ...Tag) error {
-	if err == nil {
-		return nil
-	}
-
-	return &ErrWrap{
-		err: handleGrpcError(err),
-		pb: &errorpb.ErrWrap{
-			Caller: stack.Caller(1).String(),
-			Error:  MustProtoToAny(ParseErrToPb(err)),
-			Tags:   Tags(tags).ToMap(),
-		},
-	}
+	return newErrWrap(err, tags)
 }
 
 func WrapFn(err error, fn func() Tags) error {
@@ -232,84 +125,41 @@ func WrapFn(err error, fn func() Tags) error {
 		return nil
 	}
 
-	return &ErrWrap{
-		err: handleGrpcError(err),
-		pb: &errorpb.ErrWrap{
-			Caller: stack.Caller(1).String(),
-			Error:  MustProtoToAny(ParseErrToPb(err)),
-			Tags:   fn().ToMap(),
-		},
-	}
+	return newErrWrap(err, fn())
 }
 
-func WrapKV(err error, key string, value any, kvs ...any) error {
+func WrapKV(err error, key string, value any) error {
 	if err == nil {
 		return nil
 	}
 
-	var tags = Tags{T(key, value)}
-	for i := 0; i < len(kvs); i += 2 {
-		tags = append(tags, Tag{K: kvs[i].(string), V: kvs[i+1]})
-	}
-
-	return &ErrWrap{
-		err: handleGrpcError(err),
-		pb: &errorpb.ErrWrap{
-			Caller: stack.Caller(1).String(),
-			Error:  MustProtoToAny(ParseErrToPb(err)),
-			Tags:   Tags{T(key, value)}.ToMap(),
-		},
-	}
+	return newErrWrap(err, Tags{key: value})
 }
 
-func T(k string, v any) Tag {
-	return Tag{K: k, V: v}
-}
-
-func MustProtoToAny(p proto.Message) *anypb.Any {
-	switch p := p.(type) {
-	case nil:
+func JsonPrint(err error) []byte {
+	if err == nil {
 		return nil
-	case *anypb.Any:
-		return p
 	}
 
-	pb, err := anypb.New(p)
+	data, err := json.Marshal(err)
 	if err != nil {
-		log.Err(err).Str("protobuf", prototext.Format(p)).Msgf("failed to encode protobuf message to any")
-		return nil
-	} else {
-		return pb
+		slog.Error("failed to marshal error", "err", err)
+		panic(fmt.Errorf("failed to marshal error, err=%w", err))
 	}
+	return data
 }
 
-func ParseErrToPb(err error) proto.Message {
-	switch err1 := err.(type) {
-	case nil:
-		return nil
-	case ErrorProto:
-		return err1.Proto()
-	case GRPCStatus:
-		return err1.GRPCStatus().Proto()
-	case proto.Message:
-		return err1
-	default:
-		return &errorpb.ErrMsg{Msg: err.Error(), Detail: fmt.Sprintf("%v", err)}
-	}
-}
-
-func GetErrorId(err error) string {
+func DebugPrint(err error) {
 	if err == nil {
-		return ""
+		return
 	}
 
-	for err != nil {
-		if v, ok := err.(Error); ok {
-			return v.ID()
-		}
-
-		err = Unwrap(err)
+	if _err, ok := err.(fmt.Stringer); ok {
+		_, _ = fmt.Fprintln(os.Stderr, _err.String())
+		return
 	}
 
-	return ""
+	debugPretty().Println(err)
 }
+
+func GetErrorId(err error) string { return getErrorId(err) }

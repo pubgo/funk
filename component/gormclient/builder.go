@@ -3,14 +3,15 @@ package gormclient
 import (
 	"time"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/config"
-	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/merge"
+	"github.com/samber/lo"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
+
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/config"
+	"github.com/pubgo/funk/v2/log"
+	"github.com/pubgo/funk/v2/merge"
 )
 
 func NewClients(conf map[string]*Config, logs log.Logger) map[string]*Client {
@@ -23,7 +24,7 @@ func NewClients(conf map[string]*Config, logs log.Logger) map[string]*Client {
 
 func New(conf *Config, logs log.Logger) *Client {
 	logs = logs.WithName(Name)
-	conf = config.MergeR(generic.Ptr(DefaultCfg()), conf).Unwrap()
+	conf = config.MergeR(lo.ToPtr(DefaultCfg()), conf).Unwrap()
 
 	ormCfg := merge.Copy(new(gorm.Config), conf).Unwrap()
 	ormCfg.NowFunc = func() time.Time { return time.Now().UTC() }
@@ -37,6 +38,7 @@ func New(conf *Config, logs log.Logger) *Client {
 
 	factory := Get(conf.Driver)
 	assert.If(factory == nil, "driver factory[%s] not found", conf.Driver)
+
 	dialect := factory(conf.DriverCfg)
 
 	db := assert.Must1(gorm.Open(dialect, ormCfg))

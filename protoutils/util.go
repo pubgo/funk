@@ -9,12 +9,12 @@ import (
 	"strings"
 	"unicode"
 
-	pongo2 "github.com/flosch/pongo2/v6"
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/errors"
 	options "google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
+
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/errors"
 )
 
 func Append(s *string, args ...string) {
@@ -206,7 +206,7 @@ func ExtractAPIOptions(mth *descriptorpb.MethodDescriptorProto) (*options.HttpRu
 	ext := proto.GetExtension(mth.GetOptions(), options.E_Http)
 	opts, ok := ext.(*options.HttpRule)
 	if !ok {
-		return nil, errors.Format("extension is %T; want an HttpRule", ext)
+		return nil, errors.Errorf("extension is %T; want an HttpRule", ext)
 	}
 
 	return opts, nil
@@ -279,16 +279,6 @@ func camel2Case(name string) string {
 
 func trim(s string) string {
 	return strings.Trim(strings.TrimSpace(s), ".-_/")
-}
-
-type Context = pongo2.Context
-
-func Template(tpl string, m pongo2.Context) string {
-	temp := assert.Must1(pongo2.FromString(tpl))
-
-	w := bytes.NewBuffer(nil)
-	assert.Must(temp.ExecuteWriter(m, w), tpl)
-	return w.String()
 }
 
 func goZeroValue(f *descriptorpb.FieldDescriptorProto) string {

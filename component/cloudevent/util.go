@@ -7,14 +7,15 @@ import (
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/errors"
-	cloudeventpb "github.com/pubgo/funk/proto/cloudevent"
-	"github.com/pubgo/funk/protoutils"
-	"github.com/pubgo/funk/result"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/errors"
+	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
+	"github.com/pubgo/funk/v2/protoutils"
+	"github.com/pubgo/funk/v2/result"
 )
 
 func getStorageType(name string) jetstream.StorageType {
@@ -28,7 +29,7 @@ func getStorageType(name string) jetstream.StorageType {
 	}
 }
 
-func mergeJobConfig(dst *JobEventConfig, src *JobEventConfig) *JobEventConfig {
+func mergeJobConfig(dst, src *JobEventConfig) *JobEventConfig {
 	if src == nil {
 		src = handleDefaultJobConfig(nil)
 	}
@@ -72,7 +73,7 @@ func handleDefaultJobConfig(cfg *JobEventConfig) *JobEventConfig {
 	return cfg
 }
 
-func handleSubjectName(name string, prefix string) string {
+func handleSubjectName(name, prefix string) string {
 	prefix = fmt.Sprintf("%s.", prefix)
 	if strings.HasPrefix(name, prefix) {
 		return name
@@ -92,7 +93,7 @@ func decodeDelayTime(delayTime string) (r result.Result[time.Duration]) {
 		})
 
 	return result.MapTo(tt, func(t int) time.Duration {
-		return time.Until(time.UnixMilli(int64(tt.GetValue())))
+		return time.Until(time.UnixMilli(int64(t)))
 	})
 }
 
@@ -101,7 +102,7 @@ type subjectOpt struct {
 	*cloudeventpb.CloudEventMethodOptions
 }
 
-func registerSubject(subjects map[string]*cloudeventpb.CloudEventMethodOptions, subject string, operation string, data *cloudeventpb.CloudEventMethodOptions) any {
+func registerSubject(subjects map[string]*cloudeventpb.CloudEventMethodOptions, subject, operation string, data *cloudeventpb.CloudEventMethodOptions) any {
 	assert.If(subject == "", "subject is empty")
 	assert.If(operation == "", "operation is empty")
 	assert.If(data == nil, "data is nil")
@@ -121,7 +122,7 @@ func registerSubject(subjects map[string]*cloudeventpb.CloudEventMethodOptions, 
 }
 
 func getAllSubject() map[string]*cloudeventpb.CloudEventMethodOptions {
-	var subjects = make(map[string]*cloudeventpb.CloudEventMethodOptions)
+	subjects := make(map[string]*cloudeventpb.CloudEventMethodOptions)
 	for _, opt := range getAllSubjectOptions() {
 		registerSubject(subjects, opt.CloudEventServiceOptions.Name, *opt.Operation, opt.CloudEventMethodOptions)
 	}

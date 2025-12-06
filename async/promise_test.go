@@ -26,7 +26,7 @@ func TestPromise(t *testing.T) {
 			reject(err)
 		})
 
-		assert.Equal(t, future.Await().Err(), err)
+		assert.Equal(t, future.Await().GetErr(), err)
 	})
 }
 
@@ -49,7 +49,7 @@ func TestYield(t *testing.T) {
 			yield(3)
 			return err
 		})
-		assert.Equal(t, iter.Await().Err(), err)
+		assert.Equal(t, iter.Await().GetErr(), err)
 	})
 }
 
@@ -60,7 +60,7 @@ func TestGroup(t *testing.T) {
 	}()
 
 	rsp := httpGetList().Await()
-	assert.NoError(t, rsp.Err())
+	assert.NoError(t, rsp.GetErr())
 	assert.Equal(t, len(rsp.Unwrap()), 10)
 
 	data := rsp.Unwrap()

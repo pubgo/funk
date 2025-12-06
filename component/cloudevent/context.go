@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	cloudeventpb "github.com/pubgo/funk/proto/cloudevent"
 	"github.com/rs/xid"
 	"google.golang.org/protobuf/proto"
+
+	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
 )
 
 type Context struct {
@@ -86,7 +87,7 @@ func WithPushOpt(opts ...func(opt *cloudeventpb.PushEventOptions)) *cloudeventpb
 }
 
 func getOptions(ctx context.Context, opts ...*cloudeventpb.PushEventOptions) *cloudeventpb.PushEventOptions {
-	var evtOpt = new(cloudeventpb.PushEventOptions)
+	evtOpt := new(cloudeventpb.PushEventOptions)
 	opt, ok := ctx.Value(pushEventCtxKey).(*cloudeventpb.PushEventOptions)
 	if ok {
 		evtOpt = opt

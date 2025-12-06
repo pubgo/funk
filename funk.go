@@ -1,11 +1,16 @@
 package funk
 
 import (
+	"cmp"
+	_ "embed"
 	"reflect"
 	"unsafe"
-
-	"golang.org/x/exp/constraints"
 )
+
+//go:embed .version
+var releaseVersion string
+
+func ReleaseVersion() string { return releaseVersion }
 
 func AppendOf[T any](v T, vv ...T) []T {
 	return append(append(make([]T, 0, len(vv)+1), v), vv...)
@@ -16,7 +21,7 @@ func ListOf[T any](args ...T) []T {
 }
 
 func Zero[T any]() (ret T) {
-	return
+	return ret
 }
 
 // Equals wraps the '==' operator for comparable types.
@@ -25,13 +30,13 @@ func Equals[T comparable](a, b T) bool {
 }
 
 func Nil[T any]() (t *T) {
-	return
+	return t
 }
 
 //go:inline
 func FromPtr[T any](v *T) (r T) {
 	if v == nil {
-		return
+		return r
 	}
 
 	return *v
@@ -44,7 +49,7 @@ func ToPtr[T any](v T) *T {
 
 func Last[T any](args []T) (t T) {
 	if len(args) == 0 {
-		return
+		return t
 	}
 
 	return args[len(args)-1]
@@ -64,10 +69,10 @@ func TernaryFn[T any](ok bool, a, b func() T) T {
 	return b()
 }
 
-func Map[T, V any](data []T, handle func(i int, d T) V) []V {
+func Map[T, V any](data []T, handle func(d T) V) []V {
 	vv := make([]V, 0, len(data))
 	for i := range data {
-		vv = append(vv, handle(i, data[i]))
+		vv = append(vv, handle(data[i]))
 	}
 	return vv
 }
@@ -120,33 +125,33 @@ func DeleteAll[T comparable](set []T, value T) []T {
 }
 
 // Max returns the max of the 2 passed values.
-func Max[T constraints.Ordered](a, b T) (r T) {
+func Max[T cmp.Ordered](a, b T) (r T) {
 	if a < b {
 		r = b
 	} else {
 		r = a
 	}
 
-	return
+	return r
 }
 
 // Min returns the min of the 2 passed values.
-func Min[T constraints.Ordered](a, b T) (r T) {
+func Min[T cmp.Ordered](a, b T) (r T) {
 	if a < b {
 		r = a
 	} else {
 		r = b
 	}
 
-	return
+	return r
 }
 
 // isNilValue copy from <github.com/rs/zerolog.isNilValue>
-func isNilValue(i interface{}) bool {
+func isNilValue(i any) bool {
 	return (*[2]uintptr)(unsafe.Pointer(&i))[1] == 0
 }
 
-func IsNil(err interface{}) bool {
+func IsNil(err any) bool {
 	if err == nil {
 		return true
 	}
@@ -156,10 +161,6 @@ func IsNil(err interface{}) bool {
 	}
 
 	v := reflect.ValueOf(err)
-	if !v.IsValid() {
-		return true
-	}
-
 	switch v.Kind() {
 	case reflect.Chan, reflect.Func, reflect.Map, reflect.Pointer, reflect.UnsafePointer, reflect.Slice, reflect.Interface:
 		return v.IsNil()
@@ -168,11 +169,45 @@ func IsNil(err interface{}) bool {
 	}
 }
 
-func Init(fn func()) error {
+func Init(fn func()) Void {
 	fn()
-	return nil
+	return Void{}
 }
 
-func DoFunc[T any](fn func() T) T {
-	return fn()
+func DoFunc[T any](fn func() T) T { return fn() }
+func Call[T any](fn func() T) T   { return fn() }
+
+func DoSelf[T any](t T, fn func(t T)) T {
+	fn(t)
+	return t
+}
+
+type Void struct{}
+
+type Ctx[T any] map[string]T
+
+func (c Ctx[T]) ToTuple() Tuple[T] {
+	tt := make(Tuple[T], 0, len(c))
+	for k := range c {
+		tt = append(tt, KV[T]{K: k, V: c[k]})
+	}
+	return tt
+}
+
+type (
+	List[T any]  []T
+	Tuple[T any] []KV[T]
+)
+
+func (t Tuple[T]) ToCtx() Ctx[T] {
+	ctx := make(Ctx[T], len(t))
+	for i := range t {
+		ctx[t[i].K] = t[i].V
+	}
+	return ctx
+}
+
+type KV[T any] struct {
+	K string `json:"key"`
+	V T      `json:"value"`
 }

@@ -5,26 +5,29 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/running"
-	"github.com/pubgo/funk/typex"
 	"google.golang.org/protobuf/proto"
 	yaml "gopkg.in/yaml.v3"
+
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/buildinfo/version"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/typex"
 )
 
-const DefaultPrefix = "acj"
-const DefaultTimeout = 15 * time.Second
-const DefaultMaxRetry = 3
-const DefaultRetryBackoff = time.Second
-const DefaultSenderKey = "sender"
-const DefaultCloudEventDelayKey = "__cloudevent_delay_run_at"
-const DefaultJobName = "default"
-const DefaultConcurrent = 100
-const DefaultMaxConcurrent = 1000
-const DefaultMinConcurrent = 1
+const (
+	DefaultPrefix             = "acj"
+	DefaultTimeout            = 15 * time.Second
+	DefaultMaxRetry           = 3
+	DefaultRetryBackoff       = time.Second
+	DefaultSenderKey          = "sender"
+	DefaultCloudEventDelayKey = "__cloudevent_delay_run_at"
+	DefaultJobName            = "default"
+	DefaultConcurrent         = 100
+	DefaultMaxConcurrent      = 1000
+	DefaultMinConcurrent      = 1
+)
 
-var senderValue = fmt.Sprintf("%s/%s", running.Project, running.Version)
+var senderValue = fmt.Sprintf("%s/%s", version.Project(), version.Version())
 
 type Config struct {
 	// Streams: nats stream config
@@ -111,6 +114,6 @@ func (p *strOrJobConfig) UnmarshalYAML(value *yaml.Node) error {
 	default:
 		var val any
 		assert.Exit(value.Decode(&val))
-		return errors.Format("yaml kind type error,kind=%v data=%v", value.Kind, val)
+		return errors.Errorf("yaml kind type error,kind=%v data=%v", value.Kind, val)
 	}
 }

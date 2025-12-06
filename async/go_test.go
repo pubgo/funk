@@ -13,7 +13,7 @@ func TestAsync(t *testing.T) {
 	ret := Async(func() (*http.Response, error) { //nolint
 		return http.Get("https://httpbin.org")
 	}).Await()
-	assert.NoError(t, ret.Err())
+	assert.NoError(t, ret.GetErr())
 	rsp := ret.Unwrap()
 	if b := rsp.Body; b != nil {
 		defer b.Close()

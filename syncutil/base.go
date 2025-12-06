@@ -1,6 +1,6 @@
 package syncutil
 
-import "github.com/pubgo/funk/log"
+import "github.com/pubgo/funk/v2/log"
 
 const Name = "sync-util"
 

@@ -2,13 +2,20 @@ syntax = "proto3";
 
 package errors;
 
-option go_package = "github.com/pubgo/funk/proto/errorpb;errorpb";
-import "google/protobuf/descriptor.proto";
 import "errorpb/code.proto";
+import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/pubgo/funk/v2/proto/errorpb;errorpb";
 
 message Options {
+  // gen 是否生成 error code
   bool gen = 1;
+
+  // default_code 默认的 error code, 可能是 Internal
   Code default_code = 2;
+
+  // name 是生成的 error code 的变量名前缀
+  // 如果 name = Test, 那么 生成的 error code 变量名可能为 `TestErrCodeNotFound`
   string name = 3;
 }
 

@@ -4,8 +4,9 @@ import (
 	"io/fs"
 	"time"
 
-	"github.com/pubgo/funk/merge"
 	bolt "go.etcd.io/bbolt"
+
+	"github.com/pubgo/funk/v2/merge"
 )
 
 const Name = "bolt"

@@ -2,23 +2,25 @@ package cloudevent
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/pubgo/funk/ctxutil"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/errors/errcheck"
-	cloudeventpb "github.com/pubgo/funk/proto/cloudevent"
-	"github.com/pubgo/funk/result"
-	"github.com/pubgo/funk/stack"
-	"github.com/pubgo/funk/try"
-	"github.com/pubgo/funk/typex"
 	"github.com/rs/xid"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	"github.com/pubgo/funk/v2/ctxutil"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/log/logfields"
+	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
+	"github.com/pubgo/funk/v2/result"
+	"github.com/pubgo/funk/v2/stack"
+	"github.com/pubgo/funk/v2/try"
+	"github.com/pubgo/funk/v2/typex"
 )
 
 func PushEvent[T any](handler func(*Client, context.Context, T, ...*cloudeventpb.PushEventOptions) (*PubAckInfo, error), jobCli *Client, ctx context.Context, t T, opts ...*cloudeventpb.PushEventOptions) chan result.Result[*PubAckInfo] {
@@ -30,12 +32,12 @@ func PushEvent[T any](handler func(*Client, context.Context, T, ...*cloudeventpb
 	// clone ctx and recalculate timeout
 	ctx = lo.T2(ctxutil.Clone(ctx, DefaultTimeout)).A
 	go func() {
-		var getPubAck = func() (pubAck *PubAckInfo, err error) {
+		getPubAck := func() (pubAck *PubAckInfo, err error) {
 			err = try.Try(func() error {
 				pubAck, err = handler(jobCli, ctx, t, opts...)
 				return err
 			})
-			return
+			return pubAck, err
 		}
 		pubAck, err := getPubAck()
 		err = errors.IfErr(err, func(err error) error {
@@ -68,7 +70,7 @@ func PushRpcEvent[T proto.Message](handler RpcEventHandler[T], ctx context.Conte
 	timeout := ctxutil.GetTimeout(ctx)
 	now := time.Now()
 
-	var pushEventBasic = func(handler RpcEventHandler[T], ctx context.Context) error {
+	pushEventBasic := func(handler RpcEventHandler[T], ctx context.Context) error {
 		err := try.Try(func() error { return lo.T2(handler(ctx, t)).B })
 		if err == nil {
 			return nil
@@ -97,14 +99,15 @@ func (c *Client) Publish(ctx context.Context, topic string, args proto.Message, 
 }
 
 func (c *Client) publish(ctx context.Context, topic string, args proto.Message, opts ...*cloudeventpb.PushEventOptions) (_ *PubAckInfo, gErr error) {
-	var timeout = ctxutil.GetTimeout(ctx)
-	var now = time.Now()
-	var msgId = xid.New().String()
+	defer result.RecoveryErr(&gErr)
+	timeout := ctxutil.GetTimeout(ctx)
+	now := time.Now()
+	msgId := xid.New().String()
 	var pushEventOpt *cloudeventpb.PushEventOptions
 	var pubActInfo *jetstream.PubAck
 
 	defer func() {
-		var msgFn = func(e *zerolog.Event) {
+		msgFn := func(e *zerolog.Event) {
 			e.Str("pub_topic", topic)
 			e.Str("pub_start", now.String())
 			e.Any("pub_args", args)
@@ -127,20 +130,23 @@ func (c *Client) publish(ctx context.Context, topic string, args proto.Message, 
 		msgId = pushEventOpt.GetMsgId()
 	}
 
-	pb, err := anypb.New(args)
-	err = errors.IfErr(err, func(err error) error {
-		return errors.Wrap(err, "failed to marshal args to any proto")
-	})
-	if errcheck.Check(&gErr, err) {
+	proxy := result.ErrProxyOf(&gErr)
+	pb := result.Wrap(anypb.New(args)).
+		Log(func(e *zerolog.Event) {
+			e.Str(logfields.Msg, "failed to marshal args to any proto")
+		}).
+		UnwrapOrThrow(&proxy)
+	if proxy.IsErr() {
 		return
 	}
 
 	// TODO get parent event info from ctx
-	data, err := proto.Marshal(pb)
-	err = errors.IfErr(err, func(err error) error {
-		return errors.Wrap(err, "failed to marshal any proto to bytes")
-	})
-	if errcheck.Check(&gErr, err) {
+	data := result.Wrap(proto.Marshal(pb)).
+		Log(func(e *zerolog.Event) {
+			e.Str(logfields.Msg, "failed to marshal any proto to bytes")
+		}).
+		UnwrapOrThrow(&proxy)
+	if proxy.IsErr() {
 		return
 	}
 
@@ -159,11 +165,12 @@ func (c *Client) publish(ctx context.Context, topic string, args proto.Message, 
 
 	msg := &nats.Msg{Subject: topic, Data: data, Header: header}
 	jetOpts := append([]jetstream.PublishOpt{}, jetstream.WithMsgID(msgId))
-	pubActInfo, err = c.js.PublishMsg(ctx, msg, jetOpts...)
-	err = errors.IfErr(err, func(err error) error {
-		return errors.Wrapf(err, "failed to publish msg to stream, topic=%s msg_id=%s", topic, msgId)
-	})
-	if errcheck.Check(&gErr, err) {
+	pubActInfo = result.Wrap(c.js.PublishMsg(ctx, msg, jetOpts...)).
+		Log(func(e *zerolog.Event) {
+			e.Str(logfields.Msg, fmt.Sprintf("failed to publish msg to stream, topic=%s msg_id=%s", topic, msgId))
+		}).
+		UnwrapOrThrow(&proxy)
+	if gErr != nil {
 		return
 	}
 

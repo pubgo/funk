@@ -3,9 +3,10 @@ package migrates
 import (
 	"fmt"
 
-	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/merge"
+	"github.com/samber/lo"
 	"gorm.io/gorm"
+
+	"github.com/pubgo/funk/v2/merge"
 )
 
 // Migration represents a database migration (a modification to be made on the database).
@@ -47,7 +48,7 @@ func (e *DuplicatedIDError) Error() string {
 
 // New returns a new GoMigrate.
 func New(db *gorm.DB, config *Config, migrations []*Migration) *GoMigrate {
-	config = merge.Struct(generic.Ptr(DefaultConfig), config).Unwrap()
+	config = merge.Struct(lo.ToPtr(DefaultConfig), config).Unwrap()
 	return &GoMigrate{
 		db:         db,
 		options:    config,

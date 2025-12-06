@@ -1,86 +1,187 @@
-# xerror
+# Funk
 
-> go error 简单实现
+Funk is a comprehensive Go utility library that provides enhanced error handling, result types, feature flags, and various helper functions to simplify Go development.
 
-1. 高效处理golang的error, 避免处理大量的 `err!=nil` 判断
-2. 高效处理golang的recover, 让错误中包含丰富的堆栈信息
-3. xerror实现标准As,Is,Unwrap接口, 可以和其他error库一起使用
-4. 简单易用
+## Features
 
+### 🚀 Enhanced Error Handling
+- Rich error wrapping with stack traces
+- Error codes compatible with gRPC status codes
+- Detailed error context and metadata
+- Panic recovery mechanisms
 
-## 性能分析
-```sh
-go test -bench=. -benchmem -memprofile memprofile.out -cpuprofile profile.out ./...
-go tool pprof -http=":8081" profile.out
-go tool pprof -http=":8081" memprofile.out
+### 📦 Result Types
+- Functional programming-inspired Result and Error types
+- Safe error handling without explicit nil checks
+- Comprehensive API for mapping, filtering, and transforming results
+- Async support with Future types
+
+### 🎛️ Feature Flags
+- Dynamic configuration at runtime
+- Environment variable integration
+- CLI flag generation
+- Type-safe feature access
+
+### 📝 Configuration Management
+- YAML-based configuration with environment variable substitution
+- Support for configuration merging and extension
+- Expression engine for dynamic configuration values (similar to GitHub Actions workflow syntax)
+- Hot-reloading capabilities
+
+### 🪵 Structured Logging
+- High-performance logging based on zerolog
+- Context-aware logging with automatic field injection
+- Error detail capture with stack traces
+- Modular logger support with namespacing
+
+### 🌍 Environment Management
+- Normalized environment variable access
+- Type-safe environment variable retrieval
+- .env file loading and parsing
+- Environment variable expansion
+
+### 📚 Stack Trace Analysis
+- Runtime stack trace capture
+- Caller identification and metadata extraction
+- Performance-optimized stack operations
+- Deep Go runtime integration
+
+### 🔧 Utility Functions
+- Generic helper functions for slices, maps, and comparisons
+- Assertion utilities
+- Path and file utilities
+- String and formatting helpers
+
+## Installation
+
+```bash
+go get github.com/pubgo/funk/v2
 ```
 
-```md
-goos: darwin
-goarch: amd64
-pkg: github.com/pubgo/xerror
-BenchmarkPanic-8                	 1353934	       883 ns/op	     128 B/op	       2 allocs/op
-BenchmarkPanicWithOutCaller-8   	 3861938	       309 ns/op	      48 B/op	       1 allocs/op
-BenchmarkNoPanic-8              	201641330	         5.87 ns/op	       0 B/op	       0 allocs/op
-PASS
-ok      github.com/pubgo/xerror 4.363s
-```
+## Quick Start
 
-## example
+### Error Handling
 ```go
-package xerror_test
+import "github.com/pubgo/funk/v2/errors"
 
-import (
-	"fmt"
-	"testing"
+err := errors.New("something went wrong", errors.Tags{"component": "database"})
+err = errors.Wrap(err, "failed to connect")
+errors.DebugPrint(err)
+```
 
-	"github.com/pubgo/xerror"
-)
+### Result Types
+```go
+import "github.com/pubgo/funk/v2/result"
 
-func TestErr(t *testing.T) {
-	fmt.Println(xerror.Wrap(xerror.ErrAssert))
+// Create a successful result
+res := result.OK(42)
+
+// Create a failed result
+errRes := result.Fail[int](errors.New("calculation failed"))
+
+// Safely unwrap values
+if value, ok := res.TryUnwrap(); ok {
+    fmt.Printf("Got value: %d\n", value)
 }
 
-func TestParseWith(t *testing.T) {
-	var err = fmt.Errorf("hello error")
-	xerror.ParseWith(err, func(err xerror.XErr) {
-		fmt.Printf("%v\n", err)
-	})
-}
+// Chain operations
+result := result.OK(10).
+    Map(func(x int) int { return x * 2 }).
+    FlatMap(func(x int) result.Result[int] {
+        if x > 0 {
+            return result.OK(x + 1)
+        }
+        return result.Fail[int](errors.New("negative value"))
+    })
+```
 
-func TestRespTest(t *testing.T) {
-	defer xerror.RespTest(t)
-	TestPanic1(t)
-}
+### Feature Flags
+```go
+import "github.com/pubgo/funk/v2/features"
 
-func TestRespNext(t *testing.T) {
-	defer xerror.RespExit("TestRespNext")
-	TestPanic1(t)
-}
+// Define a feature flag
+var debugMode = features.Bool("debug", false, "Enable debug mode")
 
-func TestPanic1(t *testing.T) {
-	//defer xerror.RespExit()
-	defer xerror.RespRaise(func(err xerror.XErr) error {
-		return xerror.WrapF(err, "test raise")
-	})
-
-	//xerror.Panic(xerror.New("ok"))
-	xerror.Panic(fmt.Errorf("ss"))
-}
-
-func init1Next() (err error) {
-	defer xerror.RespErr(&err)
-	xerror.Panic(fmt.Errorf("test next"))
-	return nil
-}
-
-func BenchmarkNoPanic(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = func() (err error) {
-			defer xerror.RespErr(&err)
-			xerror.Panic(nil)
-			return
-		}()
-	}
+// Use the feature flag
+if debugMode.Value() {
+    log.Println("Debug mode enabled")
 }
 ```
+
+### Configuration
+```go
+import "github.com/pubgo/funk/v2/config"
+
+type Config struct {
+    Server struct {
+        Host string `yaml:"host"`
+        Port int    `yaml:"port"`
+    } `yaml:"server"`
+}
+
+cfg := config.Load[Config]()
+fmt.Printf("Server will run on %s:%d\n", cfg.T.Server.Host, cfg.T.Server.Port)
+```
+
+### Logging
+```go
+import "github.com/pubgo/funk/v2/log"
+
+logger := log.GetLogger("myapp")
+logger.Info().Msg("Application started")
+logger.Err(someError).Msg("An error occurred")
+```
+
+### Environment Variables
+```go
+import "github.com/pubgo/funk/v2/env"
+
+// Get environment variable with fallback
+host := env.GetOr("SERVER_HOST", "localhost")
+
+// Type-safe environment variable access
+port := env.GetInt("SERVER_PORT", "PORT")
+debug := env.GetBool("DEBUG")
+```
+
+### Stack Trace Analysis
+```go
+import "github.com/pubgo/funk/v2/stack"
+
+// Capture current stack trace
+frames := stack.Trace()
+
+// Get caller information
+caller := stack.Caller(0)
+fmt.Printf("Called from: %s:%d\n", caller.File, caller.Line)
+```
+
+## Modules
+
+- **errors**: Enhanced error handling with wrapping, stack traces, and metadata
+- **result**: Functional Result and Error types for safer error handling
+- **features**: Feature flag system for runtime configuration
+- **assert**: Assertion utilities for testing and validation
+- **config**: Configuration management with multiple sources
+- **log**: Enhanced logging capabilities
+- **env**: Environment variable management
+- **stack**: Stack trace analysis and caller identification
+
+## Documentation
+
+For detailed documentation, please visit:
+- [Error Handling](./errors/README.md)
+- [Result Types](./result/README.md)
+- [Feature Flags](./features/README.md)
+- [Configuration](./config/README.md)
+- [Logging](./log/README.md)
+- [Environment](./env/README.md)
+- [Stack](./stack/README.md)
+
+## Contributing
+
+Contributions are welcome! Please read our contributing guidelines before submitting pull requests.
+
+## License
+
+MIT

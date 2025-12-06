@@ -3,22 +3,21 @@ package errors_test
 import (
 	"testing"
 
-	"github.com/pubgo/funk/errors"
-
-	"github.com/pubgo/funk/stack"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/stack"
 )
 
 func TestStack(t *testing.T) {
-	err := errors.WrapCaller(errors.New("hello error"))
+	err := errors.WrapCaller(errors.New("hello error", errors.Tags{"name": "value"}))
 	err = errors.Wrap(err, "next error")
-	err = errors.WrapTag(err,
-		errors.T("event", "test event"),
-		errors.T("test123", 123),
-		errors.T("test", "hello"),
-		errors.T("fn_stack", stack.CallerWithFunc(stack.CallerWithFunc)),
-	)
+	err = errors.WrapTags(err, errors.Tags{
+		"event":    "test event",
+		"test123":  123,
+		"test":     "hello",
+		"fn_stack": stack.CallerWithFunc(stack.CallerWithFunc),
+	})
 
 	err = errors.WrapStack(err)
 	err = errors.Wrapf(err, "next error name=%s", "wrapf")
-	errors.Debug(err)
+	errors.DebugPrint(err)
 }

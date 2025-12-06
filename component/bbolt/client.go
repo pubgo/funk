@@ -4,16 +4,17 @@ import (
 	"context"
 	"path/filepath"
 
+	result2 "github.com/pubgo/funk/v2/result"
+
 	bolt "go.etcd.io/bbolt"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/config"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/log"
-	"github.com/pubgo/funk/merge"
-	"github.com/pubgo/funk/pathutil"
-	"github.com/pubgo/funk/strutil"
-	"github.com/pubgo/funk/v2/result"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/config"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/log"
+	"github.com/pubgo/funk/v2/merge"
+	"github.com/pubgo/funk/v2/pathutil"
+	"github.com/pubgo/funk/v2/strutil"
 )
 
 func New(cfg *Config, log log.Logger) *Client {
@@ -46,7 +47,7 @@ func (t *Client) Set(ctx context.Context, key string, val []byte, names ...strin
 	}, names...)
 }
 
-func (t *Client) Get(ctx context.Context, key string, names ...string) result.Result[[]byte] {
+func (t *Client) Get(ctx context.Context, key string, names ...string) result2.Result[[]byte] {
 	var (
 		val []byte
 		err = t.View(ctx, func(bucket *bolt.Bucket) error {
@@ -55,7 +56,7 @@ func (t *Client) Get(ctx context.Context, key string, names ...string) result.Re
 		}, names...)
 	)
 
-	return result.Wrap(val, err)
+	return result2.Wrap(val, err)
 }
 
 func (t *Client) List(ctx context.Context, fn func(k, v []byte) error, names ...string) error {

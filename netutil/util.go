@@ -9,28 +9,34 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pubgo/funk/assert"
+	"github.com/pubgo/funk/v2/assert"
 )
 
-var localIp = assert.Exit1(regexp.Compile(`\d+\.\d+\.\d+\.\d+`))
+var localIpReg = assert.Exit1(regexp.Compile(`\d+\.\d+\.\d+\.\d+`))
 
 func GetLocalIP() string {
-	localIP := "localhost"
+	localIP := "127.0.0.1"
 
-	// skip the error since we don't want to break RPC calls because of it
-	addresses, err := net.InterfaceAddrs()
+	interfaces, err := net.Interfaces()
 	if err != nil {
 		return localIP
 	}
 
-	for _, addr := range addresses {
-		items := strings.Split(addr.String(), "/")
-		if len(items) < 2 || items[0] == "127.0.0.1" {
+	for _, netInterface := range interfaces {
+		if netInterface.Name != "en0" {
 			continue
 		}
 
-		if localIp.MatchString(items[0]) {
-			localIP = items[0]
+		addresses, _ := netInterface.Addrs()
+		for _, addr := range addresses {
+			items := strings.Split(addr.String(), "/")
+			if len(items) < 2 || items[0] == "127.0.0.1" {
+				continue
+			}
+
+			if localIpReg.MatchString(items[0]) {
+				localIP = items[0]
+			}
 		}
 	}
 

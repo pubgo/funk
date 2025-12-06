@@ -10,23 +10,24 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/nats-io/nats.go/jetstream"
 	ants "github.com/panjf2000/ants/v2"
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/component/natsclient"
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/errors/errcheck"
-	"github.com/pubgo/funk/internal/anyhow"
-	"github.com/pubgo/funk/log"
-	cloudeventpb "github.com/pubgo/funk/proto/cloudevent"
-	"github.com/pubgo/funk/running"
-	"github.com/pubgo/funk/stack"
-	"github.com/pubgo/funk/try"
-	"github.com/pubgo/funk/typex"
-	"github.com/pubgo/funk/version"
-	"github.com/pubgo/lava/core/lifecycle"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/buildinfo/version"
+	"github.com/pubgo/funk/v2/component/lifecycle"
+	"github.com/pubgo/funk/v2/component/natsclient"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/log"
+	"github.com/pubgo/funk/v2/log/logfields"
+	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
+	"github.com/pubgo/funk/v2/result"
+	"github.com/pubgo/funk/v2/running"
+	"github.com/pubgo/funk/v2/stack"
+	"github.com/pubgo/funk/v2/try"
+	"github.com/pubgo/funk/v2/typex"
 )
 
 type Params struct {
@@ -73,7 +74,7 @@ type Client struct {
 }
 
 func (c *Client) initStream() (r error) {
-	defer errcheck.RecoveryAndCheck(&r)
+	defer result.RecoveryErr(&r)
 
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultTimeout)
 	defer cancel()
@@ -91,27 +92,23 @@ func (c *Client) initStream() (r error) {
 			Subjects: streamSubjects,
 			Metadata: metadata,
 			Storage:  storageType,
-			//Retention: jetstream.InterestPolicy,
+			// Retention: jetstream.InterestPolicy,
 
 			// Duplicates is the window within which to track duplicate messages.
 			// If not set, server default is 2 minutes.
 			Duplicates: time.Minute * 5,
 		}
 
-		stream, err := c.js.CreateOrUpdateStream(ctx, streamCfg)
-		err = errors.IfErr(err, func(err error) error {
-			return errors.Wrapf(err, "failed to create stream:%s", streamName)
+		stream := result.Wrap(c.js.CreateOrUpdateStream(ctx, streamCfg)).UnwrapOrLog(func(e *zerolog.Event) {
+			e.Str(logfields.Msg, fmt.Sprintf("failed to create stream:%s", streamName))
 		})
-		if errcheck.Check(&r, err) {
-			return
-		}
 		c.streams[streamName] = stream
 	}
-	return
+	return r
 }
 
 func (c *Client) initConsumer() (r error) {
-	defer errcheck.RecoveryAndCheck(&r)
+	defer result.RecoveryErr(&r)
 
 	allEventKeysSet := mapset.NewSet(lo.MapToSlice(c.subjects, func(key string, value *cloudeventpb.CloudEventMethodOptions) string { return c.subjectName(key) })...)
 
@@ -198,13 +195,13 @@ func (c *Client) initConsumer() (r error) {
 			})
 		}
 	}
-	return
+	return r
 }
 
 func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects map[string]*jobEventHandler, concurrent int) func(msg jetstream.Msg) {
-	var handler = func(msg jetstream.Msg) {
-		var now = time.Now()
-		var addMsgInfo = func(e *zerolog.Event) {
+	handler := func(msg jetstream.Msg) {
+		now := time.Now()
+		addMsgInfo := func(e *zerolog.Event) {
 			e.Str("stream", streamName)
 			e.Str("consumer", consumerName)
 			e.Any("header", msg.Headers())
@@ -219,31 +216,35 @@ func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects m
 			e.Msg("received cloud job event")
 		})
 
-		var handlerDelayJob = func() (_ bool, gErr error) {
+		handlerDelayJob := func() (r result.Result[bool]) {
 			delayDur := strings.TrimSpace(msg.Headers().Get(DefaultCloudEventDelayKey))
 			if delayDur == "" {
-				return false, nil
+				return r.WithValue(false)
 			}
 
 			dur := decodeDelayTime(delayDur).
 				MapErr(func(err error) error {
 					return errors.Wrap(err, "failed to parse cloud job delay time")
 				}).
-				UnwrapErr(&gErr)
-			if gErr != nil {
+				UnwrapOrThrow(&r)
+			if r.IsErr() {
 				return
 			}
 
-			durVal := dur
 			// ignore negative delay
-			if durVal < 0 {
-				return false, nil
+			if dur < 0 {
+				return r.WithValue(false)
 			}
 
-			return true, msg.NakWithDelay(durVal)
+			r = r.WithErr(msg.NakWithDelay(dur))
+			if r.IsErr() {
+				return
+			}
+
+			return r.WithValue(true)
 		}
 
-		if ok, err := handlerDelayJob(); err != nil {
+		if ok, err := handlerDelayJob().UnwrapErr(); err != nil {
 			logger.Err(err).Func(addMsgInfo).Msg("failed to handle cloud delay job and no ack")
 			return
 		} else if ok {
@@ -264,8 +265,8 @@ func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects m
 			return
 		}
 
-		var cfg = handler.cfg
-		var checkErrAndLog = func(err error, msg string) {
+		cfg := handler.cfg
+		checkErrAndLog := func(err error, msg string) {
 			if err == nil {
 				return
 			}
@@ -292,8 +293,8 @@ func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects m
 			return
 		}
 
-		var backoff = lo.FromPtr(cfg.RetryBackoff)
-		var maxRetries = lo.FromPtr(cfg.MaxRetry)
+		backoff := lo.FromPtr(cfg.RetryBackoff)
+		maxRetries := lo.FromPtr(cfg.MaxRetry)
 
 		// If the error is a redelivery error, then the backoff duration is the error duration
 		if err1 := isRedeliveryErr(err); err1 != nil {
@@ -349,12 +350,12 @@ func (c *Client) doErrHandler(streamName, consumerName string) jetstream.PullCon
 	})
 }
 
-func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *jobEventHandler, cfg *JobEventConfig) (gErr anyhow.Error) {
-	var timeout = lo.FromPtr(cfg.Timeout)
+func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *jobEventHandler, cfg *JobEventConfig) (gErr result.Error) {
+	timeout := lo.FromPtr(cfg.Timeout)
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	ctx = log.UpdateEventCtx(ctx, log.Map{
+	ctx = log.UpdateFieldsCtx(ctx, log.Fields{
 		"sub_subject":                 msg.Subject(),
 		"sub_stream":                  meta.Stream,
 		"sub_consumer":                meta.Consumer,
@@ -373,7 +374,7 @@ func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *
 		Config:       cfg,
 	}
 
-	var now = time.Now()
+	now := time.Now()
 	var args any
 	defer func() {
 		if gErr.IsOK() {
@@ -391,43 +392,43 @@ func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *
 	}()
 
 	var pb anypb.Any
-	err := anyhow.ErrOf(proto.Unmarshal(msg.Data(), &pb)).
-		Map(func(err error) error {
-			return errors.WrapTag(err,
-				errors.T("msg", "failed to unmarshal stream msg data to any proto"),
-				errors.T("args", string(msg.Data())),
-			)
+	err := result.ErrOf(proto.Unmarshal(msg.Data(), &pb)).
+		MapErr(func(err error) error {
+			return errors.WrapTags(err, errors.Tags{
+				"msg":  "failed to unmarshal stream msg data to any proto",
+				"args": string(msg.Data()),
+			})
 		})
-	if err.CatchErr(&gErr) {
+	if err.ThrowErr(&gErr) {
 		return
 	}
 	args = &pb
 
-	dst := anyhow.Wrap(anypb.UnmarshalNew(args.(*anypb.Any), proto.UnmarshalOptions{})).
+	dst := result.Wrap(anypb.UnmarshalNew(args.(*anypb.Any), proto.UnmarshalOptions{})).
 		MapErr(func(err error) error {
-			return errors.WrapTag(err,
-				errors.T("msg", "failed to unmarshal any proto to proto msg"),
-				errors.T("args", args),
-			)
+			return errors.WrapTags(err, errors.Tags{
+				"msg":  "failed to unmarshal any proto to proto msg",
+				"args": args,
+			})
 		})
-	if dst.CatchErr(&gErr) {
+	if dst.ThrowErr(&gErr) {
 		return
 	}
 
 	ctx = createCtxWithContext(ctx, msgCtx)
-	err = anyhow.ErrOf(job.handler(ctx, dst.GetValue())).
-		Map(func(err error) error {
-			return errors.WrapTag(err,
-				errors.T("msg", "failed to do cloud job handler"),
-				errors.T("args", dst),
-				errors.T("any_pb", dst),
-			)
+	err = result.ErrOf(job.handler(ctx, dst.Unwrap())).
+		MapErr(func(err error) error {
+			return errors.WrapTags(err, errors.Tags{
+				"msg":    "failed to do cloud job handler",
+				"args":   dst,
+				"any_pb": dst,
+			})
 		})
 	return err
 }
 
 func (c *Client) doConsume() (r error) {
-	defer errcheck.RecoveryAndCheck(&r)
+	defer result.RecoveryErr(&r)
 	for streamName, consumers := range c.consumers {
 		for consumerName, consumer := range consumers {
 			assert.If(c.jobs[streamName] == nil, "stream not found, stream=%s", streamName)
@@ -454,10 +455,10 @@ func (c *Client) doConsume() (r error) {
 				c.doConsumeHandler(streamName, consumerName, jobSubjects, concurrent),
 				c.doErrHandler(streamName, consumerName),
 			))
-			c.p.Lc.BeforeStop(func() { con.Stop() })
+			c.p.Lc.BeforeStop(lifecycle.WrapNoCtxErr(con.Stop))
 		}
 	}
-	return
+	return r
 }
 
 func (c *Client) Start() error {

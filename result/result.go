@@ -1,315 +1,329 @@
 package result
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"runtime/debug"
 
-	"github.com/pubgo/funk/errors"
-	"github.com/pubgo/funk/generic"
-	"github.com/pubgo/funk/stack"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 	"github.com/samber/lo"
+
+	"github.com/pubgo/funk/v2"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/log/logfields"
 )
 
-var _ error = (*Error)(nil)
-
-type Error struct {
-	Msg   string
-	Stack string
-}
-
-func (e Error) String() string {
-	return fmt.Sprintf("%s:\n%s", e.Msg, e.Stack)
-}
-
-func (e Error) Error() string {
-	return e.String()
-}
-
-type R[T any] interface {
-	Unwrap() T
-	IsErr() bool
-	Err() error
-	Expect(format string, args ...any) T
-}
-
-func OK[T any](v T) Result[T] {
-	return Result[T]{v: &v}
-}
-
-func Err[T any](err error) Result[T] {
-	return Result[T]{E: errors.WrapCaller(err, 1)}
-}
-
-func Wrap[T any](v T, err error) Result[T] {
-	return Result[T]{v: &v, E: errors.WrapCaller(err, 1)}
-}
-
-func Of[T any](v T, err error) Result[T] {
-	return Result[T]{v: &v, E: errors.WrapCaller(err, 1)}
-}
+var (
+	_ Checkable = new(Result[any])
+	_ ErrSetter = new(Result[any])
+)
 
 type Result[T any] struct {
-	v *T
-	E error
+	_ [0]func() // disallow ==
+
+	v   *T
+	err error
 }
 
-func (r Result[T]) WithErrorf(format string, args ...any) Result[T] {
-	return Result[T]{E: errors.WrapCaller(errors.Errorf(format, args...), 1)}
+func (r Result[T]) WithFn(fn func() (T, error)) Result[T] {
+	if r.IsErr() {
+		return Result[T]{err: errors.WrapCaller(r.getErr(), 1)}
+	}
+
+	return WrapFn(fn)
 }
 
-func (r Result[T]) WithErr(err error) Result[T] {
-	return Result[T]{E: errors.WrapCaller(err, 1)}
-}
+func (r Result[T]) WithValue(v T) Result[T] {
+	if r.IsErr() {
+		return Result[T]{err: errors.WrapCaller(r.getErr(), 1)}
+	}
 
-func (r Result[T]) WithVal(v T) Result[T] {
 	return OK(v)
 }
 
-func (r Result[T]) ValueTo(v *T) error {
+func (r Result[T]) ValueTo(v *T) Error {
 	if r.IsErr() {
-		return errors.WrapCaller(r.E, 1)
+		return newError(errors.WrapCaller(r.getErr(), 1))
 	}
 
-	*v = generic.FromPtr(r.v)
-	return nil
-}
-
-func (r Result[T]) OnValue(fn func(t T) error) error {
-	if r.IsErr() {
-		return r.E
+	if v == nil {
+		return newError(errors.WrapStack(errors.New("v param is nil")))
 	}
 
-	return errors.WrapCaller(fn(generic.FromPtr(r.v)), 1)
+	*v = r.getValue()
+	return Error{}
 }
 
-func (r Result[T]) OnErr(check func(err error)) {
+func (r Result[T]) UnwrapOrLog(events ...func(e *zerolog.Event)) T {
+	if r.IsErr() {
+		panicIfError(errors.WrapCaller(r.getErr(), 1), events...)
+	}
+
+	return r.getValue()
+}
+
+// TryUnwrap attempts to unwrap the value, returning it and a boolean indicating success
+// This method is useful when you want to safely extract a value from a Result
+// without triggering a panic. It returns the value (or zero value if error)
+// and a boolean indicating whether the extraction was successful.
+//
+// Example:
+//
+//	if value, ok := result.TryUnwrap(); ok {
+//	    fmt.Printf("Success: %v\n", value)
+//	} else {
+//	    fmt.Println("Operation failed")
+//	}
+func (r Result[T]) TryUnwrap() (T, bool) {
+	if r.IsErr() {
+		var zero T
+		return zero, false
+	}
+	return r.getValue(), true
+}
+
+// Match allows pattern matching on the Result, applying the appropriate function
+// This method provides a way to handle both success and error cases in a single operation
+// similar to pattern matching in functional languages.
+//
+// Example:
+//
+//	result.OK(42).Match(
+//	    func(value int) { fmt.Printf("Success: %d\n", value) },
+//	    func(err error) { fmt.Printf("Error: %v\n", err) },
+//	)
+func (r Result[T]) Match(onOk func(T), onErr func(error)) {
 	if r.IsOK() {
+		onOk(r.getValue())
+	} else {
+		onErr(r.getErr())
+	}
+}
+
+// MatchWithResult allows pattern matching with a result-returning function
+// This method is similar to Match, but both handler functions return a Result[T],
+// allowing for chaining operations that may themselves produce Results.
+//
+// Example:
+//
+//	result.OK(42).MatchWithResult(
+//	    func(value int) result.Result[int] { return result.OK(value * 2) },
+//	    func(err error) result.Result[int] { return result.Fail[int](err) },
+//	)
+func (r Result[T]) MatchWithResult(onOk func(T) Result[T], onErr func(error) Result[T]) Result[T] {
+	if r.IsOK() {
+		return onOk(r.getValue())
+	}
+	return onErr(r.getErr())
+}
+
+func (r Result[T]) Must(events ...func(e *zerolog.Event)) {
+	if r.IsErr() {
+		panicIfError(errors.WrapCaller(r.getErr(), 1), events...)
+	}
+}
+
+func (r Result[T]) Unwrap() T {
+	if r.IsErr() {
+		panicIfError(errors.WrapCaller(r.getErr(), 1))
+	}
+	return r.getValue()
+}
+
+func (r Result[T]) UnwrapErr() (T, error) {
+	if r.IsErr() {
+		var zero T
+		return zero, r.getErr()
+	}
+	return r.getValue(), nil
+}
+
+func (r Result[T]) Or(defaultVal T) Result[T] {
+	if r.IsErr() {
+		return OK(defaultVal)
+	}
+	return r
+}
+
+func (r Result[T]) UnwrapOr(defaultVal T) T {
+	if r.IsErr() {
+		return defaultVal
+	}
+	return r.getValue()
+}
+
+func (r Result[T]) OrElse(fn func() T) Result[T] {
+	if r.IsErr() {
+		return OK(fn())
+	}
+	return r
+}
+
+func (r Result[T]) UnwrapOrElse(fn func() T) T {
+	if r.IsErr() {
+		return fn()
+	}
+	return r.getValue()
+}
+
+func (r Result[T]) UnwrapOrEmpty() (t T) {
+	if r.IsErr() {
 		return
 	}
-
-	check(r.E)
+	return r.getValue()
 }
 
-func (r Result[T]) GetErr() error {
-	if r.IsOK() {
-		return nil
-	}
-
-	return errors.WrapCaller(r.E, 1)
+func (r Result[T]) ThrowErr(setter ErrSetter, contexts ...context.Context) bool {
+	return catchErr(ErrOf(r.err), setter, nil, contexts...)
 }
 
-func (r Result[T]) Err(check ...func(err error) error) error {
-	if r.IsOK() {
-		return nil
+func (r Result[T]) UnwrapOrThrow(setter ErrSetter, contexts ...context.Context) (t T) {
+	ret, err := unwrapErr(r, nil, setter, contexts...)
+	if err != nil {
+		setError(setter, errors.WrapCaller(err, 1))
 	}
-
-	if len(check) > 0 && check[0] != nil {
-		return errors.WrapCaller(check[0](r.E), 1)
-	}
-
-	return errors.WrapCaller(r.E, 1)
-}
-
-func (r Result[T]) IsErr() bool { return r.E != nil }
-
-func (r Result[T]) IsOK() bool { return r.E == nil }
-
-func (r Result[T]) OrElse(v T) T {
-	if r.IsErr() {
-		return v
-	}
-	return generic.FromPtr(r.v)
-}
-
-func (r Result[T]) UnwrapErr(setter *error) T {
-	if setter == nil {
-		debug.PrintStack()
-		panic("UnwrapErr: setter is nil")
-	}
-
-	if r.IsErr() {
-		*setter = errors.WrapCaller(r.E, 1)
-	}
-
-	return lo.FromPtr(r.v)
-}
-
-func (r Result[T]) Unwrap(check ...func(err error) error) T {
-	if r.IsOK() {
-		return generic.FromPtr(r.v)
-	}
-
-	if len(check) > 0 && check[0] != nil {
-		panic(check[0](r.E))
-	} else {
-		panic(r.E)
-	}
-}
-
-func (r Result[T]) GetValue() T {
-	if r.IsOK() {
-		return generic.FromPtr(r.v)
-	}
-
-	panic(errors.WrapStack(r.E))
+	return ret
 }
 
 func (r Result[T]) Expect(format string, args ...any) T {
-	if r.IsOK() {
-		return generic.FromPtr(r.v)
+	if r.IsErr() {
+		err := errors.WrapCaller(r.getErr(), 1)
+		panicIfError(err, func(e *zerolog.Event) {
+			e.Str(logfields.Msg, fmt.Sprintf(format, args...))
+		})
 	}
 
-	panic(errors.WrapStack(errors.Wrapf(r.E, format, args...)))
+	return r.getValue()
+}
+
+func (r Result[T]) IsErr() bool { return r.getErr() != nil }
+
+func (r Result[T]) IsOK() bool { return r.getErr() == nil }
+
+func (r Result[T]) InspectErr(fn func(err error)) {
+	if r.IsErr() {
+		fn(r.getErr())
+	}
+}
+
+func (r Result[T]) Inspect(fn func(val T)) {
+	if r.IsOK() {
+		fn(r.getValue())
+	}
+}
+
+// IfErr executes fn if the result is an error, then returns the result unchanged.
+// This is similar to InspectErr but allows chaining with other operations.
+func (r Result[T]) IfErr(fn func(err error)) Result[T] {
+	if r.IsErr() {
+		fn(r.getErr())
+	}
+	return r
+}
+
+// IfOK executes fn if the result is OK, then returns the result unchanged.
+// This is similar to Inspect but allows chaining with other operations.
+func (r Result[T]) IfOK(fn func(val T)) Result[T] {
+	if r.IsOK() {
+		fn(r.getValue())
+	}
+	return r
+}
+
+func (r Result[T]) LogCtx(ctx context.Context, events ...func(e *zerolog.Event)) Result[T] {
+	logErr(ctx, 0, r.err, events...)
+	return r
+}
+
+func (r Result[T]) Log(events ...func(e *zerolog.Event)) Result[T] {
+	logErr(context.Background(), 0, r.err, events...)
+	return r
+}
+
+func (r Result[T]) Validate(fn func(val T) error) Result[T] {
+	if r.IsErr() {
+		return r
+	}
+
+	val := r.getValue()
+	err := fn(val)
+	if err != nil {
+		return Fail[T](errors.WrapCaller(err, 1))
+	}
+	return OK(val)
+}
+
+func (r Result[T]) Map(fn func(val T) T) Result[T] {
+	if r.IsErr() {
+		return r
+	}
+	return OK(fn(r.getValue()))
+}
+
+func (r Result[T]) FlatMap(fn func(val T) Result[T]) Result[T] {
+	if r.IsErr() {
+		return r
+	}
+	return fn(r.getValue())
+}
+
+func (r Result[T]) MapErr(fn func(err error) error) Result[T] {
+	if r.IsOK() {
+		return r
+	}
+	return Fail[T](fn(r.getErr()))
+}
+
+func (r Result[T]) MapErrOr(fn func(err error) Result[T]) Result[T] {
+	if r.IsOK() {
+		return r
+	}
+	return fn(r.getErr())
+}
+
+func (r Result[T]) GetErr() error { return r.Err() }
+
+func (r Result[T]) Err() error {
+	if r.IsOK() {
+		return nil
+	}
+
+	return r.getErr()
 }
 
 func (r Result[T]) String() string {
 	if r.IsOK() {
-		return fmt.Sprintf("%v", generic.FromPtr(r.v))
+		return fmt.Sprintf("OK(%v)", r.getValue())
+	}
+	return fmt.Sprintf("Error(%v)", r.getErr())
+}
+
+func (r Result[T]) WithErrorf(format string, args ...any) Result[T] {
+	err := fmt.Errorf(format, args...)
+	err = errors.WrapCaller(err, 1)
+	return Result[T]{err: err}
+}
+
+func (r Result[T]) WithErr(err error, tags ...errors.Tags) Result[T] {
+	if err == nil {
+		return r
 	}
 
-	return fmt.Sprint(errors.WrapCaller(r.E, 1))
+	err = errors.WrapTagsCaller(err, lo.FirstOrEmpty(tags), 1)
+	return Result[T]{err: err}
 }
 
 func (r Result[T]) MarshalJSON() ([]byte, error) {
 	if r.IsErr() {
-		return nil, errors.WrapCaller(r.E, 1)
+		return nil, errors.WrapCaller(r.err, 1)
 	}
 
-	return json.Marshal(generic.FromPtr(r.v))
+	return json.Marshal(funk.FromPtr(r.v))
 }
 
-func (r Result[T]) UnmarshalJSON([]byte) error {
-	panic("unimplemented")
-}
+func (r Result[T]) getValue() T { return lo.FromPtr(r.v) }
 
-func (r Result[T]) Do(fn func(v T)) {
-	if r.IsErr() {
-		return
-	}
+func (r Result[T]) getErr() error { return r.err }
 
-	fn(generic.FromPtr(r.v))
-}
-
-func (r Result[T]) CatchTo(setter *error, callbacks ...func(err error) error) bool {
-	if setter == nil {
-		debug.PrintStack()
-		panic("CatchTo: setter is nil")
-	}
-
-	if r.IsOK() {
-		return false
-	}
-
-	// setter err is not nil
-	if *setter != nil {
-		log.Err(*setter).Msgf("CatchTo: setter error is not nil")
-		return true
-	}
-
-	var err = r.E
-	for _, fn := range callbacks {
-		err = fn(err)
-		if err == nil {
-			return false
-		}
-	}
-
-	*setter = errors.WrapCaller(err, 1)
-	return true
-}
-
-func (r Result[T]) InspectErr(fn func(error)) Result[T] {
-	if r.IsErr() {
-		fn(r.E)
-	}
-	return r
-}
-
-func (r Result[T]) Inspect(fn func(T)) Result[T] {
-	if r.IsOK() {
-		fn(generic.FromPtr(r.v))
-	}
-	return r
-}
-
-func (r Result[T]) FlatMap(fn func(T) Result[T]) Result[T] {
-	if r.IsOK() {
-		return r
-	}
-	return fn(generic.FromPtr(r.v))
-}
-
-func (r Result[T]) Map(fn func(T) T) Result[T] {
-	if r.IsOK() {
-		return r
-	}
-	return OK(fn(generic.FromPtr(r.v)))
-}
-
-func (r Result[T]) MapErr(fn func(error) error) Result[T] {
-	if r.IsOK() {
-		return r
-	}
-	return Err[T](fn(r.E))
-}
-
-func MapTo[Src any, To any](s Result[Src], do func(s Src) To) Result[To] {
-	if s.IsErr() {
-		return Err[To](errors.WrapCaller(s.Err(), 1))
-	}
-
-	return OK(do(s.Unwrap()))
-}
-
-func FlatMap[Src any, To any](s Result[Src], do func(s Src) (r Result[To])) Result[To] {
-	if s.IsErr() {
-		return Err[To](errors.WrapCaller(s.Err(), 1))
-	}
-
-	return do(s.Unwrap())
-}
-
-func Unwrap[T any](ret Result[T], gErr *error, callback ...func(err error) error) T {
-	if gErr == nil {
-		debug.PrintStack()
-		panic("Unwrap: gErr is nil")
-	}
-
-	if ret.IsOK() {
-		return ret.GetValue()
-	}
-
-	var t T
-	err := ret.Err()
-	for _, fn := range callback {
-		if err == nil {
-			return t
-		}
-
-		err = fn(err)
-	}
-
-	*gErr = errors.WrapCaller(err, 1)
-	return t
-}
-
-func Try[T any](fn func() Result[T]) (g Result[T]) {
-	if fn == nil {
-		return g.WithErr(errors.WrapStack(errors.New("[fn] is nil")))
-	}
-
-	defer func() {
-		if err := errors.Parse(recover()); !generic.IsNil(err) {
-			g = g.WithErr(errors.WrapStack(err))
-		}
-
-		if g.IsErr() {
-			g = g.WithErr(errors.WrapKV(g.Err(), "fn_stack", stack.CallerWithFunc(fn)))
-		}
-	}()
-
-	g = fn()
-	return
+func (r Result[T]) setErrorInner() {
 }

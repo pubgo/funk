@@ -1,4 +1,4 @@
-checksum: 0cff806a9bcb71452eac9fa294e6aa308e31cdfe
+checksum: 3cdc54c7ecf84134e660deb7ed3272063883eca9
 vendor: proto-vendor
 base:
   out: proto
@@ -13,11 +13,12 @@ deps:
     path: /google
     version: v0.0.0-20220224004616-3c171936039b
   - name: google/protobuf
-    url: /usr/local/include/google/protobuf
+    url: /opt/homebrew/include/google/protobuf
+    optional: true
 plugins:
   - name: go
-  - name: go-errors
-  - name: go-enum
+  - name: go-errors2
+  - name: go-enum2
 linter:
   rules:
     included_paths: []

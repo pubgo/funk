@@ -3,7 +3,7 @@ package merge
 import (
 	"testing"
 
-	"github.com/pubgo/funk/pretty"
+	"github.com/pubgo/funk/v2/pretty"
 )
 
 type dst struct {
@@ -27,17 +27,17 @@ func TestStruct(t *testing.T) {
 	rr := &src{Name: "2", Hello: "2"}
 	pretty.Println(Struct(&dd, &rr))
 
-	d1 := map[string]interface{}{"a": src{Name: "2", Hello: "2"}}
+	d1 := map[string]any{"a": src{Name: "2", Hello: "2"}}
 	d2 := map[string]dst{"a": {Name: "1", Hello: "1"}, "b": {Name: "1", Hello: "1"}}
 	Copy(&d1, &d2).Unwrap()
 }
 
 func TestMapStruct(t *testing.T) {
-	pretty.Println(MapStruct(&dst{name: "1", Hello: "1"}, map[string]interface{}{"name": "2", "hello": "2"}))
-	pretty.Println(MapStruct(&dst{name: "1", Hello: "1"}, &map[string]interface{}{"name": "2", "hello": "2"}))
+	pretty.Println(MapStruct(&dst{name: "1", Hello: "1"}, map[string]any{"name": "2", "hello": "2"}))
+	pretty.Println(MapStruct(&dst{name: "1", Hello: "1"}, &map[string]any{"name": "2", "hello": "2"}))
 
 	var dd map[string]dst
-	pretty.Println(MapStruct(&dd, map[string]map[string]interface{}{"name": {"name": "2", "hello": "2"}, "hello": {"name": "2", "hello": "2"}}))
+	pretty.Println(MapStruct(&dd, map[string]map[string]any{"name": {"name": "2", "hello": "2"}, "hello": {"name": "2", "hello": "2"}}))
 
 	// var rr = &map[string]interface{}{"name": "2", "hello": "2"}
 	// pretty.Println(MapStruct(&dd, &rr)) // error

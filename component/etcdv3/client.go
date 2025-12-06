@@ -5,10 +5,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/pubgo/funk/assert"
-	"github.com/pubgo/funk/config"
-	"github.com/pubgo/funk/merge"
-	"github.com/pubgo/funk/retry"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/config"
+	"github.com/pubgo/funk/v2/merge"
+	"github.com/pubgo/funk/v2/retry"
 )
 
 func New(conf *Config) *Client {
@@ -21,7 +21,7 @@ func New(conf *Config) *Client {
 	)
 
 	// 创建etcd client对象
-	return &Client{Client: assert.Must1(retry.Default().DoVal(func(i int) (interface{}, error) {
+	return &Client{Client: assert.Must1(retry.Default().DoVal(func(i int) (any, error) {
 		return client3.New(*cfg)
 	})).(*client3.Client)}
 }
