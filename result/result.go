@@ -185,6 +185,19 @@ func (r Result[T]) UnwrapOrThrow(setter ErrSetter, contexts ...context.Context) 
 	return ret
 }
 
+func (r Result[T]) CallIfOK(fn func(val T) error) Result[T] {
+	if r.IsErr() {
+		return r
+	}
+
+	val := r.getValue()
+	err := fn(val)
+	if err != nil {
+		return Fail[T](errors.WrapCaller(err, 1))
+	}
+	return OK(val)
+}
+
 func (r Result[T]) Expect(format string, args ...any) T {
 	if r.IsErr() {
 		err := errors.WrapCaller(r.getErr(), 1)
