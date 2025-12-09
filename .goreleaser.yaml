@@ -1,5 +1,5 @@
 builds:
-  - main: ./cmds/protoc-gen-go-errors/main.go
+  - main: ./cmds/protoc-gen-go-errors2/main.go
     id: protoc-gen-go-errors
     binary: protoc-gen-go-errors
     goos:
@@ -9,7 +9,7 @@ builds:
     goarch:
       - amd64
       - arm64
-  - main: ./cmds/protoc-gen-go-enum/main.go
+  - main: ./cmds/protoc-gen-go-enum2/main.go
     id: protoc-gen-go-enum
     binary: protoc-gen-go-enum
     goos:
