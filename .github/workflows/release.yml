@@ -10,13 +10,30 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Create cache directories
+        run: |
+          mkdir -p ~/.cache/go-build
+
+      - name: Go Mod Cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+          key: go-mod-cache-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            go-mod-cache-${{ runner.os }}-
+            go-mod-cache-
+
+
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
           version: latest
           args: release --clean
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASER_TOKEN }}
