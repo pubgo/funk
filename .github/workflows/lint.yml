@@ -2,9 +2,9 @@ name: Lint & Test
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+  #    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
 
 jobs:
 
@@ -12,11 +12,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Create cache directories
+        run: |
+          mkdir -p ~/.cache/golangci-lint
+          mkdir -p ~/.cache/go-build
+
       - uses: actions/checkout@v4
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: actions/setup-go@v5
         with:
-          go-version: 1.22
+          go-version-file: 'go.mod'
 
       - name: Go Lint Cache
         uses: actions/cache@v3
