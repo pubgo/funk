@@ -8,15 +8,21 @@ jobs:
     name: Release on GitHub
     runs-on: ubuntu-latest
     steps:
+      - name: Create cache directories
+        run: |
+          mkdir -p ~/.cache/golangci-lint
+          mkdir -p ~/.cache/go-build
+
       - name: Checkout
         uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
           version: latest
           args: release --clean
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASER_TOKEN }}
