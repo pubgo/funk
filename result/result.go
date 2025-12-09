@@ -168,12 +168,16 @@ func (r Result[T]) UnwrapOrElse(fn func() T) T {
 
 func (r Result[T]) UnwrapOrEmpty() (t T) {
 	if r.IsErr() {
-		return
+		return t
 	}
 	return r.getValue()
 }
 
-func (r Result[T]) ThrowErr(setter ErrSetter, contexts ...context.Context) bool {
+func (r Result[T]) ThrowErr(err *error, contexts ...context.Context) bool {
+	return catchErr(ErrOf(r.err), nil, err, contexts...)
+}
+
+func (r Result[T]) Throw(setter ErrSetter, contexts ...context.Context) bool {
 	return catchErr(ErrOf(r.err), setter, nil, contexts...)
 }
 

@@ -59,6 +59,7 @@ func Errorf(msg string, args ...any) Error {
 	return newError(errors.WrapCaller(fmt.Errorf(msg, args...), 1))
 }
 
+func ProxyOf(err *error) ProxyErr { return ErrProxyOf(err) }
 func ErrProxyOf(err *error) ProxyErr {
 	if err == nil {
 		panicIfError(errors.Errorf("err param is nil"))

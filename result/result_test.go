@@ -56,7 +56,7 @@ func TestErrOf(t *testing.T) {
 }
 
 func fn1() (r result.Result[string]) {
-	if fn3().ThrowErr(&r) {
+	if fn3().Throw(&r) {
 		return r
 	}
 
@@ -75,7 +75,7 @@ func fn2() (r result.Result[string]) {
 		IfErr(func(err error) {
 			log.Err(err).Msg("test error")
 		}).
-		ThrowErr(&r)
+		Throw(&r)
 	if r.IsErr() {
 		return r
 	}
