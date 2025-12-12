@@ -24,6 +24,10 @@ func (e ProxyErr) GetErr() error {
 	return lo.FromPtr(e.err)
 }
 
+func (e ProxyErr) Err() error {
+	return lo.FromPtr(e.err)
+}
+
 func (e ProxyErr) String() string {
 	if e.IsOK() {
 		return "OK"

@@ -228,7 +228,7 @@ func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects m
 				}).
 				UnwrapOrThrow(&r)
 			if r.IsErr() {
-				return
+				return r
 			}
 
 			// ignore negative delay
@@ -238,7 +238,7 @@ func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects m
 
 			r = r.WithErr(msg.NakWithDelay(dur))
 			if r.IsErr() {
-				return
+				return r
 			}
 
 			return r.WithValue(true)
@@ -399,8 +399,8 @@ func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *
 				"args": string(msg.Data()),
 			})
 		})
-	if err.ThrowErr(&gErr) {
-		return
+	if err.Throw(&gErr) {
+		return gErr
 	}
 	args = &pb
 
@@ -411,8 +411,8 @@ func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *
 				"args": args,
 			})
 		})
-	if dst.ThrowErr(&gErr) {
-		return
+	if dst.Throw(&gErr) {
+		return gErr
 	}
 
 	ctx = createCtxWithContext(ctx, msgCtx)

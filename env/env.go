@@ -177,7 +177,7 @@ func LoadFiles(files ...string) (r result.Error) {
 				continue
 			}
 
-			if Set(k, v).ThrowErr(&r) {
+			if Set(k, v).Throw(&r) {
 				return r
 			}
 

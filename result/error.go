@@ -152,6 +152,14 @@ func (e Error) Err() error { return e.getErr() }
 
 func (e Error) GetErr() error { return e.getErr() }
 
+func (e Error) Unwrap() (void Void) {
+	if e.IsErr() {
+		panicIfError(errors.WrapCaller(e.getErr(), 1))
+	}
+
+	return void
+}
+
 func (e Error) Must() {
 	if e.IsOK() {
 		return
@@ -160,7 +168,11 @@ func (e Error) Must() {
 	panicIfError(errors.WrapCaller(e.getErr(), 1))
 }
 
-func (e Error) ThrowErr(setter ErrSetter, contexts ...context.Context) bool {
+func (e Error) ThrowErr(err *error, contexts ...context.Context) bool {
+	return catchErr(e, nil, err, contexts...)
+}
+
+func (e Error) Throw(setter ErrSetter, contexts ...context.Context) bool {
 	return catchErr(e, setter, nil, contexts...)
 }
 

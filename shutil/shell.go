@@ -21,10 +21,9 @@ func Run(args ...string) (r result.Result[string]) {
 	cmd := Shell(args...)
 	cmd.Stdout = b
 
-	result.ErrOf(cmd.Run()).
-		MustWithLog(func(e *zerolog.Event) {
-			e.Str(logfields.Msg, fmt.Sprintf("failed to execute: %q", args))
-		})
+	result.ErrOf(cmd.Run()).Log(func(e *zerolog.Event) {
+		e.Str(logfields.Msg, fmt.Sprintf("failed to execute: %q", args))
+	})
 
 	return r.WithValue(strings.TrimSpace(b.String()))
 }
