@@ -7,6 +7,8 @@ import (
 	"github.com/k0kubun/pp/v3"
 )
 
+const Name = "assert"
+
 func Assert(b bool, format string, a ...any) {
 	if b {
 		must(fmt.Errorf(format, a...))

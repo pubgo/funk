@@ -24,6 +24,3 @@ var (
 	// project, project name
 	project string
 )
-
-// release tag
-var release string

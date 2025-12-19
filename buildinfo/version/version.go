@@ -1,6 +1,8 @@
 package version
 
-import "github.com/pubgo/funk/v2"
+import (
+	"github.com/pubgo/funk/v2"
+)
 
 var (
 	mainPath  string
@@ -9,16 +11,14 @@ var (
 	buildTime string
 	version   string
 	project   string
-	release   string
 )
 
-func CommitID() string       { return commitID }
-func MainPath() string       { return mainPath }
-func Version() string        { return version }
-func ReleaseVersion() string { return release }
-func BuildTime() string      { return buildTime }
-func Project() string        { return project }
-func Domain() string         { return domain }
+func CommitID() string  { return commitID }
+func MainPath() string  { return mainPath }
+func Version() string   { return version }
+func BuildTime() string { return buildTime }
+func Project() string   { return project }
+func Domain() string    { return domain }
 
 func SetCommitID(id string) funk.Void {
 	if id != "" {
@@ -37,13 +37,6 @@ func SetMainPath(path string) funk.Void {
 func SetVersion(v string) funk.Void {
 	if v != "" {
 		version = v
-	}
-	return funk.Void{}
-}
-
-func SetReleaseVersion(r string) funk.Void {
-	if r != "" {
-		release = r
 	}
 	return funk.Void{}
 }

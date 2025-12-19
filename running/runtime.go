@@ -1,19 +1,19 @@
 package running
 
 import (
-	"context"
 	"os"
-	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/projectdiscovery/machineid"
+	"github.com/pubgo/redant"
 	"github.com/rs/xid"
-	"github.com/urfave/cli/v3"
+	"github.com/samber/lo"
+	"github.com/spf13/pflag"
 
 	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/buildinfo/version"
 	"github.com/pubgo/funk/v2/config"
+	"github.com/pubgo/funk/v2/debugs"
 	"github.com/pubgo/funk/v2/env"
 	"github.com/pubgo/funk/v2/netutil"
 	"github.com/pubgo/funk/v2/pathutil"
@@ -22,10 +22,10 @@ import (
 
 // default global variables
 var (
-	Env      = sync.OnceValue(func() string { return EnvFlag.Get().(string) })
-	Debug    = sync.OnceValue(func() bool { return DebugFlag.Get().(bool) })
-	HttpPort = sync.OnceValue(func() int { return HttpPortFlag.Get().(int) })
-	GrpcPort = sync.OnceValue(func() int { return GrpcPortFlag.Get().(int) })
+	Env      = redant.StringOf(lo.ToPtr("dev"))
+	Debug    = redant.BoolOf(lo.ToPtr(false))
+	HttpPort = redant.Int64Of(lo.ToPtr(int64(8080)))
+	GrpcPort = redant.Int64Of(lo.ToPtr(int64(50051)))
 	Project  = version.Project
 
 	// InstanceID service id
@@ -63,71 +63,70 @@ var (
 
 	Domain = version.Domain
 
-	DebugFlag = cli.BoolFlag{
-		Name:     "debug",
-		Usage:    "enable debug mode",
-		Value:    false,
-		Local:    true,
-		Category: "system",
-		Sources:  cli.EnvVars(env.Key("enable_debug"), env.Key("debug")),
-		Action: func(ctx context.Context, command *cli.Command, b bool) error {
-			env.Set("enable_debug", strconv.FormatBool(b))
-			env.Set("debug", strconv.FormatBool(b))
+	DebugFlag = redant.Option{
+		Flag:        "debug",
+		Description: "enable debug mode",
+		Value:       Debug,
+		Default:     Debug.String(),
+		Category:    "system",
+		Envs:        []string{env.Key("enable_debug"), env.Key("debug")},
+		Action: func(val pflag.Value) error {
+			env.Set("enable_debug", val.String())
+			env.Set("debug", val.String())
+			return debugs.Enabled.Set(val.String())
+		},
+	}
+
+	EnvFlag = redant.Option{
+		Flag:        "env",
+		Description: "running env, dev,test,stage,prod",
+		Value:       Env,
+		Default:     Env.String(),
+		Category:    "system",
+		Envs:        []string{env.Key("env"), env.Key("run_env")},
+		Action: func(val pflag.Value) error {
+			env.Set("env", val.String())
+			env.Set("run_env", val.String())
 			return nil
 		},
 	}
 
-	EnvFlag = cli.StringFlag{
-		Name:     "env",
-		Usage:    "running env, dev,test,stage,prod",
-		Value:    "dev",
-		Local:    true,
-		Category: "system",
-		Sources:  cli.NewValueSourceChain(cli.EnvVar(env.Key("env")), cli.EnvVar(env.Key("run_env"))),
-		Action: func(ctx context.Context, command *cli.Command, s string) error {
-			env.Set("env", s)
-			env.Set("run_env", s)
+	GrpcPortFlag = redant.Option{
+		Flag:        "grpc-port",
+		Description: "service grpc port",
+		Value:       GrpcPort,
+		Default:     GrpcPort.String(),
+		Category:    "system",
+		Envs:        []string{env.Key("server_grpc_port")},
+		Action: func(val pflag.Value) error {
+			env.Set("server_grpc_port", val.String())
 			return nil
 		},
 	}
 
-	GrpcPortFlag = cli.IntFlag{
-		Name:     "grpc-port",
-		Usage:    "service grpc port",
-		Local:    true,
-		Value:    50051,
-		Category: "system",
-		Sources:  cli.EnvVars(env.Key("server_grpc_port")),
-		Action: func(ctx context.Context, command *cli.Command, i int) error {
-			env.Set("server_grpc_port", strconv.Itoa(i))
+	HttpPortFlag = redant.Option{
+		Flag:        "http-port",
+		Description: "service http port",
+		Value:       HttpPort,
+		Category:    "system",
+		Envs:        []string{env.Key("server_http_port")},
+		Action: func(val pflag.Value) error {
+			env.Set("server_http_port", val.String())
 			return nil
 		},
 	}
 
-	HttpPortFlag = cli.IntFlag{
-		Name:     "http-port",
-		Usage:    "service http port",
-		Local:    true,
-		Value:    8080,
-		Category: "system",
-		Sources:  cli.EnvVars(env.Key("server_http_port")),
-		Action: func(ctx context.Context, command *cli.Command, i int) error {
-			env.Set("server_http_port", strconv.Itoa(i))
-			return nil
-		},
-	}
-
-	ConfFlag = cli.StringFlag{
-		Name:     "config",
-		Aliases:  []string{"c"},
-		Usage:    "config path",
-		Value:    config.GetConfigPath(),
-		Local:    true,
-		Category: "system",
-		Sources:  cli.EnvVars(env.Key("config_path")),
-		Action: func(ctx context.Context, command *cli.Command, s string) error {
-			config.SetConfigPath(s)
-			env.Set("config_path", s)
+	ConfFlag = redant.Option{
+		Flag:        "config",
+		Shorthand:   "c",
+		Description: "config path",
+		Default:     config.GetConfigPath(),
+		Value:       redant.StringOf(lo.ToPtr(config.GetConfigPath())),
+		Category:    "system",
+		Envs:        []string{env.Key("config_path")},
+		Action: func(val pflag.Value) error {
+			config.SetConfigPath(val.String())
+			env.Set("config_path", val.String())
 			return nil
 		},
 	}
