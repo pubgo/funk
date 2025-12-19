@@ -58,7 +58,6 @@ func init() {
 	_ = v.SetBuildTime(buildTime)
 	_ = v.SetCommitID(commitID)
 	_ = v.SetProject(project)
-	_ = v.SetReleaseVersion(release)
 	_ = v.SetMainPath(mainPath)
 	_ = v.SetVersion(version)
 	_ = v.SetDomain(domain)
