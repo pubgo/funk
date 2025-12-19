@@ -71,6 +71,21 @@ func ParseErrToPb(err error) proto.Message {
 	switch err1 := err.(type) {
 	case nil:
 		return nil
+	case *errors.Err:
+		return &errorpb.ErrMsg{
+			Msg:    err1.Msg,
+			Detail: err1.Detail,
+			Tags:   err1.Tags.ToMapString(),
+			Id:     lo.ToPtr(err1.ID()),
+		}
+	case *errors.ErrWrap:
+		return &errorpb.ErrWrap{
+			Caller: err1.Caller,
+			Tags:   err1.Tags.ToMapString(),
+			Stacks: err1.Stacks,
+			Error:  MustProtoToAny(ParseErrToPb(err1.Err)),
+			Id:     lo.ToPtr(err1.ID()),
+		}
 	case ErrorProto:
 		return err1.Proto()
 	case GRPCStatus:
