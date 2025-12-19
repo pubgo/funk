@@ -2,15 +2,11 @@ package funk
 
 import (
 	"cmp"
-	_ "embed"
 	"reflect"
 	"unsafe"
+
+	_ "github.com/pubgo/redant"
 )
-
-//go:embed .version
-var releaseVersion string
-
-func ReleaseVersion() string { return releaseVersion }
 
 func AppendOf[T any](v T, vv ...T) []T {
 	return append(append(make([]T, 0, len(vv)+1), v), vv...)

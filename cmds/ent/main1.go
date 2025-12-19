@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/urfave/cli/v3"
-
+	"github.com/pubgo/redant"
 	// atlas "ariga.io/atlas/sql/migrate"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
@@ -24,15 +23,15 @@ type params struct {
 	MigrateOptions []schema.MigrateOption
 }
 
-func New1() *cli.Command {
-	return &cli.Command{
-		Name:  "ent",
-		Usage: "ent manager",
-		Commands: []*cli.Command{
+func New1() *redant.Command {
+	return &redant.Command{
+		Use:   "ent",
+		Short: "ent manager",
+		Children: []*redant.Command{
 			{
-				Name:  "gen",
-				Usage: "do gen query",
-				Action: func(ctx context.Context, command *cli.Command) error {
+				Use:   "gen",
+				Short: "do gen query",
+				Handler: func(ctx context.Context, i *redant.Invocation) error {
 					defer recovery.Exit()
 					return entc.Generate("./ent/schema", &gen.Config{
 						Features: []gen.Feature{
@@ -47,9 +46,9 @@ func New1() *cli.Command {
 			},
 
 			{
-				Name:  "generate migration",
-				Usage: "automatically generate migration files for your Ent schema:",
-				Action: func(ctx context.Context, command *cli.Command) error {
+				Use:   "generate migration",
+				Short: "automatically generate migration files for your Ent schema:",
+				Handler: func(ctx context.Context, i *redant.Invocation) error {
 					// atlas migrate lint \
 					//  --dev-url="docker://mysql/8/test" \
 					//  --dir="file://ent/migrate/migrations" \
@@ -74,9 +73,9 @@ func New1() *cli.Command {
 			},
 
 			{
-				Name:  "apply migration",
-				Usage: "apply the pending migration files onto the database",
-				Action: func(ctx context.Context, command *cli.Command) error {
+				Use:   "apply migration",
+				Short: "apply the pending migration files onto the database",
+				Handler: func(ctx context.Context, i *redant.Invocation) error {
 					return nil
 				},
 			},
