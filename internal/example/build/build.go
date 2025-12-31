@@ -109,7 +109,7 @@ type BuildDetails struct {
 type StringArray []string
 
 // UnmarshalYAML is a custom unmarshaler that wraps strings in arrays.
-func (a *StringArray) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (a *StringArray) UnmarshalYAML(unmarshal func(any) error) error {
 	var strings []string
 	if err := unmarshal(&strings); err != nil {
 		var str string
@@ -140,7 +140,7 @@ func (a StringArray) JSONSchema() *jsonschema.Schema {
 type FlagArray []string
 
 // UnmarshalYAML is a custom unmarshaler that wraps strings in arrays.
-func (a *FlagArray) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (a *FlagArray) UnmarshalYAML(unmarshal func(any) error) error {
 	var flags []string
 	if err := unmarshal(&flags); err != nil {
 		var flagstr string
@@ -175,7 +175,7 @@ type BuildHookConfig struct {
 type Hooks []Hook
 
 // UnmarshalYAML is a custom unmarshaler that allows simplified declaration of single command.
-func (bhc *Hooks) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (bhc *Hooks) UnmarshalYAML(unmarshal func(any) error) error {
 	var singleCmd string
 	err := unmarshal(&singleCmd)
 	if err == nil {
@@ -200,7 +200,7 @@ type Hook struct {
 }
 
 // UnmarshalYAML is a custom unmarshaler that allows simplified declarations of commands as strings.
-func (bh *Hook) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (bh *Hook) UnmarshalYAML(unmarshal func(any) error) error {
 	var cmd string
 	if err := unmarshal(&cmd); err != nil {
 		type t Hook

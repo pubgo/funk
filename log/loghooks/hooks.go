@@ -1,3 +1,5 @@
+// loghooks/hooks.go
+
 package loghooks
 
 import (
@@ -13,7 +15,7 @@ type hookImpl struct {
 	count uint64
 }
 
-func (h *hookImpl) Run(e *zerolog.Event, level zerolog.Level, message string) {
+func (h *hookImpl) Run(e *zerolog.Event, _ zerolog.Level, _ string) {
 	if zerolog.GlobalLevel() != zerolog.TraceLevel {
 		return
 	}

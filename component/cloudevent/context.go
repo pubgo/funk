@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rs/xid"
+	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
 
+	"github.com/pubgo/funk/v2"
 	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
 )
 
@@ -37,7 +38,7 @@ type Context struct {
 	Config *JobEventConfig
 }
 
-var cloudeventCtxKey = xid.New().String()
+var cloudeventCtxKey = lo.ToPtr(funk.Void{})
 
 func createCtxWithContext(parent context.Context, ctx *Context) context.Context {
 	if parent == nil {
@@ -59,7 +60,7 @@ func GetEventContext(ctx context.Context) *Context {
 	return evtCtx
 }
 
-var pushEventCtxKey = xid.New().String()
+var pushEventCtxKey = lo.ToPtr(struct{}{})
 
 func withOptions(ctx context.Context, opts ...*cloudeventpb.PushEventOptions) context.Context {
 	if len(opts) == 0 {

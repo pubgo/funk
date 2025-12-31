@@ -8,15 +8,16 @@ import (
 
 	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/buildinfo/version"
+	"github.com/pubgo/funk/v2/env"
 	"github.com/pubgo/funk/v2/recovery"
 )
 
 func GetSysInfo() map[string]string {
 	return map[string]string{
 		"main_path":     version.MainPath(),
-		"grpc_port":     fmt.Sprintf("%v", GrpcPort()),
-		"http_post":     fmt.Sprintf("%v", HttpPort()),
-		"debug":         fmt.Sprintf("%v", Debug()),
+		"grpc_port":     fmt.Sprintf("%d", GrpcPort),
+		"http_post":     fmt.Sprintf("%d", HttpPort),
+		"debug":         fmt.Sprintf("%v", Debug),
 		"cur_dir":       Pwd,
 		"local_ip":      LocalIP,
 		"namespace":     Namespace,
@@ -28,7 +29,7 @@ func GetSysInfo() map[string]string {
 		"version":       Version(),
 		"domain":        Domain(),
 		"commit_id":     CommitID(),
-		"go_root":       rt.GOROOT(),
+		"go_root":       env.Get("GOROOT"),
 		"go_arch":       rt.GOARCH,
 		"go_os":         rt.GOOS,
 		"go_version":    rt.Version(),
@@ -37,6 +38,7 @@ func GetSysInfo() map[string]string {
 	}
 }
 
+// CheckVersion 检查版本信息
 func CheckVersion() {
 	defer recovery.Exit()
 	assert.If(version.Project() == "", "project is null")

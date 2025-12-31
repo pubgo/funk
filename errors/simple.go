@@ -59,11 +59,11 @@ func (e Err) MarshalJSON() ([]byte, error) {
 
 func (e Err) String() string {
 	buf := bytes.NewBuffer(nil)
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorId, e.id))
+	fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorId, e.id)
 	for k, v := range e.Tags.ToMapString() {
-		buf.WriteString(fmt.Sprintf("%s]: %s: %q\n", errinter.ColorTags, k, v))
+		fmt.Fprintf(buf, "%s]: %s: %q\n", errinter.ColorTags, k, v)
 	}
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorErrMsg, e.Msg))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorErrDetail, e.Detail))
+	fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorErrMsg, e.Msg)
+	fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorErrDetail, e.Detail)
 	return buf.String()
 }

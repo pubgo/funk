@@ -25,6 +25,6 @@ type Config struct {
 func DefaultCfg() *Config {
 	return &Config{
 		DialTimeout: time.Second * 2,
-		DialOptions: []grpc.DialOption{grpc.WithBlock()},
+		DialOptions: []grpc.DialOption{},
 	}
 }

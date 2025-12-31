@@ -23,10 +23,9 @@ type baseValue[T any] struct {
 	getString func(val T) string
 }
 
-func (b *baseValue[T]) Name() string    { return b.ff.Name }
-func (b *baseValue[T]) Type() ValueType { return b.typ }
-func (b *baseValue[T]) Get() any        { return b.val }
-func (b *baseValue[T]) Value() T        { return b.val }
+func (b *baseValue[T]) Name() string { return b.ff.Name }
+func (b *baseValue[T]) Type() string { return b.typ.String() }
+func (b *baseValue[T]) Value() any   { return b.val }
 func (b *baseValue[T]) Set(s string) error {
 	val, err := b.set(s)
 	if err != nil {
@@ -49,6 +48,8 @@ type StringValue struct {
 	*baseValue[string]
 }
 
+func (v StringValue) Value() string { return v.val }
+
 func String(name, value, usage string, tags ...map[string]any) StringValue {
 	base := newBase(
 		defaultFeature,
@@ -66,6 +67,8 @@ func String(name, value, usage string, tags ...map[string]any) StringValue {
 type IntValue struct {
 	*baseValue[int64]
 }
+
+func (v IntValue) Value() int64 { return v.val }
 
 func Int(name string, value int64, usage string, tags ...map[string]any) IntValue {
 	base := newBase(
@@ -88,6 +91,8 @@ type FloatValue struct {
 	*baseValue[float64]
 }
 
+func (v FloatValue) Value() float64 { return v.val }
+
 func Float(name string, value float64, usage string, tags ...map[string]any) FloatValue {
 	base := newBase(
 		defaultFeature,
@@ -108,6 +113,8 @@ func Float(name string, value float64, usage string, tags ...map[string]any) Flo
 type BoolValue struct {
 	*baseValue[bool]
 }
+
+func (v BoolValue) Value() bool { return v.val }
 
 func Bool(name string, value bool, usage string, tags ...map[string]any) BoolValue {
 	base := newBase(
@@ -135,6 +142,8 @@ func Bool(name string, value bool, usage string, tags ...map[string]any) BoolVal
 type JsonValue[T any] struct {
 	*baseValue[T]
 }
+
+func (v JsonValue[T]) Value() T { return v.val }
 
 func Json[T any](name string, value T, usage string, tags ...map[string]any) JsonValue[T] {
 	base := newBase[T](

@@ -7,10 +7,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/pubgo/funk/v2/errors/errparser"
-
 	assert1 "github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/debugs"
 	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/errors/errparser"
 	"github.com/pubgo/funk/v2/log"
 )
 
@@ -60,7 +60,7 @@ func init1Next() (err error) {
 }
 
 func TestDebugMode(t *testing.T) {
-	assert1.Exit(assert1.FeatureDebugMode.Set("true"))
+	assert1.Exit(debugs.Enabled.Set("true"))
 	assert1.Must(fmt.Errorf("test next"))
 }
 
@@ -77,7 +77,7 @@ func BenchmarkPanic(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		func() {
 			defer func() {
-				recover()
+				_ = recover()
 			}()
 
 			panic("hello")

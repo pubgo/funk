@@ -2,6 +2,7 @@ package syncutil
 
 import "context"
 
+// CallWithContext calls fn with a context.
 func CallWithContext(ctx context.Context, fn func() error) error {
 	var err error
 	done := make(chan struct{})

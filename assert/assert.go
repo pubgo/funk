@@ -7,6 +7,8 @@ import (
 	"github.com/k0kubun/pp/v3"
 )
 
+const Name = "assert"
+
 func Assert(b bool, format string, a ...any) {
 	if b {
 		must(fmt.Errorf(format, a...))
@@ -15,8 +17,8 @@ func Assert(b bool, format string, a ...any) {
 
 func MustEqual[T any](a, b T) {
 	if !cmp.Equal(a, b) {
-		pp.Println("a: ", a)
-		pp.Println("b: ", b)
+		_, _ = pp.Println("a: ", a)
+		_, _ = pp.Println("b: ", b)
 		must(fmt.Errorf("a,b not equal"))
 	}
 }

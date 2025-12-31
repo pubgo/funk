@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/samber/lo"
+
 	"github.com/pubgo/funk/v2/features"
 )
 
@@ -45,10 +47,10 @@ func main() {
 	// 模拟更新
 	go func() {
 		time.Sleep(2 * time.Second)
-		status.Set("degraded")
+		lo.Must0(status.Set("degraded"))
 
 		time.Sleep(2 * time.Second)
-		replicas.Set(fmt.Sprintf("%v", replicas.Value()+2))
+		lo.Must0(replicas.Set(fmt.Sprintf("%v", replicas.Value()+2)))
 
 		time.Sleep(2 * time.Second)
 	}()
@@ -57,7 +59,7 @@ func main() {
 	http.HandleFunc("/metadata", func(w http.ResponseWriter, r *http.Request) {
 		data := extractPublicMetadata()
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(data)
+		lo.Must0(json.NewEncoder(w).Encode(data))
 	})
 
 	log.Println("Feature server listening on :8181")

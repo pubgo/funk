@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/urfave/cli/v3"
+	"github.com/pubgo/redant"
 
 	"github.com/pubgo/funk/v2/config"
 	"github.com/pubgo/funk/v2/env"
@@ -12,11 +12,11 @@ import (
 	"github.com/pubgo/funk/v2/recovery"
 )
 
-func New() *cli.Command {
-	return &cli.Command{
-		Name:  "envs",
-		Usage: "show all envs",
-		Action: func(ctx context.Context, command *cli.Command) error {
+func New() *redant.Command {
+	return &redant.Command{
+		Use:   "envs",
+		Short: "show all envs",
+		Handler: func(ctx context.Context, i *redant.Invocation) error {
 			defer recovery.Exit()
 
 			env.Reload()

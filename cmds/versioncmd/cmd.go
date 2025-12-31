@@ -4,29 +4,30 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pubgo/redant"
+
 	"github.com/pubgo/funk/v2/buildinfo/version"
 	"github.com/pubgo/funk/v2/pretty"
 	"github.com/pubgo/funk/v2/recovery"
 	"github.com/pubgo/funk/v2/running"
-	"github.com/urfave/cli/v3"
 )
 
-func New() *cli.Command {
-	return &cli.Command{
-		Name:  "version",
-		Usage: fmt.Sprintf("%s version info", version.Project()),
-		Commands: []*cli.Command{
+func New() *redant.Command {
+	return &redant.Command{
+		Use:   "version",
+		Short: fmt.Sprintf("%s version info", version.Project()),
+		Children: []*redant.Command{
 			{
-				Name:  "validate",
-				Usage: "show version info",
-				Action: func(ctx context.Context, command *cli.Command) error {
+				Use:   "validate",
+				Short: "show version info",
+				Handler: func(ctx context.Context, i *redant.Invocation) error {
 					defer recovery.Exit()
 					running.CheckVersion()
 					return nil
 				},
 			},
 		},
-		Action: func(ctx context.Context, command *cli.Command) error {
+		Handler: func(ctx context.Context, i *redant.Invocation) error {
 			defer recovery.Exit()
 			pretty.Println(running.GetSysInfo())
 			return nil

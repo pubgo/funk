@@ -3,6 +3,8 @@ package typex
 import (
 	"fmt"
 	"testing"
+
+	"github.com/samber/lo"
 )
 
 func TestName(t *testing.T) {
@@ -11,19 +13,19 @@ func TestName(t *testing.T) {
 	sm.Set("a2", 2)
 	fmt.Println(sm.Has("a1"))
 
-	sm.Each(func(key string) {
+	lo.Must0(sm.Each(func(key string) {
 		fmt.Println(key)
-	})
+	}))
 
-	sm.Each(func(key string, val int) {
+	lo.Must0(sm.Each(func(key string, val int) {
 		fmt.Println(key, val)
-	})
+	}))
 
 	data := make(map[string]int)
-	sm.MapTo(data)
+	lo.Must0(sm.MapTo(data))
 	fmt.Println(data)
 
 	var data1 map[string]int
-	sm.MapTo(&data1)
+	lo.Must0(sm.MapTo(&data1))
 	fmt.Println(data1)
 }

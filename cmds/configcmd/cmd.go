@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/urfave/cli/v3"
+	"github.com/pubgo/redant"
 	yaml "gopkg.in/yaml.v3"
 
 	"github.com/pubgo/funk/v2/assert"
@@ -12,15 +12,15 @@ import (
 	"github.com/pubgo/funk/v2/recovery"
 )
 
-func New[Cfg any]() *cli.Command {
-	return &cli.Command{
-		Name:  "config",
-		Usage: "config management",
-		Commands: []*cli.Command{
+func New[Cfg any]() *redant.Command {
+	return &redant.Command{
+		Use:   "config",
+		Short: "config management",
+		Children: []*redant.Command{
 			{
-				Name:        "show",
-				Description: "show config data",
-				Action: func(ctx context.Context, command *cli.Command) error {
+				Use:   "show",
+				Short: "show config data",
+				Handler: func(ctx context.Context, i *redant.Invocation) error {
 					defer recovery.Exit()
 					fmt.Println("config path:\n", config.GetConfigPath())
 					fmt.Println("config raw data:\n", string(assert.Must1(yaml.Marshal(config.Load[Cfg]().T))))

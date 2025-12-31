@@ -20,7 +20,7 @@ func testExit() {
 	assert.Must(fmt.Errorf("test"))
 }
 
-func TestExit(t *testing.T) {
+func TestExit(_ *testing.T) {
 	testExit1()
 }
 
@@ -50,7 +50,7 @@ func TestResult(t *testing.T) {
 	t.Log(handler().UnwrapOr(A{A: "error"}).A)
 }
 
-func TestName(t *testing.T) {
+func TestName(_ *testing.T) {
 	defer recovery.DebugPrint()
 
 	log.Print("test panic")

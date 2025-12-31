@@ -20,13 +20,11 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/structpb"
 
+	"github.com/pubgo/funk/v2"
 	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/internal/errors/errinter"
 	"github.com/pubgo/funk/v2/log/logutil"
 	"github.com/pubgo/funk/v2/proto/errorpb"
-
-	"github.com/pubgo/funk/v2/internal/errors/errinter"
-
-	"github.com/pubgo/funk/v2"
 )
 
 func MustTagsToAny(tags errors.Tags) []*anypb.Any {
@@ -71,6 +69,21 @@ func ParseErrToPb(err error) proto.Message {
 	switch err1 := err.(type) {
 	case nil:
 		return nil
+	case *errors.Err:
+		return &errorpb.ErrMsg{
+			Msg:    err1.Msg,
+			Detail: err1.Detail,
+			Tags:   err1.Tags.ToMapString(),
+			Id:     lo.ToPtr(err1.ID()),
+		}
+	case *errors.ErrWrap:
+		return &errorpb.ErrWrap{
+			Caller: err1.Caller,
+			Tags:   err1.Tags.ToMapString(),
+			Stacks: err1.Stacks,
+			Error:  MustProtoToAny(ParseErrToPb(err1.Err)),
+			Id:     lo.ToPtr(err1.ID()),
+		}
 	case ErrorProto:
 		return err1.Proto()
 	case GRPCStatus:
@@ -276,11 +289,11 @@ func (t *ErrCode) As(err any) bool {
 
 func (t *ErrCode) String() string {
 	buf := bytes.NewBuffer(nil)
-	buf.WriteString(fmt.Sprintf("%s]: %d\n", errinter.ColorCode, t.pb.Code))
-	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorMessage, t.pb.Message))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorName, t.pb.Name))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorStatusCode, t.pb.StatusCode.String()))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorId, lo.FromPtr(t.pb.Id)))
+	fmt.Fprintf(buf, "%s]: %d\n", errinter.ColorCode, t.pb.Code)
+	fmt.Fprintf(buf, "%s]: %q\n", errinter.ColorMessage, t.pb.Message)
+	fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorName, t.pb.Name)
+	fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorStatusCode, t.pb.StatusCode.String())
+	fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorId, lo.FromPtr(t.pb.Id))
 	errors.ErrStringify(buf, t.err)
 	return buf.String()
 }

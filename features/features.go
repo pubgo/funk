@@ -1,8 +1,11 @@
 package features
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
+
+	"github.com/spf13/pflag"
 )
 
 type ValueType string
@@ -33,18 +36,28 @@ const (
 )
 
 type Value interface {
-	String() string
-	Type() ValueType
-	Set(string) error
-	Get() any
+	pflag.Value
+	Value() any
 }
 
+var _ json.Marshaler = (*Flag)(nil)
+
 type Flag struct {
-	Name       string
-	Usage      string
-	Value      Value
-	Deprecated bool
-	Tags       map[string]any
+	Name       string         `json:"name"`
+	Usage      string         `json:"usage"`
+	Value      Value          `json:"-"`
+	Deprecated bool           `json:"deprecated"`
+	Tags       map[string]any `json:"tags"`
+}
+
+func (f Flag) MarshalJSON() ([]byte, error) {
+	data := make(map[string]any)
+	data["name"] = f.Name
+	data["usage"] = f.Usage
+	data["value"] = f.Value.Value()
+	data["type"] = f.Value.Type()
+	data["deprecated"] = f.Deprecated
+	return json.Marshal(data)
 }
 
 type Feature struct {
@@ -105,10 +118,8 @@ func VisitAll(fn func(*Flag)) { defaultFeature.VisitAll(fn) }
 func mergeTags(maps ...map[string]any) map[string]any {
 	m := make(map[string]any)
 	for _, mm := range maps {
-		if mm != nil { // Skip nil maps to prevent panics
-			for k, v := range mm {
-				m[k] = v
-			}
+		for k, v := range mm {
+			m[k] = v
 		}
 	}
 	return m

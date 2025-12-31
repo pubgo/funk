@@ -9,12 +9,17 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 
+	"github.com/pubgo/funk/v2/debugs"
 	"github.com/pubgo/funk/v2/errors"
 )
 
 func errDetail(err error) string {
 	if err == nil {
 		return ""
+	}
+
+	if debugs.Enabled.Value() {
+		errors.DebugPrint(err)
 	}
 
 	return string(errors.JsonPrint(err))

@@ -136,10 +136,7 @@ func LoadFromPath[T any](val *T, cfgPath string) EnvSpecMap {
 	})
 
 	valType := reflect.TypeOf(val)
-	for {
-		if valType.Kind() != reflect.Ptr {
-			break
-		}
+	for valType.Kind() == reflect.Ptr {
 
 		valType = valType.Elem()
 	}
@@ -238,7 +235,7 @@ func LoadFromPath[T any](val *T, cfgPath string) EnvSpecMap {
 	err := Merge(val, cfgList...)
 	if err != nil {
 		for _, cfg := range cfgList {
-			pretty.Simple().Println(cfg)
+			_, _ = pretty.Simple().Println(cfg)
 		}
 		log.Fatal().Err(err).Msg("failed to merge config")
 	}

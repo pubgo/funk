@@ -10,6 +10,7 @@ import (
 	"github.com/k0kubun/pp/v3"
 	"github.com/samber/lo"
 
+	"github.com/pubgo/funk/v2/debugs"
 	"github.com/pubgo/funk/v2/log/logfields"
 	"github.com/pubgo/funk/v2/stack"
 )
@@ -69,7 +70,7 @@ func must(err error, messageArgs ...any) {
 
 	logErr(err, message, attrs...)
 
-	if FeatureDebugMode.Value() {
+	if debugs.Enabled.Value() {
 		_, _ = pp.Println(err)
 		debug.PrintStack()
 	}
