@@ -13,6 +13,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/ettle/strcase v0.2.0
 	github.com/expr-lang/expr v1.17.7
+	github.com/fsnotify/fsnotify v1.9.0
 	github.com/google/go-cmp v0.7.0
 	github.com/gopherjs/gopherjs v1.17.2
 	github.com/hashicorp/go-version v1.6.0
@@ -84,7 +85,6 @@ require (
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
