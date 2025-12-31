@@ -10,7 +10,6 @@ import (
 	"github.com/samber/lo"
 
 	"github.com/pubgo/funk/v2/debugs"
-
 	"github.com/pubgo/funk/v2/errors"
 )
 

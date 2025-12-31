@@ -16,7 +16,9 @@ func TestAsync(t *testing.T) {
 	assert.NoError(t, ret.GetErr())
 	rsp := ret.Unwrap()
 	if b := rsp.Body; b != nil {
-		defer b.Close()
+		defer func() {
+			_ = b.Close()
+		}()
 	}
 	assert.Equal(t, rsp.StatusCode, 200)
 }

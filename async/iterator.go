@@ -31,12 +31,12 @@ func (cc *Iterator[T]) Next() (T, bool) {
 }
 
 func (cc *Iterator[T]) Await() result.Result[[]T] {
-	var ll []T
 	err := cc.err
 	if err != nil {
-		return result.Wrap(ll, err)
+		return result.Fail[[]T](err)
 	}
 
+	ll := make([]T, 0, len(cc.v))
 	for c := range cc.v {
 		ll = append(ll, c)
 	}

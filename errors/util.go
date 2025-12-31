@@ -38,8 +38,8 @@ func ErrStringify(buf *bytes.Buffer, err error) {
 		return
 	}
 
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorErrMsg, strings.TrimSpace(err.Error())))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorErrDetail, strings.TrimSpace(fmt.Sprintf("%v", err))))
+	fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorErrMsg, strings.TrimSpace(err.Error()))
+	fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorErrDetail, strings.TrimSpace(fmt.Sprintf("%v", err)))
 	ErrStringify(buf, Unwrap(err))
 }
 
@@ -67,12 +67,12 @@ func PrintFormat(f fmt.State, verb rune, err Error) {
 	case 'v':
 		data, err := err.MarshalJSON()
 		if err != nil {
-			fmt.Fprintln(f, err.Error())
+			_, _ = fmt.Fprintln(f, err.Error())
 		} else {
-			fmt.Fprintln(f, string(data))
+			_, _ = fmt.Fprintln(f, string(data))
 		}
 	case 's', 'q':
-		fmt.Fprintln(f, err.String())
+		_, _ = fmt.Fprintln(f, err.String())
 	}
 }
 

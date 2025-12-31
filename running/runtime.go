@@ -104,11 +104,13 @@ var (
 		},
 	}
 
+	// HttpPortFlag http port
 	HttpPortFlag = redant.Option{
 		Flag:        "http-port",
 		Description: "service http port",
 		Value:       HttpPort,
 		Category:    "system",
+		Default:     HttpPort.String(),
 		Envs:        []string{env.Key("server_http_port")},
 		Action: func(val pflag.Value) error {
 			env.Set("server_http_port", val.String())

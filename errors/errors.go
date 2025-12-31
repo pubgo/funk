@@ -160,7 +160,7 @@ func DebugPrint(err error) {
 		return
 	}
 
-	debugPretty().Println(err)
+	_, _ = debugPretty().Println(err)
 }
 
 func GetErrorId(err error) string { return getErrorId(err) }

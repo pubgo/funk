@@ -5,8 +5,6 @@ package sqliteutil
 import (
 	"database/sql"
 	"fmt"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func connectDB(dbPath string) (*sql.DB, error) {

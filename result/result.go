@@ -25,6 +25,7 @@ type Result[T any] struct {
 	err error
 }
 
+// WrapFn wraps a function into a Result.
 func (r Result[T]) WithFn(fn func() (T, error)) Result[T] {
 	if r.IsErr() {
 		return Result[T]{err: errors.WrapCaller(r.getErr(), 1)}
@@ -33,6 +34,7 @@ func (r Result[T]) WithFn(fn func() (T, error)) Result[T] {
 	return WrapFn(fn)
 }
 
+// WithValue wraps a value into a Result.
 func (r Result[T]) WithValue(v T) Result[T] {
 	if r.IsErr() {
 		return Result[T]{err: errors.WrapCaller(r.getErr(), 1)}
@@ -41,6 +43,7 @@ func (r Result[T]) WithValue(v T) Result[T] {
 	return OK(v)
 }
 
+// ValueTo extracts the value from the Result and assigns it to the provided variable.
 func (r Result[T]) ValueTo(v *T) Error {
 	if r.IsErr() {
 		return newError(errors.WrapCaller(r.getErr(), 1))
@@ -54,6 +57,7 @@ func (r Result[T]) ValueTo(v *T) Error {
 	return Error{}
 }
 
+// UnwrapOrLog attempts to unwrap the value, returning it and panicking if an error occurs.
 func (r Result[T]) UnwrapOrLog(events ...func(e *zerolog.Event)) T {
 	if r.IsErr() {
 		panicIfError(errors.WrapCaller(r.getErr(), 1), events...)
@@ -117,12 +121,14 @@ func (r Result[T]) MatchWithResult(onOk func(T) Result[T], onErr func(error) Res
 	return onErr(r.getErr())
 }
 
+// Must panics if the result is an error.
 func (r Result[T]) Must(events ...func(e *zerolog.Event)) {
 	if r.IsErr() {
 		panicIfError(errors.WrapCaller(r.getErr(), 1), events...)
 	}
 }
 
+// Unwrap returns the value if it's OK, or panics if it's an error.
 func (r Result[T]) Unwrap() T {
 	if r.IsErr() {
 		panicIfError(errors.WrapCaller(r.getErr(), 1))
@@ -130,6 +136,7 @@ func (r Result[T]) Unwrap() T {
 	return r.getValue()
 }
 
+// UnwrapErr returns the value and error if it's OK, or the zero value and nil error if it's an error.
 func (r Result[T]) UnwrapErr() (T, error) {
 	if r.IsErr() {
 		var zero T
@@ -138,6 +145,7 @@ func (r Result[T]) UnwrapErr() (T, error) {
 	return r.getValue(), nil
 }
 
+// Or returns a new Result with the provided default value if the current Result is an error.
 func (r Result[T]) Or(defaultVal T) Result[T] {
 	if r.IsErr() {
 		return OK(defaultVal)
@@ -145,6 +153,7 @@ func (r Result[T]) Or(defaultVal T) Result[T] {
 	return r
 }
 
+// UnwrapOr returns the value if it's OK, or the default value if it's an error.
 func (r Result[T]) UnwrapOr(defaultVal T) T {
 	if r.IsErr() {
 		return defaultVal
@@ -152,6 +161,7 @@ func (r Result[T]) UnwrapOr(defaultVal T) T {
 	return r.getValue()
 }
 
+// OrElse returns a new Result with the provided default value if the current Result is an error.
 func (r Result[T]) OrElse(fn func() T) Result[T] {
 	if r.IsErr() {
 		return OK(fn())
@@ -159,6 +169,7 @@ func (r Result[T]) OrElse(fn func() T) Result[T] {
 	return r
 }
 
+// UnwrapOrElse returns the value if it's OK, or the result of the provided function if it's an error.
 func (r Result[T]) UnwrapOrElse(fn func() T) T {
 	if r.IsErr() {
 		return fn()
@@ -166,6 +177,7 @@ func (r Result[T]) UnwrapOrElse(fn func() T) T {
 	return r.getValue()
 }
 
+// UnwrapOrEmpty returns the value if it's OK, or the zero value if it's an error.
 func (r Result[T]) UnwrapOrEmpty() (t T) {
 	if r.IsErr() {
 		return t
@@ -173,14 +185,17 @@ func (r Result[T]) UnwrapOrEmpty() (t T) {
 	return r.getValue()
 }
 
+// ThrowErr throws an error if the result is an error.
 func (r Result[T]) ThrowErr(err *error, contexts ...context.Context) bool {
 	return catchErr(ErrOf(r.err), nil, err, contexts...)
 }
 
+// Throw returns the value if it's OK, or throws an error if it's an error.
 func (r Result[T]) Throw(setter ErrSetter, contexts ...context.Context) bool {
 	return catchErr(ErrOf(r.err), setter, nil, contexts...)
 }
 
+// UnwrapOrThrow returns the value if it's OK, or throws an error if it's an error.
 func (r Result[T]) UnwrapOrThrow(setter ErrSetter, contexts ...context.Context) (t T) {
 	ret, err := unwrapErr(r, nil, setter, contexts...)
 	if err != nil {
@@ -189,6 +204,7 @@ func (r Result[T]) UnwrapOrThrow(setter ErrSetter, contexts ...context.Context) 
 	return ret
 }
 
+// CallIfOK calls the provided function with the value if the result is OK,
 func (r Result[T]) CallIfOK(fn func(val T) error) Result[T] {
 	if r.IsErr() {
 		return r
@@ -202,6 +218,7 @@ func (r Result[T]) CallIfOK(fn func(val T) error) Result[T] {
 	return OK(val)
 }
 
+// Expect panics if the result is an error.
 func (r Result[T]) Expect(format string, args ...any) T {
 	if r.IsErr() {
 		err := errors.WrapCaller(r.getErr(), 1)
@@ -213,16 +230,20 @@ func (r Result[T]) Expect(format string, args ...any) T {
 	return r.getValue()
 }
 
+// IsErr returns true if the result is an error.
 func (r Result[T]) IsErr() bool { return r.getErr() != nil }
 
+// IsOK returns true if the result is OK.
 func (r Result[T]) IsOK() bool { return r.getErr() == nil }
 
+// InspectErr executes fn if the result is an error.
 func (r Result[T]) InspectErr(fn func(err error)) {
 	if r.IsErr() {
 		fn(r.getErr())
 	}
 }
 
+// Inspect executes fn if the result is OK, then returns the result unchanged.
 func (r Result[T]) Inspect(fn func(val T)) {
 	if r.IsOK() {
 		fn(r.getValue())
@@ -247,16 +268,19 @@ func (r Result[T]) IfOK(fn func(val T)) Result[T] {
 	return r
 }
 
+// LogCtx logs the error with the provided context.
 func (r Result[T]) LogCtx(ctx context.Context, events ...func(e *zerolog.Event)) Result[T] {
 	logErr(ctx, 0, r.err, events...)
 	return r
 }
 
+// Log logs the error.
 func (r Result[T]) Log(events ...func(e *zerolog.Event)) Result[T] {
 	logErr(context.Background(), 0, r.err, events...)
 	return r
 }
 
+// Validate calls fn with the value if the result is OK, then returns the result unchanged.
 func (r Result[T]) Validate(fn func(val T) error) Result[T] {
 	if r.IsErr() {
 		return r
@@ -270,6 +294,7 @@ func (r Result[T]) Validate(fn func(val T) error) Result[T] {
 	return OK(val)
 }
 
+// Map calls fn with the value if the result is OK, then returns the result unchanged.
 func (r Result[T]) Map(fn func(val T) T) Result[T] {
 	if r.IsErr() {
 		return r
@@ -277,6 +302,7 @@ func (r Result[T]) Map(fn func(val T) T) Result[T] {
 	return OK(fn(r.getValue()))
 }
 
+// FlatMap calls fn with the value if the result is OK, then returns the result unchanged.
 func (r Result[T]) FlatMap(fn func(val T) Result[T]) Result[T] {
 	if r.IsErr() {
 		return r
@@ -284,6 +310,7 @@ func (r Result[T]) FlatMap(fn func(val T) Result[T]) Result[T] {
 	return fn(r.getValue())
 }
 
+// MapErr calls fn with the error if the result is an error, then returns the result unchanged.
 func (r Result[T]) MapErr(fn func(err error) error) Result[T] {
 	if r.IsOK() {
 		return r
@@ -291,6 +318,7 @@ func (r Result[T]) MapErr(fn func(err error) error) Result[T] {
 	return Fail[T](fn(r.getErr()))
 }
 
+// MapErrOr calls fn with the error if the result is an error, then returns the result unchanged.
 func (r Result[T]) MapErrOr(fn func(err error) Result[T]) Result[T] {
 	if r.IsOK() {
 		return r
@@ -298,8 +326,10 @@ func (r Result[T]) MapErrOr(fn func(err error) Result[T]) Result[T] {
 	return fn(r.getErr())
 }
 
+// GetErr returns the error if the result is an error, or nil if it's OK.
 func (r Result[T]) GetErr() error { return r.Err() }
 
+// Err returns the error if the result is an error, or nil if it's OK.
 func (r Result[T]) Err() error {
 	if r.IsOK() {
 		return nil
@@ -308,6 +338,7 @@ func (r Result[T]) Err() error {
 	return r.getErr()
 }
 
+// String returns a string representation of the result.
 func (r Result[T]) String() string {
 	if r.IsOK() {
 		return fmt.Sprintf("OK(%v)", r.getValue())
@@ -315,12 +346,14 @@ func (r Result[T]) String() string {
 	return fmt.Sprintf("Error(%v)", r.getErr())
 }
 
+// WithErrorf returns a new Result with the provided error message.
 func (r Result[T]) WithErrorf(format string, args ...any) Result[T] {
 	err := fmt.Errorf(format, args...)
 	err = errors.WrapCaller(err, 1)
 	return Result[T]{err: err}
 }
 
+// WithErr returns a new Result with the provided error.
 func (r Result[T]) WithErr(err error, tags ...errors.Tags) Result[T] {
 	if err == nil {
 		return r
@@ -330,6 +363,7 @@ func (r Result[T]) WithErr(err error, tags ...errors.Tags) Result[T] {
 	return Result[T]{err: err}
 }
 
+// MarshalJSON returns a JSON representation of the result.
 func (r Result[T]) MarshalJSON() ([]byte, error) {
 	if r.IsErr() {
 		return nil, errors.WrapCaller(r.err, 1)

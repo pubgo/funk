@@ -11,7 +11,8 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 )
 
-func NewTlsConfig(domains ...string) *tls.Config {
+// NewTLSConfigWithDomain returns a new tls.Config
+func NewTLSConfigWithDomain(domains ...string) *tls.Config {
 	m := &autocert.Manager{
 		Prompt: autocert.AcceptTOS,
 	}

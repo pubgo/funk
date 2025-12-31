@@ -1,53 +1,71 @@
 version: "2"
+
+# 启用自动修复功能（如果 linter 支持）
 issues:
   fix: true
+
 linters:
   default: none
   enable:
+    # 正确性 & 安全性
     - govet
+    - errcheck
+    - staticcheck
+#    - gosec
+
+    # 未使用 & 冗余
+#    - unused
+    - ineffassign
+    - unconvert
+
+    # 风格 & 可读性（非格式层面）
+#    - revive        # 替代 golint，检查命名、注释等
+    - prealloc
+
+    # 文档 & 其他
+    - misspell
+#    - godox
+
+  # 排除特定问题
   exclusions:
-    presets:
-      - comments
-      - common-false-positives
-      - legacy
-      - std-error-handling
     paths:
-      - internal/example
-      - cmds
       - vendor
       - third_party$
       - builtin$
-      - examples$
+      - proto
+
+# 格式化工具配置
 formatters:
   enable:
     - goimports
     - gofmt
-    - gofumpt
+    - gci      # 增加 gci 以更好地控制导入顺序
   settings:
     gofumpt:
       extra-rules: true
     goimports:
-      # A list of prefixes, which, if set, checks import paths
-      # with the given prefixes are grouped after 3rd-party packages.
-      # Default: []
       local-prefixes:
         - github.com/pubgo/funk/v2
     gofmt:
-      # Simplify code: gofmt with `-s` option.
-      # Default: true
-      simplify: false
-      # Apply the rewrite rules to the source before reformatting.
-      # https://pkg.go.dev/cmd/gofmt
-      # Default: []
+      simplify: true
       rewrite-rules:
         - pattern: 'interface{}'
           replacement: 'any'
-        - pattern: 'a[b:len(a)]'
-          replacement: 'a[b:]'
+        - pattern: 'α[β:len(α)]'
+          replacement: 'α[β:]'
+        - pattern: 'α[:len(α)]'
+          replacement: 'α'
+        - pattern: 'make(map[α]β, 0)'
+          replacement: 'make(map[α]β)'
+    gci:
+      # 定义导入顺序，使代码更整洁
+      sections:
+        - standard
+        - default
+        - prefix(github.com/pubgo/funk/v2)
 
+  # 格式化工具的排除路径
   exclusions:
     paths:
-      - internal/example
       - vendor
-      - examples$
       - proto

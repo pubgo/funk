@@ -4,8 +4,6 @@ import (
 	"context"
 	"path/filepath"
 
-	result2 "github.com/pubgo/funk/v2/result"
-
 	bolt "go.etcd.io/bbolt"
 
 	"github.com/pubgo/funk/v2/assert"
@@ -14,6 +12,7 @@ import (
 	"github.com/pubgo/funk/v2/log"
 	"github.com/pubgo/funk/v2/merge"
 	"github.com/pubgo/funk/v2/pathutil"
+	result2 "github.com/pubgo/funk/v2/result"
 	"github.com/pubgo/funk/v2/strutil"
 )
 

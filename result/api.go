@@ -6,9 +6,8 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/pubgo/funk/v2/errors/errparser"
-
 	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/errors/errparser"
 )
 
 func Run(executors ...func() error) Error {
@@ -228,7 +227,7 @@ func Partition[T any](results []Result[T]) ([]T, []error) {
 //	    fmt.Printf("Collected values: %v\n", vals)
 //	}
 func Collect[T any](results []Result[T]) Result[[]T] {
-	var values []T
+	var values = make([]T, 0, len(results))
 
 	for _, result := range results {
 		if result.IsErr() {

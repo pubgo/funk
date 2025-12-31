@@ -1,5 +1,6 @@
 package systeminfo
 
+// DiskStatus 磁盘状态
 type DiskStatus struct {
 	All  uint64 `json:"all"`
 	Used uint64 `json:"used"`

@@ -17,7 +17,7 @@ func TestName(t *testing.T) {
 	}
 }
 
-func TestHomeDir(t *testing.T) {
+func TestHomeDir(_ *testing.T) {
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatal(err)

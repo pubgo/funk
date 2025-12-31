@@ -1,3 +1,5 @@
+// template engine for go
+
 package template
 
 import (
@@ -12,12 +14,14 @@ import (
 	"github.com/pubgo/funk/v2/log"
 )
 
+// Template is a template engine.
 type Template struct {
 	fs        fs.FS
 	templates sync.Map
 	globals   native.Declarations
 }
 
+// Build builds a template.
 func Build[Data any](t *Template, name string, data *Data) (string, error) {
 	_, ok := t.templates.Load(name)
 	if !ok {
@@ -44,6 +48,7 @@ func Build[Data any](t *Template, name string, data *Data) (string, error) {
 	return buf.String(), nil
 }
 
+// New returns a new template engine.
 func New(fs fs.FS, globals native.Declarations) *Template {
 	assert.If(fs == nil, "fs should not be nil")
 

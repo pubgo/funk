@@ -7,12 +7,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/pubgo/funk/v2/debugs"
-
-	"github.com/pubgo/funk/v2/errors/errparser"
-
 	assert1 "github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/debugs"
 	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/errors/errparser"
 	"github.com/pubgo/funk/v2/log"
 )
 
@@ -79,7 +77,7 @@ func BenchmarkPanic(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		func() {
 			defer func() {
-				recover()
+				_ = recover()
 			}()
 
 			panic("hello")

@@ -47,7 +47,7 @@ func TestResultDo(t *testing.T) {
 	})
 }
 
-func TestErrOf(t *testing.T) {
+func TestErrOf(_ *testing.T) {
 	resultchecker.RegisterErrCheck(log.RecordErr())
 
 	fn1().IfErr(func(err error) {
@@ -123,7 +123,7 @@ func TestMoreReasonableErrorHandling(t *testing.T) {
 	errResult := result.Fail[string](fmt.Errorf("initial error"))
 
 	// Chain operations on an error result
-	chainedResult := result.FlatMapTo(errResult, func(s string) result.Result[int] {
+	chainedResult := result.FlatMapTo(errResult, func(_ string) result.Result[int] {
 		return result.OK(100)
 	})
 

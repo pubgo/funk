@@ -23,6 +23,10 @@ type TLSConfig struct {
 
 // NewTLSConfig creates a new tls.Config from the given TLSConfig.
 func NewTLSConfig(cfg *TLSConfig) (*tls.Config, error) {
+	if cfg == nil {
+		return nil, fmt.Errorf("no TLS configuration provided")
+	}
+
 	tlsConfig := &tls.Config{InsecureSkipVerify: cfg.InsecureSkipVerify}
 
 	// If a CA cert is provided then let's read it in.

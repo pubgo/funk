@@ -7,9 +7,8 @@ import (
 
 	"github.com/samber/lo"
 
-	"github.com/pubgo/funk/v2/errors/errparser"
-
 	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/errors/errparser"
 )
 
 func Err(gErr *error, callbacks ...func(err error) error) {

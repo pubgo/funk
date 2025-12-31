@@ -1,3 +1,5 @@
+// stackutil provides stack utils
+
 package stackutil
 
 import (

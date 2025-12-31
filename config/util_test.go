@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/a8m/envsubst"
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
 
@@ -29,7 +30,7 @@ type testCfg struct {
 var genYaml string
 
 func TestExpr(t *testing.T) {
-	os.Setenv("testAbc", "hello")
+	lo.Must0(os.Setenv("testAbc", "hello"))
 	env.Reload()
 
 	assert.Equal(t, string(cfgFormat([]byte("${{env.TEST_ABC}}"), &config{})), "hello")
@@ -45,12 +46,12 @@ func TestExpr(t *testing.T) {
 }
 
 func TestEnv(t *testing.T) {
-	os.Setenv("hello", "world")
+	lo.Must0(os.Setenv("hello", "world"))
 	data, err := envsubst.String("${hello}")
 	assert.Nil(t, err)
 	assert.Equal(t, data, "world")
 
-	os.Setenv("hello", "")
+	lo.Must0(os.Setenv("hello", ""))
 	data, err = envsubst.String("${hello:-abc}")
 	assert.Nil(t, err)
 	assert.Equal(t, data, "abc")
