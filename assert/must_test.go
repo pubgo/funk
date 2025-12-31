@@ -7,6 +7,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/pubgo/funk/v2/debugs"
+
 	"github.com/pubgo/funk/v2/errors/errparser"
 
 	assert1 "github.com/pubgo/funk/v2/assert"
@@ -60,7 +62,7 @@ func init1Next() (err error) {
 }
 
 func TestDebugMode(t *testing.T) {
-	assert1.Exit(assert1.FeatureDebugMode.Set("true"))
+	assert1.Exit(debugs.Enabled.Set("true"))
 	assert1.Must(fmt.Errorf("test next"))
 }
 

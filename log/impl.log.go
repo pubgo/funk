@@ -215,8 +215,12 @@ func (l *loggerImpl) newEvent(ctx context.Context, e *zerolog.Event) *zerolog.Ev
 		e = e.CallerSkipFrame(l.callerSkip)
 	}
 
-	for k, v := range GetFieldsFromCtx(ctx) {
-		fields[k] = v
+	if fields == nil {
+		fields = GetFieldsFromCtx(ctx)
+	} else {
+		for k, v := range GetFieldsFromCtx(ctx) {
+			fields[k] = v
+		}
 	}
 
 	if len(fields) > 0 {
