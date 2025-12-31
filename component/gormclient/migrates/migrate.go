@@ -6,6 +6,7 @@ import (
 	"github.com/samber/lo"
 	"gorm.io/gorm"
 
+	"github.com/pubgo/funk/v2/closer"
 	"github.com/pubgo/funk/v2/merge"
 )
 
@@ -351,7 +352,7 @@ func (g *GoMigrate) unknownMigrationsHaveHappened() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	defer rows.Close()
+	defer closer.SafeClose(rows)
 
 	validIDSet := make(map[string]struct{}, len(g.migrations)+1)
 	validIDSet[initSchemaMigrationID] = struct{}{}

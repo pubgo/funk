@@ -32,15 +32,13 @@ type Pool struct {
 // Go submits a task to be run in the pool. If all goroutines in the pool
 // are busy, a call to Go() will block until the task can be started.
 func (p *Pool) Go(f func()) {
-	select {
-	case p.limiter <- struct{}{}:
-		// If we are below our limit, spawn a new worker rather
-		// than waiting for one to become available.
-		p.handle.Go(func() {
-			defer func() { <-p.limiter }()
-			f()
-		})
-	}
+	p.limiter <- struct{}{}
+	// If we are below our limit, spawn a new worker rather
+	// than waiting for one to become available.
+	p.handle.Go(func() {
+		defer func() { <-p.limiter }()
+		f()
+	})
 }
 
 // Wait cleans up spawned goroutines, propagating any panics that were

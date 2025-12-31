@@ -1,3 +1,5 @@
+// testing/testing.go
+
 package testing
 
 import "testing"
@@ -7,6 +9,7 @@ var (
 	_ Interface = (*testing.B)(nil)
 )
 
+// Interface is a testing interface.
 type Interface interface {
 	Name() string
 	Cleanup(f func())

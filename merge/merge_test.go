@@ -17,7 +17,7 @@ type src struct {
 	Hello string `json:"hello"`
 }
 
-func TestStruct(t *testing.T) {
+func TestStruct(_ *testing.T) {
 	pretty.Println(Struct(&dst{name: "1", Hello: "1"}, &src{Name: "2", Hello: "2"}))
 	pretty.Println(Struct(&dst{name: "1", Hello: "1"}, &src{Name: "2", Hello: "2"}))
 
@@ -32,7 +32,7 @@ func TestStruct(t *testing.T) {
 	Copy(&d1, &d2).Unwrap()
 }
 
-func TestMapStruct(t *testing.T) {
+func TestMapStruct(_ *testing.T) {
 	pretty.Println(MapStruct(&dst{name: "1", Hello: "1"}, map[string]any{"name": "2", "hello": "2"}))
 	pretty.Println(MapStruct(&dst{name: "1", Hello: "1"}, &map[string]any{"name": "2", "hello": "2"}))
 

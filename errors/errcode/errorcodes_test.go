@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -96,7 +97,7 @@ func TestNewCodeErrWithMsg(t *testing.T) {
 
 	// 测试空消息 - 应该panic
 	assert.Panics(t, func() {
-		errcode.NewCodeErrWithMsg(code, "")
+		lo.Must0(errcode.NewCodeErrWithMsg(code, ""))
 	})
 
 	// 测试带细节的错误
@@ -452,7 +453,7 @@ func TestRegistry(t *testing.T) {
 
 	// 注册错误码
 	assert.NotPanics(t, func() {
-		errcode.RegisterErrCodes(code)
+		lo.Must0(errcode.RegisterErrCodes(code))
 	})
 
 	// 获取所有错误码
@@ -461,6 +462,6 @@ func TestRegistry(t *testing.T) {
 
 	// 尝试重复注册同一个名称的错误码应该panic
 	assert.Panics(t, func() {
-		errcode.RegisterErrCodes(code)
+		lo.Must0(errcode.RegisterErrCodes(code))
 	})
 }

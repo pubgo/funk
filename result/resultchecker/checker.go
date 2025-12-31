@@ -27,7 +27,7 @@ func RegisterErrCheck(f ErrChecker) bool {
 func GetErrChecks() []ErrChecker { return errChecks }
 
 func GetErrCheckStacks() []*stack.Frame {
-	var frames []*stack.Frame
+	var frames = make([]*stack.Frame, 0, len(errChecks))
 	for _, err := range errChecks {
 		frames = append(frames, stack.CallerWithFunc(err))
 	}

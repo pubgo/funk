@@ -16,7 +16,6 @@ func New(conf *Config) *Client {
 	cfg := merge.Struct(new(client3.Config), conf).Unwrap()
 	cfg.DialOptions = append(
 		cfg.DialOptions,
-		grpc.WithBlock(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 

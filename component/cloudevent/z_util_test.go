@@ -13,6 +13,7 @@ func TestCalcTimeout(t *testing.T) {
 	ctx := context.Background()
 	deadline, ok := ctx.Deadline()
 	assert.Equal(t, ok, false)
+	assert.Equal(t, deadline.IsZero(), true)
 
 	cc := lo.T2(context.WithTimeout(ctx, time.Second*5))
 	deadline, ok = cc.A.Deadline()

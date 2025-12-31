@@ -118,10 +118,8 @@ func VisitAll(fn func(*Flag)) { defaultFeature.VisitAll(fn) }
 func mergeTags(maps ...map[string]any) map[string]any {
 	m := make(map[string]any)
 	for _, mm := range maps {
-		if mm != nil { // Skip nil maps to prevent panics
-			for k, v := range mm {
-				m[k] = v
-			}
+		for k, v := range mm {
+			m[k] = v
 		}
 	}
 	return m

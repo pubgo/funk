@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/pubgo/redant"
 	// atlas "ariga.io/atlas/sql/migrate"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/schema"
 	"entgo.io/ent/entc"
 	"entgo.io/ent/entc/gen"
+	"github.com/pubgo/redant"
+
 	"github.com/pubgo/funk/v2/recovery"
-	// https://github.com/ent/ent/blob/master/cmd/internal/base/base.go
 )
 
 type params struct {

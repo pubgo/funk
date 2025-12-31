@@ -59,14 +59,14 @@ func (e *ErrWrap) Error() string                 { return e.Err.Error() }
 func (e *ErrWrap) String() string {
 	buf := bytes.NewBuffer(nil)
 	buf.WriteString("===============================================================\n")
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorId, e.ID()))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorCaller, e.Caller))
+	fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorId, e.ID())
+	fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorCaller, e.Caller)
 	for k, v := range e.Tags.ToMapString() {
-		buf.WriteString(fmt.Sprintf("%s]: %s=%q\n", errinter.ColorTags, k, v))
+		fmt.Fprintf(buf, "%s]: %s=%q\n", errinter.ColorTags, k, v)
 	}
 
 	for i := range e.Stacks {
-		buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorStack, e.Stacks[i]))
+		fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorStack, e.Stacks[i])
 	}
 	ErrStringify(buf, e.Err)
 	return buf.String()

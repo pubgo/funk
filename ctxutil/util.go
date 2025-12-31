@@ -73,7 +73,7 @@ func GetTimeout(ctx context.Context) *time.Duration {
 func Signal() context.Context {
 	ctx, cancel := context.WithCancel(context.Background())
 	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL)
+	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
 	go func() {
 		defer cancel()
 		select {

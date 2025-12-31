@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/closer"
 )
 
 var localIpReg = assert.Exit1(regexp.Compile(`\d+\.\d+\.\d+\.\d+`))
@@ -49,7 +50,7 @@ func IsPortUsed(protocol, addr string) bool {
 	if err != nil {
 		return false
 	}
-	defer conn.Close()
+	defer closer.SafeClose(conn)
 	return true
 }
 
@@ -72,8 +73,8 @@ const (
 	XRealIP       = "X-Real-IP"
 )
 
-// RemoteIp 返回远程客户端的 IP，如 192.168.1.1
-func RemoteIp(req *http.Request) string {
+// RemoteIP 返回远程客户端的 IP，如 192.168.1.1
+func RemoteIP(req *http.Request) string {
 	remoteAddr := req.RemoteAddr
 	if ip := req.Header.Get(XRealIP); ip != "" {
 		remoteAddr = ip
@@ -143,5 +144,5 @@ func getIP(r *http.Request) (string, error) {
 	if netIP != nil {
 		return ip, nil
 	}
-	return "", fmt.Errorf("No valid ip found")
+	return "", fmt.Errorf("no valid ip found")
 }

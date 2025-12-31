@@ -41,6 +41,7 @@ func (f *Frame) IsRuntime() bool {
 	return strings.Contains(f.File, goRoot)
 }
 
+// GetGORoot returns the GOROOT.
 func GetGORoot() string { return goRoot }
 
 // Caller returns the Frame of the caller.
@@ -104,6 +105,7 @@ func CallerWithFunc(fn any) *Frame {
 	return stack(vfn.Pointer())
 }
 
+// GetStack returns the stack pointer.
 func GetStack(skip int) uintptr {
 	var pcs [1]uintptr
 	n := runtime.Callers(skip+2, pcs[:])
@@ -114,6 +116,7 @@ func GetStack(skip int) uintptr {
 	return pcs[0] - 1
 }
 
+// Stack returns the Frame of the stack.
 func Stack(p uintptr) *Frame {
 	return stack(p)
 }

@@ -20,13 +20,11 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/structpb"
 
+	"github.com/pubgo/funk/v2"
 	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/internal/errors/errinter"
 	"github.com/pubgo/funk/v2/log/logutil"
 	"github.com/pubgo/funk/v2/proto/errorpb"
-
-	"github.com/pubgo/funk/v2/internal/errors/errinter"
-
-	"github.com/pubgo/funk/v2"
 )
 
 func MustTagsToAny(tags errors.Tags) []*anypb.Any {
@@ -291,11 +289,11 @@ func (t *ErrCode) As(err any) bool {
 
 func (t *ErrCode) String() string {
 	buf := bytes.NewBuffer(nil)
-	buf.WriteString(fmt.Sprintf("%s]: %d\n", errinter.ColorCode, t.pb.Code))
-	buf.WriteString(fmt.Sprintf("%s]: %q\n", errinter.ColorMessage, t.pb.Message))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorName, t.pb.Name))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorStatusCode, t.pb.StatusCode.String()))
-	buf.WriteString(fmt.Sprintf("%s]: %s\n", errinter.ColorId, lo.FromPtr(t.pb.Id)))
+	fmt.Fprintf(buf, "%s]: %d\n", errinter.ColorCode, t.pb.Code)
+	fmt.Fprintf(buf, "%s]: %q\n", errinter.ColorMessage, t.pb.Message)
+	fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorName, t.pb.Name)
+	fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorStatusCode, t.pb.StatusCode.String())
+	fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorId, lo.FromPtr(t.pb.Id))
 	errors.ErrStringify(buf, t.err)
 	return buf.String()
 }

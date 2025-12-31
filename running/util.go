@@ -8,6 +8,7 @@ import (
 
 	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/buildinfo/version"
+	"github.com/pubgo/funk/v2/env"
 	"github.com/pubgo/funk/v2/recovery"
 )
 
@@ -28,7 +29,7 @@ func GetSysInfo() map[string]string {
 		"version":       Version(),
 		"domain":        Domain(),
 		"commit_id":     CommitID(),
-		"go_root":       rt.GOROOT(),
+		"go_root":       env.Get("GOROOT"),
 		"go_arch":       rt.GOARCH,
 		"go_os":         rt.GOOS,
 		"go_version":    rt.Version(),
@@ -37,6 +38,7 @@ func GetSysInfo() map[string]string {
 	}
 }
 
+// CheckVersion 检查版本信息
 func CheckVersion() {
 	defer recovery.Exit()
 	assert.If(version.Project() == "", "project is null")

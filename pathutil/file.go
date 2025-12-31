@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/closer"
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/recovery"
 )
@@ -68,10 +69,10 @@ func CopyFile(source, dest string) (err error) {
 	defer recovery.Err(&err)
 
 	sourcefile := assert.Must1(os.Open(source))
-	defer sourcefile.Close()
+	defer closer.SafeClose(sourcefile)
 
 	destfile := assert.Must1(os.Create(dest))
-	defer destfile.Close()
+	defer closer.SafeClose(destfile)
 
 	_ = assert.Must1(io.Copy(destfile, sourcefile))
 
@@ -91,7 +92,7 @@ func CopyDir(source, dest string) (err error) {
 	assert.Must(os.MkdirAll(dest, sourceinfo.Mode()))
 
 	directory := assert.Must1(os.Open(source))
-	defer directory.Close()
+	defer closer.SafeClose(directory)
 
 	objects := assert.Must1(directory.Readdir(-1))
 	for _, obj := range objects {
@@ -209,7 +210,7 @@ func GetModelPath() string {
 // GetCurrentDirectory 获取程序运行路径
 func GetCurrentDirectory() string {
 	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	return strings.Replace(dir, "\\", "/", -1)
+	return strings.ReplaceAll(dir, "\\", "/")
 }
 
 func DirName(argv ...string) string {
@@ -221,14 +222,15 @@ func DirName(argv ...string) string {
 	}
 	path, _ := filepath.Abs(file)
 	directory := filepath.Dir(path)
-	return strings.Replace(directory, "\\", "/", -1)
+	return strings.ReplaceAll(directory, "\\", "/")
 }
 
+// GetProPath get project path
 func GetProPath() string {
 	return DirName("root")
 }
 
-// List list file
+// List file
 func List(dirPth, suffix string) (files []string, err error) {
 	files = make([]string, 0, 10)
 	dir, err := os.ReadDir(dirPth)
