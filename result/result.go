@@ -5,12 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 
 	"github.com/pubgo/funk/v2"
 	"github.com/pubgo/funk/v2/errors"
-	"github.com/pubgo/funk/v2/log/logfields"
 )
 
 var (
@@ -58,7 +56,7 @@ func (r Result[T]) ValueTo(v *T) Error {
 }
 
 // UnwrapOrLog attempts to unwrap the value, returning it and panicking if an error occurs.
-func (r Result[T]) UnwrapOrLog(events ...func(e *zerolog.Event)) T {
+func (r Result[T]) UnwrapOrLog(events ...func(e Event)) T {
 	if r.IsErr() {
 		panicIfError(errors.WrapCaller(r.getErr(), 1), events...)
 	}
@@ -122,7 +120,7 @@ func (r Result[T]) MatchWithResult(onOk func(T) Result[T], onErr func(error) Res
 }
 
 // Must panics if the result is an error.
-func (r Result[T]) Must(events ...func(e *zerolog.Event)) {
+func (r Result[T]) Must(events ...func(e Event)) {
 	if r.IsErr() {
 		panicIfError(errors.WrapCaller(r.getErr(), 1), events...)
 	}
@@ -222,8 +220,8 @@ func (r Result[T]) CallIfOK(fn func(val T) error) Result[T] {
 func (r Result[T]) Expect(format string, args ...any) T {
 	if r.IsErr() {
 		err := errors.WrapCaller(r.getErr(), 1)
-		panicIfError(err, func(e *zerolog.Event) {
-			e.Str(logfields.Msg, fmt.Sprintf(format, args...))
+		panicIfError(err, func(e Event) {
+			e.Msgf(format, args...)
 		})
 	}
 
@@ -269,13 +267,13 @@ func (r Result[T]) IfOK(fn func(val T)) Result[T] {
 }
 
 // LogCtx logs the error with the provided context.
-func (r Result[T]) LogCtx(ctx context.Context, events ...func(e *zerolog.Event)) Result[T] {
+func (r Result[T]) LogCtx(ctx context.Context, events ...func(e Event)) Result[T] {
 	logErr(ctx, 0, r.err, events...)
 	return r
 }
 
 // Log logs the error.
-func (r Result[T]) Log(events ...func(e *zerolog.Event)) Result[T] {
+func (r Result[T]) Log(events ...func(e Event)) Result[T] {
 	logErr(context.Background(), 0, r.err, events...)
 	return r
 }

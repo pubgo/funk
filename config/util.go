@@ -11,13 +11,13 @@ import (
 	"strings"
 
 	"dario.cat/mergo"
+	"github.com/a8m/envsubst"
 	"github.com/samber/lo"
 	"github.com/valyala/fasttemplate"
 	"gopkg.in/yaml.v3"
 
 	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/errors"
-	"github.com/pubgo/funk/v2/log"
 	"github.com/pubgo/funk/v2/pathutil"
 	"github.com/pubgo/funk/v2/result"
 )
@@ -206,37 +206,51 @@ func RegisterExpr(name string, fn any) error {
 	return globalManager.RegisterExprFunc(name, fn)
 }
 
-// MustRegisterExpr is like RegisterExpr but panics on error.
-// Deprecated: prefer RegisterExpr which returns error.
-func MustRegisterExpr(name string, fn any) {
-	if err := RegisterExpr(name, fn); err != nil {
-		panic(err)
-	}
-}
-
-func cfgFormat(template []byte, cfg *config) []byte {
-	tpl := fasttemplate.New(string(template), "${{", "}}")
-	return []byte(tpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
+func evalData(template []byte, cfg *config) []byte {
+	exprTpl := fasttemplate.New(string(template), "${{", "}}")
+	res := []byte(exprTpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
 		tag = strings.TrimSpace(tag)
-		evalData, err := eval(tag, cfg)
-		if err != nil {
-			return -1, errors.Wrap(err, tag)
+		d, err := result.WrapErr(evalExpr(tag, cfg))
+		if err.IsErr() {
+			err.Log(func(e result.Event) {
+				e.Str("tag", tag)
+			})
+			return -1, err.Err()
 		}
 
-		data, err := yaml.Marshal(evalData)
-		if err != nil {
-			log.Err(err).
-				Str("tag", tag).
-				Msgf("failed to marshal yaml: %v", evalData)
-			return -1, errors.Wrap(err, tag)
+		data, err := result.WrapErr(yaml.Marshal(d))
+		if err.IsErr() {
+			err.Log(func(e result.Event) {
+				e.Str("tag", tag)
+				e.Msg("failed to marshal yaml")
+			})
+			return -1, err.Err()
 		}
 
 		return w.Write(bytes.TrimSpace(data))
 	}))
+
+	envTpl := fasttemplate.New(string(res), "${", "}")
+	return []byte(envTpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
+		tag = strings.TrimSpace(tag)
+		name := strings.TrimSpace(strings.Split(tag, ":")[0])
+		if cfg.envSpecMap != nil {
+			if _, defined := cfg.envSpecMap[name]; !defined {
+				return -1, fmt.Errorf("env: variable %q is not defined in envs, all env vars must be declared", name)
+			}
+		}
+
+		tag = fmt.Sprintf("${%s}", tag)
+		return w.Write(bytes.TrimSpace([]byte(result.Wrap(envsubst.String(tag)).
+			UnwrapOrLog(func(e result.Event) {
+				e.Str("env", name)
+				e.Msg("failed to process env subst")
+			}))))
+	}))
 }
 
-// eval evaluates a CEL expression with the given config context
-func eval(code string, cfg *config) (any, error) {
+// evalExpr evaluates a CEL expression with the given config context
+func evalExpr(code string, cfg *config) (any, error) {
 	engine, err := newCelEngine(cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create CEL engine")

@@ -9,8 +9,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/a8m/envsubst"
-	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
 
@@ -71,8 +69,7 @@ func GetConfigData(cfgPath string, envSpecMap ...EnvSpecMap) (_ []byte, gErr err
 	}
 
 	configBytes = result.Wrap(os.ReadFile(cfgPath)).Expect("failed to read config data: %s", cfgPath)
-	configBytes = cfgFormat(configBytes, cfg)
-	configBytes = result.Wrap(envsubst.Bytes(configBytes)).Expect("failed to handler config env data: %s", cfgPath)
+	configBytes = evalData(configBytes, cfg)
 	return configBytes, nil
 }
 
@@ -108,7 +105,7 @@ func loadEnvConfigMap(cfgPath string) EnvSpecMap {
 
 			envConfigBytes := result.Wrap(os.ReadFile(p)).
 				Map(bytes.TrimSpace).
-				UnwrapOrLog(func(e *zerolog.Event) {
+				UnwrapOrLog(func(e result.Event) {
 					e.Str("env_path", p)
 					e.Str(logfields.Msg, "failed to handler env config data")
 				})
@@ -116,18 +113,12 @@ func loadEnvConfigMap(cfgPath string) EnvSpecMap {
 				continue
 			}
 
-			envConfigBytes = cfgFormat(envConfigBytes, &config{workDir: filepath.Dir(cfgPath)})
-			envConfigBytes = result.Wrap(envsubst.Bytes(envConfigBytes)).
-				UnwrapOrLog(func(e *zerolog.Event) {
-					e.Str("env_path", p)
-					// Security: don't log raw env data which may contain secrets
-					e.Str(logfields.Msg, "failed to process env config")
-				})
+			envConfigBytes = evalData(envConfigBytes, &config{workDir: filepath.Dir(cfgPath)})
 
 			// Parse into temporary map to check for conflicts
 			var tempEnvMap EnvSpecMap
 			result.ErrOf(yaml.Unmarshal(envConfigBytes, &tempEnvMap)).
-				MustWithLog(func(e *zerolog.Event) {
+				MustWithLog(func(e result.Event) {
 					// Security: don't log raw env data which may contain secrets
 					e.Str("env_path", p)
 					e.Str(logfields.Msg, "failed to unmarshal env config")
@@ -213,11 +204,12 @@ func LoadFromPath[T any](cfgPath string) (*Cfg[T], error) {
 		resBytes := result.Wrap(GetConfigData(resPath, envCfgMap)).Expect("failed to handler config data")
 
 		var cfg1 T
-		result.ErrOf(yaml.Unmarshal(resBytes, &cfg1)).MustWithLog(func(e *zerolog.Event) {
+		result.ErrOf(yaml.Unmarshal(resBytes, &cfg1)).MustWithLog(func(e result.Event) {
 			fmt.Println("res_path", resPath)
 			fmt.Println("config_data", string(resBytes))
 			assert.Exit(os.WriteFile(resPath+".err.yml", resBytes, 0o666))
-			e.Str(logfields.Msg, "failed to unmarshal config")
+
+			e.Msg("failed to unmarshal config")
 		})
 
 		return cfg1

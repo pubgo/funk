@@ -2,7 +2,6 @@ package cloudevent
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/nats-io/nats.go"
@@ -15,7 +14,6 @@ import (
 
 	"github.com/pubgo/funk/v2/ctxutil"
 	"github.com/pubgo/funk/v2/errors"
-	"github.com/pubgo/funk/v2/log/logfields"
 	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
 	"github.com/pubgo/funk/v2/result"
 	"github.com/pubgo/funk/v2/stack"
@@ -132,8 +130,8 @@ func (c *Client) publish(ctx context.Context, topic string, args proto.Message, 
 
 	proxy := result.ErrProxyOf(&gErr)
 	pb := result.Wrap(anypb.New(args)).
-		Log(func(e *zerolog.Event) {
-			e.Str(logfields.Msg, "failed to marshal args to any proto")
+		Log(func(e result.Event) {
+			e.Msg("failed to marshal args to any proto")
 		}).
 		UnwrapOrThrow(&proxy)
 	if proxy.IsErr() {
@@ -142,8 +140,8 @@ func (c *Client) publish(ctx context.Context, topic string, args proto.Message, 
 
 	// TODO get parent event info from ctx
 	data := result.Wrap(proto.Marshal(pb)).
-		Log(func(e *zerolog.Event) {
-			e.Str(logfields.Msg, "failed to marshal any proto to bytes")
+		Log(func(e result.Event) {
+			e.Msg("failed to marshal any proto to bytes")
 		}).
 		UnwrapOrThrow(&proxy)
 	if proxy.IsErr() {
@@ -166,8 +164,8 @@ func (c *Client) publish(ctx context.Context, topic string, args proto.Message, 
 	msg := &nats.Msg{Subject: topic, Data: data, Header: header}
 	jetOpts := append([]jetstream.PublishOpt{}, jetstream.WithMsgID(msgId))
 	pubActInfo = result.Wrap(c.js.PublishMsg(ctx, msg, jetOpts...)).
-		Log(func(e *zerolog.Event) {
-			e.Str(logfields.Msg, fmt.Sprintf("failed to publish msg to stream, topic=%s msg_id=%s", topic, msgId))
+		Log(func(e result.Event) {
+			e.Msgf("failed to publish msg to stream, topic=%s msg_id=%s", topic, msgId)
 		}).
 		UnwrapOrThrow(&proxy)
 	if gErr != nil {

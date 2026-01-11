@@ -7,7 +7,7 @@ import (
 
 	"github.com/samber/lo"
 
-	"github.com/pubgo/funk/v2/internal/errors/errinter"
+	"github.com/pubgo/funk/v2/internal/errors/errcolorfield"
 	"github.com/pubgo/funk/v2/stack"
 )
 
@@ -59,14 +59,14 @@ func (e *ErrWrap) Error() string                 { return e.Err.Error() }
 func (e *ErrWrap) String() string {
 	buf := bytes.NewBuffer(nil)
 	buf.WriteString("===============================================================\n")
-	fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorId, e.ID())
-	fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorCaller, e.Caller)
+	fmt.Fprintf(buf, "%s]: %s\n", errcolorfield.ColorId, e.ID())
+	fmt.Fprintf(buf, "%s]: %s\n", errcolorfield.ColorCaller, e.Caller)
 	for k, v := range e.Tags.ToMapString() {
-		fmt.Fprintf(buf, "%s]: %s=%q\n", errinter.ColorTags, k, v)
+		fmt.Fprintf(buf, "%s]: %s=%q\n", errcolorfield.ColorTags, k, v)
 	}
 
 	for i := range e.Stacks {
-		fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorStack, e.Stacks[i])
+		fmt.Fprintf(buf, "%s]: %s\n", errcolorfield.ColorStack, e.Stacks[i])
 	}
 	ErrStringify(buf, e.Err)
 	return buf.String()

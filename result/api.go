@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/rs/zerolog"
-
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/errors/errparser"
 )
@@ -99,6 +97,14 @@ func Fail[T any](err error) Result[T] {
 	return Result[T]{err: err}
 }
 
+func WrapErr[T any](v T, err error) (t T, gErr Error) {
+	if err == nil {
+		return v, gErr
+	}
+
+	return t, newError(errors.WrapCaller(err, 1))
+}
+
 func Wrap[T any](v T, err error) Result[T] {
 	if err == nil {
 		return Result[T]{v: &v}
@@ -142,15 +148,15 @@ func FlatMapTo[T, U any](r Result[T], fn func(T) Result[U]) Result[U] {
 	return fn(r.getValue())
 }
 
-func LogErr(err error, events ...func(e *zerolog.Event)) {
+func LogErr(err error, events ...func(e Event)) {
 	logErr(context.Background(), 0, err, events...)
 }
 
-func LogErrCtx(ctx context.Context, err error, events ...func(e *zerolog.Event)) {
+func LogErrCtx(ctx context.Context, err error, events ...func(e Event)) {
 	logErr(ctx, 0, err, events...)
 }
 
-func Must(err error, events ...func(e *zerolog.Event)) {
+func Must(err error, events ...func(e Event)) {
 	if err == nil {
 		return
 	}

@@ -9,7 +9,7 @@ import (
 	"github.com/rs/xid"
 
 	"github.com/pubgo/funk/v2"
-	"github.com/pubgo/funk/v2/internal/errors/errinter"
+	"github.com/pubgo/funk/v2/internal/errors/errcolorfield"
 )
 
 var (
@@ -59,11 +59,11 @@ func (e Err) MarshalJSON() ([]byte, error) {
 
 func (e Err) String() string {
 	buf := bytes.NewBuffer(nil)
-	fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorId, e.id)
+	fmt.Fprintf(buf, "%s]: %s\n", errcolorfield.ColorId, e.id)
 	for k, v := range e.Tags.ToMapString() {
-		fmt.Fprintf(buf, "%s]: %s: %q\n", errinter.ColorTags, k, v)
+		fmt.Fprintf(buf, "%s]: %s: %q\n", errcolorfield.ColorTags, k, v)
 	}
-	fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorErrMsg, e.Msg)
-	fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorErrDetail, e.Detail)
+	fmt.Fprintf(buf, "%s]: %s\n", errcolorfield.ColorErrMsg, e.Msg)
+	fmt.Fprintf(buf, "%s]: %s\n", errcolorfield.ColorErrDetail, e.Detail)
 	return buf.String()
 }

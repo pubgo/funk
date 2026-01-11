@@ -35,12 +35,12 @@ func TestExpr(t *testing.T) {
 
 	// CEL uses env() function to access environment variables
 	// When envSpecMap is nil, env() calls are not validated (for backwards compatibility in patch_envs)
-	assert.Equal(t, string(cfgFormat([]byte(`${{env("TEST_ABC")}}`), &config{})), "hello")
-	assert.Equal(t, string(cfgFormat([]byte(`${{embed("configs/assets/secret")}}`), &config{})), strings.TrimSpace(`MTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1Ng==`))
+	assert.Equal(t, string(evalData([]byte(`${{env("TEST_ABC")}}`), &config{})), "hello")
+	assert.Equal(t, string(evalData([]byte(`${{embed("configs/assets/secret")}}`), &config{})), strings.TrimSpace(`MTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1Ng==`))
 
 	dd, err := os.ReadFile("configs/assets/assets.yaml")
 	assert.NoError(t, err)
-	dd1 := bytes.TrimSpace(cfgFormat(dd, &config{workDir: "configs/assets"}))
+	dd1 := bytes.TrimSpace(evalData(dd, &config{workDir: "configs/assets"}))
 	var cfg testCfg
 	assert.NoError(t, yaml.Unmarshal(dd1, &cfg))
 

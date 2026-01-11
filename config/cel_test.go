@@ -188,7 +188,7 @@ func TestCelEngine_SecurityNoSideEffects(t *testing.T) {
 	for _, expr := range dangerousExprs {
 		t.Run(expr, func(t *testing.T) {
 			_, err := engine.Eval(expr)
-			// Should error on compile or eval
+			// Should error on compile or evalExpr
 			assert.Error(t, err, "expected error for dangerous expression: %s", expr)
 		})
 	}

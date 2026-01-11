@@ -21,7 +21,6 @@ import (
 	"github.com/pubgo/funk/v2/component/natsclient"
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/log"
-	"github.com/pubgo/funk/v2/log/logfields"
 	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
 	"github.com/pubgo/funk/v2/result"
 	"github.com/pubgo/funk/v2/running"
@@ -99,8 +98,8 @@ func (c *Client) initStream() (r error) {
 			Duplicates: time.Minute * 5,
 		}
 
-		stream := result.Wrap(c.js.CreateOrUpdateStream(ctx, streamCfg)).UnwrapOrLog(func(e *zerolog.Event) {
-			e.Str(logfields.Msg, fmt.Sprintf("failed to create stream:%s", streamName))
+		stream := result.Wrap(c.js.CreateOrUpdateStream(ctx, streamCfg)).UnwrapOrLog(func(e result.Event) {
+			e.Msgf("failed to create stream:%s", streamName)
 		})
 		c.streams[streamName] = stream
 	}
