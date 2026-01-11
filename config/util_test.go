@@ -33,7 +33,9 @@ func TestExpr(t *testing.T) {
 	lo.Must0(os.Setenv("testAbc", "hello"))
 	env.Reload()
 
-	assert.Equal(t, string(cfgFormat([]byte("${{env.TEST_ABC}}"), &config{})), "hello")
+	// CEL uses env() function to access environment variables
+	// When envSpecMap is nil, env() calls are not validated (for backwards compatibility in patch_envs)
+	assert.Equal(t, string(cfgFormat([]byte(`${{env("TEST_ABC")}}`), &config{})), "hello")
 	assert.Equal(t, string(cfgFormat([]byte(`${{embed("configs/assets/secret")}}`), &config{})), strings.TrimSpace(`MTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1Ng==`))
 
 	dd, err := os.ReadFile("configs/assets/assets.yaml")
@@ -58,10 +60,14 @@ func TestEnv(t *testing.T) {
 }
 
 func TestConfigPath(t *testing.T) {
-	t.Log(getConfigPath("", ""))
-	assert.Panics(t, func() {
-		t.Log(getConfigPath("", "toml"))
-	})
+	cfgPath, _, err := findConfigPath("", "")
+	assert.NoError(t, err)
+	t.Log(cfgPath)
+
+	// toml config should not be found and return error
+	_, _, err = findConfigPath("", "toml")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "config not found")
 }
 
 var _ NamedConfig = (*configL)(nil)

@@ -368,8 +368,7 @@ func exec(ver string) string {
 		WithOccurrence(2).
 		WithStartupTimeout(30 * time.Second)
 
-	ctr := assert.Must1(postgres.RunContainer(ctx,
-		testcontainers.WithImage("postgres:"+ver),
+	ctr := assert.Must1(postgres.Run(ctx, "postgres:"+ver,
 		testcontainers.WithWaitStrategy(waitForLogs),
 	))
 

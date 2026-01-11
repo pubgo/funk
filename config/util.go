@@ -2,7 +2,6 @@ package config
 
 import (
 	"bytes"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"io/fs"
@@ -12,22 +11,22 @@ import (
 	"strings"
 
 	"dario.cat/mergo"
-	"github.com/expr-lang/expr"
 	"github.com/samber/lo"
 	"github.com/valyala/fasttemplate"
 	"gopkg.in/yaml.v3"
 
 	"github.com/pubgo/funk/v2/assert"
-	"github.com/pubgo/funk/v2/env"
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/log"
 	"github.com/pubgo/funk/v2/pathutil"
 	"github.com/pubgo/funk/v2/result"
 )
 
-func getConfigPath(name, typ string, configDir ...string) (string, string) {
-	if len(configDir) == 0 {
-		configDir = append(configDir, "./", defaultConfigPath)
+// findConfigPath searches for config file and returns path and directory.
+// Returns error if config file is not found.
+func findConfigPath(name, typ string, configDirs ...string) (cfgPath string, cfgDir string, err error) {
+	if len(configDirs) == 0 {
+		configDirs = append(configDirs, "./", defaultConfigPath)
 	}
 
 	if name == "" {
@@ -41,19 +40,17 @@ func getConfigPath(name, typ string, configDir ...string) (string, string) {
 	configName := fmt.Sprintf("%s.%s", name, typ)
 	var notFoundPath []string
 	for _, path := range getPathList() {
-		for _, dir := range configDir {
+		for _, dir := range configDirs {
 			cfgPath := filepath.Join(path, dir, configName)
 			if pathutil.IsNotExist(cfgPath) {
 				notFoundPath = append(notFoundPath, cfgPath)
 			} else {
-				return cfgPath, filepath.Dir(cfgPath)
+				return cfgPath, filepath.Dir(cfgPath), nil
 			}
 		}
 	}
 
-	log.Panic().Msgf("config not found in: %v", notFoundPath)
-
-	return "", ""
+	return "", "", errors.Errorf("config not found in: %v", notFoundPath)
 }
 
 // getPathList 递归得到当前目录到跟目录中所有的目录路径
@@ -198,49 +195,23 @@ func makeList(typ reflect.Type, data []reflect.Value) reflect.Value {
 }
 
 type config struct {
-	workDir string
+	workDir    string
+	envSpecMap EnvSpecMap // allowed env vars from patch_envs
 }
 
-var registerMap = make(map[string]any)
-
-func RegisterExpr(name string, expr any) {
-	if registerMap[name] != nil {
-		panic(fmt.Sprintf("expr:%s has existed", name))
-	}
-	registerMap[name] = expr
+// RegisterExpr registers a custom expression function for use in config templates.
+// Returns error if the name already exists. For backward compatibility, use MustRegisterExpr for panic behavior.
+// Note: Custom functions must have simple signatures: func() T or func(T) R
+func RegisterExpr(name string, fn any) error {
+	return globalManager.RegisterExprFunc(name, fn)
 }
 
-func getEnvData(cfg *config) map[string]any {
-	exprEnv := map[string]any{
-		"env": env.Map(),
-		"config_dir": func() string {
-			return cfg.workDir
-		},
-		"embed": func(name string) string {
-			if name == "" {
-				return ""
-			}
-
-			path := filepath.Join(cfg.workDir, name)
-			d, err := os.ReadFile(path)
-			if err != nil {
-				log.Panic().Err(err).
-					Str("path", path).
-					Msg("failed to read file")
-				return ""
-			}
-
-			return strings.TrimSpace(base64.StdEncoding.EncodeToString(d))
-		},
+// MustRegisterExpr is like RegisterExpr but panics on error.
+// Deprecated: prefer RegisterExpr which returns error.
+func MustRegisterExpr(name string, fn any) {
+	if err := RegisterExpr(name, fn); err != nil {
+		panic(err)
 	}
-
-	for k, v := range registerMap {
-		if exprEnv[k] != nil {
-			panic(fmt.Sprintf("expr:%s has existed", k))
-		}
-		exprEnv[k] = v
-	}
-	return exprEnv
 }
 
 func cfgFormat(template []byte, cfg *config) []byte {
@@ -264,11 +235,11 @@ func cfgFormat(template []byte, cfg *config) []byte {
 	}))
 }
 
+// eval evaluates a CEL expression with the given config context
 func eval(code string, cfg *config) (any, error) {
-	envData := getEnvData(cfg)
-	data, err := expr.Eval(strings.TrimSpace(code), envData)
+	engine, err := newCelEngine(cfg)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to eval expr:%q", code)
+		return nil, errors.Wrap(err, "failed to create CEL engine")
 	}
-	return data, nil
+	return engine.Eval(code)
 }
