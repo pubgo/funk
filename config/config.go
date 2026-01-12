@@ -55,7 +55,8 @@ func SetConfigPath(confPath string) {
 
 // GetConfigData loads and processes config file content with optional envSpecMap validation.
 // If envSpecMap is provided, env() calls in the config will be validated against defined vars.
-func GetConfigData(cfgPath string, envSpecMap ...EnvSpecMap) (_ []byte, gErr error) {
+// workDir is the root config directory used for embed() path resolution.
+func GetConfigData(cfgPath string, workDir string, envSpecMap ...EnvSpecMap) (_ []byte, gErr error) {
 	var configBytes []byte
 	defer result.RecoveryErr(&gErr, func(err error) error {
 		// Security: mask config content in logs to prevent sensitive data leakage
@@ -63,7 +64,12 @@ func GetConfigData(cfgPath string, envSpecMap ...EnvSpecMap) (_ []byte, gErr err
 		return err
 	})
 
-	cfg := &config{workDir: filepath.Dir(cfgPath)}
+	// If workDir not specified, use the directory of cfgPath
+	if workDir == "" {
+		workDir = filepath.Dir(cfgPath)
+	}
+
+	cfg := &config{workDir: workDir}
 	if len(envSpecMap) > 0 && envSpecMap[0] != nil {
 		cfg.envSpecMap = envSpecMap[0]
 	}
@@ -164,9 +170,11 @@ func LoadFromPath[T any](cfgPath string) (*Cfg[T], error) {
 	}
 
 	envCfgMap := loadEnvConfigMap(cfgPath)
+	parentDir := filepath.Dir(cfgPath)
 
 	// Pass envSpecMap to GetConfigData to validate env() calls against defined vars
-	configBytes := result.Wrap(GetConfigData(cfgPath, envCfgMap)).Expect("failed to handler config data")
+	// workDir is the root config directory for embed() path resolution
+	configBytes := result.Wrap(GetConfigData(cfgPath, parentDir, envCfgMap)).Expect("failed to handler config data")
 	defer recovery.Exit(func(err error) error {
 		// Security: don't log raw config data which may contain secrets
 		log.Err(err).
@@ -182,7 +190,6 @@ func LoadFromPath[T any](cfgPath string) (*Cfg[T], error) {
 		return nil, err
 	}
 
-	parentDir := filepath.Dir(cfgPath)
 	getRealPath := func(pp []string) []string {
 		pp = lo.Map(pp, func(item string, index int) string { return filepath.Join(parentDir, item) })
 
@@ -201,7 +208,8 @@ func LoadFromPath[T any](cfgPath string) (*Cfg[T], error) {
 	}
 	getCfg := func(resPath string) T {
 		// Pass envCfgMap to validate env() calls against defined vars
-		resBytes := result.Wrap(GetConfigData(resPath, envCfgMap)).Expect("failed to handler config data")
+		// Use parentDir as workDir so embed() paths are relative to root config dir
+		resBytes := result.Wrap(GetConfigData(resPath, parentDir, envCfgMap)).Expect("failed to handler config data")
 
 		var cfg1 T
 		result.ErrOf(yaml.Unmarshal(resBytes, &cfg1)).MustWithLog(func(e result.Event) {
