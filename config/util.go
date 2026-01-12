@@ -233,7 +233,7 @@ func evalData(template []byte, cfg *config) []byte {
 	envTpl := fasttemplate.New(string(res), "${", "}")
 	return []byte(envTpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
 		tag = strings.TrimSpace(tag)
-		name := strings.TrimSpace(strings.Split(tag, ":")[0])
+		name := strings.ToUpper(strings.TrimSpace(strings.Split(tag, ":")[0]))
 		if cfg.envSpecMap != nil {
 			if _, defined := cfg.envSpecMap[name]; !defined {
 				return -1, fmt.Errorf("env: variable %q is not defined in envs, all env vars must be declared", name)

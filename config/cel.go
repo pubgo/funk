@@ -82,8 +82,10 @@ func newCelEngine(cfg *config) (*celEngine, error) {
 				if !ok {
 					return types.NewErr("env: expected string argument")
 				}
+
 				// Check if env var is defined in envSpecMap
 				if cfg.envSpecMap != nil {
+					key = strings.TrimSpace(strings.ToUpper(key))
 					if _, defined := cfg.envSpecMap[key]; !defined {
 						return types.NewErr("env: variable %q is not defined in patch_envs, all env vars must be declared", key)
 					}

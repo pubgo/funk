@@ -132,6 +132,7 @@ func loadEnvConfigMap(cfgPath string) EnvSpecMap {
 
 			// Check for duplicate definitions and merge
 			for name, spec := range tempEnvMap {
+				name = strings.ToUpper(name)
 				if existingSource, exists := envSourceMap[name]; exists {
 					log.Panic().
 						Str("env_name", name).
