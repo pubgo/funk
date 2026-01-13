@@ -207,7 +207,9 @@ func RegisterExpr(name string, fn any) error {
 }
 
 func evalData(template []byte, cfg *config) []byte {
-	exprTpl := fasttemplate.New(string(template), "${{", "}}")
+	cleanedTemplate := removeYAMLComments(template)
+
+	exprTpl := fasttemplate.New(string(cleanedTemplate), "${{", "}}")
 	res := []byte(exprTpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
 		tag = strings.TrimSpace(tag)
 		d, err := result.WrapErr(evalExpr(tag, cfg))
@@ -248,6 +250,83 @@ func evalData(template []byte, cfg *config) []byte {
 				e.Msg("failed to process env subst")
 			}))
 	}))
+}
+
+// removeYAMLCommentsFromLine removes comments from a YAML line while respecting quoted strings
+func removeYAMLCommentsFromLine(line []byte) []byte {
+	resultData := make([]byte, 0, len(line))
+	inSingleQuote := false
+	inDoubleQuote := false
+	i := 0
+	for i < len(line) {
+		char := line[i]
+
+		// Check for escape character (backslash)
+		if char == '\\' && (inSingleQuote || inDoubleQuote) {
+			// In YAML, within single quotes, backslash has no special meaning
+			// Within double quotes, backslash can escape certain characters
+			if inDoubleQuote && i+1 < len(line) {
+				// Check if next character is a quote or backslash
+				nextChar := line[i+1]
+				if nextChar == '"' || nextChar == '\\' {
+					// This is an escaped quote or backslash, keep both characters
+					resultData = append(resultData, char, nextChar)
+					i += 2
+					continue
+				}
+			}
+			// For single quotes or other cases, just append the backslash
+			resultData = append(resultData, char)
+			i++
+			continue
+		}
+
+		// Check for quote characters, but not if escaped (handled above)
+		if char == '\'' && !inDoubleQuote {
+			// Toggle single quote state
+			inSingleQuote = !inSingleQuote
+			resultData = append(resultData, char)
+		} else if char == '"' && !inSingleQuote {
+			// Toggle double quote state
+			inDoubleQuote = !inDoubleQuote
+			resultData = append(resultData, char)
+		} else if char == '#' && !inSingleQuote && !inDoubleQuote {
+			// Found comment marker outside of quotes, stop processing
+			break
+		} else {
+			resultData = append(resultData, char)
+		}
+		i++
+	}
+	// Trim trailing spaces
+	return bytes.TrimRight(resultData, " \t")
+}
+
+// removeYAMLComments removes all comments from YAML data while respecting quoted strings
+func removeYAMLComments(data []byte) []byte {
+	lines := bytes.Split(data, []byte("\n"))
+	var cleanedLines [][]byte
+	for _, line := range lines {
+		// Check if original line is empty (only whitespace)
+		originalTrimmed := bytes.TrimSpace(line)
+		isOriginalEmpty := len(originalTrimmed) == 0
+
+		// Process each line to remove comments
+		cleanedLine := removeYAMLCommentsFromLine(line)
+		trimmed := bytes.TrimSpace(cleanedLine)
+
+		// Preserve empty lines, but remove lines that were only comments
+		if isOriginalEmpty {
+			// Original line was empty, preserve it
+			cleanedLines = append(cleanedLines, cleanedLine)
+		} else if len(trimmed) > 0 {
+			// Line had content and still has content after comment removal
+			cleanedLines = append(cleanedLines, cleanedLine)
+		}
+		// If original line had content but after comment removal it's empty,
+		// it means the line was only a comment, so we skip it
+	}
+	return bytes.Join(cleanedLines, []byte("\n"))
 }
 
 // evalExpr evaluates a CEL expression with the given config context

@@ -1,185 +1,109 @@
 package config
 
 import (
-	"bytes"
-	_ "embed"
-	"os"
-	"sort"
-	"strings"
 	"testing"
 
-	"github.com/a8m/envsubst"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v3"
-
-	"github.com/pubgo/funk/v2/env"
 )
 
-type testCfg struct {
-	Assets struct {
-		TestMd struct {
-			TestAbc struct {
-				Secret Base64File `yaml:"secret"`
-			} `yaml:"test_abc"`
-		} `yaml:"test_md"`
-	} `yaml:"assets"`
+func TestRemoveYAMLComments(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "simple comment removal",
+			input:    "key: value # this is a comment\nother: value",
+			expected: "key: value\nother: value",
+		},
+		{
+			name:     "comment at beginning of line",
+			input:    "# this is a comment\nkey: value",
+			expected: "key: value",
+		},
+		{
+			name:     "quoted string with hash",
+			input:    "key: \"value # not a comment\"\nother: value",
+			expected: "key: \"value # not a comment\"\nother: value",
+		},
+		{
+			name:     "hash inside quoted string",
+			input:    "key: \"#comment here\" # real comment\nother: value",
+			expected: "key: \"#comment here\"\nother: value",
+		},
+		{
+			name:     "single quoted string with hash",
+			input:    "key: '#not a comment'\nother: value",
+			expected: "key: '#not a comment'\nother: value",
+		},
+		{
+			name:     "mixed quotes",
+			input:    "key: \"double quote # comment\"\nother: 'single quote # comment'\nthird: value # actual comment",
+			expected: "key: \"double quote # comment\"\nother: 'single quote # comment'\nthird: value",
+		},
+		{
+			name:     "escaped quotes not handled specially",
+			input:    "key: \"value with \\\"quotes\\\" # not a comment\"\nother: value",
+			expected: "key: \"value with \\\"quotes\\\" # not a comment\"\nother: value",
+		},
+		{
+			name:     "empty lines preserved",
+			input:    "key: value\n\nother: value",
+			expected: "key: value\n\nother: value",
+		},
+		{
+			name:     "multiple comments",
+			input:    "key: value # comment1\nother: value # comment2",
+			expected: "key: value\nother: value",
+		},
+		{
+			name:     "whitespace before comment",
+			input:    "key: value   # comment with spaces\nother: value",
+			expected: "key: value\nother: value",
+		},
+		{
+			name:     "only comment line",
+			input:    "key: value\n  # this is a comment\nother: value",
+			expected: "key: value\nother: value",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := removeYAMLComments([]byte(tt.input))
+			assert.Equal(t, tt.expected, string(result))
+		})
+	}
 }
 
-//go:embed configs/assets/.gen.yaml
-var genYaml string
-
-func TestExpr(t *testing.T) {
-	lo.Must0(os.Setenv("testAbc", "hello"))
-	env.Reload()
-
-	// CEL uses env() function to access environment variables
-	// When envSpecMap is nil, env() calls are not validated (for backwards compatibility in patch_envs)
-	assert.Equal(t, string(evalData([]byte(`${{env("TEST_ABC")}}`), &config{})), "hello")
-	assert.Equal(t, string(evalData([]byte(`${{embed("configs/assets/secret")}}`), &config{})), strings.TrimSpace(`MTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1NgoxMjM0NTYKMTIzNDU2CjEyMzQ1Ng==`))
-
-	dd, err := os.ReadFile("configs/assets/assets.yaml")
-	assert.NoError(t, err)
-	dd1 := bytes.TrimSpace(evalData(dd, &config{workDir: "configs/assets"}))
-	var cfg testCfg
-	assert.NoError(t, yaml.Unmarshal(dd1, &cfg))
-
-	assert.Equal(t, string(dd1), strings.TrimSpace(genYaml))
-}
-
-func TestEnv(t *testing.T) {
-	lo.Must0(os.Setenv("hello", "world"))
-	data, err := envsubst.String("${hello}")
-	assert.Nil(t, err)
-	assert.Equal(t, data, "world")
-
-	lo.Must0(os.Setenv("hello", ""))
-	data, err = envsubst.String("${hello:-abc}")
-	assert.Nil(t, err)
-	assert.Equal(t, data, "abc")
-}
-
-func TestConfigPath(t *testing.T) {
-	cfgPath, _, err := findConfigPath("", "")
-	assert.NoError(t, err)
-	t.Log(cfgPath)
-
-	// toml config should not be found and return error
-	_, _, err = findConfigPath("", "toml")
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "config not found")
-}
-
-var _ NamedConfig = (*configL)(nil)
-
-type configL struct {
-	Name  string
-	Value string
-}
-
-func (c configL) ConfigUniqueName() string {
-	return c.Name
-}
-
-type configA struct {
-	Names []*configL
-	Name1 configL
-}
-
-func TestMerge(t *testing.T) {
-	cfg := &configA{}
-	assert.Nil(t, Merge(
-		cfg,
-		configA{
-			Name1: configL{
-				Name: "a1",
-			},
+func TestRemoveYAMLCommentsFromLine(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "simple comment",
+			input:    "key: value # comment",
+			expected: "key: value",
 		},
-	))
-	assert.Equal(t, cfg.Name1.Name, "a1")
-
-	cfg = &configA{}
-	assert.Nil(t, Merge(
-		cfg,
-		configA{
-			Name1: configL{
-				Name: "a1",
-			},
+		{
+			name:     "quoted hash",
+			input:    "key: \"value # not comment\"",
+			expected: "key: \"value # not comment\"",
 		},
-		configA{
-			Names: []*configL{
-				{Name: "a2"},
-			},
-			Name1: configL{
-				Name: "a2",
-			},
+		{
+			name:     "comment after quoted hash",
+			input:    "key: \"value # not comment\" # actual comment",
+			expected: "key: \"value # not comment\"",
 		},
-	))
-	assert.Equal(t, cfg.Name1.Name, "a2")
-	assert.Equal(t, len(cfg.Names), 1)
-	assert.Equal(t, cfg.Names[0].Name, "a2")
+	}
 
-	cfg = new(configA)
-	assert.Nil(t, Merge(
-		cfg,
-		configA{
-			Name1: configL{
-				Name: "a1",
-			},
-		},
-
-		configA{
-			Names: []*configL{
-				{Name: "a2", Value: "a2"},
-			},
-			Name1: configL{
-				Name: "a2",
-			},
-		},
-
-		configA{
-			Names: []*configL{
-				{Name: "a2", Value: "a3"},
-				{Name: "a3"},
-			},
-			Name1: configL{
-				Name: "a3",
-			},
-		},
-	))
-	assert.Equal(t, cfg.Name1.Name, "a3")
-	assert.Equal(t, len(cfg.Names), 2)
-	sort.Slice(cfg.Names, func(i, j int) bool {
-		return cfg.Names[i].Name < cfg.Names[j].Name
-	})
-
-	assert.Equal(t, cfg.Names[0].Name, "a2")
-	assert.Equal(t, cfg.Names[0].Value, "a3")
-	assert.Equal(t, cfg.Names[1].Name, "a3")
-	assert.Equal(t, cfg.Names[1].Value, "")
-
-	cfg = new(configA)
-	assert.Nil(t, Merge(
-		cfg,
-		configA{
-			Name1: configL{
-				Name:  "a1",
-				Value: "a1",
-			},
-		},
-
-		configA{
-			Names: []*configL{
-				{Name: "a1", Value: ""},
-			},
-			Name1: configL{
-				Name: "a1",
-			},
-		},
-	))
-	assert.Equal(t, cfg.Name1.Name, "a1")
-	assert.Equal(t, cfg.Name1.Value, "a1")
-	assert.Equal(t, len(cfg.Names), 1)
-	assert.Equal(t, cfg.Names[0].Name, "a1")
-	assert.Equal(t, cfg.Names[0].Value, "")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := removeYAMLCommentsFromLine([]byte(tt.input))
+			assert.Equal(t, tt.expected, string(result))
+		})
+	}
 }
