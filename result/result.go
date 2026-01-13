@@ -300,8 +300,8 @@ func (r Result[T]) Map(fn func(val T) T) Result[T] {
 	return OK(fn(r.getValue()))
 }
 
-// FlatMap calls fn with the value if the result is OK, then returns the result unchanged.
-func (r Result[T]) FlatMap(fn func(val T) Result[T]) Result[T] {
+// MapVal calls fn with the value if the result is OK, then returns the result unchanged.
+func (r Result[T]) MapVal(fn func(val T) Result[T]) Result[T] {
 	if r.IsErr() {
 		return r
 	}

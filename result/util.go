@@ -378,18 +378,3 @@ func logErr(ctx context.Context, skip int, err error, events ...func(e Event)) {
 		}).
 		Msgf("%s\n%s", err.Error(), errors.JsonPrint(err))
 }
-
-type Event struct {
-	*log.Event
-}
-
-func (e Event) Msg(msg string) {
-	e.Str(logfields.Msg, msg)
-}
-func (e Event) MsgFunc(createMsg func() string) {
-	e.Str(logfields.Msg, createMsg())
-}
-
-func (e Event) Msgf(format string, v ...any) {
-	e.Str(logfields.Msg, fmt.Sprintf(format, v...))
-}

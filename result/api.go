@@ -140,7 +140,7 @@ func MapTo[T, U any](r Result[T], fn func(T) U) Result[U] {
 	return OK(fn(r.getValue()))
 }
 
-func FlatMapTo[T, U any](r Result[T], fn func(T) Result[U]) Result[U] {
+func MapValTo[T, U any](r Result[T], fn func(T) Result[U]) Result[U] {
 	if r.IsErr() {
 		return Fail[U](errors.WrapCaller(r.getErr(), 1))
 	}

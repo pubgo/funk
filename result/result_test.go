@@ -104,7 +104,7 @@ func TestMoreReasonableErrorHandling(t *testing.T) {
 	})
 
 	// Apply a function that might fail
-	finalResult := result.FlatMapTo(strResult, func(s string) result.Result[int] {
+	finalResult := result.MapValTo(strResult, func(s string) result.Result[int] {
 		if len(s) > 10 {
 			return result.Fail[int](fmt.Errorf("string too long"))
 		}
@@ -123,7 +123,7 @@ func TestMoreReasonableErrorHandling(t *testing.T) {
 	errResult := result.Fail[string](fmt.Errorf("initial error"))
 
 	// Chain operations on an error result
-	chainedResult := result.FlatMapTo(errResult, func(_ string) result.Result[int] {
+	chainedResult := result.MapValTo(errResult, func(_ string) result.Result[int] {
 		return result.OK(100)
 	})
 

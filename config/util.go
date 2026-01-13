@@ -241,11 +241,12 @@ func evalData(template []byte, cfg *config) []byte {
 		}
 
 		tag = fmt.Sprintf("${%s}", tag)
-		return w.Write(bytes.TrimSpace([]byte(result.Wrap(envsubst.String(tag)).
+		return w.Write(result.Wrap(envsubst.Bytes([]byte(tag))).
+			Map(bytes.TrimSpace).
 			UnwrapOrLog(func(e result.Event) {
 				e.Str("env", name)
 				e.Msg("failed to process env subst")
-			}))))
+			}))
 	}))
 }
 
