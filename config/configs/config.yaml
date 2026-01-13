@@ -9,4 +9,5 @@ metric:
   driver: "prometheus"
 resources:
   - resources
-
+patch_envs:
+  - envs
