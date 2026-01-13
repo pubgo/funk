@@ -14,7 +14,6 @@ import (
 
 	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/log"
-	"github.com/pubgo/funk/v2/log/logfields"
 	"github.com/pubgo/funk/v2/pathutil"
 	"github.com/pubgo/funk/v2/pretty"
 	"github.com/pubgo/funk/v2/recovery"
@@ -106,6 +105,7 @@ func loadEnvConfigMap(cfgPath string) EnvSpecMap {
 		pathList := listAllPath(envPath).Expect("failed to list env config path: %s", envPath)
 		for _, p := range pathList {
 			if !strings.HasSuffix(p, "."+defaultConfigType) {
+				log.Warn().Str("env_path", p).Msg("env config path not allowed")
 				continue
 			}
 
@@ -113,9 +113,10 @@ func loadEnvConfigMap(cfgPath string) EnvSpecMap {
 				Map(bytes.TrimSpace).
 				UnwrapOrLog(func(e result.Event) {
 					e.Str("env_path", p)
-					e.Str(logfields.Msg, "failed to handler env config data")
+					e.Msg("failed to handler env config data")
 				})
 			if len(envConfigBytes) == 0 {
+				log.Warn().Str("env_path", p).Msg("env config data is empty")
 				continue
 			}
 
@@ -127,7 +128,7 @@ func loadEnvConfigMap(cfgPath string) EnvSpecMap {
 				MustWithLog(func(e result.Event) {
 					// Security: don't log raw env data which may contain secrets
 					e.Str("env_path", p)
-					e.Str(logfields.Msg, "failed to unmarshal env config")
+					e.Msg("failed to unmarshal env config")
 				})
 
 			// Check for duplicate definitions and merge
