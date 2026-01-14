@@ -7,7 +7,6 @@ import (
 
 	"github.com/a8m/envsubst"
 	"github.com/joho/godotenv"
-	"github.com/rs/zerolog/log"
 	"github.com/samber/lo"
 
 	"github.com/pubgo/funk/v2/assert"
@@ -152,19 +151,16 @@ func LoadFiles(files ...string) (r result.Error) {
 
 	var needReloadEnv bool
 	for _, file := range files {
-		data := result.Wrap(os.ReadFile(file)).UnwrapOrThrow(&r)
-		if r.IsErr() {
-			log.Error().Err(r.GetErr()).Msgf("failed to read file %q", file)
+		data, err := result.WrapErr(os.ReadFile(file))
+		if err.Throw(&r) {
+			r.Log(func(e result.Event) { e.Msgf("failed to read file %q", file) })
 			return
 		}
 
-		dataMap := result.Wrap(godotenv.UnmarshalBytes(data)).
-			Log(func(e result.Event) {
-				e.Msgf("failed to parse env file:%s", file)
-			}).
-			UnwrapOrThrow(&r)
-		if r.IsErr() {
-			return r
+		dataMap, err := result.WrapErr(godotenv.UnmarshalBytes(data))
+		if err.Throw(&r) {
+			r.Log(func(e result.Event) { e.Msgf("failed to parse env file:%s", file) })
+			return
 		}
 
 		for k, v := range dataMap {
