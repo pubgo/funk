@@ -12,7 +12,6 @@ import (
 
 	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/buildinfo/version"
-	"github.com/pubgo/funk/v2/config"
 	"github.com/pubgo/funk/v2/debugs"
 	"github.com/pubgo/funk/v2/env"
 	"github.com/pubgo/funk/v2/netutil"
@@ -114,21 +113,6 @@ var (
 		Envs:        []string{env.Key("server_http_port")},
 		Action: func(val pflag.Value) error {
 			env.Set("server_http_port", val.String())
-			return nil
-		},
-	}
-
-	ConfFlag = redant.Option{
-		Flag:        "config",
-		Shorthand:   "c",
-		Description: "config path",
-		Default:     config.GetConfigPath(),
-		Value:       redant.StringOf(lo.ToPtr(config.GetConfigPath())),
-		Category:    "system",
-		Envs:        []string{env.Key("config_path")},
-		Action: func(val pflag.Value) error {
-			config.SetConfigPath(val.String())
-			env.Set("config_path", val.String())
 			return nil
 		},
 	}

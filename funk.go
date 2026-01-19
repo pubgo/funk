@@ -3,9 +3,6 @@ package funk
 import (
 	"cmp"
 	"reflect"
-	"unsafe"
-
-	_ "github.com/pubgo/redant"
 )
 
 func AppendOf[T any](v T, vv ...T) []T {
