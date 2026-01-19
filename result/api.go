@@ -11,7 +11,7 @@ import (
 func Run(executors ...func() error) Error {
 	for _, executor := range executors {
 		if err := executor(); err != nil {
-			return ErrOf(errors.WrapCaller(err, 1))
+			return newError(errors.WrapCaller(err, 1))
 		}
 	}
 	return Error{}
@@ -34,10 +34,8 @@ func RecoveryErr(setter *error, callbacks ...func(err error) error) {
 		return
 	}
 
-	setError(ErrProxyOf(setter), errRecovery(
-		func() error { return *setter },
-		callbacks...,
-	))
+	err := errRecovery(func() error { return *setter }, callbacks...)
+	setError(ErrProxyOf(setter), errors.WrapCaller(err, 1))
 }
 
 func Recovery(setter ErrSetter, callbacks ...func(err error) error) {
@@ -46,10 +44,8 @@ func Recovery(setter ErrSetter, callbacks ...func(err error) error) {
 		return
 	}
 
-	setError(setter, errRecovery(
-		func() error { return setter.GetErr() },
-		callbacks...,
-	))
+	err := errRecovery(func() error { return setter.GetErr() }, callbacks...)
+	setError(setter, errors.WrapCaller(err, 1))
 }
 
 func Errorf(msg string, args ...any) Error {
@@ -125,10 +121,12 @@ func WrapFn[T any](fn func() (T, error)) Result[T] {
 }
 
 func Throw(setter ErrSetter, err error, contexts ...context.Context) bool {
+	err = errors.WrapCaller(err, 1)
 	return catchErr(newError(err), setter, nil, contexts...)
 }
 
 func ThrowErr(rawSetter *error, err error, contexts ...context.Context) bool {
+	err = errors.WrapCaller(err, 1)
 	return catchErr(newError(err), nil, rawSetter, contexts...)
 }
 
@@ -149,10 +147,12 @@ func MapValTo[T, U any](r Result[T], fn func(T) Result[U]) Result[U] {
 }
 
 func LogErr(err error, events ...func(e Event)) {
+	err = errors.WrapCaller(err, 1)
 	logErr(context.Background(), 0, err, events...)
 }
 
 func LogErrCtx(ctx context.Context, err error, events ...func(e Event)) {
+	err = errors.WrapCaller(err, 1)
 	logErr(ctx, 0, err, events...)
 }
 
