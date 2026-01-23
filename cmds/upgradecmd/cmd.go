@@ -131,6 +131,8 @@ func New(owner, repo string) *redant.Command {
 			}
 			// 解析符号链接，获取真实路径
 			execFile = assert.Must1(filepath.EvalSymlinks(execFile))
+			// 记录当前可执行文件权限，回退到0755
+			origMode := assert.Must1(os.Stat(execFile)).Mode()
 
 			// 根据文件扩展名判断下载模式
 			var destPath string
@@ -164,6 +166,11 @@ func New(owner, repo string) *redant.Command {
 			}
 			assert.Must(c.Get())
 			assert.Must(os.Rename(filepath.Join(downloadDir, asset.Filename), execFile))
+
+			// 恢复可执行权限，避免覆盖后丢失执行位
+			if err := os.Chmod(execFile, origMode); err != nil {
+				assert.Must(os.Chmod(execFile, 0o755))
+			}
 
 			return nil
 		},
