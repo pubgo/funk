@@ -5,8 +5,9 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/pubgo/funk/v2/pretty"
 	"github.com/samber/lo"
+
+	"github.com/pubgo/funk/v2/pretty"
 )
 
 func TestName(t *testing.T) {

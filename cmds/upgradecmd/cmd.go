@@ -11,17 +11,17 @@ import (
 	"github.com/hashicorp/go-getter"
 	"github.com/hashicorp/go-version"
 	"github.com/olekukonko/tablewriter"
-	"github.com/pubgo/funk/v2/assert"
-	"github.com/pubgo/funk/v2/errors"
-	"github.com/pubgo/funk/v2/log"
-	"github.com/pubgo/funk/v2/pretty"
-	"github.com/pubgo/funk/v2/result"
 	"github.com/pubgo/redant"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 	"github.com/yarlson/tap"
 
-	"github.com/pubgo/funk/v2/cmds/upgradecmd/githubclient"
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/component/githubclient"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/log"
+	"github.com/pubgo/funk/v2/pretty"
+	"github.com/pubgo/funk/v2/result"
 )
 
 func New(owner, repo string) *redant.Command {
@@ -132,19 +132,34 @@ func New(owner, repo string) *redant.Command {
 			// 解析符号链接，获取真实路径
 			execFile = assert.Must1(filepath.EvalSymlinks(execFile))
 
+			// 根据文件扩展名判断下载模式
+			var destPath string
+			var clientMode getter.ClientMode
+			if asset.IsArchive() {
+				// 归档文件：使用 Dir 模式解压到目录
+				destPath = downloadDir
+				clientMode = getter.ClientModeDir
+			} else {
+				// 二进制文件：使用 File 模式直接下载
+				destPath = filepath.Join(downloadDir, asset.Filename)
+				clientMode = getter.ClientModeFile
+			}
+
 			log.Info().Func(func(e *zerolog.Event) {
 				e.Str("download_dir", downloadDir)
+				e.Str("dest_path", destPath)
 				e.Str("pwd", pwd)
 				e.Str("exec_file", execFile)
+				e.Bool("is_archive", asset.IsArchive())
 				e.Msgf("start download %s", downloadURL)
 			})
 
 			c := &getter.Client{
 				Ctx:              ctx,
 				Src:              downloadURL,
-				Dst:              downloadDir,
+				Dst:              destPath,
 				Pwd:              pwd,
-				Mode:             getter.ClientModeDir,
+				Mode:             clientMode,
 				ProgressListener: defaultProgressBar,
 			}
 			assert.Must(c.Get())

@@ -7,6 +7,8 @@ import (
 
 	pb "github.com/cheggaaa/pb/v3"
 	getter "github.com/hashicorp/go-getter"
+
+	"github.com/pubgo/funk/v2/assert"
 )
 
 // defaultProgressBar is the default instance of a cheggaaa
@@ -41,7 +43,7 @@ func (cpb *ProgressBar) TrackProgress(src string, currentSize, totalSize int64, 
 	newPb.Set("prefix", filepath.Base(src))
 	if cpb.pool == nil {
 		cpb.pool = pb.NewPool()
-		cpb.pool.Start()
+		assert.Must(cpb.pool.Start())
 	}
 	cpb.pool.Add(newPb)
 	reader := newPb.NewProxyReader(stream)
@@ -56,7 +58,7 @@ func (cpb *ProgressBar) TrackProgress(src string, currentSize, totalSize int64, 
 			newPb.Finish()
 			cpb.pbs--
 			if cpb.pbs <= 0 {
-				cpb.pool.Stop()
+				assert.Must(cpb.pool.Stop())
 				cpb.pool = nil
 			}
 			return nil

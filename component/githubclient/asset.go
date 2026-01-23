@@ -1,7 +1,6 @@
 package githubclient
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -9,19 +8,19 @@ import (
 	"github.com/google/go-github/v71/github"
 )
 
-func GetAssetList(repo []*github.RepositoryRelease) Assets {
-	var assetList Assets
-	for _, a := range repo {
+func GetAssetList(repositoryReleases []*github.RepositoryRelease) Assets {
+	var assetList = make(Assets, 0, len(repositoryReleases))
+	for _, a := range repositoryReleases {
 		assetList = append(assetList, GetAssets(a)...)
 	}
 	return assetList
 }
 
-func GetAssets(repo *github.RepositoryRelease) Assets {
-	var assetList Assets
-	for _, a := range repo.Assets {
+func GetAssets(repositoryRelease *github.RepositoryRelease) Assets {
+	var assetList = make(Assets, 0, len(repositoryRelease.Assets))
+	for _, a := range repositoryRelease.Assets {
 		assetList = append(assetList, Asset{
-			Name:      repo.GetTagName(),
+			Name:      repositoryRelease.GetTagName(),
 			Filename:  a.GetName(),
 			URL:       a.GetBrowserDownloadURL(),
 			Type:      a.GetContentType(),
@@ -72,6 +71,18 @@ func (a Asset) IsMacM1() bool {
 	return a.IsMac() && a.Arch == "arm64"
 }
 
+// IsArchive 根据文件扩展名判断是否为归档文件
+func (a Asset) IsArchive() bool {
+	filename := strings.ToLower(a.Filename)
+	return strings.HasSuffix(filename, ".zip") ||
+		strings.HasSuffix(filename, ".tar.gz") ||
+		strings.HasSuffix(filename, ".tgz") ||
+		strings.HasSuffix(filename, ".tar.bz2") ||
+		strings.HasSuffix(filename, ".bz2") ||
+		strings.HasSuffix(filename, ".gz") ||
+		strings.HasSuffix(filename, ".tar")
+}
+
 type Assets []Asset
 
 func (as Assets) HasM1() bool {
@@ -82,21 +93,6 @@ func (as Assets) HasM1() bool {
 		}
 	}
 	return false
-}
-
-func checkExt(url string, size int, name string) error {
-	fext := getFileExt(url)
-	if fext == "" && size > 1024*1024 {
-		fext = ".bin" // +1MB binary
-	}
-
-	switch fext {
-	case ".bin", ".zip", ".tar.bz", ".tar.bz2", ".bz2", ".gz", ".tar.gz", ".tgz":
-		// valid
-		return nil
-	default:
-		return fmt.Errorf("fetched asset has unsupported file type: %s (ext '%s')", name, fext)
-	}
 }
 
 func GetSizeFormat(size int) string {

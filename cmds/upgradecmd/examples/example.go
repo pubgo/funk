@@ -4,8 +4,9 @@ import (
 	"context"
 	"os"
 
-	"github.com/pubgo/funk/v2/cmds/upgradecmd"
 	"github.com/pubgo/redant"
+
+	"github.com/pubgo/funk/v2/cmds/upgradecmd"
 )
 
 func main() {

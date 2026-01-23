@@ -31,11 +31,12 @@ func getArch(s string) string {
 	a := archRe.FindString(s)
 
 	// arch modifications
-	if a == "64" || a == "x86_64" || a == "" {
+	switch a {
+	case "64", "x86_64", "":
 		a = "amd64" //default
-	} else if a == "32" || a == "686" {
+	case "32", "686":
 		a = "386"
-	} else if a == "aarch64" {
+	case "aarch64":
 		a = "arm64"
 	}
 	return a
