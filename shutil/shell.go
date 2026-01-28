@@ -2,14 +2,10 @@ package shutil
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"os/exec"
 	"strings"
 
-	"github.com/rs/zerolog"
-
-	"github.com/pubgo/funk/v2/log/logfields"
 	"github.com/pubgo/funk/v2/result"
 )
 
@@ -21,8 +17,8 @@ func Run(args ...string) (r result.Result[string]) {
 	cmd := Shell(args...)
 	cmd.Stdout = b
 
-	result.ErrOf(cmd.Run()).Log(func(e *zerolog.Event) {
-		e.Str(logfields.Msg, fmt.Sprintf("failed to execute: %q", args))
+	result.ErrOf(cmd.Run()).Log(func(e result.Event) {
+		e.Msgf("failed to execute: %q", args)
 	})
 
 	return r.WithValue(strings.TrimSpace(b.String()))

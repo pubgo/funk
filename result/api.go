@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/rs/zerolog"
-
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/errors/errparser"
 )
@@ -13,7 +11,7 @@ import (
 func Run(executors ...func() error) Error {
 	for _, executor := range executors {
 		if err := executor(); err != nil {
-			return ErrOf(errors.WrapCaller(err, 1))
+			return newError(errors.WrapCaller(err, 1))
 		}
 	}
 	return Error{}
@@ -36,10 +34,8 @@ func RecoveryErr(setter *error, callbacks ...func(err error) error) {
 		return
 	}
 
-	setError(ErrProxyOf(setter), errRecovery(
-		func() error { return *setter },
-		callbacks...,
-	))
+	err := errRecovery(func() error { return *setter }, callbacks...)
+	setError(ErrProxyOf(setter), errors.WrapCaller(err, 1))
 }
 
 func Recovery(setter ErrSetter, callbacks ...func(err error) error) {
@@ -48,10 +44,8 @@ func Recovery(setter ErrSetter, callbacks ...func(err error) error) {
 		return
 	}
 
-	setError(setter, errRecovery(
-		func() error { return setter.GetErr() },
-		callbacks...,
-	))
+	err := errRecovery(func() error { return setter.GetErr() }, callbacks...)
+	setError(setter, errors.WrapCaller(err, 1))
 }
 
 func Errorf(msg string, args ...any) Error {
@@ -99,6 +93,14 @@ func Fail[T any](err error) Result[T] {
 	return Result[T]{err: err}
 }
 
+func WrapErr[T any](v T, err error) (t T, gErr Error) {
+	if err == nil {
+		return v, gErr
+	}
+
+	return t, newError(errors.WrapCaller(err, 1))
+}
+
 func Wrap[T any](v T, err error) Result[T] {
 	if err == nil {
 		return Result[T]{v: &v}
@@ -119,10 +121,12 @@ func WrapFn[T any](fn func() (T, error)) Result[T] {
 }
 
 func Throw(setter ErrSetter, err error, contexts ...context.Context) bool {
+	err = errors.WrapCaller(err, 1)
 	return catchErr(newError(err), setter, nil, contexts...)
 }
 
 func ThrowErr(rawSetter *error, err error, contexts ...context.Context) bool {
+	err = errors.WrapCaller(err, 1)
 	return catchErr(newError(err), nil, rawSetter, contexts...)
 }
 
@@ -134,7 +138,7 @@ func MapTo[T, U any](r Result[T], fn func(T) U) Result[U] {
 	return OK(fn(r.getValue()))
 }
 
-func FlatMapTo[T, U any](r Result[T], fn func(T) Result[U]) Result[U] {
+func MapValTo[T, U any](r Result[T], fn func(T) Result[U]) Result[U] {
 	if r.IsErr() {
 		return Fail[U](errors.WrapCaller(r.getErr(), 1))
 	}
@@ -142,15 +146,17 @@ func FlatMapTo[T, U any](r Result[T], fn func(T) Result[U]) Result[U] {
 	return fn(r.getValue())
 }
 
-func LogErr(err error, events ...func(e *zerolog.Event)) {
+func LogErr(err error, events ...func(e Event)) {
+	err = errors.WrapCaller(err, 1)
 	logErr(context.Background(), 0, err, events...)
 }
 
-func LogErrCtx(ctx context.Context, err error, events ...func(e *zerolog.Event)) {
+func LogErrCtx(ctx context.Context, err error, events ...func(e Event)) {
+	err = errors.WrapCaller(err, 1)
 	logErr(ctx, 0, err, events...)
 }
 
-func Must(err error, events ...func(e *zerolog.Event)) {
+func Must(err error, events ...func(e Event)) {
 	if err == nil {
 		return
 	}

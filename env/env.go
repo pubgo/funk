@@ -1,18 +1,15 @@
 package env
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/a8m/envsubst"
 	"github.com/joho/godotenv"
-	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 
 	"github.com/pubgo/funk/v2/assert"
-	"github.com/pubgo/funk/v2/log/logfields"
 	"github.com/pubgo/funk/v2/pathutil"
 	"github.com/pubgo/funk/v2/result"
 )
@@ -21,10 +18,10 @@ const Name = "env"
 
 func Set(key, value string) result.Error {
 	return result.ErrOf(os.Setenv(keyHandler(key), value)).
-		Log(func(e *zerolog.Event) {
+		Log(func(e result.Event) {
 			e.Str("key", key)
 			e.Str("value", value)
-			e.Str(logfields.Msg, "env_set_error")
+			e.Msg("env_set_error")
 		})
 }
 
@@ -113,9 +110,9 @@ func Lookup(key string) (string, bool) { return os.LookupEnv(keyHandler(key)) }
 
 func Delete(key string) result.Error {
 	return result.ErrOf(os.Unsetenv(keyHandler(key))).
-		Log(func(e *zerolog.Event) {
+		Log(func(e result.Event) {
 			e.Str("key", key)
-			e.Str(logfields.Msg, "env_delete_error")
+			e.Msg("env_delete_error")
 		})
 }
 
@@ -123,9 +120,9 @@ func MustDelete(key string) { Delete(key).MustWithLog() }
 
 func Expand(value string) result.Result[string] {
 	return result.Wrap(envsubst.String(value)).
-		Log(func(e *zerolog.Event) {
+		Log(func(e result.Event) {
 			e.Str("value", value)
-			e.Str(logfields.Msg, "env_expand_error")
+			e.Msg("env_expand_error")
 		})
 }
 
@@ -154,22 +151,16 @@ func LoadFiles(files ...string) (r result.Error) {
 
 	var needReloadEnv bool
 	for _, file := range files {
-		data := result.Wrap(os.ReadFile(file)).
-			Log(func(e *zerolog.Event) {
-				e.Str(logfields.Msg, fmt.Sprintf("failed to read file:%s", file))
-			}).
-			UnwrapOrThrow(&r)
-		if r.IsErr() {
-			return r
+		data, err := result.WrapErr(os.ReadFile(file))
+		if err.Throw(&r) {
+			r.Log(func(e result.Event) { e.Msgf("failed to read file %q", file) })
+			return
 		}
 
-		dataMap := result.Wrap(godotenv.UnmarshalBytes(data)).
-			Log(func(e *zerolog.Event) {
-				e.Str(logfields.Msg, fmt.Sprintf("failed to parse env file:%s", file))
-			}).
-			UnwrapOrThrow(&r)
-		if r.IsErr() {
-			return r
+		dataMap, err := result.WrapErr(godotenv.UnmarshalBytes(data))
+		if err.Throw(&r) {
+			r.Log(func(e result.Event) { e.Msgf("failed to parse env file:%s", file) })
+			return
 		}
 
 		for k, v := range dataMap {

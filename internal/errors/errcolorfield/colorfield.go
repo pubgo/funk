@@ -1,4 +1,4 @@
-package errinter
+package errcolorfield
 
 import (
 	"strings"

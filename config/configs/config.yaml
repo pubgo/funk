@@ -8,6 +8,6 @@ tracing:
 metric:
   driver: "prometheus"
 resources:
-  - "orm.yaml"
-  - "redis.yaml"
-  - "service.yaml"
+  - resources
+patch_envs:
+  - envs

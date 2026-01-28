@@ -3,9 +3,6 @@ package funk
 import (
 	"cmp"
 	"reflect"
-	"unsafe"
-
-	_ "github.com/pubgo/redant"
 )
 
 func AppendOf[T any](v T, vv ...T) []T {
@@ -142,17 +139,8 @@ func Min[T cmp.Ordered](a, b T) (r T) {
 	return r
 }
 
-// isNilValue copy from <github.com/rs/zerolog.isNilValue>
-func isNilValue(i any) bool {
-	return (*[2]uintptr)(unsafe.Pointer(&i))[1] == 0
-}
-
 func IsNil(err any) bool {
 	if err == nil {
-		return true
-	}
-
-	if isNilValue(err) {
 		return true
 	}
 

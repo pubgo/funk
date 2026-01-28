@@ -2,7 +2,6 @@ package config
 
 import (
 	"bytes"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"io/fs"
@@ -12,22 +11,22 @@ import (
 	"strings"
 
 	"dario.cat/mergo"
-	"github.com/expr-lang/expr"
+	"github.com/a8m/envsubst"
 	"github.com/samber/lo"
 	"github.com/valyala/fasttemplate"
 	"gopkg.in/yaml.v3"
 
 	"github.com/pubgo/funk/v2/assert"
-	"github.com/pubgo/funk/v2/env"
 	"github.com/pubgo/funk/v2/errors"
-	"github.com/pubgo/funk/v2/log"
 	"github.com/pubgo/funk/v2/pathutil"
 	"github.com/pubgo/funk/v2/result"
 )
 
-func getConfigPath(name, typ string, configDir ...string) (string, string) {
-	if len(configDir) == 0 {
-		configDir = append(configDir, "./", defaultConfigPath)
+// findConfigPath searches for config file and returns path and directory.
+// Returns error if config file is not found.
+func findConfigPath(name, typ string, configDirs ...string) (cfgPath string, cfgDir string, err error) {
+	if len(configDirs) == 0 {
+		configDirs = append(configDirs, "./", defaultConfigPath)
 	}
 
 	if name == "" {
@@ -41,19 +40,17 @@ func getConfigPath(name, typ string, configDir ...string) (string, string) {
 	configName := fmt.Sprintf("%s.%s", name, typ)
 	var notFoundPath []string
 	for _, path := range getPathList() {
-		for _, dir := range configDir {
+		for _, dir := range configDirs {
 			cfgPath := filepath.Join(path, dir, configName)
 			if pathutil.IsNotExist(cfgPath) {
 				notFoundPath = append(notFoundPath, cfgPath)
 			} else {
-				return cfgPath, filepath.Dir(cfgPath)
+				return cfgPath, filepath.Dir(cfgPath), nil
 			}
 		}
 	}
 
-	log.Panic().Msgf("config not found in: %v", notFoundPath)
-
-	return "", ""
+	return "", "", errors.Errorf("config not found in: %v", notFoundPath)
 }
 
 // getPathList 递归得到当前目录到跟目录中所有的目录路径
@@ -198,77 +195,145 @@ func makeList(typ reflect.Type, data []reflect.Value) reflect.Value {
 }
 
 type config struct {
-	workDir string
+	workDir    string
+	envSpecMap EnvSpecMap // allowed env vars from patch_envs
 }
 
-var registerMap = make(map[string]any)
-
-func RegisterExpr(name string, expr any) {
-	if registerMap[name] != nil {
-		panic(fmt.Sprintf("expr:%s has existed", name))
-	}
-	registerMap[name] = expr
+// RegisterExpr registers a custom expression function for use in config templates.
+// Returns error if the name already exists. For backward compatibility, use MustRegisterExpr for panic behavior.
+// Note: Custom functions must have simple signatures: func() T or func(T) R
+func RegisterExpr(name string, fn any) error {
+	return globalManager.RegisterExprFunc(name, fn)
 }
 
-func getEnvData(cfg *config) map[string]any {
-	exprEnv := map[string]any{
-		"env": env.Map(),
-		"config_dir": func() string {
-			return cfg.workDir
-		},
-		"embed": func(name string) string {
-			if name == "" {
-				return ""
-			}
+func evalData(template []byte, cfg *config) []byte {
+	cleanedTemplate := removeYAMLComments(template)
 
-			path := filepath.Join(cfg.workDir, name)
-			d, err := os.ReadFile(path)
-			if err != nil {
-				log.Panic().Err(err).
-					Str("path", path).
-					Msg("failed to read file")
-				return ""
-			}
-
-			return strings.TrimSpace(base64.StdEncoding.EncodeToString(d))
-		},
-	}
-
-	for k, v := range registerMap {
-		if exprEnv[k] != nil {
-			panic(fmt.Sprintf("expr:%s has existed", k))
-		}
-		exprEnv[k] = v
-	}
-	return exprEnv
-}
-
-func cfgFormat(template []byte, cfg *config) []byte {
-	tpl := fasttemplate.New(string(template), "${{", "}}")
-	return []byte(tpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
+	exprTpl := fasttemplate.New(string(cleanedTemplate), "${{", "}}")
+	res := []byte(exprTpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
 		tag = strings.TrimSpace(tag)
-		evalData, err := eval(tag, cfg)
-		if err != nil {
-			return -1, errors.Wrap(err, tag)
+		d, err := result.WrapErr(evalExpr(tag, cfg))
+		if err.IsErr() {
+			err.Log(func(e result.Event) {
+				e.Str("tag", tag)
+			})
+			return -1, err.Err()
 		}
 
-		data, err := yaml.Marshal(evalData)
-		if err != nil {
-			log.Err(err).
-				Str("tag", tag).
-				Msgf("failed to marshal yaml: %v", evalData)
-			return -1, errors.Wrap(err, tag)
+		data, err := result.WrapErr(yaml.Marshal(d))
+		if err.IsErr() {
+			err.Log(func(e result.Event) {
+				e.Str("tag", tag)
+				e.Msg("failed to marshal yaml")
+			})
+			return -1, err.Err()
 		}
 
 		return w.Write(bytes.TrimSpace(data))
 	}))
+
+	envTpl := fasttemplate.New(string(res), "${", "}")
+	return []byte(envTpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
+		tag = strings.TrimSpace(tag)
+		name := strings.ToUpper(strings.TrimSpace(strings.Split(tag, ":")[0]))
+		if cfg.envSpecMap != nil {
+			if _, defined := cfg.envSpecMap[name]; !defined {
+				return -1, fmt.Errorf("env: variable %q is not defined in envs, all env vars must be declared", name)
+			}
+		}
+
+		tag = fmt.Sprintf("${%s}", tag)
+		return w.Write(result.Wrap(envsubst.Bytes([]byte(tag))).
+			Map(bytes.TrimSpace).
+			UnwrapOrLog(func(e result.Event) {
+				e.Str("env", name)
+				e.Msg("failed to process env subst")
+			}))
+	}))
 }
 
-func eval(code string, cfg *config) (any, error) {
-	envData := getEnvData(cfg)
-	data, err := expr.Eval(strings.TrimSpace(code), envData)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to eval expr:%q", code)
+// removeYAMLCommentsFromLine removes comments from a YAML line while respecting quoted strings
+func removeYAMLCommentsFromLine(line []byte) []byte {
+	resultData := make([]byte, 0, len(line))
+	inSingleQuote := false
+	inDoubleQuote := false
+	i := 0
+	for i < len(line) {
+		char := line[i]
+
+		// Check for escape character (backslash)
+		if char == '\\' && (inSingleQuote || inDoubleQuote) {
+			// In YAML, within single quotes, backslash has no special meaning
+			// Within double quotes, backslash can escape certain characters
+			if inDoubleQuote && i+1 < len(line) {
+				// Check if next character is a quote or backslash
+				nextChar := line[i+1]
+				if nextChar == '"' || nextChar == '\\' {
+					// This is an escaped quote or backslash, keep both characters
+					resultData = append(resultData, char, nextChar)
+					i += 2
+					continue
+				}
+			}
+			// For single quotes or other cases, just append the backslash
+			resultData = append(resultData, char)
+			i++
+			continue
+		}
+
+		// Check for quote characters, but not if escaped (handled above)
+		if char == '\'' && !inDoubleQuote {
+			// Toggle single quote state
+			inSingleQuote = !inSingleQuote
+			resultData = append(resultData, char)
+		} else if char == '"' && !inSingleQuote {
+			// Toggle double quote state
+			inDoubleQuote = !inDoubleQuote
+			resultData = append(resultData, char)
+		} else if char == '#' && !inSingleQuote && !inDoubleQuote {
+			// Found comment marker outside of quotes, stop processing
+			break
+		} else {
+			resultData = append(resultData, char)
+		}
+		i++
 	}
-	return data, nil
+	// Trim trailing spaces
+	return bytes.TrimRight(resultData, " \t")
+}
+
+// removeYAMLComments removes all comments from YAML data while respecting quoted strings
+func removeYAMLComments(data []byte) []byte {
+	lines := bytes.Split(data, []byte("\n"))
+	var cleanedLines [][]byte
+	for _, line := range lines {
+		// Check if original line is empty (only whitespace)
+		originalTrimmed := bytes.TrimSpace(line)
+		isOriginalEmpty := len(originalTrimmed) == 0
+
+		// Process each line to remove comments
+		cleanedLine := removeYAMLCommentsFromLine(line)
+		trimmed := bytes.TrimSpace(cleanedLine)
+
+		// Preserve empty lines, but remove lines that were only comments
+		if isOriginalEmpty {
+			// Original line was empty, preserve it
+			cleanedLines = append(cleanedLines, cleanedLine)
+		} else if len(trimmed) > 0 {
+			// Line had content and still has content after comment removal
+			cleanedLines = append(cleanedLines, cleanedLine)
+		}
+		// If original line had content but after comment removal it's empty,
+		// it means the line was only a comment, so we skip it
+	}
+	return bytes.Join(cleanedLines, []byte("\n"))
+}
+
+// evalExpr evaluates a CEL expression with the given config context
+func evalExpr(code string, cfg *config) (any, error) {
+	engine, err := newCelEngine(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create CEL engine")
+	}
+	return engine.Eval(code)
 }

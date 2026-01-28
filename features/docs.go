@@ -1,3 +1,5 @@
+//go:build docs
+
 package features
 
 // 用于程序启动之后对程序内部进行控制的参数, 一般是全局性质的控制
