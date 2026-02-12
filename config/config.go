@@ -185,7 +185,7 @@ func LoadFromPath[T any](cfgPath string) (*Cfg[T], error) {
 		return err
 	})
 
-	if err := yaml.Unmarshal(configBytes, val); err != nil {
+	if err := yaml.Unmarshal(configBytes, &val); err != nil {
 		log.Err(err).
 			Str("config_path", cfgPath).
 			Msg("failed to unmarshal config")
