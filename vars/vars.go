@@ -46,6 +46,10 @@ func Error(name string) *atomic.Error {
 	return Any(name, atomic.NewError(nil))
 }
 
+func Pointer[T any](name string) *atomic.Pointer[T] {
+	return Any(name, atomic.NewPointer[T](nil))
+}
+
 var _ json.Marshaler = (*Func)(nil)
 
 type Func func() any
