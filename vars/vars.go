@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"expvar"
 	"fmt"
-	"log/slog"
 	"strconv"
 	"strings"
 	"sync"
@@ -95,7 +94,7 @@ func toString(dt any) (r string) {
 	case error:
 		return errToString(dt)
 	default:
-		return slog.AnyValue(dt).String()
+		return jsonStr(dt)
 	}
 }
 

@@ -266,6 +266,10 @@ func LoadFromPath[T any](cfgPath string) (*Cfg[T], error) {
 		}
 		log.Fatal().Err(err).Msg("failed to merge config")
 	}
+
+	vars.Register(vars.UniqueName("config.data"), func() any {
+		return map[string]any{"data": val, "env": envCfgMap}
+	})
 	return &Cfg[T]{T: val, P: &val, EnvCfg: lo.ToPtr(envCfgMap)}, nil
 }
 
