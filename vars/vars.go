@@ -108,7 +108,12 @@ func Any[T any](name string, v T) T {
 
 	vv := expvar.Get(name)
 	if vv != nil {
-		return vv.(*anyValue).v.(T)
+		vv, ok := vv.(*anyValue)
+		if ok {
+			return vv.v.(T)
+		}
+
+		assert.Must(fmt.Errorf("var type error: %s is of type %T, not *anyValue", name, vv))
 	}
 
 	expvar.Publish(name, &anyValue{v: v})
