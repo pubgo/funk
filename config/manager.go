@@ -10,7 +10,7 @@ var globalManager = NewManager()
 // NewManager creates a new Manager instance
 func NewManager() *Manager {
 	return &Manager{
-		exprFuncs: make(map[string]any),
+		exprFns: make(map[string]any),
 	}
 }
 
@@ -19,7 +19,33 @@ type Manager struct {
 	mu         sync.RWMutex
 	configDir  string
 	configPath string
-	exprFuncs  map[string]any
+	exprFns    map[string]any
+	data       any
+	envMap     EnvSpecMap
+}
+
+func (m *Manager) SetEnvMap(data EnvSpecMap) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.envMap = data
+}
+
+func (m *Manager) GetEnvMap() EnvSpecMap {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.envMap
+}
+
+func (m *Manager) SetConfigData(data any) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.data = data
+}
+
+func (m *Manager) GetConfigData() any {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.data
 }
 
 // SetPath sets the config path in a thread-safe manner
@@ -55,20 +81,20 @@ func (m *Manager) RegisterExprFunc(name string, fn any) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if m.exprFuncs[name] != nil {
+	if m.exprFns[name] != nil {
 		return &ExprExistsError{Name: name}
 	}
-	m.exprFuncs[name] = fn
+	m.exprFns[name] = fn
 	return nil
 }
 
-// GetExprFuncs returns a copy of registered expression functions
-func (m *Manager) GetExprFuncs() map[string]any {
+// GetExprFns returns a copy of registered expression functions
+func (m *Manager) GetExprFns() map[string]any {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	result := make(map[string]any, len(m.exprFuncs))
-	for k, v := range m.exprFuncs {
+	result := make(map[string]any, len(m.exprFns))
+	for k, v := range m.exprFns {
 		result[k] = v
 	}
 	return result

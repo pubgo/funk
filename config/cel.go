@@ -121,7 +121,7 @@ func newCelEngine(cfg *config) (*celEngine, error) {
 	}
 
 	// Add custom registered functions
-	for name, fn := range globalManager.GetExprFuncs() {
+	for name, fn := range globalManager.GetExprFns() {
 		fnOpt, err := createCelFunction(name, fn)
 		if err != nil {
 			log.Warn().Err(err).Str("name", name).Msg("failed to register custom CEL function")

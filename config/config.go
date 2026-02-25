@@ -266,10 +266,6 @@ func LoadFromPath[T any](cfgPath string) (*Cfg[T], error) {
 		}
 		log.Fatal().Err(err).Msg("failed to merge config")
 	}
-
-	vars.Register(vars.UniqueName("config.data"), func() any {
-		return map[string]any{"data": val, "env": envCfgMap}
-	})
 	return &Cfg[T]{T: val, P: &val, EnvCfg: lo.ToPtr(envCfgMap)}, nil
 }
 
@@ -297,7 +293,20 @@ func TryLoad[T any]() (*Cfg[T], error) {
 	globalManager.SetPath(cfgPath)
 	globalManager.SetDir(cfgDir)
 
-	return LoadFromPath[T](cfgPath)
+	cfg, err := LoadFromPath[T](cfgPath)
+	if err != nil {
+		log.Err(err).Str("path", cfgPath).Msg("failed to load config")
+		return nil, err
+	}
+
+	globalManager.SetConfigData(cfg.P)
+	globalManager.SetEnvMap(lo.FromPtr(cfg.EnvCfg))
+
+	vars.Register(vars.UniqueName("config.data"), func() any {
+		return map[string]any{"config_data": cfg.P, "envs": cfg.EnvCfg}
+	})
+
+	return cfg, nil
 }
 
 // Load loads configuration (panics on error).

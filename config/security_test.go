@@ -287,7 +287,7 @@ func TestEnvSpecValidation(t *testing.T) {
 
 func TestManagerThreadSafety(t *testing.T) {
 	m := &Manager{
-		exprFuncs: make(map[string]any),
+		exprFns: make(map[string]any),
 	}
 
 	// Test concurrent access
@@ -311,7 +311,7 @@ func TestRegisterExpr(t *testing.T) {
 	// Reset for test
 	oldManager := globalManager
 	globalManager = &Manager{
-		exprFuncs: make(map[string]any),
+		exprFns: make(map[string]any),
 	}
 	defer func() { globalManager = oldManager }()
 
