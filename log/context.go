@@ -3,6 +3,7 @@ package log
 import (
 	"context"
 	"log"
+	"maps"
 )
 
 type (
@@ -59,10 +60,7 @@ func UpdateFieldsCtx(ctx context.Context, fields Fields) context.Context {
 		evt = e
 	}
 
-	for k, v := range fields {
-		evt[k] = v
-	}
-
+	maps.Copy(evt, fields)
 	return context.WithValue(ctx, ctxEventKey{}, evt)
 }
 
