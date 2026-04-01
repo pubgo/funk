@@ -26,6 +26,4 @@ func keyHandler(key string) string {
 	return strings.ToUpper(trim(key))
 }
 
-var getLog = sync.OnceValue(func() *slog.Logger {
-	return slog.Default().WithGroup(Name)
-})
+var getLog = sync.OnceValue(func() *slog.Logger { return slog.Default() })
