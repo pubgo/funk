@@ -209,10 +209,16 @@ func RegisterExpr(name string, fn any) error {
 func evalData(template []byte, cfg *config) []byte {
 	cleanedTemplate := removeYAMLComments(template)
 
+	engine, engineErr := newCelEngine(cfg)
+
 	exprTpl := fasttemplate.New(string(cleanedTemplate), "${{", "}}")
 	res := []byte(exprTpl.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
 		tag = strings.TrimSpace(tag)
-		d, err := result.WrapErr(evalExpr(tag, cfg))
+		if engineErr != nil {
+			return -1, errors.Wrap(engineErr, "failed to create CEL engine")
+		}
+
+		d, err := result.WrapErr(engine.Eval(tag))
 		if err.IsErr() {
 			err.Log(func(e result.Event) {
 				e.Str("tag", tag)

@@ -1,0 +1,2 @@
+app:
+  required: ${UNDECLARED_VAR:missing}

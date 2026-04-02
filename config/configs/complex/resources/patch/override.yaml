@@ -1,0 +1,11 @@
+app:
+  name: from-patch
+  flags:
+    - patch
+  endpoints:
+    - https://patch
+feature:
+  tags:
+    - p1
+database:
+  port: 6432

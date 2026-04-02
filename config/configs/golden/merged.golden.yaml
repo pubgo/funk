@@ -1,0 +1,17 @@
+app:
+  name: from-patch
+  mode: production
+  custom: FUNK
+  env_name: golden-app
+  token: c2VjcmV0LXRva2VuCg==
+  labels:
+    - base
+    - patch
+service:
+  retries: 3
+  timeout: 5s
+feature:
+  enabled: true
+  list:
+    - a
+    - b

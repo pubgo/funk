@@ -1,0 +1,6 @@
+app:
+  name: from-patch
+  labels:
+    - patch
+service:
+  retries: 3

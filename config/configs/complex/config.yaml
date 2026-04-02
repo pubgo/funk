@@ -1,0 +1,14 @@
+app:
+  name: main
+  mode_from_main: ${MODE:dev}
+feature:
+  tags:
+    - main
+
+resources:
+  - resources/base
+patch_resources:
+  - resources/patch
+  - resources/not-exist
+patch_envs:
+  - envs

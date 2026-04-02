@@ -80,6 +80,22 @@ func GetConfigData(cfgPath string, workDir string, envSpecMap ...EnvSpecMap) (_ 
 
 func LoadEnvMap(cfgPath string) EnvSpecMap { return loadEnvConfigMap(cfgPath) }
 
+func resolveConfigPaths(parentDir string, refs []string) []string {
+	refs = lo.Map(refs, func(item string, index int) string { return filepath.Join(parentDir, item) })
+
+	var resPaths []string
+	for _, resPath := range refs {
+		pathList := listAllPath(resPath).Expect("failed to list cfgPath: %s", resPath)
+		resPaths = append(resPaths, pathList...)
+	}
+
+	cfgFilter := func(item string, index int) bool {
+		return strings.HasSuffix(item, "."+defaultConfigType) && !strings.HasPrefix(filepath.Base(item), ".")
+	}
+	resPaths = lo.Filter(resPaths, cfgFilter)
+	return lo.Uniq(resPaths)
+}
+
 func loadEnvConfigMap(cfgPath string) EnvSpecMap {
 	defer recovery.Exit(func(err error) error {
 		log.Err(err).Str("path", cfgPath).Msg("load env config map error")
@@ -161,12 +177,12 @@ func loadEnvConfigMap(cfgPath string) EnvSpecMap {
 //
 // This method is intended for explicit/manual validation. Normal loading no longer forces
 // env reference declaration checks during parsing.
-func ValidateEnvReferences(cfgPath string) (_ error) {
+func ValidateEnvReferences(cfgPath string) (gErr error) {
 	if strings.TrimSpace(cfgPath) == "" {
 		return fmt.Errorf("config path is null")
 	}
 
-	defer recovery.Exit(func(err error) error {
+	defer result.RecoveryErr(&gErr, func(err error) error {
 		log.Err(err).Str("config_path", cfgPath).Msg("failed to validate env references")
 		return err
 	})
@@ -185,22 +201,6 @@ func ValidateEnvReferences(cfgPath string) (_ error) {
 		return err
 	}
 
-	getRealPath := func(pp []string) []string {
-		pp = lo.Map(pp, func(item string, index int) string { return filepath.Join(parentDir, item) })
-
-		var resPaths []string
-		for _, resPath := range pp {
-			pathList := listAllPath(resPath).Expect("failed to list cfgPath: %s", resPath)
-			resPaths = append(resPaths, pathList...)
-		}
-
-		cfgFilter := func(item string, index int) bool {
-			return strings.HasSuffix(item, "."+defaultConfigType) && !strings.HasPrefix(filepath.Base(item), ".")
-		}
-		resPaths = lo.Filter(resPaths, cfgFilter)
-		return lo.Uniq(resPaths)
-	}
-
 	validateFiles := func(paths []string, allowNotExist bool) error {
 		for _, p := range paths {
 			if pathutil.IsNotExist(p) {
@@ -217,11 +217,11 @@ func ValidateEnvReferences(cfgPath string) (_ error) {
 		return nil
 	}
 
-	if err = validateFiles(getRealPath(res.Resources), false); err != nil {
+	if err = validateFiles(resolveConfigPaths(parentDir, res.Resources), false); err != nil {
 		return err
 	}
 
-	if err = validateFiles(getRealPath(res.PatchResources), true); err != nil {
+	if err = validateFiles(resolveConfigPaths(parentDir, res.PatchResources), true); err != nil {
 		return err
 	}
 
@@ -265,22 +265,6 @@ func LoadMergedConfigData(cfgPath string) (_ []byte, gErr error) {
 			e.Msg("failed to unmarshal resource config")
 		})
 
-	getRealPath := func(pp []string) []string {
-		pp = lo.Map(pp, func(item string, index int) string { return filepath.Join(parentDir, item) })
-
-		var resPaths []string
-		for _, resPath := range pp {
-			pathList := listAllPath(resPath).Expect("failed to list cfgPath: %s", resPath)
-			resPaths = append(resPaths, pathList...)
-		}
-
-		cfgFilter := func(item string, index int) bool {
-			return strings.HasSuffix(item, "."+defaultConfigType) && !strings.HasPrefix(filepath.Base(item), ".")
-		}
-		resPaths = lo.Filter(resPaths, cfgFilter)
-		return lo.Uniq(resPaths)
-	}
-
 	mergeFile := func(resPath string) {
 		resBytes := result.Wrap(GetConfigData(resPath, parentDir)).Expect("failed to handler config data")
 
@@ -298,7 +282,7 @@ func LoadMergedConfigData(cfgPath string) (_ []byte, gErr error) {
 			})
 	}
 
-	resPathList := getRealPath(res.Resources)
+	resPathList := resolveConfigPaths(parentDir, res.Resources)
 	sort.Strings(resPathList)
 	for _, resPath := range resPathList {
 		if pathutil.IsNotExist(resPath) {
@@ -308,7 +292,7 @@ func LoadMergedConfigData(cfgPath string) (_ []byte, gErr error) {
 		mergeFile(resPath)
 	}
 
-	patchResPathList := getRealPath(res.PatchResources)
+	patchResPathList := resolveConfigPaths(parentDir, res.PatchResources)
 	sort.Strings(patchResPathList)
 	for _, resPath := range patchResPathList {
 		if pathutil.IsNotExist(resPath) {
@@ -369,23 +353,6 @@ func LoadFromPath[T any](cfgPath string) (*Cfg[T], error) {
 			Msg("failed to unmarshal config")
 		return nil, err
 	}
-
-	getRealPath := func(pp []string) []string {
-		pp = lo.Map(pp, func(item string, index int) string { return filepath.Join(parentDir, item) })
-
-		var resPaths []string
-		for _, resPath := range pp {
-			pathList := listAllPath(resPath).Expect("failed to list cfgPath: %s", resPath)
-			resPaths = append(resPaths, pathList...)
-		}
-
-		// skip .*.yaml and cfg.other
-		cfgFilter := func(item string, index int) bool {
-			return strings.HasSuffix(item, "."+defaultConfigType) && !strings.HasPrefix(item, ".")
-		}
-		resPaths = lo.Filter(resPaths, cfgFilter)
-		return lo.Uniq(resPaths)
-	}
 	getCfg := func(resPath string) T {
 		// Do not force env reference declaration checks during normal loading.
 		// Use parentDir as workDir so embed() paths are relative to root config dir.
@@ -408,7 +375,7 @@ func LoadFromPath[T any](cfgPath string) (*Cfg[T], error) {
 
 	var cfgList []T
 	cfgList = append(cfgList, typex.DoBlock1(func() []T {
-		resPathList := getRealPath(res.Resources)
+		resPathList := resolveConfigPaths(parentDir, res.Resources)
 		sort.Strings(resPathList)
 
 		var pathList []T
@@ -423,7 +390,7 @@ func LoadFromPath[T any](cfgPath string) (*Cfg[T], error) {
 		return pathList
 	})...)
 	cfgList = append(cfgList, typex.DoBlock1(func() []T {
-		patchResPathList := getRealPath(res.PatchResources)
+		patchResPathList := resolveConfigPaths(parentDir, res.PatchResources)
 		sort.Strings(patchResPathList)
 
 		var pathList []T

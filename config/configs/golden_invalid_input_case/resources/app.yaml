@@ -1,0 +1,2 @@
+app:
+  must_fail: ${UNDECLARED_FOR_GOLDEN:test}

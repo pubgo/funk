@@ -1,0 +1,11 @@
+app:
+  name: main
+  mode: ${MODE:dev}
+  custom: ${{golden_upper("funk")}}
+
+resources:
+  - resources/base
+patch_resources:
+  - resources/patch
+patch_envs:
+  - envs
