@@ -77,7 +77,7 @@ var (
 	}
 
 	EnvFlag = redant.Option{
-		Flag:        "env",
+		Flag:        "runenv",
 		Description: "running env, dev,test,stage,prod",
 		Value:       Env,
 		Default:     Env.String(),
@@ -86,6 +86,7 @@ var (
 		Action: func(val pflag.Value) error {
 			env.Set("env", val.String())
 			env.Set("run_env", val.String())
+			env.Set("runenv", val.String())
 			return nil
 		},
 	}
