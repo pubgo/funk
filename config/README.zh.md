@@ -71,12 +71,12 @@ app:
 
 #### 内置CEL函数
 
-| 函数 | 描述 | 示例 |
-|------|------|------|
-| `env("KEY")` | 获取环境变量值（**必须在patch_envs中定义**） | `${{env("DB_HOST")}}` |
-| `envs()` | 返回所有已定义环境变量的map | `${{envs()}}` |
-| `config_dir()` | 获取配置文件所在目录 | `${{config_dir()}}` |
-| `embed("file")` | 将文件内容嵌入为base64（相对于配置目录） | `${{embed("secret.key")}}` |
+| 函数            | 描述                                         | 示例                       |
+| --------------- | -------------------------------------------- | -------------------------- |
+| `env("KEY")`    | 获取环境变量值（**必须在patch_envs中定义**） | `${{env("DB_HOST")}}`      |
+| `envs()`        | 返回所有已定义环境变量的map                  | `${{envs()}}`              |
+| `config_dir()`  | 获取配置文件所在目录                         | `${{config_dir()}}`        |
+| `embed("file")` | 将文件内容嵌入为base64（相对于配置目录）     | `${{embed("secret.key")}}` |
 
 #### 环境变量必须预定义
 
@@ -176,21 +176,21 @@ type EnvSpec struct {
 
 使用 [go-playground/validator](https://github.com/go-playground/validator) 提供的验证规则：
 
-| 规则 | 描述 | 示例 |
-|------|------|------|
-| `required` | 必填 | `validate: required` |
-| `email` | 邮箱格式 | `validate: email` |
-| `url` | URL格式 | `validate: url` |
-| `uuid` | UUID格式 | `validate: uuid` |
-| `ip` | IP地址 | `validate: ip` |
-| `ipv4` | IPv4地址 | `validate: ipv4` |
-| `ipv6` | IPv6地址 | `validate: ipv6` |
-| `numeric` | 纯数字 | `validate: numeric` |
-| `boolean` | 布尔值 | `validate: boolean` |
-| `min=n` | 最小长度 | `validate: min=3` |
-| `max=n` | 最大长度 | `validate: max=50` |
-| `len=n` | 固定长度 | `validate: len=10` |
-| `oneof=a b c` | 枚举值 | `validate: oneof=dev staging prod` |
+| 规则          | 描述     | 示例                               |
+| ------------- | -------- | ---------------------------------- |
+| `required`    | 必填     | `validate: required`               |
+| `email`       | 邮箱格式 | `validate: email`                  |
+| `url`         | URL格式  | `validate: url`                    |
+| `uuid`        | UUID格式 | `validate: uuid`                   |
+| `ip`          | IP地址   | `validate: ip`                     |
+| `ipv4`        | IPv4地址 | `validate: ipv4`                   |
+| `ipv6`        | IPv6地址 | `validate: ipv6`                   |
+| `numeric`     | 纯数字   | `validate: numeric`                |
+| `boolean`     | 布尔值   | `validate: boolean`                |
+| `min=n`       | 最小长度 | `validate: min=3`                  |
+| `max=n`       | 最大长度 | `validate: max=50`                 |
+| `len=n`       | 固定长度 | `validate: len=10`                 |
+| `oneof=a b c` | 枚举值   | `validate: oneof=dev staging prod` |
 
 规则可以组合使用，用逗号分隔：
 
@@ -240,8 +240,20 @@ cfg := config.Load[AppConfig]()
 ### 手动配置加载
 
 ```go
-var appConfig AppConfig
-envCfgMap := config.LoadFromPath(&appConfig, "path/to/config.yaml")
+cfg, err := config.LoadFromPath[AppConfig]("path/to/config.yaml")
+if err != nil {
+  panic(err)
+}
+
+// 类型化配置
+_ = cfg.T
+
+// 导出最终合并后的 YAML，便于排查与查看
+merged, err := config.LoadMergedConfigData("path/to/config.yaml")
+if err != nil {
+  panic(err)
+}
+fmt.Println(string(merged))
 ```
 
 ### 注册自定义CEL函数
@@ -262,14 +274,14 @@ if err != nil {
 
 **支持的函数签名**:
 
-| 签名 | 描述 |
-|------|------|
-| `func() T` | 无参数，返回值 |
-| `func() (T, error)` | 无参数，返回值和错误 |
-| `func() error` | 无参数，只返回错误 |
-| `func(T) R` | 一个参数，返回值 |
+| 签名                 | 描述                   |
+| -------------------- | ---------------------- |
+| `func() T`           | 无参数，返回值         |
+| `func() (T, error)`  | 无参数，返回值和错误   |
+| `func() error`       | 无参数，只返回错误     |
+| `func(T) R`          | 一个参数，返回值       |
 | `func(T) (R, error)` | 一个参数，返回值和错误 |
-| `func(T) error` | 一个参数，只返回错误 |
+| `func(T) error`      | 一个参数，只返回错误   |
 
 ### 路径安全
 
@@ -287,24 +299,29 @@ secret: ${{embed("../../../etc/passwd")}}
 
 ### 核心函数
 
-| 函数 | 描述 |
-|------|------|
-| `Load[T]()` | 泛型加载和解析配置 |
-| `LoadFromPath[T](val *T, cfgPath string)` | 从特定路径加载配置 |
-| `SetConfigPath(path string)` | 设置自定义配置文件路径 |
-| `GetConfigPath()` | 获取当前配置文件路径 |
-| `GetConfigDir()` | 获取配置目录 |
-| `GetConfigData(cfgPath string, envSpecMap ...EnvSpecMap)` | 获取处理后的配置数据 |
-| `RegisterExpr(name string, fn any)` | 注册自定义CEL表达式函数 |
-| `LoadEnvMap(cfgPath string)` | 加载环境变量配置映射 |
+| 函数                                                      | 描述                                                |
+| --------------------------------------------------------- | --------------------------------------------------- |
+| `Load[T]()`                                               | 泛型加载和解析配置                                  |
+| `TryLoad[T]()`                                            | 尝试加载类型化配置（返回错误）                      |
+| `LoadFromPath[T](cfgPath string)`                         | 从特定路径加载类型化配置                            |
+| `LoadMergedConfigData(cfgPath string)`                    | 获取最终合并处理后的配置内容（YAML字节）            |
+| `TryLoadMergedData()`                                     | 使用全局配置路径/自动发现尝试加载最终合并配置       |
+| `LoadMergedData()`                                        | 加载最终合并配置（错误时 panic）                    |
+| `ValidateEnvReferences(cfgPath string)`                   | 手动校验配置中的 env 引用是否在 `patch_envs` 中声明 |
+| `SetConfigPath(path string)`                              | 设置自定义配置文件路径                              |
+| `GetConfigPath()`                                         | 获取当前配置文件路径                                |
+| `GetConfigDir()`                                          | 获取配置目录                                        |
+| `GetConfigData(cfgPath string, envSpecMap ...EnvSpecMap)` | 获取处理后的配置数据                                |
+| `RegisterExpr(name string, fn any)`                       | 注册自定义CEL表达式函数                             |
+| `LoadEnvMap(cfgPath string)`                              | 加载环境变量配置映射                                |
 
 ### 配置结构
 
-| 结构 | 描述 |
-|------|------|
-| `Cfg[T]` | 包含加载配置和元数据的包装器 |
-| `Resources` | 资源加载和合并的配置 |
-| `EnvSpec` | 环境变量规范定义 |
+| 结构         | 描述                                   |
+| ------------ | -------------------------------------- |
+| `Cfg[T]`     | 包含加载配置和元数据的包装器           |
+| `Resources`  | 资源加载和合并的配置                   |
+| `EnvSpec`    | 环境变量规范定义                       |
 | `EnvSpecMap` | 环境变量规范映射 (map[string]*EnvSpec) |
 
 ## 最佳实践

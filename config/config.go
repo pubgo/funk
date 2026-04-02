@@ -152,6 +152,184 @@ func loadEnvConfigMap(cfgPath string) EnvSpecMap {
 	return envSpecMap
 }
 
+// ValidateEnvReferences validates that env vars used in config files are declared in patch_envs.
+//
+// It checks env references in:
+//   - main config file
+//   - resources files
+//   - patch_resources files
+//
+// This method is intended for explicit/manual validation. Normal loading no longer forces
+// env reference declaration checks during parsing.
+func ValidateEnvReferences(cfgPath string) (_ error) {
+	if strings.TrimSpace(cfgPath) == "" {
+		return fmt.Errorf("config path is null")
+	}
+
+	defer recovery.Exit(func(err error) error {
+		log.Err(err).Str("config_path", cfgPath).Msg("failed to validate env references")
+		return err
+	})
+
+	parentDir := filepath.Dir(cfgPath)
+	envCfgMap := loadEnvConfigMap(cfgPath)
+
+	// Validate env references in main config first.
+	configBytes, err := GetConfigData(cfgPath, parentDir, envCfgMap)
+	if err != nil {
+		return err
+	}
+
+	var res Resources
+	if err = yaml.Unmarshal(configBytes, &res); err != nil {
+		return err
+	}
+
+	getRealPath := func(pp []string) []string {
+		pp = lo.Map(pp, func(item string, index int) string { return filepath.Join(parentDir, item) })
+
+		var resPaths []string
+		for _, resPath := range pp {
+			pathList := listAllPath(resPath).Expect("failed to list cfgPath: %s", resPath)
+			resPaths = append(resPaths, pathList...)
+		}
+
+		cfgFilter := func(item string, index int) bool {
+			return strings.HasSuffix(item, "."+defaultConfigType) && !strings.HasPrefix(filepath.Base(item), ".")
+		}
+		resPaths = lo.Filter(resPaths, cfgFilter)
+		return lo.Uniq(resPaths)
+	}
+
+	validateFiles := func(paths []string, allowNotExist bool) error {
+		for _, p := range paths {
+			if pathutil.IsNotExist(p) {
+				if allowNotExist {
+					continue
+				}
+				return fmt.Errorf("resources config path not found: %s", p)
+			}
+
+			if _, err := GetConfigData(p, parentDir, envCfgMap); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	if err = validateFiles(getRealPath(res.Resources), false); err != nil {
+		return err
+	}
+
+	if err = validateFiles(getRealPath(res.PatchResources), true); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// LoadMergedConfigData returns the fully merged, processed config content in YAML format.
+//
+// Processing includes:
+//   - env initialization from patch_envs
+//   - template/CEL evaluation for each config file
+//   - merge order: main config -> resources -> patch_resources
+//
+// Meta fields (resources/patch_resources/patch_envs) are removed from returned content.
+func LoadMergedConfigData(cfgPath string) (_ []byte, gErr error) {
+	if strings.TrimSpace(cfgPath) == "" {
+		return nil, fmt.Errorf("config path is null")
+	}
+
+	defer result.RecoveryErr(&gErr, func(err error) error {
+		log.Err(err).Str("config_path", cfgPath).Msg("failed to load merged config data")
+		return err
+	})
+
+	parentDir := filepath.Dir(cfgPath)
+	_ = loadEnvConfigMap(cfgPath)
+
+	configBytes := result.Wrap(GetConfigData(cfgPath, parentDir)).Expect("failed to handler config data")
+
+	var merged map[string]any
+	result.ErrOf(yaml.Unmarshal(configBytes, &merged)).
+		MustWithLog(func(e result.Event) {
+			e.Str("config_path", cfgPath)
+			e.Msg("failed to unmarshal main config")
+		})
+
+	var res Resources
+	result.ErrOf(yaml.Unmarshal(configBytes, &res)).
+		MustWithLog(func(e result.Event) {
+			e.Str("config_path", cfgPath)
+			e.Msg("failed to unmarshal resource config")
+		})
+
+	getRealPath := func(pp []string) []string {
+		pp = lo.Map(pp, func(item string, index int) string { return filepath.Join(parentDir, item) })
+
+		var resPaths []string
+		for _, resPath := range pp {
+			pathList := listAllPath(resPath).Expect("failed to list cfgPath: %s", resPath)
+			resPaths = append(resPaths, pathList...)
+		}
+
+		cfgFilter := func(item string, index int) bool {
+			return strings.HasSuffix(item, "."+defaultConfigType) && !strings.HasPrefix(filepath.Base(item), ".")
+		}
+		resPaths = lo.Filter(resPaths, cfgFilter)
+		return lo.Uniq(resPaths)
+	}
+
+	mergeFile := func(resPath string) {
+		resBytes := result.Wrap(GetConfigData(resPath, parentDir)).Expect("failed to handler config data")
+
+		var item map[string]any
+		result.ErrOf(yaml.Unmarshal(resBytes, &item)).
+			MustWithLog(func(e result.Event) {
+				e.Str("res_path", resPath)
+				e.Msg("failed to unmarshal resource config")
+			})
+
+		result.ErrOf(Merge(&merged, item)).
+			MustWithLog(func(e result.Event) {
+				e.Str("res_path", resPath)
+				e.Msg("failed to merge resource config")
+			})
+	}
+
+	resPathList := getRealPath(res.Resources)
+	sort.Strings(resPathList)
+	for _, resPath := range resPathList {
+		if pathutil.IsNotExist(resPath) {
+			log.Panic().Str("path", resPath).Msg("resources config cfgPath not found")
+			continue
+		}
+		mergeFile(resPath)
+	}
+
+	patchResPathList := getRealPath(res.PatchResources)
+	sort.Strings(patchResPathList)
+	for _, resPath := range patchResPathList {
+		if pathutil.IsNotExist(resPath) {
+			continue
+		}
+		mergeFile(resPath)
+	}
+
+	delete(merged, "resources")
+	delete(merged, "patch_resources")
+	delete(merged, "patch_envs")
+
+	out := result.Wrap(yaml.Marshal(merged)).
+		Map(bytes.TrimSpace).
+		UnwrapOrLog(func(e result.Event) {
+			e.Str("config_path", cfgPath)
+			e.Msg("failed to marshal merged config")
+		})
+	return out, nil
+}
+
 func LoadFromPath[T any](cfgPath string) (*Cfg[T], error) {
 	defer recovery.Exit(func(err error) error {
 		log.Err(err).Str("config_path", cfgPath).Msg("failed to load config")
@@ -174,9 +352,9 @@ func LoadFromPath[T any](cfgPath string) (*Cfg[T], error) {
 	envCfgMap := loadEnvConfigMap(cfgPath)
 	parentDir := filepath.Dir(cfgPath)
 
-	// Pass envSpecMap to GetConfigData to validate env() calls against defined vars
-	// workDir is the root config directory for embed() path resolution
-	configBytes := result.Wrap(GetConfigData(cfgPath, parentDir, envCfgMap)).Expect("failed to handler config data")
+	// Do not force env reference declaration checks during normal loading.
+	// Use ValidateEnvReferences for explicit/manual validation when needed.
+	configBytes := result.Wrap(GetConfigData(cfgPath, parentDir)).Expect("failed to handler config data")
 	defer recovery.Exit(func(err error) error {
 		// Security: don't log raw config data which may contain secrets
 		log.Err(err).
@@ -209,9 +387,9 @@ func LoadFromPath[T any](cfgPath string) (*Cfg[T], error) {
 		return lo.Uniq(resPaths)
 	}
 	getCfg := func(resPath string) T {
-		// Pass envCfgMap to validate env() calls against defined vars
-		// Use parentDir as workDir so embed() paths are relative to root config dir
-		resBytes := result.Wrap(GetConfigData(resPath, parentDir, envCfgMap)).Expect("failed to handler config data")
+		// Do not force env reference declaration checks during normal loading.
+		// Use parentDir as workDir so embed() paths are relative to root config dir.
+		resBytes := result.Wrap(GetConfigData(resPath, parentDir)).Expect("failed to handler config data")
 
 		var cfg1 T
 		result.ErrOf(yaml.Unmarshal(resBytes, &cfg1)).MustWithLog(func(e result.Event) {
@@ -309,10 +487,47 @@ func TryLoad[T any]() (*Cfg[T], error) {
 	return cfg, nil
 }
 
+// TryLoadMergedData attempts to load fully merged, processed config data and returns error instead of panicking.
+//
+// It resolves config path in the same way as TryLoad:
+//   - use global configured path if set
+//   - otherwise auto-discover by default config name/type
+func TryLoadMergedData() ([]byte, error) {
+	var cfgPath = globalManager.GetPath()
+	var cfgDir string
+	if cfgPath != "" {
+		cfgDir = filepath.Dir(cfgPath)
+	} else {
+		var err error
+		cfgPath, cfgDir, err = findConfigPath(defaultConfigName, defaultConfigType)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	globalManager.SetPath(cfgPath)
+	globalManager.SetDir(cfgDir)
+
+	data, err := LoadMergedConfigData(cfgPath)
+	if err != nil {
+		log.Err(err).Str("path", cfgPath).Msg("failed to load merged config data")
+		return nil, err
+	}
+	return data, nil
+}
+
 // Load loads configuration (panics on error).
 // For better error handling, use TryLoad instead.
 func Load[T any]() Cfg[T] {
 	cfg, err := TryLoad[T]()
 	assert.Must(err, "failed to load config")
 	return lo.FromPtr(cfg)
+}
+
+// LoadMergedData loads fully merged, processed config data (panics on error).
+// For better error handling, use TryLoadMergedData instead.
+func LoadMergedData() []byte {
+	data, err := TryLoadMergedData()
+	assert.Must(err, "failed to load merged config data")
+	return data
 }
