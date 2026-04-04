@@ -82,10 +82,9 @@ var (
 		Value:       Env,
 		Default:     Env.String(),
 		Category:    "system",
-		Envs:        []string{env.Key("env"), env.Key("run_env")},
+		Envs:        []string{env.Key("env"), env.Key("runenv")},
 		Action: func(val pflag.Value) error {
 			env.Set("env", val.String())
-			env.Set("run_env", val.String())
 			env.Set("runenv", val.String())
 			return nil
 		},
