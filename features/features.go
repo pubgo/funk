@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"sync"
-
-	"github.com/spf13/pflag"
 )
 
 type ValueType string
@@ -36,7 +34,9 @@ const (
 )
 
 type Value interface {
-	pflag.Value
+	String() string
+	Set(string) error
+	Type() string
 	Value() any
 }
 

@@ -51,7 +51,7 @@ type StringValue struct {
 func (v StringValue) Value() string { return v.val }
 
 func String(name, value, usage string, tags ...map[string]any) StringValue {
-	base := newBase(
+	return StringValue{baseValue: newBase(
 		defaultFeature,
 		name,
 		value,
@@ -60,8 +60,7 @@ func String(name, value, usage string, tags ...map[string]any) StringValue {
 		tags,
 		func(s string) (string, error) { return s, nil },
 		func(val string) string { return val },
-	)
-	return StringValue{baseValue: base}
+	)}
 }
 
 type IntValue struct {
@@ -71,7 +70,7 @@ type IntValue struct {
 func (v IntValue) Value() int64 { return v.val }
 
 func Int(name string, value int64, usage string, tags ...map[string]any) IntValue {
-	base := newBase(
+	return IntValue{baseValue: newBase(
 		defaultFeature,
 		name,
 		value,
@@ -80,11 +79,13 @@ func Int(name string, value int64, usage string, tags ...map[string]any) IntValu
 		tags,
 		func(s string) (val int64, err error) {
 			_, err = fmt.Sscanf(s, "%d", &val)
-			return val, err
+			if err != nil {
+				return val, fmt.Errorf("failed to parse int value, str=%s err=%w", s, err)
+			}
+			return val, nil
 		},
 		func(val int64) string { return fmt.Sprintf("%d", val) },
-	)
-	return IntValue{baseValue: base}
+	)}
 }
 
 type FloatValue struct {
@@ -94,7 +95,7 @@ type FloatValue struct {
 func (v FloatValue) Value() float64 { return v.val }
 
 func Float(name string, value float64, usage string, tags ...map[string]any) FloatValue {
-	base := newBase(
+	return FloatValue{baseValue: newBase(
 		defaultFeature,
 		name,
 		value,
@@ -103,11 +104,13 @@ func Float(name string, value float64, usage string, tags ...map[string]any) Flo
 		tags,
 		func(s string) (val float64, err error) {
 			_, err = fmt.Sscanf(s, "%f", &val)
-			return val, err
+			if err != nil {
+				return val, fmt.Errorf("failed to parse float value, str=%s err=%w", s, err)
+			}
+			return val, nil
 		},
 		func(val float64) string { return fmt.Sprintf("%f", val) },
-	)
-	return FloatValue{baseValue: base}
+	)}
 }
 
 type BoolValue struct {
@@ -117,7 +120,7 @@ type BoolValue struct {
 func (v BoolValue) Value() bool { return v.val }
 
 func Bool(name string, value bool, usage string, tags ...map[string]any) BoolValue {
-	base := newBase(
+	return BoolValue{baseValue: newBase(
 		defaultFeature,
 		name,
 		value,
@@ -126,17 +129,16 @@ func Bool(name string, value bool, usage string, tags ...map[string]any) BoolVal
 		tags,
 		func(s string) (val bool, err error) {
 			switch strings.ToLower(s) {
-			case "true", "1", "on", "yes":
+			case "true", "1", "on", "yes", "ok":
 				return true, nil
-			case "false", "0", "off", "no":
+			case "false", "0", "off", "no", "fail":
 				return false, nil
 			default:
 				return len(s) > 0, nil
 			}
 		},
 		func(val bool) string { return fmt.Sprintf("%v", val) },
-	)
-	return BoolValue{baseValue: base}
+	)}
 }
 
 type JsonValue[T any] struct {
@@ -146,7 +148,7 @@ type JsonValue[T any] struct {
 func (v JsonValue[T]) Value() T { return v.val }
 
 func Json[T any](name string, value T, usage string, tags ...map[string]any) JsonValue[T] {
-	base := newBase[T](
+	return JsonValue[T]{baseValue: newBase[T](
 		defaultFeature,
 		name,
 		value,
@@ -154,7 +156,11 @@ func Json[T any](name string, value T, usage string, tags ...map[string]any) Jso
 		JsonType,
 		tags,
 		func(s string) (val T, err error) {
-			return val, json.Unmarshal([]byte(s), &val)
+			err = json.Unmarshal([]byte(s), &val)
+			if err != nil {
+				return val, fmt.Errorf("failed to unmarshal json, str=%s err=%w", s, err)
+			}
+			return val, nil
 		},
 		func(val T) string {
 			data, err := json.Marshal(val)
@@ -163,6 +169,5 @@ func Json[T any](name string, value T, usage string, tags ...map[string]any) Jso
 			}
 			return string(data)
 		},
-	)
-	return JsonValue[T]{baseValue: base}
+	)}
 }

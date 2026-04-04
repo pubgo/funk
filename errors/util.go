@@ -11,7 +11,7 @@ import (
 	"github.com/rs/xid"
 	"github.com/samber/lo"
 
-	"github.com/pubgo/funk/v2/internal/errors/errinter"
+	"github.com/pubgo/funk/v2/internal/errors/errcolorfield"
 	"github.com/pubgo/funk/v2/stack"
 )
 
@@ -38,8 +38,8 @@ func ErrStringify(buf *bytes.Buffer, err error) {
 		return
 	}
 
-	fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorErrMsg, strings.TrimSpace(err.Error()))
-	fmt.Fprintf(buf, "%s]: %s\n", errinter.ColorErrDetail, strings.TrimSpace(fmt.Sprintf("%v", err)))
+	fmt.Fprintf(buf, "%s]: %s\n", errcolorfield.ColorErrMsg, strings.TrimSpace(err.Error()))
+	fmt.Fprintf(buf, "%s]: %s\n", errcolorfield.ColorErrDetail, strings.TrimSpace(fmt.Sprintf("%v", err)))
 	ErrStringify(buf, Unwrap(err))
 }
 

@@ -184,7 +184,7 @@ func (l *loggerImpl) enabled(ctx context.Context, lvl zerolog.Level) bool {
 
 func (l *loggerImpl) copy() *loggerImpl {
 	return &loggerImpl{
-		log:        l.log,
+		log:        l.getLog(),
 		fields:     maps.Clone(l.fields),
 		lvl:        l.lvl,
 		name:       l.name,

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"expvar"
 	"fmt"
-	"log/slog"
 	"strconv"
 	"strings"
 	"sync"
@@ -45,6 +44,10 @@ func Time(name string) *atomic.Time {
 
 func Error(name string) *atomic.Error {
 	return Any(name, atomic.NewError(nil))
+}
+
+func Pointer[T any](name string) *atomic.Pointer[T] {
+	return Any(name, atomic.NewPointer[T](nil))
 }
 
 var _ json.Marshaler = (*Func)(nil)
@@ -95,7 +98,7 @@ func toString(dt any) (r string) {
 	case error:
 		return errToString(dt)
 	default:
-		return slog.AnyValue(dt).String()
+		return jsonStr(dt)
 	}
 }
 
@@ -105,7 +108,12 @@ func Any[T any](name string, v T) T {
 
 	vv := expvar.Get(name)
 	if vv != nil {
-		return vv.(*anyValue).v.(T)
+		vv, ok := vv.(*anyValue)
+		if ok {
+			return vv.v.(T)
+		}
+
+		assert.Must(fmt.Errorf("var type error: %s is of type %T, not *anyValue", name, vv))
 	}
 
 	expvar.Publish(name, &anyValue{v: v})

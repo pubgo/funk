@@ -1,0 +1,11 @@
+app:
+  name: from-resource
+  flags:
+    - base
+  endpoints:
+    - http://base
+  computed_name: ${{"svc-" + env("APP_NAME")}}
+  secret_from_embed: ${{embed("assets/token.txt")}}
+feature:
+  tags:
+    - r1

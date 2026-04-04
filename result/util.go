@@ -84,7 +84,7 @@ func try1[T any](fn func() (T, error)) (t T, gErr error) {
 
 // panicIfError logs the error and panics
 // This maintains backward compatibility with existing code that expects panics
-func panicIfError(err error, events ...func(e *zerolog.Event)) {
+func panicIfError(err error, events ...func(e Event)) {
 	if err == nil {
 		return
 	}
@@ -239,14 +239,14 @@ func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts .
 		ctx = context.Background()
 	}
 
-	getErr := func() error {
+	getPreErr := func() error {
 		err := lo.FromPtr(setter1)
 		if err == nil {
 			err = setter2.GetErr()
 		}
 		return err
 	}
-	if preErr := getErr(); preErr != nil {
+	if preErr := getPreErr(); preErr != nil {
 		log.Err(preErr, ctx).Msgf("error setter has already set the error, err=%v", preErr)
 	}
 
@@ -352,7 +352,7 @@ var resultFile = stack.Caller(0)
 //	skip - Number of stack frames to skip
 //	err - The error to log
 //	events - Optional functions to add additional log fields
-func logErr(ctx context.Context, skip int, err error, events ...func(e *zerolog.Event)) {
+func logErr(ctx context.Context, skip int, err error, events ...func(e Event)) {
 	if err == nil {
 		return
 	}
@@ -371,8 +371,9 @@ func logErr(ctx context.Context, skip int, err error, events ...func(e *zerolog.
 			e.CallerSkipFrame(2 + skip)
 		}).
 		Func(func(e *zerolog.Event) {
+			evt := Event{e}
 			for _, fn := range events {
-				fn(e)
+				fn(evt)
 			}
 		}).
 		Msgf("%s\n%s", err.Error(), errors.JsonPrint(err))

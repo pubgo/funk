@@ -45,9 +45,12 @@ func (s slogImpl) Enabled(ctx context.Context, level slog.Level) bool {
 }
 
 func (s slogImpl) Handle(ctx context.Context, r slog.Record) error {
-	level := convertSlog(r.Level)
-	logger := s.l.WithLevel(logLevels[level])
+	if isLogDisabled(ctx) {
+		return nil
+	}
 
+	logger := s.l
+	level := convertSlog(r.Level)
 	var evt *Event
 	switch level {
 	case slog.LevelDebug:
@@ -60,10 +63,6 @@ func (s slogImpl) Handle(ctx context.Context, r slog.Record) error {
 		evt = logger.Error(ctx)
 	}
 	if evt == nil {
-		return nil
-	}
-
-	if isLogDisabled(ctx) {
 		return nil
 	}
 

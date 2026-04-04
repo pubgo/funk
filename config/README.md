@@ -157,8 +157,20 @@ cfg := config.Load[AppConfig]()
 ### Manual Configuration Loading
 
 ```go
-var appConfig AppConfig
-envCfgMap := config.LoadFromPath(&appConfig, "path/to/config.yaml")
+cfg, err := config.LoadFromPath[AppConfig]("path/to/config.yaml")
+if err != nil {
+  panic(err)
+}
+
+// typed config value
+_ = cfg.T
+
+// export fully merged YAML for inspection/debugging
+merged, err := config.LoadMergedConfigData("path/to/config.yaml")
+if err != nil {
+  panic(err)
+}
+fmt.Println(string(merged))
 ```
 
 ### Configuration Validation
@@ -176,26 +188,31 @@ cfg := config.Load[ValidatedConfig]()
 
 ### Core Functions
 
-| Function | Description |
-|----------|-------------|
-| `Load[T]()` | Load and parse configuration generically |
-| `LoadFromPath[T](val *T, cfgPath string)` | Load configuration from specific path |
-| `SetConfigPath(path string)` | Set custom configuration file path |
-| `GetConfigPath()` | Get current configuration file path |
+| Function                                | Description                                                        |
+| --------------------------------------- | ------------------------------------------------------------------ |
+| `Load[T]()`                             | Load and parse configuration generically                           |
+| `TryLoad[T]()`                          | Try load typed configuration (returns error)                       |
+| `LoadFromPath[T](cfgPath string)`       | Load typed configuration from specific path                        |
+| `LoadMergedConfigData(cfgPath string)`  | Load fully merged processed config content (YAML bytes)            |
+| `TryLoadMergedData()`                   | Try load merged processed config content via global path/discovery |
+| `LoadMergedData()`                      | Load merged processed config content (panic on error)              |
+| `ValidateEnvReferences(cfgPath string)` | Manually validate env references against `patch_envs`              |
+| `SetConfigPath(path string)`            | Set custom configuration file path                                 |
+| `GetConfigPath()`                       | Get current configuration file path                                |
 
 ### Configuration Structures
 
-| Structure | Description |
-|-----------|-------------|
-| `Cfg[T]` | Wrapper containing loaded configuration and metadata |
-| `Resources` | Configuration for resource loading and merging |
-| `Node` | YAML node wrapper for flexible access |
+| Structure   | Description                                          |
+| ----------- | ---------------------------------------------------- |
+| `Cfg[T]`    | Wrapper containing loaded configuration and metadata |
+| `Resources` | Configuration for resource loading and merging       |
+| `Node`      | YAML node wrapper for flexible access                |
 
 ### Environment Integration
 
-| Function | Description |
-|----------|-------------|
-| `LoadEnvMap(cfgPath string)` | Load environment configuration map |
+| Function                              | Description                          |
+| ------------------------------------- | ------------------------------------ |
+| `LoadEnvMap(cfgPath string)`          | Load environment configuration map   |
 | `RegisterExpr(name string, expr any)` | Register custom expression functions |
 
 ## Best Practices

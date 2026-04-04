@@ -127,3 +127,19 @@ func WithMaxDuration(timeout time.Duration, next Backoff) Backoff {
 		return val, false
 	})
 }
+
+func WithMutiBackoff(bs ...Backoff) Backoff {
+	return BackoffFunc(func() (time.Duration, bool) {
+		for _, b := range bs {
+			val, stop := b.Next()
+			if stop {
+				return 0, true
+			}
+
+			if val > 0 {
+				return val, false
+			}
+		}
+		return 0, false
+	})
+}

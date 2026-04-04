@@ -11,9 +11,10 @@ func GetFlags() redant.OptionSet {
 	const category = "feature"
 	var options []redant.Option
 	features.VisitAll(func(flag *features.Flag) {
-		envVar := env.Key("feature." + flag.Name)
+		name := "feature." + flag.Name
+		envVar := env.Key(name)
 		options = append(options, redant.Option{
-			Flag:        "feature." + flag.Name,
+			Flag:        name,
 			Description: flag.Usage,
 			Value:       flag.Value,
 			Default:     flag.Value.String(),

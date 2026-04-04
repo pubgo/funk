@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 
 	"github.com/pubgo/funk/v2/errors"
-	"github.com/pubgo/funk/v2/log/logfields"
 )
 
 var (
@@ -36,12 +34,12 @@ func (e Error) MapErr(fn func(err error) error) Error {
 	return Error{err: err}
 }
 
-func (e Error) LogCtx(ctx context.Context, events ...func(e *zerolog.Event)) Error {
+func (e Error) LogCtx(ctx context.Context, events ...func(e Event)) Error {
 	logErr(ctx, 0, e.err, events...)
 	return e
 }
 
-func (e Error) Log(events ...func(e *zerolog.Event)) Error {
+func (e Error) Log(events ...func(e Event)) Error {
 	logErr(context.Background(), 0, e.err, events...)
 	return e
 }
@@ -138,8 +136,8 @@ func (e Error) InspectErr(fn func(error)) {
 func (e Error) Expect(format string, args ...any) {
 	if e.IsErr() {
 		err := errors.WrapCaller(e.getErr(), 1)
-		panicIfError(err, func(e *zerolog.Event) {
-			e.Str(logfields.Msg, fmt.Sprintf(format, args...))
+		panicIfError(err, func(e Event) {
+			e.Msgf(format, args...)
 		})
 	}
 }
@@ -176,7 +174,7 @@ func (e Error) Throw(setter ErrSetter, contexts ...context.Context) bool {
 	return catchErr(e, setter, nil, contexts...)
 }
 
-func (e Error) MustWithLog(events ...func(e *zerolog.Event)) {
+func (e Error) MustWithLog(events ...func(e Event)) {
 	if e.IsOK() {
 		return
 	}

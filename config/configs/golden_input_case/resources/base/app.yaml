@@ -1,0 +1,9 @@
+app:
+  name: from-base
+  labels:
+    - base
+  env_name: ${{env("APP_NAME")}}
+  token: ${{embed("assets/token.txt")}}
+service:
+  retries: 1
+  timeout: ${TIMEOUT:3s}

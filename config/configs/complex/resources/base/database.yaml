@@ -1,0 +1,3 @@
+database:
+  host: ${DB_HOST:127.0.0.1}
+  port: ${DB_PORT:5432}

@@ -52,6 +52,10 @@ Funk is a comprehensive Go utility library that provides enhanced error handling
 - Path and file utilities
 - String and formatting helpers
 
+### 🔀 Connection Multiplexing
+- Serve gRPC/HTTP/1/HTTP/2 on the same port (connection sniffing)
+- Package: `connmux` (see `connmux/README.md`)
+
 ## Installation
 
 ```bash

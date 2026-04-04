@@ -25,3 +25,4 @@ kdata
 *.log
 proto-vendor
 .gitconfig
+.local

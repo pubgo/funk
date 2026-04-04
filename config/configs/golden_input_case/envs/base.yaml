@@ -1,0 +1,13 @@
+APP_NAME:
+  desc: app name
+  default: golden-app
+  validate: required
+
+MODE:
+  desc: run mode
+  default: production
+  validate: oneof=dev staging production
+
+TIMEOUT:
+  desc: service timeout
+  default: 5s

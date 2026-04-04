@@ -1,0 +1,18 @@
+APP_NAME:
+  desc: app name for computed fields
+  default: funk
+  validate: required
+
+DB_HOST:
+  desc: db host
+  default: db.local
+
+DB_PORT:
+  desc: db port
+  default: "15432"
+  validate: numeric
+
+MODE:
+  desc: runtime mode
+  default: production
+  validate: oneof=dev staging production
