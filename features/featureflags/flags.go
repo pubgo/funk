@@ -8,7 +8,6 @@ import (
 )
 
 func GetFlags() redant.OptionSet {
-	const category = "feature"
 	var options []redant.Option
 	features.VisitAll(func(flag *features.Flag) {
 		name := "feature." + flag.Name
@@ -18,7 +17,6 @@ func GetFlags() redant.OptionSet {
 			Description: flag.Usage,
 			Value:       flag.Value,
 			Default:     flag.Value.String(),
-			Category:    category,
 			Envs:        []string{envVar},
 		})
 	})

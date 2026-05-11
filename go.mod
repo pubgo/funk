@@ -37,7 +37,7 @@ require (
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58
 	github.com/phuslu/goid v1.0.2
 	github.com/projectdiscovery/machineid v0.0.0-20250715113114-c77eb3567582
-	github.com/pubgo/redant v0.2.0
+	github.com/pubgo/redant v0.4.0
 	github.com/rs/xid v1.6.0
 	github.com/rs/zerolog v1.34.0
 	github.com/samber/lo v1.52.0

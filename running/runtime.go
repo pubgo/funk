@@ -66,8 +66,8 @@ var (
 		Flag:        "debug",
 		Description: "enable debug mode",
 		Value:       Debug,
+		Inherit:     true,
 		Default:     Debug.String(),
-		Category:    "system",
 		Envs:        []string{env.Key("enable_debug"), env.Key("debug")},
 		Action: func(val pflag.Value) error {
 			env.Set("enable_debug", val.String())
@@ -80,8 +80,8 @@ var (
 		Flag:        "runenv",
 		Description: "running env, dev,test,stage,prod",
 		Value:       Env,
+		Inherit:     true,
 		Default:     Env.String(),
-		Category:    "system",
 		Envs:        []string{env.Key("env"), env.Key("runenv")},
 		Action: func(val pflag.Value) error {
 			env.Set("env", val.String())
@@ -95,7 +95,6 @@ var (
 		Description: "service grpc port",
 		Value:       GrpcPort,
 		Default:     GrpcPort.String(),
-		Category:    "system",
 		Envs:        []string{env.Key("server_grpc_port")},
 		Action: func(val pflag.Value) error {
 			env.Set("server_grpc_port", val.String())
@@ -108,7 +107,7 @@ var (
 		Flag:        "http-port",
 		Description: "service http port",
 		Value:       HttpPort,
-		Category:    "system",
+		Inherit:     true,
 		Default:     HttpPort.String(),
 		Envs:        []string{env.Key("server_http_port")},
 		Action: func(val pflag.Value) error {

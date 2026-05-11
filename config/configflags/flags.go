@@ -15,7 +15,7 @@ var ConfFlag = redant.Option{
 	Description: "config path",
 	Default:     config.GetConfigPath(),
 	Value:       redant.StringOf(lo.ToPtr(config.GetConfigPath())),
-	Category:    "system",
+	Inherit:     true,
 	Envs:        []string{env.Key("config_path")},
 	Action: func(val pflag.Value) error {
 		config.SetConfigPath(val.String())

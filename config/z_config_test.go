@@ -28,7 +28,7 @@ type envRefTestCfg struct {
 	} `yaml:"app"`
 }
 
-func callValidateEnvReferences(cfgPath string) (err error, panicVal any) {
+func callValidateEnvReferences(cfgPath string) (panicVal any, err error) {
 	defer func() {
 		panicVal = recover()
 	}()
@@ -111,7 +111,7 @@ patch_envs:
   - envs
 `), 0o644))
 
-	panicErr, panicVal := callValidateEnvReferences(cfgPath)
+	panicVal, panicErr := callValidateEnvReferences(cfgPath)
 	if panicVal != nil {
 		assert.Contains(t, fmt.Sprint(panicVal), "not defined in envs")
 		return
@@ -294,7 +294,7 @@ func TestComplexFixture_LoadMergedConfigData(t *testing.T) {
 }
 
 func TestComplexFixture_ValidateEnvReferences_Fails(t *testing.T) {
-	err, panicVal := callValidateEnvReferences("./configs/complex_invalid_env/config.yaml")
+	panicVal, err := callValidateEnvReferences("./configs/complex_invalid_env/config.yaml")
 	if panicVal != nil {
 		assert.Contains(t, fmt.Sprint(panicVal), "not defined in envs")
 		return
@@ -379,7 +379,7 @@ func TestGolden_ValidateEnvReferences(t *testing.T) {
 		resetGoldenRelatedEnv(t)
 		require.NoError(t, RegisterExpr("golden_upper", func(s string) string { return strings.ToUpper(s) }))
 
-		err, panicVal := callValidateEnvReferences("./configs/golden_input_case/config.yaml")
+		panicVal, err := callValidateEnvReferences("./configs/golden_input_case/config.yaml")
 		if panicVal != nil {
 			t.Fatalf("unexpected panic on valid golden config: %v", panicVal)
 		}
@@ -388,7 +388,7 @@ func TestGolden_ValidateEnvReferences(t *testing.T) {
 }
 
 func TestGolden_ValidateEnvReferences_Fails(t *testing.T) {
-	err, panicVal := callValidateEnvReferences("./configs/golden_invalid_input_case/config.yaml")
+	panicVal, err := callValidateEnvReferences("./configs/golden_invalid_input_case/config.yaml")
 	if panicVal != nil {
 		assert.Contains(t, fmt.Sprint(panicVal), "not defined in envs")
 		return
