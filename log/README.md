@@ -11,6 +11,25 @@ The logging module provides a high-performance, structured logging system based 
 - **Modular Loggers**: Namespaced loggers for different components
 - **Multiple Output Formats**: Console and JSON output formats
 
+## Design Notes
+
+- The package intentionally uses `zerolog` as its concrete backend and exposes `Event` as an alias of `zerolog.Event` for a fluent, low-overhead API.
+- `Logger.WithFields(...)` returns a derived logger and does not mutate the original logger.
+- `WithLogger(ctx, ...)` is the convenience entry point for attaching a logger to a context.
+- `WithFields(ctx, ...)` is the convenience entry point for attaching request-scoped fields to a context.
+- `CreateFieldsCtx(...)` snapshots the initial field map so later mutations to the caller's map do not leak into logging context.
+- `WithLogger(...)`, `WithFields(...)`, `GetFieldsFromCtx(...)`, and `WithDisabled(...)` are nil-safe helpers for request-scoped logging flows.
+- Global helpers such as `log.Info(ctx)` and `log.Err(err, ctx)` honor the logger stored in the context.
+- `FromCtx(ctx)` is the ergonomic way to fetch the effective logger from a context when you need to keep chaining logger methods.
+- `UpdateFieldsCtx(...)` returns a new context and does not mutate field maps already stored in parent contexts.
+- When logger fields and context fields use the same key, **context fields win**. This lets request-scoped metadata override module defaults safely.
+
+## Recommended Patterns
+
+- **Typical request flow**: use `WithLogger` + `WithFields`, then call `log.Info(ctx)` / `log.Err(err, ctx)`.
+- **Need direct logger chaining from context**: use `log.FromCtx(ctx)`.
+- **Low-level explicit construction**: keep `CreateCtx` / `CreateFieldsCtx` for places where you want stricter, non-helper semantics.
+
 ## Installation
 
 ```bash
@@ -60,6 +79,7 @@ import (
 
 // Create a context with fields
 ctx := context.Background()
+ctx = log.WithLogger(ctx, log.GetLogger("request"))
 ctx = log.WithFields(ctx, map[string]any{
     "request_id": "abc123",
     "user_id": 42,
@@ -67,7 +87,20 @@ ctx = log.WithFields(ctx, map[string]any{
 
 // Log with context (fields are automatically included)
 log.Info(ctx).Msg("Processing request")
+
+// Global helpers also use the context-bound logger automatically.
+
+// If you need logger chaining, fetch the effective logger from context.
+log.FromCtx(ctx).WithName("db").Info(ctx).Msg("Query finished")
 ```
+
+### Context Helper Cheat Sheet
+
+- `WithLogger`: bind a request-scoped logger to context
+- `WithFields`: append request-scoped fields
+- `log.Info(ctx)` / `log.Err(err, ctx)`: the common path for emitting logs
+- `FromCtx`: fetch the effective logger when you need more chaining
+- `CreateCtx` / `CreateFieldsCtx`: lower-level explicit constructors
 
 ## Core Concepts
 
@@ -176,6 +209,29 @@ err := errors.New("database connection failed", errors.Tags{
 log.Err(err).Msg("Connection attempt failed")
 ```
 
+### Slog / Std Adapter Usage
+
+```go
+import (
+    "log/slog"
+    "github.com/pubgo/funk/v2/log"
+)
+
+ctx := log.WithLogger(nil, log.GetLogger("request"))
+
+// slog adapter
+slogger := slog.New(log.NewSlog(log.FromCtx(ctx)))
+slogger.Info("handled request")
+
+// std-style adapter
+std := log.NewStd(log.FromCtx(ctx))
+std.Println("request", "finished")
+```
+
+Notes:
+- `NewSlog(nil)` and `NewStd(nil)` safely fall back to the global logger.
+- `StdLogger.Println(...)` follows standard-library-style spacing between arguments.
+
 ### Event Building
 
 ```go
@@ -193,33 +249,41 @@ log.Info().
 
 ### Core Functions
 
-| Function | Description |
-|----------|-------------|
-| `GetLogger(names ...string)` | Get a module-specific logger |
-| `SetLogger(log *zerolog.Logger)` | Set the global logger |
-| `WithFields(ctx context.Context, fields Fields)` | Add fields to context |
-| `GetFieldsFromCtx(ctx context.Context)` | Extract fields from context |
+| Function                                              | Description                                    |
+| ----------------------------------------------------- | ---------------------------------------------- |
+| `FromCtx(ctx context.Context)`                        | Get the effective logger from context          |
+| `GetFromCtx(ctx context.Context, loggers ...Logger)`  | Low-level logger lookup with optional fallback |
+| `GetLogger(names ...string)`                          | Get a module-specific logger                   |
+| `SetLogger(log *zerolog.Logger)`                      | Set the global logger                          |
+| `CreateCtx(ctx context.Context, ll Logger)`           | Create a context with an explicit logger       |
+| `WithLogger(ctx context.Context, ll Logger)`          | Attach a logger to context                     |
+| `WithFields(ctx context.Context, fields Fields)`      | Add fields to context                          |
+| `CreateFieldsCtx(ctx context.Context, evt Fields)`    | Create a context with initial fields           |
+| `UpdateFieldsCtx(ctx context.Context, fields Fields)` | Add or override fields in a derived context    |
+| `GetFieldsFromCtx(ctx context.Context)`               | Extract fields from context                    |
 
 ### Logging Functions
 
-| Function | Description |
-|----------|-------------|
-| `Debug(ctx ...context.Context)` | Start a debug level log event |
-| `Info(ctx ...context.Context)` | Start an info level log event |
-| `Warn(ctx ...context.Context)` | Start a warning level log event |
-| `Error(ctx ...context.Context)` | Start an error level log event |
+| Function                                 | Description                                |
+| ---------------------------------------- | ------------------------------------------ |
+| `Debug(ctx ...context.Context)`          | Start a debug level log event              |
+| `Info(ctx ...context.Context)`           | Start an info level log event              |
+| `Warn(ctx ...context.Context)`           | Start a warning level log event            |
+| `Error(ctx ...context.Context)`          | Start an error level log event             |
 | `Err(err error, ctx ...context.Context)` | Start an error log event with error detail |
-| `Fatal(ctx ...context.Context)` | Start a fatal log event |
-| `Panic(ctx ...context.Context)` | Start a panic log event |
+| `Fatal(ctx ...context.Context)`          | Start a fatal log event                    |
+| `Panic(ctx ...context.Context)`          | Start a panic log event                    |
 
 ### Utility Functions
 
-| Function | Description |
-|----------|-------------|
-| `NewEvent()` | Create a new dictionary event |
-| `RecordErr(logs ...Logger)` | Create an error recording function |
-| `Output(w io.Writer)` | Create logger with custom output |
-| `OutputWriter(w func([]byte) (int, error))` | Create logger with custom writer function |
+| Function                                    | Description                                    |
+| ------------------------------------------- | ---------------------------------------------- |
+| `NewEvent()`                                | Create a new dictionary event                  |
+| `RecordErr(logs ...Logger)`                 | Create an error recording function             |
+| `Output(w io.Writer)`                       | Create logger with custom output               |
+| `OutputWriter(w func([]byte) (int, error))` | Create logger with custom writer function      |
+| `NewSlog(log Logger)`                       | Create a `slog.Handler` backed by `log.Logger` |
+| `NewStd(log Logger)`                        | Create a std-style logger adapter              |
 
 ## Best Practices
 
@@ -229,6 +293,14 @@ log.Info().
 4. **Appropriate Levels**: Use appropriate log levels for different scenarios
 5. **Avoid Sensitive Data**: Never log passwords, tokens, or other sensitive information
 6. **Error Detail**: Always log errors with sufficient context for debugging
+7. **Treat Loggers as Immutable**: Chain `WithName` / `WithFields` to create derived loggers instead of expecting in-place mutation
+8. **Prefer Context For Request Data**: Put request-specific values in `context.Context` rather than module logger defaults
+
+## Performance Notes
+
+- The package keeps `zerolog` as the execution engine to preserve its allocation profile and fluent builder API.
+- Recent regression tests ensure context-field merging does not leak state into reusable loggers.
+- Benchmarks are included in `z_bench_test.go` for context merging and context-aware info logging so future changes can be measured quickly.
 
 ## Integration Patterns
 
@@ -286,12 +358,16 @@ import (
 func handleRequest(ctx context.Context) {
     // Add request ID to context
     requestID := uuid.New().String()
+    ctx = log.WithLogger(ctx, log.GetLogger("request"))
     ctx = log.WithFields(ctx, map[string]any{
         "request_id": requestID,
     })
     
     // Log with request context
     log.Info(ctx).Msg("Handling request")
+
+    // Continue chaining on the effective context logger when needed.
+    log.FromCtx(ctx).WithName("downstream").Info(ctx).Msg("Calling processData")
     
     // Pass context to downstream functions
     processData(ctx)

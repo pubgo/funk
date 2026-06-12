@@ -93,10 +93,6 @@ func SetLogger(log *zerolog.Logger) {
 }
 
 func SetEnableChecker(checker EnableChecker) {
-	if checker == nil {
-		return
-	}
-
 	logEnableChecker = checker
 }
 
@@ -105,35 +101,35 @@ func SetEnableChecker(checker EnableChecker) {
 //
 // You must call msg on the returned event in order to send the event.
 func Err(err error, ctx ...context.Context) *zerolog.Event {
-	return stdLog.Err(err, ctx...)
+	return getLoggerFromArgs(ctx...).Err(err, ctx...)
 }
 
 // Debug starts a new message with debug level.
 //
 // You must call msg on the returned event in order to send the event.
 func Debug(ctx ...context.Context) *zerolog.Event {
-	return stdLog.Debug(ctx...)
+	return getLoggerFromArgs(ctx...).Debug(ctx...)
 }
 
 // Info starts a new message with info level.
 //
 // You must call msg on the returned event in order to send the event.
 func Info(ctx ...context.Context) *zerolog.Event {
-	return stdLog.Info(ctx...)
+	return getLoggerFromArgs(ctx...).Info(ctx...)
 }
 
 // Warn starts a new message with warn level.
 //
 // You must call msg on the returned event in order to send the event.
 func Warn(ctx ...context.Context) *zerolog.Event {
-	return stdLog.Warn(ctx...)
+	return getLoggerFromArgs(ctx...).Warn(ctx...)
 }
 
 // Error starts a new message with error level.
 //
 // You must call msg on the returned event in order to send the event.
 func Error(ctx ...context.Context) *zerolog.Event {
-	return stdLog.Error(ctx...)
+	return getLoggerFromArgs(ctx...).Error(ctx...)
 }
 
 // Fatal starts a new message with fatal level. The os.Exit(1) function
@@ -141,7 +137,7 @@ func Error(ctx ...context.Context) *zerolog.Event {
 //
 // You must call msg on the returned event in order to send the event.
 func Fatal(ctx ...context.Context) *zerolog.Event {
-	return stdLog.Fatal(ctx...)
+	return getLoggerFromArgs(ctx...).Fatal(ctx...)
 }
 
 // Panic starts a new message with panic level. The message is also sent
@@ -149,7 +145,7 @@ func Fatal(ctx ...context.Context) *zerolog.Event {
 //
 // You must call msg on the returned event in order to send the event.
 func Panic(ctx ...context.Context) *zerolog.Event {
-	return stdLog.Panic(ctx...)
+	return getLoggerFromArgs(ctx...).Panic(ctx...)
 }
 
 // Print sends a log event using debug level and no extra field.
@@ -176,4 +172,14 @@ func (w writerFunc) Write(p []byte) (n int, err error) {
 
 func OutputWriter(w func(p []byte) (n int, err error)) Logger {
 	return New(lo.ToPtr(stdZeroLog.Output(writerFunc(w))))
+}
+
+func getLoggerFromArgs(ctxL ...context.Context) Logger {
+	for i := range ctxL {
+		if ctxL[i] != nil {
+			return GetFromCtx(ctxL[i])
+		}
+	}
+
+	return stdLog
 }

@@ -1,10 +1,17 @@
 package log
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 var _ StdLogger = (*stdLogImpl)(nil)
 
 func NewStd(log Logger) StdLogger {
+	if log == nil {
+		log = stdLog
+	}
+
 	return &stdLogImpl{log: log.WithCallerSkip(1)}
 }
 
@@ -29,5 +36,5 @@ func (s *stdLogImpl) Logf(format string, v ...any) {
 }
 
 func (s *stdLogImpl) Println(v ...any) {
-	s.log.Info().Msg(fmt.Sprint(v...))
+	s.log.Info().Msg(strings.TrimSuffix(fmt.Sprintln(v...), "\n"))
 }

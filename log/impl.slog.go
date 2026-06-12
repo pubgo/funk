@@ -11,6 +11,10 @@ import (
 )
 
 func NewSlog(log Logger) slog.Handler {
+	if log == nil {
+		log = stdLog
+	}
+
 	return &slogImpl{l: log.WithCallerSkip(3)}
 }
 
@@ -41,7 +45,17 @@ type slogImpl struct {
 }
 
 func (s slogImpl) Enabled(ctx context.Context, level slog.Level) bool {
-	return s.l.(*loggerImpl).enabled(ctx, logLevels[convertSlog(level)])
+	if isLogDisabled(ctx) {
+		return false
+	}
+
+	if enabler, ok := s.l.(interface {
+		enabled(context.Context, zerolog.Level) bool
+	}); ok {
+		return enabler.enabled(ctx, logLevels[convertSlog(level)])
+	}
+
+	return logLevels[convertSlog(level)] >= zerolog.GlobalLevel()
 }
 
 func (s slogImpl) Handle(ctx context.Context, r slog.Record) error {

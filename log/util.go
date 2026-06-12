@@ -27,6 +27,10 @@ func errDetail(err error) string {
 
 func RecordErr(logs ...Logger) func(ctx context.Context, err error) error {
 	return func(ctx context.Context, err error) error {
+		if err == nil {
+			return nil
+		}
+
 		ctx = lo.If(ctx != nil, ctx).ElseF(context.Background)
 
 		logger := stdLog
@@ -88,43 +92,4 @@ func GetEventBuf(evt *Event) []byte {
 	}
 
 	return append(convertEvent(evt).buf, '}')
-}
-
-func mergeEvent(target *Event, from ...*Event) *Event {
-	if len(from) == 0 {
-		return target
-	}
-
-	if target == nil {
-		target = zerolog.Dict()
-	}
-
-	targetEvent := convertEvent(target)
-	targetEvent.buf = bytes.TrimSpace(bytes.Trim(targetEvent.buf, ","))
-	for i := range from {
-		if from[i] == nil {
-			continue
-		}
-
-		buf := slices.Clone(convertEvent(from[i]).buf)
-		if len(buf) == 0 {
-			continue
-		}
-
-		buf = bytes.TrimLeft(buf, "{")
-		buf = bytes.TrimSpace(bytes.Trim(buf, ","))
-		if len(buf) == 0 {
-			continue
-		}
-
-		if len(targetEvent.buf) == 0 {
-			targetEvent.buf = append(targetEvent.buf, '{')
-			targetEvent.buf = append(targetEvent.buf, buf...)
-		} else {
-			targetEvent.buf = append(targetEvent.buf, ","...)
-			targetEvent.buf = append(targetEvent.buf, buf...)
-		}
-	}
-	targetEvent.buf = bytes.TrimSpace(targetEvent.buf)
-	return target
 }
