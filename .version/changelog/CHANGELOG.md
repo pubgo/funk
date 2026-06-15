@@ -7,22 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.2] - 2026-06-15
+
 ### Added
-- Enhanced error handling with stack traces
-- Result types for functional error handling
-- Feature flag system with environment variable integration
-- CLI flag generation for urfave/cli
-- Generic utility functions for collections and comparisons
+- `log`: `WithLogger`, `FromCtx`, and context-aware global helpers; `FlatMap` aliases in `result`
+- `result`: `FlatMap` / `FlatMapTo` aliases; expanded regression tests (coverage ~80%+)
+- CI: lint workflow now runs on `v2` branch
 
 ### Changed
-- Refactored error wrapping mechanisms
-- Improved performance of result type operations
-- Enhanced documentation and examples
+- `log`: context field maps are cloned to avoid mutating logger defaults; `Logger.WithFields` caller fields win
+- `result`: `Fail(nil)` panics as a programming mistake; `Recovery` calls `recover` directly
 
 ### Fixed
-- Race conditions in feature flag registry
-- Memory leaks in error stack traces
-- Incorrect error wrapping in nested operations
+- `log`: `Error.MarshalJSON` encodes OK as JSON `null`; slog/std nil fallbacks
+- `result`: `Error.MarshalJSON`, `Future.Await` race, `Async(nil)` deadlock, typed-nil `ErrSetter` propagation
+- `result`: removed unsafe reflection from `setError`; concurrent-safe `resultchecker` registration
 
 ## [2.0.0] - 2025-12-06
 
