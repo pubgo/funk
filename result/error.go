@@ -111,6 +111,10 @@ func (e Error) WithFn(fn func() error) Error {
 }
 
 func (e Error) WithErr(err error, tags ...errors.Tags) Error {
+	if err == nil {
+		return e
+	}
+
 	return Error{err: errors.WrapTagsCaller(err, lo.FirstOrEmpty(tags), 1)}
 }
 
@@ -191,11 +195,18 @@ func (e Error) String() string {
 }
 
 func (e Error) MarshalJSON() ([]byte, error) {
-	if e.IsErr() {
-		return nil, errors.WrapCaller(e.err, 1)
+	if e.IsOK() {
+		return []byte("null"), nil
 	}
 
 	return errors.JsonPrint(e.err), nil
+}
+
+func (e *Error) applyErr(err error) {
+	if err == nil {
+		return
+	}
+	e.err = err
 }
 
 func (e Error) getErr() error { return e.err }

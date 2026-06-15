@@ -10,6 +10,21 @@
 - **异步支持**: Future类型用于异步计算
 - **标准兼容性**: 与现有Go错误处理模式协作
 
+## 设计说明
+
+- `Result[T]` 和 `Error` 有意禁止 `==` 比较；请使用 `IsOK` / `IsErr`。
+- `Fail[T](err)` 要求 `err` 非 nil；传入 `nil` 会被视为编程错误并 panic。
+- `ErrOf(nil)` 与 `Error{}` 表示“没有错误”，对应 error-only 路径的成功状态。
+- `FlatMap` 是 `MapVal` 的主推荐命名，两者实现相同。
+- `MapValTo` / `FlatMapTo` 是包级 helper，用于在链式转换时改变值类型。
+- `UnwrapErr()` 遵循标准 Go `(T, error)` 语义：成功返回 `(value, nil)`，失败返回 `(zero, err)`。
+- `WithErrorf(...)` 会丢弃当前成功值，并替换为格式化错误。
+- `Throw` / `UnwrapOrThrow` 通过 `ErrSetter` 目标传播错误，例如 `*Result[T]`、`*Error`、`ProxyErr`。
+- `Collect` 与 `All` 都可聚合多个结果；`All` 是 `Collect` 的可变参数便捷形式。
+- 当异步任务已经完成时，即使 `ctx` 已取消，`Future.Await(ctx)` 仍会返回完成后的值。
+- `Error.MarshalJSON` 在成功时编码为 JSON `null`，失败时使用 enriched `errors` JSON。
+- `Result[T].MarshalJSON` 在成功时直接编码值，失败时返回 marshal error。
+
 ## 安装
 
 ```bash
@@ -230,9 +245,11 @@ result := future.Await(ctx)
 
 1. **优先使用Result[T]而非(T, error)**: 为了更好的组合性和更少的nil检查
 2. **使用TryUnwrap进行安全提取**: 在不确定的情况下避免panic
-3. **链式操作以提高可读性**: 使用Map/FlatMap进行数据转换管道
+3. **链式操作以提高可读性**: 使用 `Map` / `FlatMap` 进行数据转换管道
 4. **适当处理错误**: 使用Match进行详尽的错误处理
-5. **利用Async进行IO绑定操作**: 使用Future[T]进行非阻塞计算
+5. **利用Async进行IO绑定操作**: 使用 `Future[T]` 进行非阻塞计算
+6. **不要向 Fail 传 nil**: 若表示“没有错误”，在 error-only 路径上使用 `ErrOf(nil)`
+7. **向 Throw 传入可写指针**: `Throw(&r)` 需要能原地更新的 setter
 
 ## API参考
 
@@ -241,7 +258,7 @@ result := future.Await(ctx)
 | 函数 | 描述 |
 |------|------|
 | `OK(v T)` | 创建成功结果 |
-| `Fail[T](err error)` | 创建失败结果 |
+| `Fail[T](err error)` | 创建失败结果；`err` 必须非 nil |
 | `Wrap(v T, err error)` | 从值/错误对创建 |
 | `WrapFn(fn func() (T, error))` | 从函数创建 |
 
@@ -259,6 +276,7 @@ result := future.Await(ctx)
 |------|------|
 | `Map(func(T) T)` | 转换成功值 |
 | `FlatMap(func(T) Result[T])` | 转换带潜在新错误 |
+| `MapVal(func(T) Result[T])` | `FlatMap` 的别名 |
 | `Validate(func(T) error)` | 验证带潜在错误 |
 
 ### Result[T] 消费
@@ -266,6 +284,7 @@ result := future.Await(ctx)
 | 方法 | 描述 |
 |------|------|
 | `Unwrap() T` | 获取值或panic |
+| `UnwrapErr() (T, error)` | 转为标准 Go `(T, error)` |
 | `UnwrapOr(default T) T` | 获取值或默认值 |
 | `Expect(msg string) T` | 获取值或带消息panic |
 

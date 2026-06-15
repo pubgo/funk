@@ -48,11 +48,20 @@ func (f *Future[T]) setVal(val Result[T]) { f.v = val }
 
 func (f *Future[T]) Await(ctxL ...context.Context) Result[T] {
 	ctx := lo.FirstOr(ctxL, context.Background())
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	select {
 	case <-f.done:
 		return f.v
 	case <-ctx.Done():
-		return f.v.WithErr(ctx.Err())
+		select {
+		case <-f.done:
+			return f.v
+		default:
+			return Fail[T](ctx.Err())
+		}
 	}
 }
 
@@ -70,10 +79,19 @@ func (f *FutureErr) setErr(err error) { f.e = err }
 
 func (f *FutureErr) Await(ctxL ...context.Context) Error {
 	ctx := lo.FirstOr(ctxL, context.Background())
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	select {
 	case <-f.done:
 		return ErrOf(f.e)
 	case <-ctx.Done():
-		return ErrOf(ctx.Err())
+		select {
+		case <-f.done:
+			return ErrOf(f.e)
+		default:
+			return ErrOf(ctx.Err())
+		}
 	}
 }

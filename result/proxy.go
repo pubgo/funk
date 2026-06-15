@@ -38,3 +38,10 @@ func (e ProxyErr) String() string {
 
 func (e ProxyErr) setErrorInner() {
 }
+
+func (e ProxyErr) applyErr(err error) {
+	if err == nil || e.err == nil {
+		return
+	}
+	*e.err = err
+}

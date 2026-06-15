@@ -86,7 +86,7 @@ func OK[T any](v T) Result[T] {
 
 func Fail[T any](err error) Result[T] {
 	if err == nil {
-		return Result[T]{}
+		panicIfError(errors.WrapCaller(errors.New("result.Fail called with nil error"), 1))
 	}
 
 	err = errors.WrapCaller(err, 1)
@@ -144,6 +144,12 @@ func MapValTo[T, U any](r Result[T], fn func(T) Result[U]) Result[U] {
 	}
 
 	return fn(r.getValue())
+}
+
+// FlatMapTo transforms a successful value with fn and propagates the first error.
+// It is an alias of MapValTo for callers who prefer the FlatMap naming convention.
+func FlatMapTo[T, U any](r Result[T], fn func(T) Result[U]) Result[U] {
+	return MapValTo(r, fn)
 }
 
 func LogErr(err error, events ...func(e Event)) {

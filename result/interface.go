@@ -15,6 +15,7 @@ type Checkable interface {
 type ErrSetter interface {
 	Checkable
 	setErrorInner()
+	applyErr(error)
 }
 
 type Void = funk.Void

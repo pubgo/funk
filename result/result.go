@@ -134,7 +134,8 @@ func (r Result[T]) Unwrap() T {
 	return r.getValue()
 }
 
-// UnwrapErr returns the value and error if it's OK, or the zero value and nil error if it's an error.
+// UnwrapErr returns the value and a nil error when the result is OK,
+// or the zero value and the underlying error when the result failed.
 func (r Result[T]) UnwrapErr() (T, error) {
 	if r.IsErr() {
 		var zero T
@@ -202,7 +203,7 @@ func (r Result[T]) UnwrapOrThrow(setter ErrSetter, contexts ...context.Context) 
 	return ret
 }
 
-// CallIfOK calls the provided function with the value if the result is OK,
+// CallIfOK calls fn with the value when the result is OK and propagates any returned error.
 func (r Result[T]) CallIfOK(fn func(val T) error) Result[T] {
 	if r.IsErr() {
 		return r
@@ -278,7 +279,7 @@ func (r Result[T]) Log(events ...func(e Event)) Result[T] {
 	return r
 }
 
-// Validate calls fn with the value if the result is OK, then returns the result unchanged.
+// Validate runs fn on the successful value and returns a failed result when validation fails.
 func (r Result[T]) Validate(fn func(val T) error) Result[T] {
 	if r.IsErr() {
 		return r
@@ -292,7 +293,7 @@ func (r Result[T]) Validate(fn func(val T) error) Result[T] {
 	return OK(val)
 }
 
-// Map calls fn with the value if the result is OK, then returns the result unchanged.
+// Map transforms the successful value and preserves any existing error.
 func (r Result[T]) Map(fn func(val T) T) Result[T] {
 	if r.IsErr() {
 		return r
@@ -300,7 +301,7 @@ func (r Result[T]) Map(fn func(val T) T) Result[T] {
 	return OK(fn(r.getValue()))
 }
 
-// MapVal calls fn with the value if the result is OK, then returns the result unchanged.
+// MapVal transforms the successful value with fn and propagates the first error.
 func (r Result[T]) MapVal(fn func(val T) Result[T]) Result[T] {
 	if r.IsErr() {
 		return r
@@ -308,7 +309,12 @@ func (r Result[T]) MapVal(fn func(val T) Result[T]) Result[T] {
 	return fn(r.getValue())
 }
 
-// MapErr calls fn with the error if the result is an error, then returns the result unchanged.
+// FlatMap is an alias of MapVal for callers who prefer the FlatMap naming convention.
+func (r Result[T]) FlatMap(fn func(val T) Result[T]) Result[T] {
+	return r.MapVal(fn)
+}
+
+// MapErr transforms the error when the result failed and leaves successful values unchanged.
 func (r Result[T]) MapErr(fn func(err error) error) Result[T] {
 	if r.IsOK() {
 		return r
@@ -316,7 +322,7 @@ func (r Result[T]) MapErr(fn func(err error) error) Result[T] {
 	return Fail[T](fn(r.getErr()))
 }
 
-// MapErrOr calls fn with the error if the result is an error, then returns the result unchanged.
+// MapErrOr transforms the error with fn when the result failed and returns the produced result.
 func (r Result[T]) MapErrOr(fn func(err error) Result[T]) Result[T] {
 	if r.IsOK() {
 		return r
@@ -344,7 +350,7 @@ func (r Result[T]) String() string {
 	return fmt.Sprintf("Error(%v)", r.getErr())
 }
 
-// WithErrorf returns a new Result with the provided error message.
+// WithErrorf replaces the result with a formatted error and discards any successful value.
 func (r Result[T]) WithErrorf(format string, args ...any) Result[T] {
 	err := fmt.Errorf(format, args...)
 	err = errors.WrapCaller(err, 1)
@@ -375,4 +381,12 @@ func (r Result[T]) getValue() T { return lo.FromPtr(r.v) }
 func (r Result[T]) getErr() error { return r.err }
 
 func (r Result[T]) setErrorInner() {
+}
+
+func (r *Result[T]) applyErr(err error) {
+	if err == nil {
+		return
+	}
+	r.err = err
+	r.v = nil
 }

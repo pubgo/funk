@@ -2,11 +2,16 @@ package resultchecker
 
 import (
 	"context"
+	"slices"
+	"sync"
 
 	"github.com/pubgo/funk/v2/stack"
 )
 
-var errChecks []ErrChecker
+var (
+	errChecksMu sync.RWMutex
+	errChecks   []ErrChecker
+)
 
 func RegisterErrCheck(f ErrChecker) bool {
 	if f == nil {
@@ -14,6 +19,10 @@ func RegisterErrCheck(f ErrChecker) bool {
 	}
 
 	checkFrame := stack.CallerWithFunc(f).String()
+
+	errChecksMu.Lock()
+	defer errChecksMu.Unlock()
+
 	for _, errFunc := range errChecks {
 		if checkFrame == stack.CallerWithFunc(errFunc).String() {
 			return false
@@ -24,10 +33,18 @@ func RegisterErrCheck(f ErrChecker) bool {
 	return true
 }
 
-func GetErrChecks() []ErrChecker { return errChecks }
+func GetErrChecks() []ErrChecker {
+	errChecksMu.RLock()
+	defer errChecksMu.RUnlock()
+
+	return slices.Clone(errChecks)
+}
 
 func GetErrCheckStacks() []*stack.Frame {
-	var frames = make([]*stack.Frame, 0, len(errChecks))
+	errChecksMu.RLock()
+	defer errChecksMu.RUnlock()
+
+	frames := make([]*stack.Frame, 0, len(errChecks))
 	for _, err := range errChecks {
 		frames = append(frames, stack.CallerWithFunc(err))
 	}
@@ -36,6 +53,10 @@ func GetErrCheckStacks() []*stack.Frame {
 
 func RemoveErrCheck(f func(context.Context, error) error) {
 	checkFrame := stack.CallerWithFunc(f).String()
+
+	errChecksMu.Lock()
+	defer errChecksMu.Unlock()
+
 	index := -1
 	for idx, errFunc := range errChecks {
 		if checkFrame == stack.CallerWithFunc(errFunc).String() {
