@@ -203,7 +203,7 @@ func (e Error) MarshalJSON() ([]byte, error) {
 }
 
 func (e *Error) applyErr(err error) {
-	if err == nil {
+	if e == nil || err == nil {
 		return
 	}
 	e.err = err

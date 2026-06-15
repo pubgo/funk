@@ -3,6 +3,7 @@ package result
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
@@ -108,12 +109,16 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 		panicIfError(errors.Errorf("error setter is nil"))
 	}
 
+	if isNilErrSetter(setter) && rawSetter == nil {
+		return false
+	}
+
 	if r.IsOK() {
 		return false
 	}
 
 	isErr := func() bool {
-		if setter != nil {
+		if !isNilErrSetter(setter) {
 			return setter.IsErr()
 		}
 
@@ -125,7 +130,7 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 	}
 
 	getErr := func() error {
-		if setter != nil {
+		if !isNilErrSetter(setter) {
 			return setter.GetErr()
 		}
 
@@ -137,7 +142,7 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 	}
 
 	setErr := func(err error) {
-		if setter != nil {
+		if !isNilErrSetter(setter) {
 			setError(setter, err)
 		}
 
@@ -220,7 +225,7 @@ func errRecovery(getErr func() error, callbacks ...func(err error) error) error 
 //	T - The unwrapped value
 //	error - Any error that occurred during unwrapping
 func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts ...context.Context) (T, error) {
-	if setter1 == nil && setter2 == nil {
+	if setter1 == nil && isNilErrSetter(setter2) {
 		panicIfError(fmt.Errorf("error setter is nil"))
 	}
 
@@ -236,7 +241,7 @@ func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts .
 
 	getPreErr := func() error {
 		err := lo.FromPtr(setter1)
-		if err == nil {
+		if err == nil && !isNilErrSetter(setter2) {
 			err = setter2.GetErr()
 		}
 		return err
@@ -270,12 +275,26 @@ func setError(setter ErrSetter, err error) {
 		return
 	}
 
-	if setter == nil {
+	if isNilErrSetter(setter) {
 		panicIfError(errors.Errorf("error setter is nil"))
 		return
 	}
 
 	setter.applyErr(err)
+}
+
+func isNilErrSetter(setter ErrSetter) bool {
+	if setter == nil {
+		return true
+	}
+
+	v := reflect.ValueOf(setter)
+	switch v.Kind() {
+	case reflect.Ptr, reflect.Interface, reflect.Map, reflect.Slice, reflect.Chan, reflect.Func:
+		return v.IsNil()
+	default:
+		return false
+	}
 }
 
 var resultFile = stack.Caller(0)

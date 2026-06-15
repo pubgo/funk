@@ -97,10 +97,15 @@ func TestUnwrapErrSemantics(t *testing.T) {
 }
 
 func TestSetErrorClearsValueOnResult(t *testing.T) {
-	var r result.Result[int]
-	r = result.OK(99)
+	var r result.Result[int] = result.OK(99)
 
 	assert.True(t, result.ErrOf(errors.New("propagate")).Throw(&r))
 	assert.True(t, r.IsErr())
 	assert.Equal(t, 0, r.UnwrapOrEmpty())
+}
+
+func TestApplyErrIgnoresTypedNilSetter(t *testing.T) {
+	var r *result.Result[int]
+
+	assert.False(t, result.ErrOf(errors.New("noop")).Throw(r))
 }

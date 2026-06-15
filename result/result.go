@@ -384,7 +384,7 @@ func (r Result[T]) setErrorInner() {
 }
 
 func (r *Result[T]) applyErr(err error) {
-	if err == nil {
+	if r == nil || err == nil {
 		return
 	}
 	r.err = err
