@@ -6,6 +6,7 @@ import (
 
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/errors/errparser"
+	"github.com/pubgo/funk/v2/stack"
 )
 
 func Run(executors ...func() error) Error {
@@ -34,7 +35,23 @@ func RecoveryErr(setter *error, callbacks ...func(err error) error) {
 		return
 	}
 
-	err := errRecovery(func() error { return *setter }, callbacks...)
+	err := errparser.Parse(recover())
+	if err == nil {
+		err = *setter
+	}
+
+	if err == nil {
+		return
+	}
+
+	for _, fn := range callbacks {
+		err = fn(err)
+		if err == nil {
+			return
+		}
+	}
+
+	stack.Print()
 	setError(ErrProxyOf(setter), errors.WrapCaller(err, 1))
 }
 
@@ -44,7 +61,23 @@ func Recovery(setter ErrSetter, callbacks ...func(err error) error) {
 		return
 	}
 
-	err := errRecovery(func() error { return setter.GetErr() }, callbacks...)
+	err := errparser.Parse(recover())
+	if err == nil {
+		err = setter.GetErr()
+	}
+
+	if err == nil {
+		return
+	}
+
+	for _, fn := range callbacks {
+		err = fn(err)
+		if err == nil {
+			return
+		}
+	}
+
+	stack.Print()
 	setError(setter, errors.WrapCaller(err, 1))
 }
 

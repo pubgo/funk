@@ -10,7 +10,7 @@ import (
 
 func AsyncErr(fn func() Error) *FutureErr {
 	if fn == nil {
-		return &FutureErr{e: errors.WrapCaller(errFnIsNil, 1)}
+		return completedErrFuture(errors.WrapCaller(errFnIsNil, 1))
 	}
 
 	future := newErrFuture()
@@ -23,7 +23,7 @@ func AsyncErr(fn func() Error) *FutureErr {
 
 func Async[T any](fn func() Result[T]) *Future[T] {
 	if fn == nil {
-		return &Future[T]{v: Fail[T](errors.WrapCaller(errFnIsNil, 1))}
+		return completedFuture(Fail[T](errors.WrapCaller(errFnIsNil, 1)))
 	}
 
 	future := newFuture[T]()
@@ -31,6 +31,20 @@ func Async[T any](fn func() Result[T]) *Future[T] {
 		defer future.close()
 		future.setVal(tryResult(fn))
 	}()
+	return future
+}
+
+func completedFuture[T any](val Result[T]) *Future[T] {
+	future := newFuture[T]()
+	future.setVal(val)
+	future.close()
+	return future
+}
+
+func completedErrFuture(err error) *FutureErr {
+	future := newErrFuture()
+	future.setErr(err)
+	future.close()
 	return future
 }
 

@@ -176,18 +176,8 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 	return true
 }
 
-// errRecovery handles error recovery from panics
-// This function is used to recover from panics and convert them to errors.
-// It applies callback functions to transform the error if needed.
-//
-// Parameters:
-//
-//	getErr - A function that returns the current error (if any)
-//	callbacks - Optional functions to transform the error
-//
-// Returns:
-//
-//	error - The recovered error, or nil if no error occurred
+// errRecovery handles error recovery from panics when recover is called directly
+// in the deferred function. Prefer result.Recovery for deferred panic handling.
 func errRecovery(getErr func() error, callbacks ...func(err error) error) error {
 	err := errparser.Parse(recover())
 	if err == nil {
