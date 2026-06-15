@@ -76,11 +76,11 @@ func (l *loggerImpl) WithFields(m Fields) Logger {
 
 	log := l.copy()
 	logFields := make(Fields, len(m)+len(log.fields))
-	for k, v := range m {
+	for k, v := range log.fields {
 		logFields[k] = v
 	}
 
-	for k, v := range log.fields {
+	for k, v := range m {
 		logFields[k] = v
 	}
 
@@ -215,12 +215,23 @@ func (l *loggerImpl) newEvent(ctx context.Context, e *zerolog.Event) *zerolog.Ev
 		e = e.CallerSkipFrame(l.callerSkip)
 	}
 
-	if fields == nil {
-		fields = GetFieldsFromCtx(ctx)
-	} else {
-		for k, v := range GetFieldsFromCtx(ctx) {
-			fields[k] = v
+	ctxFields := GetFieldsFromCtx(ctx)
+	switch {
+	case len(fields) == 0 && len(ctxFields) == 0:
+		fields = nil
+	case len(ctxFields) == 0:
+		fields = maps.Clone(fields)
+	case len(fields) == 0:
+		fields = maps.Clone(ctxFields)
+	default:
+		mergedFields := make(Fields, len(fields)+len(ctxFields))
+		for k, v := range fields {
+			mergedFields[k] = v
 		}
+		for k, v := range ctxFields {
+			mergedFields[k] = v
+		}
+		fields = mergedFields
 	}
 
 	if len(fields) > 0 {

@@ -13,6 +13,12 @@ type (
 	ctxMapFieldKey struct{}
 )
 
+// FromCtx returns the logger stored in the context or the global logger when
+// the context does not carry one.
+func FromCtx(ctx context.Context) Logger {
+	return GetFromCtx(ctx)
+}
+
 func GetFromCtx(ctx context.Context, loggers ...Logger) Logger {
 	defaultLog := stdLog
 	if len(loggers) > 0 {
@@ -38,12 +44,33 @@ func CreateCtx(ctx context.Context, ll Logger) context.Context {
 	return context.WithValue(ctx, ctxLoggerKey{}, ll)
 }
 
+// WithLogger attaches a logger to the context and is safe to use with nil input.
+// When ctx is nil it falls back to context.Background(); when ll is nil it falls
+// back to the global logger.
+func WithLogger(ctx context.Context, ll Logger) context.Context {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	if ll == nil {
+		ll = stdLog
+	}
+
+	return context.WithValue(ctx, ctxLoggerKey{}, ll)
+}
+
 func CreateFieldsCtx(ctx context.Context, evt Fields) context.Context {
 	if evt == nil || ctx == nil {
 		log.Panicln("ctx or log event is nil")
 	}
 
-	return context.WithValue(ctx, ctxEventKey{}, evt)
+	return context.WithValue(ctx, ctxEventKey{}, maps.Clone(evt))
+}
+
+// WithFields adds or overrides fields in the context used by log events.
+// It is a nil-safe convenience wrapper around UpdateFieldsCtx.
+func WithFields(ctx context.Context, fields Fields) context.Context {
+	return UpdateFieldsCtx(ctx, fields)
 }
 
 func UpdateFieldsCtx(ctx context.Context, fields Fields) context.Context {
@@ -55,9 +82,9 @@ func UpdateFieldsCtx(ctx context.Context, fields Fields) context.Context {
 		return ctx
 	}
 
-	evt := make(Fields)
-	if e := GetFieldsFromCtx(ctx); e != nil {
-		evt = e
+	evt := maps.Clone(GetFieldsFromCtx(ctx))
+	if evt == nil {
+		evt = make(Fields, len(fields))
 	}
 
 	maps.Copy(evt, fields)
@@ -65,6 +92,10 @@ func UpdateFieldsCtx(ctx context.Context, fields Fields) context.Context {
 }
 
 func GetFieldsFromCtx(ctx context.Context) Fields {
+	if ctx == nil {
+		return nil
+	}
+
 	evt, ok := ctx.Value(ctxEventKey{}).(Fields)
 	if ok {
 		return evt
@@ -81,6 +112,10 @@ func WithDisabled(ctx context.Context) context.Context {
 }
 
 func isLogDisabled(ctx context.Context) bool {
+	if ctx == nil {
+		return false
+	}
+
 	b, ok := ctx.Value(disableLogKey{}).(bool)
 	return b && ok
 }
