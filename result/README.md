@@ -10,6 +10,21 @@ The result module provides functional programming-inspired error handling throug
 - **Async Support**: Future types for asynchronous computations
 - **Standard Compatibility**: Works with existing Go error handling patterns
 
+## Design Notes
+
+- `Result[T]` and `Error` intentionally disallow `==` comparisons; use `IsOK` / `IsErr` instead.
+- `Fail[T](err)` requires a non-nil error. Passing `nil` is treated as a programming mistake and panics.
+- `ErrOf(nil)` and `Error{}` represent the absence of an error, similar to a successful `Error` value.
+- `FlatMap` is the primary chaining name for `MapVal`; both names call the same implementation.
+- `MapValTo` / `FlatMapTo` are package-level helpers for changing the result value type.
+- `UnwrapErr()` follows standard Go `(T, error)` semantics: success returns `(value, nil)`, failure returns `(zero, err)`.
+- `WithErrorf(...)` always replaces the current result with a formatted error and discards any successful value.
+- `Throw` / `UnwrapOrThrow` propagate errors through `ErrSetter` targets such as `*Result[T]`, `*Error`, and `ProxyErr`.
+- `Collect` and `All` both gather many results; `All` is the variadic convenience form of `Collect`.
+- `Future.Await(ctx)` returns a completed value even when `ctx` is already cancelled, as long as the work finished first.
+- `Error.MarshalJSON` encodes success as JSON `null` and encodes failures with the enriched `errors` JSON format.
+- `Result[T].MarshalJSON` encodes successful values directly and returns a marshal error when the result failed.
+
 ## Installation
 
 ```bash
@@ -230,9 +245,11 @@ result := future.Await(ctx)
 
 1. **Prefer Result[T] over (T, error)**: For better composability and fewer nil checks
 2. **Use TryUnwrap for Safe Extraction**: Avoid panics in uncertain situations
-3. **Chain Operations for Readability**: Use Map/FlatMap for data transformation pipelines
+3. **Chain Operations for Readability**: Use `Map` / `FlatMap` for data transformation pipelines
 4. **Handle Errors Appropriately**: Use Match for exhaustive error handling
-5. **Leverage Async for IO-bound Operations**: Use Future[T] for non-blocking computations
+5. **Leverage Async for IO-bound Operations**: Use `Future[T]` for non-blocking computations
+6. **Never Pass nil to Fail**: Use `ErrOf(nil)` when you mean “no error” on the error-only path
+7. **Pass Pointers to Throw Targets**: `Throw(&r)` requires a setter that can be updated in place
 
 ## API Reference
 
@@ -241,7 +258,7 @@ result := future.Await(ctx)
 | Function | Description |
 |----------|-------------|
 | `OK(v T)` | Create successful result |
-| `Fail[T](err error)` | Create failed result |
+| `Fail[T](err error)` | Create failed result; `err` must be non-nil |
 | `Wrap(v T, err error)` | Create from value/error pair |
 | `WrapFn(fn func() (T, error))` | Create from function |
 
@@ -259,6 +276,7 @@ result := future.Await(ctx)
 |--------|-------------|
 | `Map(func(T) T)` | Transform successful value |
 | `FlatMap(func(T) Result[T])` | Transform with potential new errors |
+| `MapVal(func(T) Result[T])` | Alias of `FlatMap` |
 | `Validate(func(T) error)` | Validate with potential error |
 
 ### Result[T] Consumption
@@ -266,6 +284,7 @@ result := future.Await(ctx)
 | Method | Description |
 |--------|-------------|
 | `Unwrap() T` | Get value or panic |
+| `UnwrapErr() (T, error)` | Convert to standard Go `(T, error)` |
 | `UnwrapOr(default T) T` | Get value or default |
 | `Expect(msg string) T` | Get value or panic with message |
 

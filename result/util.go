@@ -3,11 +3,7 @@ package result
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"reflect"
-	"runtime/debug"
-	"strings"
-	"unsafe"
 
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
@@ -113,12 +109,16 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 		panicIfError(errors.Errorf("error setter is nil"))
 	}
 
+	if isNilErrSetter(setter) && rawSetter == nil {
+		return false
+	}
+
 	if r.IsOK() {
 		return false
 	}
 
 	isErr := func() bool {
-		if setter != nil {
+		if !isNilErrSetter(setter) {
 			return setter.IsErr()
 		}
 
@@ -130,7 +130,7 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 	}
 
 	getErr := func() error {
-		if setter != nil {
+		if !isNilErrSetter(setter) {
 			return setter.GetErr()
 		}
 
@@ -142,7 +142,7 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 	}
 
 	setErr := func(err error) {
-		if setter != nil {
+		if !isNilErrSetter(setter) {
 			setError(setter, err)
 		}
 
@@ -176,18 +176,8 @@ func catchErr(r Error, setter ErrSetter, rawSetter *error, contexts ...context.C
 	return true
 }
 
-// errRecovery handles error recovery from panics
-// This function is used to recover from panics and convert them to errors.
-// It applies callback functions to transform the error if needed.
-//
-// Parameters:
-//
-//	getErr - A function that returns the current error (if any)
-//	callbacks - Optional functions to transform the error
-//
-// Returns:
-//
-//	error - The recovered error, or nil if no error occurred
+// errRecovery handles error recovery from panics when recover is called directly
+// in the deferred function. Prefer result.Recovery for deferred panic handling.
 func errRecovery(getErr func() error, callbacks ...func(err error) error) error {
 	err := errparser.Parse(recover())
 	if err == nil {
@@ -225,7 +215,7 @@ func errRecovery(getErr func() error, callbacks ...func(err error) error) error 
 //	T - The unwrapped value
 //	error - Any error that occurred during unwrapping
 func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts ...context.Context) (T, error) {
-	if setter1 == nil && setter2 == nil {
+	if setter1 == nil && isNilErrSetter(setter2) {
 		panicIfError(fmt.Errorf("error setter is nil"))
 	}
 
@@ -241,7 +231,7 @@ func unwrapErr[T any](r Result[T], setter1 *error, setter2 ErrSetter, contexts .
 
 	getPreErr := func() error {
 		err := lo.FromPtr(setter1)
-		if err == nil {
+		if err == nil && !isNilErrSetter(setter2) {
 			err = setter2.GetErr()
 		}
 		return err
@@ -275,68 +265,25 @@ func setError(setter ErrSetter, err error) {
 		return
 	}
 
-	if setter == nil {
+	if isNilErrSetter(setter) {
 		panicIfError(errors.Errorf("error setter is nil"))
 		return
 	}
 
-	switch errSet := setter.(type) {
-	case *Error:
-		errSet.err = err
-	case *ProxyErr:
-		*errSet.err = err
-	case ProxyErr:
-		*errSet.err = err
+	setter.applyErr(err)
+}
+
+func isNilErrSetter(setter ErrSetter) bool {
+	if setter == nil {
+		return true
+	}
+
+	v := reflect.ValueOf(setter)
+	switch v.Kind() {
+	case reflect.Ptr, reflect.Interface, reflect.Map, reflect.Slice, reflect.Chan, reflect.Func:
+		return v.IsNil()
 	default:
-		// Use reflection for generic Result[T] types
-		rv := reflect.ValueOf(setter)
-		if !rv.IsValid() || rv.IsNil() {
-			slog.Error("error setter is invalid or nil",
-				slog.String("type", fmt.Sprintf("%T", setter)),
-				slog.String("stack", string(debug.Stack())),
-			)
-			return
-		}
-
-		t := rv.Type()
-		typeStr := t.String()
-
-		// Check if it's a Result type (pointer or value)
-		if !strings.Contains(typeStr, "Result[") {
-			slog.Error("error setter type error, type is not Result",
-				slog.String("type", fmt.Sprintf("%T", setter)),
-				slog.String("type-string", typeStr),
-				slog.String("stack", string(debug.Stack())),
-			)
-			return
-		}
-
-		// Handle both *Result[T] and Result[T]
-		var resultPtr *Result[any]
-		if rv.Kind() == reflect.Ptr {
-			if rv.IsNil() {
-				slog.Error("error setter is nil pointer",
-					slog.String("type", typeStr),
-					slog.String("stack", string(debug.Stack())),
-				)
-				return
-			}
-			resultPtr = (*Result[any])(rv.UnsafePointer())
-		} else {
-			// For value types, get address
-			if !rv.CanAddr() {
-				slog.Error("error setter cannot get address",
-					slog.String("type", typeStr),
-					slog.String("stack", string(debug.Stack())),
-				)
-				return
-			}
-			resultPtr = (*Result[any])(unsafe.Pointer(rv.UnsafeAddr()))
-		}
-
-		if resultPtr != nil {
-			resultPtr.err = err
-		}
+		return false
 	}
 }
 

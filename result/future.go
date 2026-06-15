@@ -10,7 +10,7 @@ import (
 
 func AsyncErr(fn func() Error) *FutureErr {
 	if fn == nil {
-		return &FutureErr{e: errors.WrapCaller(errFnIsNil, 1)}
+		return completedErrFuture(errors.WrapCaller(errFnIsNil, 1))
 	}
 
 	future := newErrFuture()
@@ -23,7 +23,7 @@ func AsyncErr(fn func() Error) *FutureErr {
 
 func Async[T any](fn func() Result[T]) *Future[T] {
 	if fn == nil {
-		return &Future[T]{v: Fail[T](errors.WrapCaller(errFnIsNil, 1))}
+		return completedFuture(Fail[T](errors.WrapCaller(errFnIsNil, 1)))
 	}
 
 	future := newFuture[T]()
@@ -31,6 +31,20 @@ func Async[T any](fn func() Result[T]) *Future[T] {
 		defer future.close()
 		future.setVal(tryResult(fn))
 	}()
+	return future
+}
+
+func completedFuture[T any](val Result[T]) *Future[T] {
+	future := newFuture[T]()
+	future.setVal(val)
+	future.close()
+	return future
+}
+
+func completedErrFuture(err error) *FutureErr {
+	future := newErrFuture()
+	future.setErr(err)
+	future.close()
 	return future
 }
 
@@ -48,11 +62,20 @@ func (f *Future[T]) setVal(val Result[T]) { f.v = val }
 
 func (f *Future[T]) Await(ctxL ...context.Context) Result[T] {
 	ctx := lo.FirstOr(ctxL, context.Background())
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	select {
 	case <-f.done:
 		return f.v
 	case <-ctx.Done():
-		return f.v.WithErr(ctx.Err())
+		select {
+		case <-f.done:
+			return f.v
+		default:
+			return Fail[T](ctx.Err())
+		}
 	}
 }
 
@@ -70,10 +93,19 @@ func (f *FutureErr) setErr(err error) { f.e = err }
 
 func (f *FutureErr) Await(ctxL ...context.Context) Error {
 	ctx := lo.FirstOr(ctxL, context.Background())
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	select {
 	case <-f.done:
 		return ErrOf(f.e)
 	case <-ctx.Done():
-		return ErrOf(ctx.Err())
+		select {
+		case <-f.done:
+			return ErrOf(f.e)
+		default:
+			return ErrOf(ctx.Err())
+		}
 	}
 }
