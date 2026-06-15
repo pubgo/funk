@@ -40,6 +40,9 @@ Run from repo root:
 - All-package vet: `make vet`
 - Lint: `make lint`
 - Format/refactor: `make refactor`
+- Release notes preview: `make changelog` / `make changelog-latest` (requires [git-cliff](https://git-cliff.org))
+- Release dry-run: `make release-dry` (requires GoReleaser)
+- Release process: [docs/RELEASE.md](./docs/RELEASE.md)
 - All-package Go tests directly: `go test ./...`
 - Package-scoped tests: `go test ./log`, `go test ./errors`, etc.
 
