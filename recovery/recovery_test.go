@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/log"
 	"github.com/pubgo/funk/v2/recovery"
@@ -20,8 +22,13 @@ func testExit() {
 	assert.Must(fmt.Errorf("test"))
 }
 
-func TestExit(_ *testing.T) {
+func TestExit(t *testing.T) {
+	var code int
+	recovery.SetExitFn(func(c int) { code = c })
+	t.Cleanup(func() { recovery.SetExitFn(nil) })
+
 	testExit1()
+	require.Equal(t, 1, code)
 }
 
 func TestErr(t *testing.T) {
@@ -62,8 +69,16 @@ func hello() {
 }
 
 func TestTesting(t *testing.T) {
-	defer recovery.Testing(t)
+	var fatalErr error
+	recovery.SetTestingFatalFn(func(_ *testing.T, err error) { fatalErr = err })
+	t.Cleanup(func() { recovery.SetTestingFatalFn(nil) })
 
-	log.Print("test panic")
-	hello()
+	func() {
+		defer recovery.Testing(t)
+
+		log.Print("test panic")
+		hello()
+	}()
+
+	require.EqualError(t, fatalErr, "hello")
 }

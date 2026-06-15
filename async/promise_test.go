@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPromise(t *testing.T) {
@@ -26,7 +27,7 @@ func TestPromise(t *testing.T) {
 			reject(err)
 		})
 
-		assert.Equal(t, future.Await().GetErr(), err)
+		require.ErrorIs(t, future.Await().GetErr(), err)
 	})
 }
 
@@ -49,7 +50,7 @@ func TestYield(t *testing.T) {
 			yield(3)
 			return err
 		})
-		assert.Equal(t, iter.Await().GetErr(), err)
+		require.ErrorIs(t, iter.Await().GetErr(), err)
 	})
 }
 

@@ -51,7 +51,10 @@ func TestRespTest(t *testing.T) {
 }
 
 func TestRespNext(t *testing.T) {
-	assert1.Must(init1Next())
+	is := assert.New(t)
+	is.Panics(func() {
+		_ = init1Next()
+	})
 }
 
 func init1Next() (err error) {
@@ -60,8 +63,11 @@ func init1Next() (err error) {
 }
 
 func TestDebugMode(t *testing.T) {
+	is := assert.New(t)
 	assert1.Exit(debugs.Enabled.Set("true"))
-	assert1.Must(fmt.Errorf("test next"))
+	is.Panics(func() {
+		assert1.Must(fmt.Errorf("test next"))
+	})
 }
 
 func BenchmarkNoPanic(b *testing.B) {
