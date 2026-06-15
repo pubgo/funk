@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"net"
+	"sync"
 	"testing"
 	"time"
 
@@ -222,12 +223,17 @@ func TestMux_SniffOverflowIsFatal(t *testing.T) {
 		t.Fatalf("listen: %v", err)
 	}
 
-	var gotErr error
+	var (
+		gotErrMu sync.Mutex
+		gotErr   error
+	)
 	m := New(root,
 		WithMaxSniffBytes(8),
 		WithReadTimeout(2*time.Second),
 		WithErrorHandler(func(err error) bool {
+			gotErrMu.Lock()
 			gotErr = err
+			gotErrMu.Unlock()
 			return true
 		}),
 	)
@@ -266,7 +272,10 @@ func TestMux_SniffOverflowIsFatal(t *testing.T) {
 	case <-time.After(2 * time.Second):
 		t.Fatalf("accept did not unblock after close")
 	}
-	if gotErr == nil {
+	gotErrMu.Lock()
+	handled := gotErr
+	gotErrMu.Unlock()
+	if handled == nil {
 		t.Fatalf("expected error handler to be called")
 	}
 }

@@ -1,6 +1,8 @@
 package async
 
 import (
+	"sync"
+
 	"github.com/pubgo/funk/v2/result"
 )
 
@@ -10,6 +12,7 @@ func iteratorOf[T any]() *Iterator[T] {
 
 type Iterator[T any] struct {
 	v   chan T
+	mu  sync.Mutex
 	err error
 }
 
@@ -18,7 +21,14 @@ func (cc *Iterator[T]) setDone() {
 }
 
 func (cc *Iterator[T]) setErr(err error) {
-	cc.err = err
+	if err == nil {
+		return
+	}
+	cc.mu.Lock()
+	if cc.err == nil {
+		cc.err = err
+	}
+	cc.mu.Unlock()
 }
 
 func (cc *Iterator[T]) setValue(v T) {
@@ -30,15 +40,18 @@ func (cc *Iterator[T]) Next() (T, bool) {
 	return r, ok
 }
 
+// Await blocks until the iterator channel is closed, collects all yielded values,
+// then returns them or the first error recorded by Yield/Group. It always drains
+// the channel so producers cannot block on send after a failure.
 func (cc *Iterator[T]) Await() result.Result[[]T] {
-	err := cc.err
-	if err != nil {
-		return result.Fail[[]T](err)
-	}
-
 	ll := make([]T, 0, len(cc.v))
 	for c := range cc.v {
 		ll = append(ll, c)
 	}
-	return result.Wrap(ll, cc.err)
+
+	cc.mu.Lock()
+	err := cc.err
+	cc.mu.Unlock()
+
+	return result.Wrap(ll, err)
 }

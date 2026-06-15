@@ -57,6 +57,12 @@ func Recovery(fn func(err error)) {
 	fn(err)
 }
 
+var exitFn = os.Exit
+
+var testingFatalFn = func(t *testing.T, err error) {
+	t.Fatal(err)
+}
+
 func Exit(handlers ...func(err error) error) {
 	err := errparser.Parse(recover())
 	if err == nil {
@@ -72,7 +78,7 @@ func Exit(handlers ...func(err error) error) {
 
 	debug.PrintStack()
 	errors.DebugPrint(err)
-	os.Exit(1)
+	exitFn(1)
 }
 
 func DebugPrint() {
@@ -92,5 +98,5 @@ func Testing(t *testing.T) {
 	}
 
 	errors.DebugPrint(err)
-	t.Fatal(err)
+	testingFatalFn(t, err)
 }

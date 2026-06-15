@@ -1,3 +1,14 @@
+version: 2
+
+project_name: funk
+
+release:
+  prerelease: auto
+  name_template: "v{{ .Version }}"
+
+changelog:
+  disable: true
+
 builds:
   - main: ./cmds/protoc-gen-go-errors2/main.go
     id: protoc-gen-go-errors
@@ -19,6 +30,10 @@ builds:
     goarch:
       - amd64
       - arm64
+
 archives:
   - name_template: "{{ .Binary }}-{{ .Tag }}-{{ .Os }}-{{ .Arch }}"
     format: binary
+
+checksum:
+  name_template: "funk_{{ .Version }}_checksums.txt"

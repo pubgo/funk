@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPromise(t *testing.T) {
@@ -26,7 +27,7 @@ func TestPromise(t *testing.T) {
 			reject(err)
 		})
 
-		assert.Equal(t, future.Await().GetErr(), err)
+		require.ErrorIs(t, future.Await().GetErr(), err)
 	})
 }
 
@@ -49,7 +50,7 @@ func TestYield(t *testing.T) {
 			yield(3)
 			return err
 		})
-		assert.Equal(t, iter.Await().GetErr(), err)
+		require.ErrorIs(t, iter.Await().GetErr(), err)
 	})
 }
 
@@ -66,6 +67,23 @@ func TestGroup(t *testing.T) {
 	data := rsp.Unwrap()
 	sort.Ints(data)
 	assert.Equal(t, []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, data)
+}
+
+func TestGroupAwaitOnWorkerError(t *testing.T) {
+	err := fmt.Errorf("worker failed")
+	iter := Group(func(async func(func() (int, error))) error {
+		async(func() (int, error) {
+			time.Sleep(20 * time.Millisecond)
+			return 1, nil
+		})
+		async(func() (int, error) {
+			time.Sleep(5 * time.Millisecond)
+			return 0, err
+		})
+		return nil
+	})
+
+	require.ErrorIs(t, iter.Await().GetErr(), err)
 }
 
 func httpGetList() *Iterator[int] {
