@@ -69,6 +69,23 @@ func TestGroup(t *testing.T) {
 	assert.Equal(t, []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, data)
 }
 
+func TestGroupAwaitOnWorkerError(t *testing.T) {
+	err := fmt.Errorf("worker failed")
+	iter := Group(func(async func(func() (int, error))) error {
+		async(func() (int, error) {
+			time.Sleep(20 * time.Millisecond)
+			return 1, nil
+		})
+		async(func() (int, error) {
+			time.Sleep(5 * time.Millisecond)
+			return 0, err
+		})
+		return nil
+	})
+
+	require.ErrorIs(t, iter.Await().GetErr(), err)
+}
+
 func httpGetList() *Iterator[int] {
 	return Group(func(async func(func() (int, error))) error {
 		for i := 10; i > 0; i-- {

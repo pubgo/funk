@@ -32,17 +32,6 @@ jobs:
         with:
           go-version-file: 'go.mod'
 
-      - name: Parse release channel from tag
-        id: version
-        run: |
-          version="${GITHUB_REF#refs/tags/}"
-          echo "version=${version}" >> "$GITHUB_OUTPUT"
-          if [[ "$version" =~ -(alpha|beta) ]]; then
-            echo "channel=prerelease" >> "$GITHUB_OUTPUT"
-          else
-            echo "channel=stable" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Install git-cliff
         run: go install github.com/orhun/git-cliff/cmd/git-cliff@v2.10.1
 

@@ -64,6 +64,15 @@ func init1Next() (err error) {
 
 func TestDebugMode(t *testing.T) {
 	is := assert.New(t)
+	wasDebug := debugs.IsDebug()
+	t.Cleanup(func() {
+		if wasDebug {
+			debugs.SetEnabled()
+		} else {
+			debugs.SetDisabled()
+		}
+	})
+
 	assert1.Exit(debugs.Enabled.Set("true"))
 	is.Panics(func() {
 		assert1.Must(fmt.Errorf("test next"))

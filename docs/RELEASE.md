@@ -9,7 +9,8 @@ This guide follows the same principles as [zigo](https://github.com/pubgo/zigo):
 | Artifact | Version source | Example |
 |----------|----------------|---------|
 | Go module | Git tag on `v2` | `v2.0.2` → `go get github.com/pubgo/funk/v2@v2.0.2` |
-| Protoc plugins | Same tag + GoReleaser | `protoc-gen-go-errors-v2.0.2-darwin-arm64` |
+| Protoc plugins (GitHub Release) | Same tag + GoReleaser | `protoc-gen-go-errors`, `protoc-gen-go-enum` |
+| Protoc plugins (source install) | `make install-tools` | `protoc-gen-go-sql2`, `protoc-gen-go-cloudevent2` |
 | `.version/VERSION` | Release prep commit (human-facing) | `v2.0.2` |
 
 Unlike zigo's per-tool tags (`mqttcli/v*`), funk keeps a **single module tag** so Go proxy consumers stay aligned with binary releases.
@@ -80,7 +81,7 @@ Builds snapshot binaries under `dist/` without publishing.
 ## What we adopted from zigo
 
 - **git-cliff** for scoped, conventional-commit release notes
-- **Tag-driven CI** with prerelease channel detection
+- **Tag-driven CI** with GoReleaser `prerelease: auto` for alpha/beta tags
 - **Makefile for dev**, workflows for release
 - **Documented release checklist** (this file)
 

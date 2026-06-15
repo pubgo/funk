@@ -21,8 +21,13 @@ func (cc *Iterator[T]) setDone() {
 }
 
 func (cc *Iterator[T]) setErr(err error) {
+	if err == nil {
+		return
+	}
 	cc.mu.Lock()
-	cc.err = err
+	if cc.err == nil {
+		cc.err = err
+	}
 	cc.mu.Unlock()
 }
 
@@ -35,6 +40,9 @@ func (cc *Iterator[T]) Next() (T, bool) {
 	return r, ok
 }
 
+// Await blocks until the iterator channel is closed, collects all yielded values,
+// then returns them or the first error recorded by Yield/Group. It always drains
+// the channel so producers cannot block on send after a failure.
 func (cc *Iterator[T]) Await() result.Result[[]T] {
 	ll := make([]T, 0, len(cc.v))
 	for c := range cc.v {
