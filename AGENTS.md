@@ -16,6 +16,7 @@ This repository is a Go utility library module: `github.com/pubgo/funk/v2`.
   - [env](./env/README.md)
   - [stack](./stack/README.md)
   - [connmux](./connmux/README.md)
+  - [cloudevent](./component/cloudevent/README.md)
 
 ## Working rules for AI coding agents
 

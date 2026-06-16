@@ -1,11 +1,8 @@
 package cloudevent
 
-// Promise/Future, Group/Yield iterators, and Go helpers for async work.
+// NATS JetStream-backed CloudEvent job runtime with protobuf-driven handlers.
 //
-// Protobuf extensions live in github.com/pubgo/funk/v2/proto/cloudeventoption.
-// Message types live in github.com/pubgo/funk/v2/proto/cloudevent.
+// See README.md for configuration, proto annotations, codegen, and migration notes.
 //
-// Iterator.Await drains the value channel to completion before returning the
-// first error, so callers never leave Group workers blocked on send.
-//
-// https://github.com/octu0/chanque
+// Message types: github.com/pubgo/funk/v2/proto/cloudevent
+// Descriptor extensions: github.com/pubgo/funk/v2/proto/cloudeventoption
