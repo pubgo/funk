@@ -7,16 +7,17 @@ import (
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/pubgo/funk/v2/assert"
-	"github.com/pubgo/funk/v2/errors"
-	"github.com/pubgo/funk/v2/protoutils"
-	"github.com/pubgo/funk/v2/result"
-	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
-	cloudeventoptionpb "github.com/pubgo/funk/v2/proto/cloudeventoption"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/durationpb"
+
+	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/errors"
+	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
+	cloudeventoptionpb "github.com/pubgo/funk/v2/proto/cloudeventoption"
+	"github.com/pubgo/funk/v2/protoutils"
+	"github.com/pubgo/funk/v2/result"
 )
 
 func getStorageType(name string) jetstream.StorageType {

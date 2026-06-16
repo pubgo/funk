@@ -3,9 +3,10 @@ package cloudevent_test
 import (
 	"fmt"
 
+	"github.com/samber/lo"
+
 	"github.com/pubgo/funk/v2/component/cloudevent"
 	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
-	"github.com/samber/lo"
 )
 
 func ExampleWithPushOpt() {

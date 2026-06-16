@@ -5,11 +5,12 @@ import (
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
-	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
-	"github.com/pubgo/funk/v2/log"
-	"github.com/pubgo/funk/v2/result"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
+
+	"github.com/pubgo/funk/v2/log"
+	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
+	"github.com/pubgo/funk/v2/result"
 )
 
 var logger = log.GetLogger("cloudevent")

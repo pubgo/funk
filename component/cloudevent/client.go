@@ -8,18 +8,19 @@ import (
 
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/nats-io/nats.go/jetstream"
+	"github.com/rs/zerolog"
+	"github.com/samber/lo"
+
 	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/buildinfo/version"
 	"github.com/pubgo/funk/v2/component/lifecycle"
 	"github.com/pubgo/funk/v2/component/natsclient"
 	"github.com/pubgo/funk/v2/errors"
+	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
 	"github.com/pubgo/funk/v2/result"
 	"github.com/pubgo/funk/v2/running"
 	"github.com/pubgo/funk/v2/stack"
 	"github.com/pubgo/funk/v2/typex"
-	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
-	"github.com/rs/zerolog"
-	"github.com/samber/lo"
 )
 
 type Params struct {
@@ -46,12 +47,12 @@ type Client struct {
 	p  Params
 	js jetstream.JetStream
 
-	streams   map[string]jetstream.Stream
-	consumers map[string]map[string]*Consumer
+	streams     map[string]jetstream.Stream
+	consumers   map[string]map[string]*Consumer
 	jobManagers map[string]*jobManager
-	jobs      map[string]map[string]map[string]*jobEventHandler
-	prefix    string
-	subjects  map[string]*cloudeventpb.CloudEventMethodOptions
+	jobs        map[string]map[string]map[string]*jobEventHandler
+	prefix      string
+	subjects    map[string]*cloudeventpb.CloudEventMethodOptions
 }
 
 func (c *Client) initStream() (r result.Error) {

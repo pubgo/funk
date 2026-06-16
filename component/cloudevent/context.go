@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"time"
 
-	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
 	"github.com/rs/xid"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
+
+	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
 )
 
 type Context struct {

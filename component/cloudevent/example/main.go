@@ -21,13 +21,14 @@ import (
 	"os"
 	"time"
 
+	"github.com/samber/lo"
+	yaml "gopkg.in/yaml.v3"
+
 	"github.com/pubgo/funk/v2/component/cloudevent"
 	"github.com/pubgo/funk/v2/component/cloudevent/example/demopb"
 	"github.com/pubgo/funk/v2/component/lifecycle"
 	"github.com/pubgo/funk/v2/component/natsclient"
 	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
-	"github.com/samber/lo"
-	yaml "gopkg.in/yaml.v3"
 )
 
 //go:embed config.yaml
@@ -37,10 +38,10 @@ type noopLifecycle struct {
 	beforeStops []lifecycle.ExecFunc
 }
 
-func (l *noopLifecycle) AfterStop(lifecycle.ExecFunc)  {}
+func (l *noopLifecycle) AfterStop(lifecycle.ExecFunc)    {}
 func (l *noopLifecycle) BeforeStop(f lifecycle.ExecFunc) { l.beforeStops = append(l.beforeStops, f) }
-func (l *noopLifecycle) AfterStart(lifecycle.ExecFunc) {}
-func (l *noopLifecycle) BeforeStart(lifecycle.ExecFunc) {}
+func (l *noopLifecycle) AfterStart(lifecycle.ExecFunc)   {}
+func (l *noopLifecycle) BeforeStart(lifecycle.ExecFunc)  {}
 
 func (l *noopLifecycle) shutdown() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

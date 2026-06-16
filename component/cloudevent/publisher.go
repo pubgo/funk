@@ -6,15 +6,16 @@ import (
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/pubgo/funk/v2/ctxutil"
-	"github.com/pubgo/funk/v2/errors"
-	"github.com/pubgo/funk/v2/result"
-	"github.com/pubgo/funk/v2/typex"
 	"github.com/rs/xid"
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
+
+	"github.com/pubgo/funk/v2/ctxutil"
+	"github.com/pubgo/funk/v2/errors"
+	"github.com/pubgo/funk/v2/result"
+	"github.com/pubgo/funk/v2/typex"
 )
 
 func Publish(jobCli *Client, ctx context.Context, topic string, args proto.Message, interceptors []PubInterceptor, opts ...PubOpt) result.Result[*PubAckInfo] {

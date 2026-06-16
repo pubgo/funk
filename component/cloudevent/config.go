@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/samber/lo"
+	yaml "gopkg.in/yaml.v3"
+
 	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/buildinfo/version"
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/typex"
-	"github.com/samber/lo"
-	yaml "gopkg.in/yaml.v3"
 )
 
 const (
@@ -28,7 +29,7 @@ const (
 var senderValue = fmt.Sprintf("%s/%s", version.Project(), version.Version())
 
 type Config struct {
-	Streams   map[string]*StreamConfig                         `yaml:"streams"`
+	Streams   map[string]*StreamConfig                       `yaml:"streams"`
 	Consumers map[string]typex.YamlListType[*ConsumerConfig] `yaml:"consumers"`
 }
 
@@ -38,11 +39,11 @@ type StreamConfig struct {
 }
 
 type ConsumerConfig struct {
-	Consumer   *string                        `yaml:"consumer"`
-	Concurrent *int                           `yaml:"concurrent"`
-	Stream     string                         `yaml:"stream"`
+	Consumer   *string                             `yaml:"consumer"`
+	Concurrent *int                                `yaml:"concurrent"`
+	Stream     string                              `yaml:"stream"`
 	Subjects   typex.YamlListType[*strOrJobConfig] `yaml:"subjects"`
-	Job        *JobEventConfig                `yaml:"job"`
+	Job        *JobEventConfig                     `yaml:"job"`
 }
 
 type JobEventConfig struct {
