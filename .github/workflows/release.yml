@@ -34,8 +34,10 @@ jobs:
 
       - name: Install git-cliff
         run: |
+          tmpdir="$(mktemp -d)"
           curl -sSL "https://github.com/orhun/git-cliff/releases/download/v2.10.1/git-cliff-2.10.1-x86_64-unknown-linux-gnu.tar.gz" \
-            | tar -xz -C /usr/local/bin git-cliff
+            | tar -xz -C "$tmpdir"
+          install "$tmpdir"/git-cliff-2.10.1/git-cliff /usr/local/bin/git-cliff
           git-cliff --version
 
       - name: Generate changelog
