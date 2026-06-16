@@ -7,6 +7,11 @@ import (
 
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/panjf2000/ants/v2"
+	"github.com/rs/zerolog"
+	"github.com/samber/lo"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
+
 	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/component/lifecycle"
 	"github.com/pubgo/funk/v2/errors"
@@ -14,10 +19,6 @@ import (
 	"github.com/pubgo/funk/v2/result"
 	"github.com/pubgo/funk/v2/stack"
 	"github.com/pubgo/funk/v2/try"
-	"github.com/rs/zerolog"
-	"github.com/samber/lo"
-	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
 func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects map[string]*jobEventHandler, concurrent int) func(msg jetstream.Msg) {
@@ -174,7 +175,6 @@ func (c *Client) doErrHandler(streamName, consumerName string) jetstream.PullCon
 	})
 }
 
-func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *jobEventHandler, cfg *JobEventConfig) (gErr result.Error) {
 func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *jobEventHandler, cfg *JobEventConfig) (gErr result.Error) {
 	defer result.Recovery(&gErr)
 	timeout := lo.FromPtr(cfg.Timeout)
