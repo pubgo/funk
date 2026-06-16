@@ -175,6 +175,7 @@ func (c *Client) doErrHandler(streamName, consumerName string) jetstream.PullCon
 }
 
 func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *jobEventHandler, cfg *JobEventConfig) (gErr result.Error) {
+func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *jobEventHandler, cfg *JobEventConfig) (gErr result.Error) {
 	defer result.Recovery(&gErr)
 	timeout := lo.FromPtr(cfg.Timeout)
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
