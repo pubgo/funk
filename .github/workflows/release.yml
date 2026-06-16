@@ -47,6 +47,6 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         with:
           version: v2.12.0
-          args: release --clean --release-notes-file=${{ runner.temp }}/CHANGES.md
+          args: release --clean --release-notes=${{ runner.temp }}/CHANGES.md
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASER_TOKEN }}
