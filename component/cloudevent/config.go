@@ -1,11 +1,10 @@
 package cloudevent
 
 import (
-	"context"
 	"fmt"
 	"time"
 
-	"google.golang.org/protobuf/proto"
+	"github.com/samber/lo"
 	yaml "gopkg.in/yaml.v3"
 
 	"github.com/pubgo/funk/v2/assert"
@@ -15,76 +14,69 @@ import (
 )
 
 const (
-	DefaultPrefix             = "acj"
-	DefaultTimeout            = 15 * time.Second
-	DefaultMaxRetry           = 3
-	DefaultRetryBackoff       = time.Second
-	DefaultSenderKey          = "sender"
-	DefaultCloudEventDelayKey = "__cloudevent_delay_run_at"
-	DefaultJobName            = "default"
-	DefaultConcurrent         = 100
-	DefaultMaxConcurrent      = 1000
-	DefaultMinConcurrent      = 1
+	DefaultPrefix        = "acj"
+	DefaultTimeout       = 15 * time.Second
+	DefaultMaxRetry      = 3
+	DefaultRetryBackoff  = time.Second
+	SenderHeaderKey      = "__cloudevent_sender"
+	DelayHeaderKey       = "__cloudevent_delay_run_at"
+	DefaultJobName       = "default"
+	DefaultConcurrent    = 100
+	DefaultMaxConcurrent = 1000
+	DefaultMinConcurrent = 1
 )
 
 var senderValue = fmt.Sprintf("%s/%s", version.Project(), version.Version())
 
 type Config struct {
-	// Streams: nats stream config
-	Streams map[string]*StreamConfig `yaml:"streams"`
-
-	// Consumers: nats consumer config
+	Streams   map[string]*StreamConfig                       `yaml:"streams"`
 	Consumers map[string]typex.YamlListType[*ConsumerConfig] `yaml:"consumers"`
 }
 
 type StreamConfig struct {
-	// Storage jetstream.StorageType
-	Storage string `yaml:"storage"`
-
-	// Subjects stream subscribe subject, e.g. nvr.speaker.* without prefix
+	Storage  string                     `yaml:"storage"`
 	Subjects typex.YamlListType[string] `yaml:"subjects"`
 }
 
 type ConsumerConfig struct {
-	// Consumer name without prefix
-	Consumer *string `yaml:"consumer"`
-
-	// Concurrent default: 100
-	Concurrent *int `yaml:"concurrent"`
-
-	// Stream name without prefix
-	Stream string `yaml:"stream"`
-
-	// Subjects config
-	Subjects typex.YamlListType[*strOrJobConfig] `yaml:"subjects"`
-
-	// Job event config
-	Job *JobEventConfig `yaml:"job"`
+	Consumer   *string                             `yaml:"consumer"`
+	Concurrent *int                                `yaml:"concurrent"`
+	Stream     string                              `yaml:"stream"`
+	Subjects   typex.YamlListType[*strOrJobConfig] `yaml:"subjects"`
+	Job        *JobEventConfig                     `yaml:"job"`
 }
 
 type JobEventConfig struct {
-	// Name subject name
-	Name *string `yaml:"name"`
-
-	// Timeout job executor timeout, default: DefaultTimeout
-	Timeout *time.Duration `yaml:"timeout"`
-
-	// MaxRetry max retries, default: DefaultMaxRetry
-	MaxRetry *int `yaml:"max_retries"`
-
-	// RetryBackoff retry backoff, default: DefaultRetryBackoff
+	Name         *string        `yaml:"name"`
+	Timeout      *time.Duration `yaml:"timeout"`
+	MaxRetry     *int           `yaml:"max_retries"`
 	RetryBackoff *time.Duration `yaml:"retry_backoff"`
 }
 
 type jobEventHandler struct {
-	// job name
-	name string
+	name         string
+	manager      *handlerManager
+	cfg          *JobEventConfig
+	interceptors []SubInterceptor
+}
 
-	// job handler
-	handler func(ctx context.Context, args proto.Message) error
+func consumerAckWait(cfg *ConsumerConfig) time.Duration {
+	const minAckWait = 5 * time.Minute
 
-	// job config
-	cfg *JobEventConfig
+	base := handleDefaultJobConfig(cfg.Job)
+	maxTimeout := lo.FromPtr(base.Timeout)
+	for _, sub := range cfg.Subjects {
+		subCfg := mergeJobConfig(lo.ToPtr(JobEventConfig(lo.FromPtr(sub))), base)
+		if t := lo.FromPtr(subCfg.Timeout); t > maxTimeout {
+			maxTimeout = t
+		}
+	}
+
+	ackWait := maxTimeout + time.Minute
+	if ackWait < minAckWait {
+		return minAckWait
+	}
+	return ackWait
 }
 
 type strOrJobConfig JobEventConfig

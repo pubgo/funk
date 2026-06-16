@@ -1,0 +1,13 @@
+streams:
+  demo:
+    storage: memory
+    subjects:
+      - demo.>
+consumers:
+  demo:
+    - stream: demo
+      concurrent: 1
+      subjects: demo.hello.exec
+      job:
+        timeout: 30s
+        max_retries: 3

@@ -10,10 +10,12 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/errors"
 	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
+	cloudeventoptionpb "github.com/pubgo/funk/v2/proto/cloudeventoption"
 	"github.com/pubgo/funk/v2/protoutils"
 	"github.com/pubgo/funk/v2/result"
 )
@@ -82,24 +84,33 @@ func handleSubjectName(name, prefix string) string {
 	return fmt.Sprintf("%s%s", prefix, name)
 }
 
-func encodeDelayTime(duration time.Duration) string {
-	return strconv.Itoa(int(time.Now().Add(duration).UnixMilli()))
+func encodeDelayTime(duration *durationpb.Duration) string {
+	if duration == nil {
+		return ""
+	}
+
+	return strconv.Itoa(int(time.Now().Add(duration.AsDuration()).UnixMilli()))
 }
 
 func decodeDelayTime(delayTime string) (r result.Result[time.Duration]) {
+	delayTime = strings.TrimSpace(delayTime)
+	if delayTime == "" {
+		return r.WithValue(0)
+	}
+
 	tt := result.Wrap(strconv.Atoi(delayTime)).
 		MapErr(func(err error) error {
-			return errors.Wrapf(err, "failed to parse cloud event job delay time, time=%s", delayTime)
+			return errors.Wrapf(err, "failed to parse cloudevent job delay time, time=%s", delayTime)
 		})
 
-	return result.MapTo(tt, func(t int) time.Duration {
-		return time.Until(time.UnixMilli(int64(t)))
+	return result.MapTo(tt, func(value int) time.Duration {
+		return time.Until(time.UnixMilli(int64(value)))
 	})
 }
 
 type subjectOpt struct {
-	*cloudeventpb.CloudEventServiceOptions
-	*cloudeventpb.CloudEventMethodOptions
+	Job     *cloudeventpb.CloudEventServiceOptions
+	Subject *cloudeventpb.CloudEventMethodOptions
 }
 
 func registerSubject(subjects map[string]*cloudeventpb.CloudEventMethodOptions, subject, operation string, data *cloudeventpb.CloudEventMethodOptions) any {
@@ -124,7 +135,7 @@ func registerSubject(subjects map[string]*cloudeventpb.CloudEventMethodOptions, 
 func getAllSubject() map[string]*cloudeventpb.CloudEventMethodOptions {
 	subjects := make(map[string]*cloudeventpb.CloudEventMethodOptions)
 	for _, opt := range getAllSubjectOptions() {
-		registerSubject(subjects, opt.CloudEventServiceOptions.Name, *opt.Operation, opt.CloudEventMethodOptions)
+		registerSubject(subjects, opt.Subject.Name, *opt.Subject.Operation, opt.Subject)
 	}
 	return subjects
 }
@@ -132,27 +143,27 @@ func getAllSubject() map[string]*cloudeventpb.CloudEventMethodOptions {
 func getAllSubjectOptions() []subjectOpt {
 	var opts []subjectOpt
 	protoutils.EachService(func(desc protoreflect.FileDescriptor, srv protoreflect.ServiceDescriptor) {
-		if !protoutils.HasExtension(srv.Options(), cloudeventpb.E_Job) {
+		if !protoutils.HasExtension(srv.Options(), cloudeventoptionpb.E_Job) {
 			return
 		}
 
-		jobOpt := protoutils.GetExtension[cloudeventpb.CloudEventServiceOptions](srv.Options(), cloudeventpb.E_Job)
+		jobOpt := protoutils.GetExtension[cloudeventpb.CloudEventServiceOptions](srv.Options(), cloudeventoptionpb.E_Job)
 		if jobOpt == nil {
 			return
 		}
 
 		protoutils.EachServiceMethod(srv, func(mth protoreflect.MethodDescriptor) {
-			if !protoutils.HasExtension(mth.Options(), cloudeventpb.E_Subject) {
+			if !protoutils.HasExtension(mth.Options(), cloudeventoptionpb.E_Subject) {
 				return
 			}
 
-			subOpt := protoutils.GetExtension[cloudeventpb.CloudEventMethodOptions](mth.Options(), cloudeventpb.E_Subject)
+			subOpt := protoutils.GetExtension[cloudeventpb.CloudEventMethodOptions](mth.Options(), cloudeventoptionpb.E_Subject)
 			if subOpt == nil {
 				return
 			}
 
 			subOpt.Operation = lo.ToPtr(fmt.Sprintf("/%s/%s", srv.FullName(), mth.Name()))
-			opts = append(opts, subjectOpt{CloudEventServiceOptions: jobOpt, CloudEventMethodOptions: subOpt})
+			opts = append(opts, subjectOpt{Job: jobOpt, Subject: subOpt})
 		})
 	})
 	return opts

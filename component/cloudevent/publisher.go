@@ -14,148 +14,55 @@ import (
 
 	"github.com/pubgo/funk/v2/ctxutil"
 	"github.com/pubgo/funk/v2/errors"
-	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
 	"github.com/pubgo/funk/v2/result"
-	"github.com/pubgo/funk/v2/stack"
-	"github.com/pubgo/funk/v2/try"
 	"github.com/pubgo/funk/v2/typex"
 )
 
-func PushEvent[T any](handler func(*Client, context.Context, T, ...*cloudeventpb.PushEventOptions) (*PubAckInfo, error), jobCli *Client, ctx context.Context, t T, opts ...*cloudeventpb.PushEventOptions) chan result.Result[*PubAckInfo] {
-	errChan := make(chan result.Result[*PubAckInfo])
-	timeout := ctxutil.GetTimeout(ctx)
-	now := time.Now()
-	fnCaller := stack.Caller(1).String()
-
-	// clone ctx and recalculate timeout
-	ctx = lo.T2(ctxutil.Clone(ctx, DefaultTimeout)).A
-	go func() {
-		getPubAck := func() (pubAck *PubAckInfo, err error) {
-			err = try.Try(func() error {
-				pubAck, err = handler(jobCli, ctx, t, opts...)
-				return err
-			})
-			return pubAck, err
-		}
-		pubAck, err := getPubAck()
-		err = errors.IfErr(err, func(err error) error {
-			logger.Err(err, ctx).Func(func(e *zerolog.Event) {
-				if timeout != nil {
-					e.Str("timeout", timeout.String())
-				}
-
-				e.Str("fn_caller", fnCaller)
-				e.Any("input", t)
-				e.Str("stack", stack.CallerWithFunc(handler).String())
-				e.Str("cost", time.Since(now).String())
-				e.Msg("failed to push event msg to nats stream")
-			})
-			return err
-		})
-		errChan <- result.Wrap(pubAck, err)
-	}()
-	return errChan
+func Publish(jobCli *Client, ctx context.Context, topic string, args proto.Message, interceptors []PubInterceptor, opts ...PubOpt) result.Result[*PubAckInfo] {
+	return jobCli.Publish(ctx, topic, args, interceptors, opts...)
 }
 
-// PushRpcEvent push event async
-func PushRpcEvent[T proto.Message](handler RpcEventHandler[T], ctx context.Context, t T, opts ...*cloudeventpb.PushEventOptions) chan error {
-	// clone ctx and recalculate timeout
-	ctx = lo.T2(ctxutil.Clone(ctx, DefaultTimeout)).A
-	ctx = withOptions(ctx, opts...)
+func (c *Client) Publish(ctx context.Context, topic string, args proto.Message, interceptors []PubInterceptor, opts ...PubOpt) result.Result[*PubAckInfo] {
+	return c.publish(ctx, topic, args, interceptors, opts...)
+}
 
-	fnCaller := stack.Caller(1).String()
-	errChan := make(chan error)
-	timeout := ctxutil.GetTimeout(ctx)
-	now := time.Now()
+func (c *Client) doPublish(ctx context.Context, topic string, args proto.Message, opts *PubOptions) (r result.Result[*PubAckInfo]) {
+	defer result.Recovery(&r)
 
-	pushEventBasic := func(handler RpcEventHandler[T], ctx context.Context) error {
-		err := try.Try(func() error { return lo.T2(handler(ctx, t)).B })
-		if err == nil {
-			return nil
-		}
-
-		logger.Err(err, ctx).Func(func(e *zerolog.Event) {
-			if timeout != nil {
-				e.Str("timeout", timeout.String())
-			}
-
-			e.Str("fn_caller", fnCaller)
-			e.Any("input", t)
-			e.Str("stack", stack.CallerWithFunc(handler).String())
-			e.Str("cost", time.Since(now).String())
-			e.Msg("failed to push event msg to nats stream")
-		})
-		return err
+	if opts == nil {
+		opts = new(PubOptions)
 	}
 
-	go func() { errChan <- pushEventBasic(handler, ctx) }()
-	return errChan
-}
-
-func (c *Client) Publish(ctx context.Context, topic string, args proto.Message, opts ...*cloudeventpb.PushEventOptions) (*PubAckInfo, error) {
-	return c.publish(ctx, topic, args, opts...)
-}
-
-func (c *Client) publish(ctx context.Context, topic string, args proto.Message, opts ...*cloudeventpb.PushEventOptions) (_ *PubAckInfo, gErr error) {
-	defer result.RecoveryErr(&gErr)
-	timeout := ctxutil.GetTimeout(ctx)
-	now := time.Now()
 	msgId := xid.New().String()
-	var pushEventOpt *cloudeventpb.PushEventOptions
-	var pubActInfo *jetstream.PubAck
-
-	defer func() {
-		msgFn := func(e *zerolog.Event) {
-			e.Str("pub_topic", topic)
-			e.Str("pub_start", now.String())
-			e.Any("pub_args", args)
-			e.Str("pub_cost", time.Since(now).String())
-			e.Str("pub_msg_id", msgId)
-			e.Any("pub_ack_info", pubActInfo)
-			if timeout != nil {
-				e.Str("timeout", timeout.String())
-			}
-		}
-		if gErr == nil {
-			logger.Info(ctx).Func(msgFn).Msg("succeed to publish cloud event job to stream")
-		} else {
-			logger.Err(gErr, ctx).Func(msgFn).Msg("failed to publish cloud event job to stream")
-		}
-	}()
-
-	pushEventOpt = getOptions(ctx, opts...)
-	if pushEventOpt.MsgId != nil {
-		msgId = pushEventOpt.GetMsgId()
+	if opts.MsgId != nil {
+		msgId = opts.GetMsgId()
 	}
 
-	proxy := result.ErrProxyOf(&gErr)
 	pb := result.Wrap(anypb.New(args)).
-		Log(func(e result.Event) {
-			e.Msg("failed to marshal args to any proto")
+		MapErr(func(err error) error {
+			return errors.Wrap(err, "failed to marshal args to any proto")
 		}).
-		UnwrapOrThrow(&proxy)
-	if proxy.IsErr() {
+		UnwrapOrThrow(&r)
+	if r.IsErr() {
 		return
 	}
 
-	// TODO get parent event info from ctx
 	data := result.Wrap(proto.Marshal(pb)).
-		Log(func(e result.Event) {
-			e.Msg("failed to marshal any proto to bytes")
+		MapErr(func(err error) error {
+			return errors.Wrap(err, "failed to marshal any proto to bytes")
 		}).
-		UnwrapOrThrow(&proxy)
-	if proxy.IsErr() {
+		UnwrapOrThrow(&r)
+	if r.IsErr() {
 		return
 	}
 
-	// subject|topic name
 	topic = c.subjectName(topic)
 	header := typex.DoBlock1(func() nats.Header {
 		header := nats.Header{
-			DefaultSenderKey:          []string{senderValue},
-			DefaultCloudEventDelayKey: []string{encodeDelayTime(pushEventOpt.DelayDur.AsDuration())},
+			SenderHeaderKey: []string{lo.FromPtr(opts.Sender)},
+			DelayHeaderKey:  []string{encodeDelayTime(opts.Delay)},
 		}
-		for k, v := range pushEventOpt.Metadata {
+		for k, v := range opts.Metadata {
 			header.Add(k, v)
 		}
 		return header
@@ -163,18 +70,51 @@ func (c *Client) publish(ctx context.Context, topic string, args proto.Message, 
 
 	msg := &nats.Msg{Subject: topic, Data: data, Header: header}
 	jetOpts := append([]jetstream.PublishOpt{}, jetstream.WithMsgID(msgId))
-	pubActInfo = result.Wrap(c.js.PublishMsg(ctx, msg, jetOpts...)).
-		Log(func(e result.Event) {
-			e.Msgf("failed to publish msg to stream, topic=%s msg_id=%s", topic, msgId)
+	pubActInfo := result.Wrap(c.js.PublishMsg(ctx, msg, jetOpts...)).
+		MapErr(func(err error) error {
+			return errors.Wrapf(err, "failed to publish msg to jetstream, topic=%s msg_id=%s", topic, msgId)
 		}).
-		UnwrapOrThrow(&proxy)
-	if gErr != nil {
+		UnwrapOrThrow(&r)
+	if r.IsErr() {
 		return
 	}
 
-	return &PubAckInfo{
+	return r.WithValue(&PubAckInfo{
 		AckInfo: pubActInfo,
 		Header:  header,
 		MsgId:   msgId,
-	}, nil
+	})
+}
+
+func (c *Client) publish(ctx context.Context, topic string, args proto.Message, interceptors []PubInterceptor, opts ...PubOpt) (r result.Result[*PubAckInfo]) {
+	timeout := ctxutil.GetTimeout(ctx)
+	now := time.Now()
+	logFn := func(e *zerolog.Event) {
+		e.Str("topic", topic)
+		e.Str("start_at", now.String())
+		e.Any("args", args)
+		e.Str("cost", time.Since(now).String())
+		e.Any("ack_info", r.UnwrapOrEmpty())
+		if timeout != nil {
+			e.Str("timeout", timeout.String())
+		}
+	}
+
+	defer func() {
+		if r.IsOK() {
+			logger.Info(ctx).Func(logFn).Msg("succeed to publish cloudevent msg to jetstream")
+		} else {
+			logger.Err(r.Err(), ctx).Func(logFn).Msg("failed to publish cloudevent msg to jetstream")
+		}
+	}()
+
+	interceptor := func(ctx context.Context, topic string, args proto.Message, opts *PubOptions, handler func(ctx context.Context, topic string, args proto.Message, opts *PubOptions) result.Result[*PubAckInfo]) result.Result[*PubAckInfo] {
+		return handler(ctx, topic, args, opts)
+	}
+	for i := len(interceptors) - 1; i >= 0; i-- {
+		interceptor = interceptors[i](interceptor)
+	}
+
+	pushEventOpt := getOptions(ctx, opts...)
+	return interceptor(ctx, topic, args, pushEventOpt, c.doPublish)
 }

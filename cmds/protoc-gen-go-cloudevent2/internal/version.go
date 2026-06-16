@@ -6,7 +6,7 @@ import (
 	"google.golang.org/protobuf/compiler/protogen"
 )
 
-const Version = "v0.0.4"
+const Version = "v0.0.5"
 
 func protocVersion(gen *protogen.Plugin) string {
 	v := gen.Request.GetCompilerVersion()
