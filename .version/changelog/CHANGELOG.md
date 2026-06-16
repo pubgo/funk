@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.4] - 2026-06-17
+
+### Added
+- `component/pyroscope`: Grafana Pyroscope continuous profiling integration (#62)
+
+### Changed
+- `component/cloudevent`: migrate catdogs runtime, split proto packages, and update `protoc-gen-go-cloudevent2` (#61)
+
 ## [2.0.3] - 2026-06-15
 
 ### Added
