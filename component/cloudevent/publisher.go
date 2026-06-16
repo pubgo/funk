@@ -28,6 +28,10 @@ func (c *Client) Publish(ctx context.Context, topic string, args proto.Message, 
 func (c *Client) doPublish(ctx context.Context, topic string, args proto.Message, opts *PubOptions) (r result.Result[*PubAckInfo]) {
 	defer result.Recovery(&r)
 
+	if opts == nil {
+		opts = new(PubOptions)
+	}
+
 	msgId := xid.New().String()
 	if opts.MsgId != nil {
 		msgId = opts.GetMsgId()

@@ -8,6 +8,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/panjf2000/ants/v2"
 	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/component/lifecycle"
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/log"
 	"github.com/pubgo/funk/v2/result"
@@ -35,6 +36,7 @@ func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects m
 		logger.Debug().Func(addMsgInfo).Msg("received cloud job manager")
 
 		handlerDelayJob := func() (r result.Result[bool]) {
+			defer result.Recovery(&r)
 			dur := decodeDelayTime(msg.Headers().Get(DelayHeaderKey)).
 				MapErr(func(err error) error {
 					return errors.Wrap(err, "failed to parse job delay time")
@@ -141,6 +143,9 @@ func (c *Client) doConsumeHandler(streamName, consumerName string, jobSubjects m
 		ants.WithLogger(log.NewStd(logger)),
 		ants.WithNonblocking(false),
 	))
+	c.p.Lc.BeforeStop(lifecycle.WrapNoCtxErr(func() {
+		pool.Release()
+	}))
 	return func(msg jetstream.Msg) {
 		if pool.Running() == concurrent {
 			logger.Warn().Func(func(e *zerolog.Event) {
@@ -170,6 +175,7 @@ func (c *Client) doErrHandler(streamName, consumerName string) jetstream.PullCon
 }
 
 func (c *Client) doHandler(meta *jetstream.MsgMetadata, msg jetstream.Msg, job *jobEventHandler, cfg *JobEventConfig) (gErr result.Error) {
+	defer result.Recovery(&gErr)
 	timeout := lo.FromPtr(cfg.Timeout)
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()

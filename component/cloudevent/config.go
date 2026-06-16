@@ -8,6 +8,7 @@ import (
 	"github.com/pubgo/funk/v2/buildinfo/version"
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/typex"
+	"github.com/samber/lo"
 	yaml "gopkg.in/yaml.v3"
 )
 
@@ -56,6 +57,25 @@ type jobEventHandler struct {
 	manager      *handlerManager
 	cfg          *JobEventConfig
 	interceptors []SubInterceptor
+}
+
+func consumerAckWait(cfg *ConsumerConfig) time.Duration {
+	const minAckWait = 5 * time.Minute
+
+	base := handleDefaultJobConfig(cfg.Job)
+	maxTimeout := lo.FromPtr(base.Timeout)
+	for _, sub := range cfg.Subjects {
+		subCfg := mergeJobConfig(lo.ToPtr(JobEventConfig(lo.FromPtr(sub))), base)
+		if t := lo.FromPtr(subCfg.Timeout); t > maxTimeout {
+			maxTimeout = t
+		}
+	}
+
+	ackWait := maxTimeout + time.Minute
+	if ackWait < minAckWait {
+		return minAckWait
+	}
+	return ackWait
 }
 
 type strOrJobConfig JobEventConfig

@@ -179,8 +179,8 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 				Id(mthName).
 				Params(
 					jen.Id("ctx").Qual("context", "Context"),
-					jen.Id("req *").Add(getPkg(file, ss.mth.Input.GoIdent)),
-					jen.Id("opts ...").Qual(cloudeventPkg, "PubOpt"),
+					jen.Id("req").Op("*").Add(getPkg(file, ss.mth.Input.GoIdent)),
+					jen.Id("opts").Op("...").Qual(cloudeventPkg, "PubOpt"),
 				).
 				Params(jen.Qual(resultTypesPkg, "Result").Id("[").Op("*").Qual(cloudeventPkg, "PubAckInfo").Id("]")).
 				BlockFunc(func(group *jen.Group) {
@@ -189,7 +189,7 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 						jen.Id(keyName),
 						jen.Id("req"),
 						jen.Id("a.Interceptors"),
-						jen.Qual(funkPkg, "AppendOf").Id("(a.Opt, opts...)..."),
+						jen.Qual(funkPkg, "AppendOf").Call(jen.Id("a.Opt"), jen.Id("opts").Op("...")).Op("..."),
 					)
 				})
 		}

@@ -119,7 +119,7 @@ func (c *Client) initConsumer() (r result.Error) {
 					Name:     consumerName,
 					Durable:  consumerName,
 					Metadata: metadata,
-					AckWait:  time.Minute * 5,
+					AckWait:  consumerAckWait(cfg),
 				}
 
 				consumer, err := c.js.CreateOrUpdateConsumer(ctx, streamName, consumerCfg)
