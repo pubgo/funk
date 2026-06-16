@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/grafana/pyroscope-go"
+	"github.com/samber/lo"
 
 	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/buildinfo/version"
@@ -20,6 +21,7 @@ type Param struct {
 
 type Client struct {
 	profiler *pyroscope.Profiler
+	logger   log.Logger
 }
 
 func (c *Client) Enabled() bool {
@@ -37,18 +39,26 @@ func (c *Client) Flush(wait bool) {
 	if c == nil || c.profiler == nil {
 		return
 	}
+	if c.logger != nil {
+		c.logger.Debug().Bool("wait", wait).Msg("flushing pyroscope profiler session")
+	}
 	c.profiler.Flush(wait)
+	if c.logger != nil {
+		c.logger.Debug().Bool("wait", wait).Msg("pyroscope profiler session flushed")
+	}
 }
 
 func New(p Param) *Client {
 	cfg := mergeConfig(p.Cfg)
-	if !cfg.Enabled || cfg.ServerAddress == "" {
-		return &Client{}
-	}
+	logger := resolveLogger(p)
 
-	logger := p.Logger
-	if logger == nil {
-		logger = log.GetLogger(Name)
+	if !cfg.Enabled {
+		logger.Info().Msg("pyroscope profiler disabled by config")
+		return &Client{logger: logger}
+	}
+	if cfg.ServerAddress == "" {
+		logger.Warn().Msg("pyroscope profiler skipped: server_address is empty")
+		return &Client{logger: logger}
 	}
 
 	pyroCfg := pyroscope.Config{
@@ -66,6 +76,18 @@ func New(p Param) *Client {
 		pyroCfg.Logger = newLoggerAdapter(logger)
 	}
 
+	logger.Info().Func(func(e *log.Event) {
+		e.Str("application_name", pyroCfg.ApplicationName)
+		e.Str("server_address", pyroCfg.ServerAddress)
+		e.Dur("upload_rate", pyroCfg.UploadRate)
+		e.Strs("profile_types", profileTypeNames(pyroCfg.ProfileTypes))
+		e.Any("tags", pyroCfg.Tags)
+		e.Bool("disable_gc_runs", pyroCfg.DisableGCRuns)
+		e.Bool("basic_auth", pyroCfg.BasicAuthUser != "")
+		e.Bool("tenant_id", pyroCfg.TenantID != "")
+		e.Bool("lifecycle_hook", p.Lc != nil)
+	}).Msg("starting pyroscope profiler")
+
 	profiler := assert.Must1(pyroscope.Start(pyroCfg))
 	logger.Info().
 		Str("application_name", pyroCfg.ApplicationName).
@@ -73,14 +95,35 @@ func New(p Param) *Client {
 		Msg("pyroscope profiler started")
 
 	if p.Lc != nil {
+		logger.Debug().Msg("register pyroscope profiler lifecycle stop hook")
 		p.Lc.BeforeStop(lifecycle.WrapNoCtxErr(func() {
-			if err := profiler.Stop(); err != nil {
-				logger.Err(err).Msg("failed to stop pyroscope profiler")
-			}
+			stopProfiler(logger, profiler)
 		}))
 	}
 
-	return &Client{profiler: profiler}
+	return &Client{profiler: profiler, logger: logger}
+}
+
+func resolveLogger(p Param) log.Logger {
+	if p.Logger != nil {
+		return p.Logger.WithName(Name)
+	}
+	return log.GetLogger(Name)
+}
+
+func stopProfiler(logger log.Logger, profiler *pyroscope.Profiler) {
+	logger.Info().Msg("stopping pyroscope profiler")
+	if err := profiler.Stop(); err != nil {
+		logger.Err(err).Msg("failed to stop pyroscope profiler")
+		return
+	}
+	logger.Info().Msg("pyroscope profiler stopped")
+}
+
+func profileTypeNames(types []pyroscope.ProfileType) []string {
+	return lo.Map(types, func(item pyroscope.ProfileType, _ int) string {
+		return string(item)
+	})
 }
 
 func applicationName(cfg *Config) string {
