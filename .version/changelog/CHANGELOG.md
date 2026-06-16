@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.3] - 2026-06-15
+
+### Added
+- Release tooling: git-cliff notes, GoReleaser v2 config, and `docs/RELEASE.md`
+- CI: dedicated test job running `go test ./... -race`
+- Makefile: `changelog`, `changelog-latest`, `release-dry`, and `install-tools` targets
+
+### Fixed
+- `async`: Iterator data race under `-race`; first-error-wins error retention; `Await` drains channel before returning
+- `recovery`: injectable exit/fatal hooks for CI-safe tests
+- Test fixes for `assert`, `async`, and `connmux` under the full CI race suite
+
+### Changed
+- GoReleaser pinned to v2.12.0; release workflow publishes git-cliff generated notes
+
 ## [2.0.2] - 2026-06-15
 
 ### Added
