@@ -186,6 +186,23 @@ Handler 返回以下错误可控制 JetStream 确认行为：
 5. `GetEventContext` 改名为 `GetContext`
 6. YAML job/subject 与 proto 注解保持一致
 
+## 示例
+
+可运行的端到端示例（需要 NATS + JetStream）：
+
+```bash
+docker run --rm -p 4222:4222 nats:latest -js
+go run ./component/cloudevent/example
+```
+
+目录说明：
+
+- `example/main.go` — 连接 NATS、加载 YAML、注册 handler 并发布事件
+- `example/demopb/demo.proto` — 带 cloudevent 注解的示例 service
+- `example/config.yaml` — 与 proto subject 对应的 stream/consumer 配置
+
+包级 godoc 示例见 `example_test.go`。
+
 ## 参考
 
 - [CloudEvents Go SDK](https://github.com/cloudevents/sdk-go)

@@ -189,6 +189,23 @@ Checklist for downstream services:
 5. Rename `GetEventContext` → `GetContext`.
 6. Align YAML job/subject names with proto `job` / `subject` options.
 
+## Example
+
+Runnable end-to-end demo (NATS + JetStream required):
+
+```bash
+docker run --rm -p 4222:4222 nats:latest -js
+go run ./component/cloudevent/example
+```
+
+Source layout:
+
+- `example/main.go` — wires NATS, YAML config, generated register/publish APIs
+- `example/demopb/demo.proto` — sample service annotations
+- `example/config.yaml` — stream/consumer config matching the proto subjects
+
+Package-level godoc examples live in `example_test.go`.
+
 ## References
 
 - [CloudEvents Go SDK](https://github.com/cloudevents/sdk-go) (design inspiration)
