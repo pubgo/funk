@@ -52,5 +52,8 @@ func (c *Config) profileTypes() []pyroscope.ProfileType {
 }
 
 func mergeConfig(cfg *Config) *Config {
+	if cfg == nil {
+		return DefaultConfig()
+	}
 	return merge.Copy(DefaultConfig(), cfg).Unwrap()
 }

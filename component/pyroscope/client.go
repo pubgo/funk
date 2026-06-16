@@ -6,7 +6,6 @@ import (
 	"github.com/grafana/pyroscope-go"
 	"github.com/samber/lo"
 
-	"github.com/pubgo/funk/v2/assert"
 	"github.com/pubgo/funk/v2/buildinfo/version"
 	"github.com/pubgo/funk/v2/component/lifecycle"
 	"github.com/pubgo/funk/v2/log"
@@ -88,7 +87,14 @@ func New(p Param) *Client {
 		e.Bool("lifecycle_hook", p.Lc != nil)
 	}).Msg("starting pyroscope profiler")
 
-	profiler := assert.Must1(pyroscope.Start(pyroCfg))
+	profiler, err := pyroscope.Start(pyroCfg)
+	if err != nil {
+		logger.Err(err).
+			Str("application_name", pyroCfg.ApplicationName).
+			Str("server_address", pyroCfg.ServerAddress).
+			Msg("failed to start pyroscope profiler")
+		return &Client{logger: logger}
+	}
 	logger.Info().
 		Str("application_name", pyroCfg.ApplicationName).
 		Str("server_address", pyroCfg.ServerAddress).

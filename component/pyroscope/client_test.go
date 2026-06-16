@@ -17,6 +17,11 @@ func TestMergeConfigDefaults(t *testing.T) {
 	assert.Equal(t, time.Minute, cfg.UploadRate)
 }
 
+func TestMergeConfigNil(t *testing.T) {
+	cfg := mergeConfig(nil)
+	assert.Equal(t, DefaultConfig(), cfg)
+}
+
 func TestProfileTypesFallback(t *testing.T) {
 	cfg := mergeConfig(&Config{})
 	assert.Equal(t, pyroscope.DefaultProfileTypes, cfg.profileTypes())
