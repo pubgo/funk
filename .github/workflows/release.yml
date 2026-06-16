@@ -41,12 +41,12 @@ jobs:
           git-cliff --version
 
       - name: Generate changelog
-        run: git cliff --latest --strip header --config cliff.toml > CHANGES.md
+        run: git cliff --latest --strip header --config cliff.toml > "${RUNNER_TEMP}/CHANGES.md"
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           version: v2.12.0
-          args: release --clean --release-notes=CHANGES.md
+          args: release --clean --release-notes-file=${{ runner.temp }}/CHANGES.md
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASER_TOKEN }}
