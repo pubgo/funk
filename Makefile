@@ -47,11 +47,11 @@ lint:
 	golangci-lint run --timeout=10m --verbose
 
 changelog:
-	@command -v git-cliff >/dev/null 2>&1 || { echo "install: go install github.com/orhun/git-cliff/cmd/git-cliff@v2.10.1"; exit 1; }
+	@command -v git-cliff >/dev/null 2>&1 || { echo "install: https://git-cliff.org/docs/installation/ (e.g. cargo install git-cliff --locked --version 2.10.1)"; exit 1; }
 	git cliff --unreleased --strip header
 
 changelog-latest:
-	@command -v git-cliff >/dev/null 2>&1 || { echo "install: go install github.com/orhun/git-cliff/cmd/git-cliff@v2.10.1"; exit 1; }
+	@command -v git-cliff >/dev/null 2>&1 || { echo "install: https://git-cliff.org/docs/installation/ (e.g. cargo install git-cliff --locked --version 2.10.1)"; exit 1; }
 	git cliff --latest --strip header
 
 release-dry:
