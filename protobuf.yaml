@@ -1,4 +1,4 @@
-checksum: 3cdc54c7ecf84134e660deb7ed3272063883eca9
+checksum: da0042a7fd2f896b71347db71617fc0478e20452
 vendor: proto-vendor
 base:
   out: proto
@@ -21,8 +21,6 @@ plugins:
   - name: go-enum2
 linter:
   rules:
-    included_paths: []
-    excluded_paths: []
     enabled_rules:
       - core::0131::http-method
       - core::0131::http-body
@@ -30,4 +28,3 @@ linter:
     disabled_rules:
       - all
   format_type: yaml
-  ignore_comment_disables_flag: false

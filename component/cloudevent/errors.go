@@ -10,6 +10,7 @@ import (
 var (
 	errReject        = errors.New("cloudevent: reject retry and discard msg")
 	errRedeliveryStr = "cloudevent: redelivery message with custom delay duration"
+	errForceRetry    = errors.New("cloudevent: force redelivery message with no delay")
 )
 
 func Reject(errs ...error) error {
@@ -21,11 +22,7 @@ func Reject(errs ...error) error {
 }
 
 func isRejectErr(err error) bool {
-	if err == nil {
-		return false
-	}
-
-	return errors.Is(err, errReject)
+	return err != nil && errors.Is(err, errReject)
 }
 
 type errRedelivery struct {
@@ -56,4 +53,20 @@ func isRedeliveryErr(err error) *errRedelivery {
 	return nil
 }
 
-// TODO force retry
+type forceRetryError struct{}
+
+func (err forceRetryError) Error() string {
+	return errForceRetry.Error()
+}
+
+func ForceRetry(errs ...error) error {
+	reason := "force_retry"
+	if len(errs) > 0 {
+		reason = errs[0].Error()
+	}
+	return errors.Wrap(&forceRetryError{}, reason)
+}
+
+func isForceRetry(err error) bool {
+	return err != nil && errors.As(err, new(forceRetryError))
+}

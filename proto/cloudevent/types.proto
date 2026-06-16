@@ -7,41 +7,42 @@ import "google/protobuf/duration.proto";
 option go_package = "github.com/pubgo/funk/v2/proto/cloudevent;cloudeventpb";
 
 message RegisterJobOptions {
-    optional string job_name = 1;
+  optional string job_name = 1;
 }
 
 message PushEventOptions {
+  // The content type for the data (optional).
+  // If not set, the default content type is "application/json".
+  optional string content_type = 1;
 
-    // The content type for the data (optional).
-    optional string content_type = 1;
+  // The metadata passing to pub components
+  // metadata property:
+  // - key : the key of the message.
+  map<string, string> metadata = 2;
 
-    // The metadata passing to pub components
+  // The delay duration of the message.
+  optional google.protobuf.Duration delay = 3;
 
-    // metadata property:
-    // - key : the key of the message.
-    map<string, string> metadata = 2;
+  // The message id
+  // If not set, the default message id is uuid.
+  // If set, the message id must be unique.
+  optional string msg_id = 4;
 
-    // The delay duration of the message.
-    optional google.protobuf.Duration delay_dur = 3;
-
-    // The message id
-    optional string msg_id = 4;
+  // The sender of the message.
+  optional string sender = 5;
 }
 
 message CloudEventServiceOptions {
-
-    // job event name is same with config jobs consumers job name
-    string name = 1;
+  // job event name is same with config jobs consumers job name
+  string name = 1;
 }
 
 // cloud event subject or topic
 message CloudEventMethodOptions {
+  // subject name is same with config jobs consumers
+  // subject name sametime is topic name
+  string name = 1;
 
-    // subject name is same with config jobs consumers
-    // subject name sametime is topic name
-    string name = 1;
-
-    // event or api operation
-    optional string operation = 4;
+  // cloud event operation
+  optional string operation = 2;
 }
-

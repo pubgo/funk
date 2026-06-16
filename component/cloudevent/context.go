@@ -5,49 +5,35 @@ import (
 	"net/http"
 	"time"
 
+	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
+	"github.com/rs/xid"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/proto"
-
-	"github.com/pubgo/funk/v2"
-	cloudeventpb "github.com/pubgo/funk/v2/proto/cloudevent"
 )
 
 type Context struct {
-	// Header jetstream.Headers().
-	Header http.Header
-
-	// NumDelivered jetstream.MsgMetadata{}.NumDelivered
+	Header       http.Header
 	NumDelivered uint64
-
-	// NumPending jetstream.MsgMetadata{}.NumPending
-	NumPending uint64
-
-	// Timestamp jetstream.MsgMetadata{}.Timestamp
-	Timestamp time.Time
-
-	// Stream jetstream.MsgMetadata{}.Stream
-	Stream string
-
-	// Consumer jetstream.MsgMetadata{}.Consumer
-	Consumer string
-
-	// Subject|Topic name jetstream.Msg().Subject()
-	Subject string
-
-	// Config job config from config file or default
-	Config *JobEventConfig
+	NumPending   uint64
+	Timestamp    time.Time
+	Stream       string
+	Consumer     string
+	Subject      string
+	Config       *JobEventConfig
 }
 
-var cloudeventCtxKey = lo.ToPtr(funk.Void{})
+type ctxKey int
 
-func createCtxWithContext(parent context.Context, ctx *Context) context.Context {
+const cloudeventCtxKey ctxKey = 1
+
+func createCtxWithSubjectContext(parent context.Context, ctx *Context) context.Context {
 	if parent == nil {
 		parent = context.Background()
 	}
 	return context.WithValue(parent, cloudeventCtxKey, ctx)
 }
 
-func GetEventContext(ctx context.Context) *Context {
+func GetContext(ctx context.Context) *Context {
 	if ctx == nil {
 		return nil
 	}
@@ -60,24 +46,7 @@ func GetEventContext(ctx context.Context) *Context {
 	return evtCtx
 }
 
-var pushEventCtxKey = lo.ToPtr(struct{}{})
-
-func withOptions(ctx context.Context, opts ...*cloudeventpb.PushEventOptions) context.Context {
-	if len(opts) == 0 {
-		return ctx
-	}
-
-	oldOpts, ok := ctx.Value(pushEventCtxKey).(*cloudeventpb.PushEventOptions)
-	if !ok {
-		oldOpts = new(cloudeventpb.PushEventOptions)
-	}
-
-	for i := range opts {
-		proto.Merge(oldOpts, opts[i])
-	}
-
-	return context.WithValue(ctx, pushEventCtxKey, oldOpts)
-}
+var pushEventCtxKey = xid.New().String()
 
 func WithPushOpt(opts ...func(opt *cloudeventpb.PushEventOptions)) *cloudeventpb.PushEventOptions {
 	var opt cloudeventpb.PushEventOptions
@@ -87,20 +56,64 @@ func WithPushOpt(opts ...func(opt *cloudeventpb.PushEventOptions)) *cloudeventpb
 	return &opt
 }
 
-func getOptions(ctx context.Context, opts ...*cloudeventpb.PushEventOptions) *cloudeventpb.PushEventOptions {
-	evtOpt := new(cloudeventpb.PushEventOptions)
-	opt, ok := ctx.Value(pushEventCtxKey).(*cloudeventpb.PushEventOptions)
-	if ok {
+func getOptions(ctx context.Context, opts ...PubOpt) *PubOptions {
+	evtOpt := new(PubOptions)
+	if opt, ok := ctx.Value(pushEventCtxKey).(*PubOptions); ok {
 		evtOpt = opt
 	}
 
 	for _, o := range opts {
-		proto.Merge(evtOpt, o)
+		if o == nil {
+			continue
+		}
+		o(evtOpt)
 	}
 
 	if evtOpt.GetMsgId() == "" {
 		evtOpt.MsgId = nil
 	}
 
+	if evtOpt.ContentType == nil {
+		evtOpt.ContentType = lo.ToPtr("application/json")
+	}
+
+	if evtOpt.Sender == nil {
+		evtOpt.Sender = lo.ToPtr(senderValue)
+	}
+
 	return evtOpt
+}
+
+func ProtoPubOpts(opts ...*cloudeventpb.PushEventOptions) []PubOpt {
+	if len(opts) == 0 {
+		return nil
+	}
+	return []PubOpt{func(po *PubOptions) {
+		for _, o := range opts {
+			if o == nil {
+				continue
+			}
+			proto.Merge(po, o)
+		}
+	}}
+}
+
+func ProtoRegisterOpts(opts ...*cloudeventpb.RegisterJobOptions) RegisterOpt {
+	return func(ro *RegisterJobOptions) {
+		if ro.Opts == nil {
+			ro.Opts = new(cloudeventpb.RegisterJobOptions)
+		}
+		for _, o := range opts {
+			if o == nil {
+				continue
+			}
+			proto.Merge(ro.Opts, o)
+		}
+	}
+}
+
+func WithSubInterceptors(interceptors ...SubInterceptor) RegisterOpt {
+	return func(ro *RegisterJobOptions) {
+		ro.Interceptors = append(ro.Interceptors, interceptors...)
+	}
 }

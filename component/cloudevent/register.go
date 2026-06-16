@@ -2,8 +2,6 @@ package cloudevent
 
 import (
 	"context"
-	"fmt"
-	"reflect"
 
 	"github.com/rs/zerolog"
 	"github.com/samber/lo"
@@ -25,54 +23,54 @@ func WrapHandler[Req, Rsp proto.Message](handler func(ctx context.Context, req R
 func init() {
 	vars.Register("cloudevent.default_config", func() any {
 		return map[string]any{
-			"default_prefix":            DefaultPrefix,
-			"default_timeout":           DefaultTimeout,
-			"default_max_retry":         DefaultMaxRetry,
-			"default_retry_backoff":     DefaultRetryBackoff,
-			"default_job_name":          DefaultJobName,
-			"DefaultCloudEventDelayKey": DefaultCloudEventDelayKey,
+			"default_prefix":        DefaultPrefix,
+			"default_timeout":       DefaultTimeout,
+			"default_max_retry":     DefaultMaxRetry,
+			"default_retry_backoff": DefaultRetryBackoff,
+			"default_job_name":      DefaultJobName,
+			"DelayHeaderKey":        DelayHeaderKey,
+			"SenderHeaderKey":       SenderHeaderKey,
 		}
 	})
 }
 
-func RegisterJobHandler[T proto.Message](jobCli *Client, jobName, topic string, handler EventHandler[T], opts ...*cloudeventpb.RegisterJobOptions) {
-	assert.Fn(reflect.TypeOf(jobCli.subjects[topic]) != reflect.TypeOf(lo.Empty[T]()), func() error {
-		return fmt.Errorf("type not match, topic-type=%s handler-input-type=%s", reflect.TypeOf(jobCli.subjects[topic]).String(), reflect.TypeOf(lo.Empty[T]()).String())
-	})
-
+func RegisterJobHandler[T proto.Message](jobCli *Client, jobName, topic string, handler Handler[T], opts ...RegisterOpt) {
 	if jobName == "" {
 		jobName = DefaultJobName
 	}
 
-	jobCli.registerJobHandler(jobName, topic, func(ctx context.Context, args proto.Message) error { return handler(ctx, args.(T)) }, opts...)
+	eventHandler := func(ctx context.Context, args proto.Message) error { return handler(ctx, args.(T)) }
+	jobCli.registerJobHandler(jobName, topic, eventHandler, opts...)
 }
 
-func (c *Client) registerJobHandler(jobName, topic string, handler EventHandler[proto.Message], opts ...*cloudeventpb.RegisterJobOptions) {
-	assert.If(handler == nil, "job handler is nil")
+func (c *Client) registerJobHandler(jobName, topic string, handler Handler[proto.Message], opts ...RegisterOpt) {
+	assert.If(handler == nil, "job manager is nil")
 	assert.If(c.subjects[topic] == nil, "topic:%s not found", topic)
 
-	evtOpt := new(cloudeventpb.RegisterJobOptions)
+	jobOpt := &RegisterJobOptions{Opts: new(cloudeventpb.RegisterJobOptions)}
 	for _, o := range opts {
-		proto.Merge(evtOpt, o)
+		o(jobOpt)
 	}
 
-	if lo.FromPtr(evtOpt.JobName) != "" {
-		jobName = lo.FromPtr(evtOpt.JobName)
+	if name := lo.FromPtr(jobOpt.Opts.JobName); name != "" {
+		jobName = name
 	}
 
-	if c.handlers[jobName] == nil {
-		c.handlers[jobName] = map[string]EventHandler[proto.Message]{}
+	if c.jobManagers[jobName] == nil {
+		c.jobManagers[jobName] = &jobManager{managers: make(map[string]*handlerManager), interceptors: jobOpt.Interceptors}
+	} else if len(jobOpt.Interceptors) > 0 {
+		c.jobManagers[jobName].interceptors = append(c.jobManagers[jobName].interceptors, jobOpt.Interceptors...)
 	}
 
 	topic = c.subjectName(topic)
-	assert.If(c.handlers[jobName][topic] != nil, "job handler already registered, job_name=%s, topic=%s", jobName, topic)
+	assert.If(c.jobManagers[jobName].managers[topic] != nil, "job manager already registered, job_name=%s, topic=%s", jobName, topic)
 
-	c.handlers[jobName][topic] = handler
+	c.jobManagers[jobName].managers[topic] = &handlerManager{handler: handler}
 
 	logger.Info().Func(func(e *zerolog.Event) {
-		e.Str("job_name", jobName)
+		e.Str("job", jobName)
 		e.Str("topic", topic)
-		e.Str("job_handler", stack.CallerWithFunc(handler).String())
-		e.Msg("register cloud job handler")
+		e.Str("handler", stack.CallerWithFunc(handler).String())
+		e.Msg("register cloudevent handler")
 	})
 }
