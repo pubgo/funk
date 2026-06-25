@@ -4,25 +4,57 @@ import (
 	"fmt"
 
 	"github.com/pubgo/funk/v2/proto/errorpb"
+	"google.golang.org/protobuf/proto"
 )
 
 var errorCodes = make(map[string]*errorpb.ErrCode)
 
-// GetErrCodes 获取所有错误码
+// GetErrCodes returns all registered error codes.
 func GetErrCodes() []*errorpb.ErrCode {
-	var codeList = make([]*errorpb.ErrCode, 0, len(errorCodes))
+	codeList := make([]*errorpb.ErrCode, 0, len(errorCodes))
 	for _, v := range errorCodes {
 		codeList = append(codeList, v)
 	}
 	return codeList
 }
 
-// RegisterErrCodes 注册错误码
-func RegisterErrCodes(code *errorpb.ErrCode) error {
+// LookupErrCode returns a registered error code by name.
+func LookupErrCode(name string) (*errorpb.ErrCode, bool) {
+	code, ok := errorCodes[name]
+	if !ok {
+		return nil, false
+	}
+	return proto.Clone(code).(*errorpb.ErrCode), true
+}
+
+// RegisterErrCode registers an error code and returns an error when the name already exists.
+func RegisterErrCode(code *errorpb.ErrCode) error {
+	if code == nil {
+		return fmt.Errorf("errcode: code is nil")
+	}
+	if code.Name == "" {
+		return fmt.Errorf("errcode: code name is empty")
+	}
 	if errorCodes[code.Name] != nil {
-		panic(fmt.Sprintf("error code already registered: name=%q", code.Name))
+		return fmt.Errorf("errcode: already registered: name=%q", code.Name)
 	}
 
-	errorCodes[code.Name] = code
+	errorCodes[code.Name] = proto.Clone(code).(*errorpb.ErrCode)
+	return nil
+}
+
+// MustRegisterErrCode registers an error code and panics on failure.
+func MustRegisterErrCode(code *errorpb.ErrCode) {
+	if err := RegisterErrCode(code); err != nil {
+		panic(err)
+	}
+}
+
+// RegisterErrCodes registers an error code and panics when the name already exists.
+// Deprecated: use RegisterErrCode or MustRegisterErrCode.
+func RegisterErrCodes(code *errorpb.ErrCode) error {
+	if err := RegisterErrCode(code); err != nil {
+		panic(err)
+	}
 	return nil
 }

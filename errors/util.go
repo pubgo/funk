@@ -43,20 +43,76 @@ func ErrStringify(buf *bytes.Buffer, err error) {
 	ErrStringify(buf, Unwrap(err))
 }
 
+func errLayerData(err error) map[string]any {
+	switch e := err.(type) {
+	case *ErrWrap:
+		data := map[string]any{
+			"caller": e.Caller,
+			"id":     e.ID(),
+		}
+		if len(e.Tags) > 0 {
+			data["fields"] = e.Tags
+		}
+		if len(e.Stacks) > 0 {
+			data["stacks"] = e.Stacks
+		}
+		return data
+	case *Err:
+		data := map[string]any{
+			"err_msg": e.Msg,
+			"id":      e.ID(),
+		}
+		if e.Detail != "" {
+			data["detail"] = e.Detail
+		}
+		if len(e.Tags) > 0 {
+			data["tags"] = e.Tags
+		}
+		return data
+	case Err:
+		data := map[string]any{
+			"err_msg": e.Msg,
+			"id":      e.ID(),
+		}
+		if e.Detail != "" {
+			data["detail"] = e.Detail
+		}
+		if len(e.Tags) > 0 {
+			data["tags"] = e.Tags
+		}
+		return data
+	default:
+		data := map[string]any{
+			"err_msg":    err.Error(),
+			"err_detail": fmt.Sprintf("%v", err),
+		}
+		if marshaler, ok := err.(json.Marshaler); ok {
+			raw, marshalErr := marshaler.MarshalJSON()
+			if marshalErr == nil {
+				var extra map[string]any
+				if json.Unmarshal(raw, &extra) == nil {
+					delete(extra, "cause")
+					for key, value := range extra {
+						if _, exists := data[key]; !exists {
+							data[key] = value
+						}
+					}
+				}
+			}
+		}
+		return data
+	}
+}
+
 func ErrJsonify(err error) map[string]any {
 	if err == nil {
 		return make(map[string]any)
 	}
 
-	data := make(map[string]any, 6)
-	if _err, ok := err.(json.Marshaler); ok {
-		data["cause"] = _err
-	} else {
-		data["err_msg"] = err.Error()
-		data["err_detail"] = fmt.Sprintf("%v", err)
-		err = Unwrap(err)
-		if err != nil {
-			data["cause"] = ErrJsonify(err)
+	data := errLayerData(err)
+	if next := Unwrap(err); next != nil {
+		if cause := ErrJsonify(next); len(cause) > 0 {
+			data["cause"] = cause
 		}
 	}
 	return data

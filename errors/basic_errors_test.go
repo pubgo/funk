@@ -343,6 +343,17 @@ func TestCollectTagsNil(t *testing.T) {
 	assert.Nil(t, CollectTags(nil))
 }
 
+func TestCollectUserTags(t *testing.T) {
+	err := Wrap(New("root", Tags{"code": 1}), "service")
+	tags := CollectUserTags(err)
+	_, hasMsg := tags[TagKeyMessage]
+	assert.False(t, hasMsg)
+	assert.Equal(t, 1, tags["code"])
+
+	errOnlyMsg := Wrap(New("only message"), "service")
+	assert.Nil(t, CollectUserTags(errOnlyMsg))
+}
+
 func TestTagsCloneOnWrap(t *testing.T) {
 	tags := Tags{"key": "value"}
 	err := WrapTags(New("original"), tags)
@@ -388,4 +399,46 @@ func TestWrapStackCapturesStacks(t *testing.T) {
 	assert.True(t, ok)
 	assert.NotEmpty(t, (*wrapped).Stacks)
 	assert.NotEmpty(t, (*wrapped).Caller)
+}
+
+func TestFormatChain(t *testing.T) {
+	assert.Empty(t, FormatChain(nil))
+
+	root := New("db failed")
+	assert.Equal(t, "db failed", FormatChain(root))
+	assert.Equal(t, FormatChain(root), FullMessage(root))
+
+	wrapped := Wrap(Wrap(root, "init service"), "request failed")
+	assert.Equal(t, "request failed: init service: db failed", FormatChain(wrapped))
+}
+
+func TestErrJsonifyChain(t *testing.T) {
+	err := Wrap(Wrap(New("root", Tags{"code": 1}), "middle"), "outer")
+	data := ErrJsonify(err)
+
+	var messages []string
+	for current := data; current != nil; current, _ = current["cause"].(map[string]any) {
+		if fields, ok := current["fields"].(Tags); ok {
+			if msg, ok := fields["msg"]; ok {
+				messages = append(messages, fmt.Sprint(msg))
+			}
+		}
+		if msg, ok := current["err_msg"].(string); ok {
+			messages = append(messages, msg)
+		}
+	}
+
+	assert.Contains(t, messages, "outer")
+	assert.Contains(t, messages, "middle")
+	assert.Contains(t, messages, "root")
+
+	var rootLayer map[string]any
+	for current := data; current != nil; current, _ = current["cause"].(map[string]any) {
+		if msg, ok := current["err_msg"].(string); ok && msg == "root" {
+			rootLayer = current
+			break
+		}
+	}
+	assert.NotNil(t, rootLayer)
+	assert.Equal(t, 1, rootLayer["tags"].(Tags)["code"])
 }

@@ -1,5 +1,10 @@
 package errors
 
+const (
+	// TagKeyMessage is the wrap-layer context key populated by Wrap and New.
+	TagKeyMessage = "msg"
+)
+
 func layerTags(err error) Tags {
 	switch e := err.(type) {
 	case *ErrWrap:
@@ -59,4 +64,20 @@ func CollectTags(err error) Tags {
 		return nil
 	}
 	return collected
+}
+
+// CollectUserTags returns merged user tags from the error chain.
+// System wrap context stored under TagKeyMessage is excluded.
+func CollectUserTags(err error) Tags {
+	tags := CollectTags(err)
+	if len(tags) == 0 {
+		return nil
+	}
+
+	userTags := cloneTags(tags)
+	delete(userTags, TagKeyMessage)
+	if len(userTags) == 0 {
+		return nil
+	}
+	return userTags
 }

@@ -73,16 +73,5 @@ func (e *ErrWrap) String() string {
 }
 
 func (e *ErrWrap) MarshalJSON() ([]byte, error) {
-	data := ErrJsonify(e.Err)
-	if len(e.Tags) > 0 {
-		data["fields"] = e.Tags
-	}
-
-	if len(e.Stacks) > 0 {
-		data["stacks"] = e.Stacks
-	}
-
-	data["caller"] = e.Caller
-	data["id"] = e.ID()
-	return json.Marshal(data)
+	return json.Marshal(ErrJsonify(e))
 }

@@ -429,7 +429,6 @@ func TestCloneAndCheck(t *testing.T) {
 }
 
 func TestRegistry(t *testing.T) {
-	// 测试注册错误码
 	code := &errorpb.ErrCode{
 		Code:       404,
 		StatusCode: errorpb.Code_NotFound,
@@ -437,17 +436,28 @@ func TestRegistry(t *testing.T) {
 		Message:    "Resource not found",
 	}
 
-	// 注册错误码
-	assert.NotPanics(t, func() {
-		lo.Must0(errcode.RegisterErrCodes(code))
-	})
+	assert.NoError(t, errcode.RegisterErrCode(code))
 
-	// 获取所有错误码
+	lookup, ok := errcode.LookupErrCode(code.Name)
+	assert.True(t, ok)
+	assert.Equal(t, code.Name, lookup.Name)
+	assert.Equal(t, code.Message, lookup.Message)
+
 	codes := errcode.GetErrCodes()
 	assert.NotEmpty(t, codes)
 
-	// 尝试重复注册同一个名称的错误码应该panic
+	assert.Error(t, errcode.RegisterErrCode(code))
 	assert.Panics(t, func() {
-		lo.Must0(errcode.RegisterErrCodes(code))
+		errcode.MustRegisterErrCode(code)
+	})
+
+	// generated code path still works
+	assert.NotPanics(t, func() {
+		lo.Must0(errcode.RegisterErrCodes(&errorpb.ErrCode{
+			Code:       500,
+			StatusCode: errorpb.Code_Internal,
+			Name:       "REGISTRY_LEGACY_PATH",
+			Message:    "legacy register",
+		}))
 	})
 }

@@ -150,6 +150,14 @@ func (l *loggerImpl) Err(err error, ctxL ...context.Context) *zerolog.Event {
 			e.Str("error_id", id)
 		}
 
+		if chain := errors.FormatChain(err); chain != "" {
+			e.Str("error_chain", chain)
+		}
+
+		if tags := errors.CollectUserTags(err); len(tags) > 0 {
+			e.Interface("error_tags", tags)
+		}
+
 		e.Str("error_detail", errDetail(err))
 		e.Str(zerolog.ErrorFieldName, err.Error())
 	}

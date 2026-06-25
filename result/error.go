@@ -154,6 +154,22 @@ func (e Error) Err() error { return e.getErr() }
 
 func (e Error) GetErr() error { return e.getErr() }
 
+// Message returns the full human-readable error chain.
+func (e Error) Message() string {
+	if e.IsOK() {
+		return ""
+	}
+	return errors.FormatChain(e.err)
+}
+
+// Tags returns user tags collected from the error chain.
+func (e Error) Tags() errors.Tags {
+	if e.IsOK() {
+		return nil
+	}
+	return errors.CollectUserTags(e.err)
+}
+
 func (e Error) Unwrap() (void Void) {
 	if e.IsErr() {
 		panicIfError(errors.WrapCaller(e.getErr(), 1))
@@ -191,7 +207,7 @@ func (e Error) String() string {
 		return "OK"
 	}
 
-	return fmt.Sprintf("Error(%v)", e.err)
+	return fmt.Sprintf("Error(%s)", errors.FormatChain(e.err))
 }
 
 func (e Error) MarshalJSON() ([]byte, error) {
