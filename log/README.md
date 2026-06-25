@@ -20,6 +20,7 @@ The logging module provides a high-performance, structured logging system based 
 - `CreateFieldsCtx(...)` snapshots the initial field map so later mutations to the caller's map do not leak into logging context.
 - `WithLogger(...)`, `WithFields(...)`, `GetFieldsFromCtx(...)`, and `WithDisabled(...)` are nil-safe helpers for request-scoped logging flows.
 - Global helpers such as `log.Info(ctx)` and `log.Err(err, ctx)` honor the logger stored in the context.
+- `log.Err(err, ctx)` automatically adds `error_id`, `error_chain`, `error_tags`, and `error_detail` for funk errors.
 - `FromCtx(ctx)` is the ergonomic way to fetch the effective logger from a context when you need to keep chaining logger methods.
 - `UpdateFieldsCtx(...)` returns a new context and does not mutate field maps already stored in parent contexts.
 - When logger fields and context fields use the same key, **context fields win**. This lets request-scoped metadata override module defaults safely.

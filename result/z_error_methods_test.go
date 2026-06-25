@@ -87,4 +87,14 @@ func TestErrorGettersAndInspect(t *testing.T) {
 	assert.True(t, called)
 
 	assert.Equal(t, "OK", result.ErrOf(nil).String())
+	assert.Empty(t, result.ErrOf(nil).Message())
+	assert.Nil(t, result.ErrOf(nil).Tags())
+
+	wrapped := result.ErrOf(errors.Wrap(
+		errors.New("not found", errors.Tags{"user_id": 42}),
+		"load user",
+	))
+	assert.Contains(t, wrapped.Message(), "load user")
+	assert.Contains(t, wrapped.Message(), "not found")
+	assert.Equal(t, 42, wrapped.Tags()["user_id"])
 }

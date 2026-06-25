@@ -2,7 +2,6 @@ package errcode_test
 
 import (
 	"encoding/json"
-	"errors"
 	"testing"
 
 	"github.com/samber/lo"
@@ -13,6 +12,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/structpb"
 
+	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/errors/errcode"
 	"github.com/pubgo/funk/v2/proto/errorpb"
 )
@@ -89,7 +89,7 @@ func TestNewCodeErrWithMsg(t *testing.T) {
 
 	err := errcode.NewCodeErrWithMsg(code, "Custom message")
 	assert.NotNil(t, err)
-	assert.Equal(t, "CUSTOM MESSAGE", err.Error()) // 消息会被转为大写
+	assert.Equal(t, "Custom message", err.Error())
 
 	// 测试nil错误码
 	nilErr := errcode.NewCodeErrWithMsg(nil, "message")
@@ -107,7 +107,7 @@ func TestNewCodeErrWithMsg(t *testing.T) {
 		},
 	})
 	assert.NotNil(t, detailsErr)
-	assert.Equal(t, "CUSTOM MESSAGE WITH DETAILS", detailsErr.Error())
+	assert.Equal(t, "Custom message with details", detailsErr.Error())
 }
 
 func TestWrapCode(t *testing.T) {
@@ -236,28 +236,14 @@ func TestErrCode_As(t *testing.T) {
 
 	err := errcode.NewCodeErr(code)
 
-	// 测试转换为*ErrCode
-	// 注意：As方法的第一个分支永远不会执行，因为类型不匹配
-	// var targetErr *errcode.ErrCode
-	// assert.True(t, err.(*errcode.ErrCode).As(&targetErr))
-	// assert.NotNil(t, targetErr)
+	var targetErr *errcode.ErrCode
+	assert.True(t, errors.As(err, &targetErr))
+	assert.Equal(t, code.Name, targetErr.Proto().(*errorpb.ErrCode).Name)
 
-	// 测试转换为*errorpb.ErrCode
 	var targetPb *errorpb.ErrCode
-	// 注意：As方法的实现可能有问题，所以我们只验证不panic
-	assert.NotPanics(t, func() {
-		_ = err.(*errcode.ErrCode).As(&targetPb)
-	})
-
-	// 注意：值类型的转换可能不适用于所有情况，所以我们只测试指针类型
-	// 测试转换为errorpb.ErrCode（值类型）
-	// var targetPbValue errorpb.ErrCode
-	// assert.True(t, err.(*errcode.ErrCode).As(&targetPbValue))
-	// 对于值类型，我们检查字段而不是整个结构体
-	// assert.Equal(t, code.Name, targetPbValue.Name)
-	// assert.Equal(t, code.Code, targetPbValue.Code)
-	// assert.Equal(t, code.Message, targetPbValue.Message)
-	_ = targetPb // 避免未使用变量错误
+	assert.True(t, errors.As(err, &targetPb))
+	assert.Equal(t, code.Name, targetPb.Name)
+	assert.Equal(t, code.Code, targetPb.Code)
 }
 
 func TestErrCode_MarshalJSON(t *testing.T) {
@@ -443,7 +429,6 @@ func TestCloneAndCheck(t *testing.T) {
 }
 
 func TestRegistry(t *testing.T) {
-	// 测试注册错误码
 	code := &errorpb.ErrCode{
 		Code:       404,
 		StatusCode: errorpb.Code_NotFound,
@@ -451,17 +436,28 @@ func TestRegistry(t *testing.T) {
 		Message:    "Resource not found",
 	}
 
-	// 注册错误码
-	assert.NotPanics(t, func() {
-		lo.Must0(errcode.RegisterErrCodes(code))
-	})
+	assert.NoError(t, errcode.RegisterErrCode(code))
 
-	// 获取所有错误码
+	lookup, ok := errcode.LookupErrCode(code.Name)
+	assert.True(t, ok)
+	assert.Equal(t, code.Name, lookup.Name)
+	assert.Equal(t, code.Message, lookup.Message)
+
 	codes := errcode.GetErrCodes()
 	assert.NotEmpty(t, codes)
 
-	// 尝试重复注册同一个名称的错误码应该panic
+	assert.Error(t, errcode.RegisterErrCode(code))
 	assert.Panics(t, func() {
-		lo.Must0(errcode.RegisterErrCodes(code))
+		errcode.MustRegisterErrCode(code)
+	})
+
+	// generated code path still works
+	assert.NotPanics(t, func() {
+		lo.Must0(errcode.RegisterErrCodes(&errorpb.ErrCode{
+			Code:       500,
+			StatusCode: errorpb.Code_Internal,
+			Name:       "REGISTRY_LEGACY_PATH",
+			Message:    "legacy register",
+		}))
 	})
 }

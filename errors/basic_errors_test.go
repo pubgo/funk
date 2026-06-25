@@ -7,8 +7,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/pubgo/funk/v2/errors/errparser"
 )
 
 type customError struct{ msg string }
@@ -229,30 +227,6 @@ func TestTags_ToMapString(t *testing.T) {
 	assert.Equal(t, "true", mapString["bool_key"])
 }
 
-func TestParse(t *testing.T) {
-	// 测试nil
-	var nilErr error
-	parsedNil := errparser.Parse(nilErr)
-	assert.Nil(t, parsedNil)
-
-	// 测试error类型
-	err := New("test error")
-	parsedErr := errparser.Parse(err)
-	assert.Equal(t, err, parsedErr)
-
-	// 测试string类型
-	parsedStr := errparser.Parse("string error")
-	assert.Equal(t, "string error", parsedStr.Error())
-
-	// 测试[]byte类型
-	parsedBytes := errparser.Parse([]byte("bytes error"))
-	assert.Equal(t, "bytes error", parsedBytes.Error())
-
-	// 测试其他类型
-	parsedOther := errparser.Parse(42)
-	assert.NotNil(t, parsedOther)
-}
-
 func TestIfErr(t *testing.T) {
 	// 测试无错误的情况
 	result := IfErr(nil, func(err error) error {
@@ -348,4 +322,123 @@ func TestWrapKV(t *testing.T) {
 	// 测试包装nil错误
 	nilErr := WrapKV(nil, "key", "value")
 	assert.Nil(t, nilErr)
+}
+
+func TestGetTags(t *testing.T) {
+	err := New("payment failed", Tags{"transaction_id": "txn_123"})
+	tags := GetTags(err)
+	assert.Equal(t, "txn_123", tags["transaction_id"])
+
+	wrapped := WrapTags(err, Tags{"layer": "service"})
+	tags = GetTags(wrapped)
+	assert.Equal(t, "txn_123", tags["transaction_id"])
+
+	collected := CollectTags(wrapped)
+	assert.Equal(t, "txn_123", collected["transaction_id"])
+	assert.Equal(t, "service", collected["layer"])
+}
+
+func TestCollectTagsNil(t *testing.T) {
+	assert.Nil(t, GetTags(nil))
+	assert.Nil(t, CollectTags(nil))
+}
+
+func TestCollectUserTags(t *testing.T) {
+	err := Wrap(New("root", Tags{"code": 1}), "service")
+	tags := CollectUserTags(err)
+	_, hasMsg := tags[TagKeyMessage]
+	assert.False(t, hasMsg)
+	assert.Equal(t, 1, tags["code"])
+
+	errOnlyMsg := Wrap(New("only message"), "service")
+	assert.Nil(t, CollectUserTags(errOnlyMsg))
+}
+
+func TestTagsCloneOnWrap(t *testing.T) {
+	tags := Tags{"key": "value"}
+	err := WrapTags(New("original"), tags)
+	tags["key"] = "mutated"
+
+	wrapped, ok := AsA[*ErrWrap](err)
+	assert.True(t, ok)
+	assert.Equal(t, "value", (*wrapped).Tags["key"])
+}
+
+func TestUnwrapStdlib(t *testing.T) {
+	inner := New("inner")
+	wrapped := fmt.Errorf("outer: %w", inner)
+	assert.Equal(t, inner, Unwrap(wrapped))
+}
+
+func TestMarshalError(t *testing.T) {
+	data, err := MarshalError(New("marshal test"))
+	assert.NoError(t, err)
+	assert.Contains(t, string(data), "marshal test")
+
+	data, err = MarshalError(nil)
+	assert.NoError(t, err)
+	assert.Nil(t, data)
+}
+
+func TestRootCauseAndWalk(t *testing.T) {
+	root := &customError{msg: "root"}
+	outer := Wrap(Wrap(root, "middle"), "outer")
+	assert.Equal(t, root, RootCause(outer))
+
+	var layers int
+	Walk(outer, func(err error) bool {
+		layers++
+		return true
+	})
+	assert.GreaterOrEqual(t, layers, 3)
+}
+
+func TestWrapStackCapturesStacks(t *testing.T) {
+	stackErr := WrapStack(New("stack test"))
+	wrapped, ok := AsA[*ErrWrap](stackErr)
+	assert.True(t, ok)
+	assert.NotEmpty(t, (*wrapped).Stacks)
+	assert.NotEmpty(t, (*wrapped).Caller)
+}
+
+func TestFormatChain(t *testing.T) {
+	assert.Empty(t, FormatChain(nil))
+
+	root := New("db failed")
+	assert.Equal(t, "db failed", FormatChain(root))
+	assert.Equal(t, FormatChain(root), FullMessage(root))
+
+	wrapped := Wrap(Wrap(root, "init service"), "request failed")
+	assert.Equal(t, "request failed: init service: db failed", FormatChain(wrapped))
+}
+
+func TestErrJsonifyChain(t *testing.T) {
+	err := Wrap(Wrap(New("root", Tags{"code": 1}), "middle"), "outer")
+	data := ErrJsonify(err)
+
+	var messages []string
+	for current := data; current != nil; current, _ = current["cause"].(map[string]any) {
+		if fields, ok := current["fields"].(Tags); ok {
+			if msg, ok := fields["msg"]; ok {
+				messages = append(messages, fmt.Sprint(msg))
+			}
+		}
+		if msg, ok := current["err_msg"].(string); ok {
+			messages = append(messages, msg)
+		}
+	}
+
+	assert.Contains(t, messages, "outer")
+	assert.Contains(t, messages, "middle")
+	assert.Contains(t, messages, "root")
+
+	var rootLayer map[string]any
+	for current := data; current != nil; current, _ = current["cause"].(map[string]any) {
+		if msg, ok := current["err_msg"].(string); ok && msg == "root" {
+			rootLayer = current
+			break
+		}
+	}
+	assert.NotNil(t, rootLayer)
+	assert.Equal(t, 1, rootLayer["tags"].(Tags)["code"])
 }

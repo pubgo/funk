@@ -27,6 +27,20 @@ type ErrAs interface {
 	As(any) bool
 }
 
+type Tags map[string]any
+
+func cloneTags(tags Tags) Tags {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	out := make(Tags, len(tags))
+	for key, value := range tags {
+		out[key] = value
+	}
+	return out
+}
+
 func mergeTags(tags ...Tags) Tags {
 	tagList := make(Tags)
 	for _, t := range tags {
@@ -37,7 +51,9 @@ func mergeTags(tags ...Tags) Tags {
 	return tagList
 }
 
-type Tags map[string]any
+func (t Tags) Clone() Tags {
+	return cloneTags(t)
+}
 
 func (t Tags) Merge(tags Tags) Tags {
 	tagList := make(Tags, len(t)+len(tags))

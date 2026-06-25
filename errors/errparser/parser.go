@@ -1,11 +1,11 @@
 package errparser
 
 import (
-	"errors"
 	"fmt"
 	"log/slog"
 
 	"github.com/pubgo/funk/v2"
+	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/stack"
 )
 
@@ -16,14 +16,14 @@ type ErrParser = func(val any) (error, bool)
 var errParserRegistry = make(map[string]ErrParser)
 
 func RegisterParser(errParser ErrParser) bool {
-	key := stack.CallerWithFunc(errParser).String()
-	if errParserRegistry[key] != nil {
-		slog.Error("errParser already exists", "parser", errParserRegistry[key])
+	if errParser == nil {
+		slog.Error("errParser is nil")
 		return false
 	}
 
-	if errParser == nil {
-		slog.Error("errParser is nil")
+	key := stack.CallerWithFunc(errParser).String()
+	if errParserRegistry[key] != nil {
+		slog.Error("errParser already exists", "parser", errParserRegistry[key])
 		return false
 	}
 
@@ -53,6 +53,6 @@ func parseError(val any) error {
 			}
 		}
 
-		return fmt.Errorf("%#v", val)
+		return fmt.Errorf("%#v", v)
 	}
 }

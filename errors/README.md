@@ -8,7 +8,21 @@ The errors module provides enhanced error handling capabilities for Go applicati
 - **Stack Traces**: Automatic stack trace capture for debugging
 - **Error Wrapping**: Preserve error chains with additional context
 - **gRPC Compatibility**: Integration with gRPC status codes
-- **Panic Recovery**: Safe recovery from panics with context preservation
+- **Panic Recovery**: Works with the `recovery` package for safe panic handling
+
+## Error Message Semantics
+
+`Wrap` / `Wrapf` add context as metadata rather than changing `Error()` text:
+
+```go
+err := errors.New("db failed")
+wrapped := errors.Wrap(err, "init service failed")
+
+wrapped.Error() // "db failed" — root message preserved
+// Context is available via CollectTags(wrapped)["msg"] or wrapped.(*errors.ErrWrap).String()
+```
+
+Use `String()`, `DebugPrint`, `MarshalError`, or `FormatChain` when you need the full structured representation.
 
 ## Installation
 
@@ -119,11 +133,25 @@ err := errors.New("payment processing failed", errors.Tags{
     "currency": "USD",
 })
 
-// Access metadata
+// Access metadata from the root *Err
 if tags := errors.GetTags(err); tags != nil {
     txnID := tags["transaction_id"]
     // Process transaction ID
 }
+
+// Merge tags from every layer in the chain
+allTags := errors.CollectTags(err)
+
+// User tags exclude automatic wrap context under TagKeyMessage ("msg")
+userTags := errors.CollectUserTags(err)
+```
+
+### Readable Error Chains
+
+```go
+wrapped := errors.Wrap(errors.New("db failed"), "init service")
+fmt.Println(wrapped.Error())          // db failed
+fmt.Println(errors.FormatChain(wrapped)) // init service: db failed
 ```
 
 ### Stack Trace Analysis
@@ -143,30 +171,57 @@ data := errors.ErrJsonify(err)
 
 ### With gRPC
 
+See [errcode/README.md](./errcode/README.md) for registry and lookup helpers.
+
 ```go
 import "github.com/pubgo/funk/v2/errors/errcode"
 
-// Convert to gRPC status
-status := errcode.ConvertErr2Status(err)
+errcode.MustRegisterErrCode(&errorpb.ErrCode{
+    Name:       "demo.user.not_found",
+    Code:       404,
+    StatusCode: errorpb.Code_NotFound,
+    Message:    "user not found",
+})
 
-// Create error code
-code := &errorpb.ErrCode{
-    Code: 500,
-    StatusCode: errorpb.Code_Internal,
-    Name: "INTERNAL_ERROR",
-    Message: "Internal server error",
+code, ok := errcode.LookupErrCode("demo.user.not_found")
+if ok {
+    err := errcode.NewCodeErr(code)
+    _ = err
 }
+
+status := errcode.ConvertErr2Status(errcode.ParseError(err))
 ```
 
 ### With Logging
 
+`log.Err(err)` automatically attaches:
+
+- `error_id`
+- `error_chain` via `FormatChain`
+- `error_tags` via `CollectUserTags`
+- `error_detail` as JSON
+
 ```go
 import "github.com/pubgo/funk/v2/log"
 
-// Log errors with context
 log.Error().Err(err).Msg("operation failed")
+```
 
-// Structured error logging
+### With result
+
+```go
+import "github.com/pubgo/funk/v2/result"
+
+r := result.ErrOf(err)
+if r.IsErr() {
+    _ = r.Message() // full chain
+    _ = r.Tags()     // user tags
+}
+```
+
+### Manual Structured Logging
+
+```go
 log.Error().RawJSON("error", errors.JsonPrint(err)).Send()
 ```
 
@@ -199,11 +254,19 @@ log.Error().RawJSON("error", errors.JsonPrint(err)).Send()
 | `Is(err, target error)` | Check error chain for specific error |
 | `Unwrap(err error)` | Get underlying error |
 | `GetErrorId(err error)` | Get unique error identifier |
+| `GetTags(err error)` | Get tags from the innermost `*Err` |
+| `CollectTags(err error)` | Merge tags from all layers in the chain |
+| `CollectUserTags(err error)` | Merge user tags and omit wrap `msg` context |
+| `RootCause(err error)` | Return the deepest error in the chain |
+| `Walk(err error, fn func(error) bool)` | Traverse the error chain |
+| `FormatChain(err error)` | Join error chain into a single message |
+| `FullMessage(err error)` | Alias for `FormatChain` |
+| `MarshalError(err error)` | Serialize error to JSON with error return |
 
 ### Utility Functions
 
 | Function | Description |
 |----------|-------------|
 | `DebugPrint(err error)` | Pretty print error with stack trace |
-| `JsonPrint(err error)` | Serialize error to JSON |
+| `JsonPrint(err error)` | Serialize error to JSON (returns nil on failure) |
 | `ErrJsonify(err error)` | Convert error to structured data |
