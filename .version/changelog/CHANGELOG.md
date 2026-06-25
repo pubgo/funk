@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.5] - 2026-06-25
+
+### Added
+- `errors`: `GetTags`, `CollectTags`, `CollectUserTags`, `FormatChain`, `FullMessage`, `MarshalError`, `Walk`, and `RootCause`
+- `errors/errcode`: `RegisterErrCode`, `MustRegisterErrCode`, `LookupErrCode`, and package README
+- `log`: `Err()` now emits `error_chain` and `error_tags` automatically
+- `result`: `Message()` and `Tags()` helpers on `Error`
+
+### Changed
+- `errors`: `ErrJsonify` now expands the full unwrap chain; `WrapStack` no longer prints to stderr; `JsonPrint` returns nil instead of panicking on marshal failure
+- `errors`: tag maps are cloned on create/wrap to avoid accidental mutation
+- `result`: `String()` uses the formatted error chain for clearer output
+- `errors/errcode`: `NewCodeErrWithMsg` preserves caller casing instead of using `strings.ToTitle`
+
+### Fixed
+- `errors/errcode`: `ErrCode.As` correctly extracts `*ErrCode` and `*errorpb.ErrCode`
+- `errors/errcode`: duplicate registration panic message now reports the conflicting name
+- `errors`: `Unwrap` falls back to the standard library unwrap behavior
+
 ## [2.0.4] - 2026-06-17
 
 ### Added
