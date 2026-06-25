@@ -3,6 +3,7 @@ package async
 import (
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -10,8 +11,13 @@ import (
 )
 
 func TestAsync(t *testing.T) {
-	ret := Async(func() (*http.Response, error) { //nolint
-		return http.Get("https://httpbin.org")
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	t.Cleanup(server.Close)
+
+	ret := Async(func() (*http.Response, error) {
+		return http.Get(server.URL)
 	}).Await()
 	assert.NoError(t, ret.GetErr())
 	rsp := ret.Unwrap()
@@ -20,7 +26,7 @@ func TestAsync(t *testing.T) {
 			_ = b.Close()
 		}()
 	}
-	assert.Equal(t, rsp.StatusCode, 200)
+	assert.Equal(t, http.StatusOK, rsp.StatusCode)
 }
 
 func TestGoChan(t *testing.T) {
