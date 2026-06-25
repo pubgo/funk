@@ -68,9 +68,27 @@ go get github.com/pubgo/funk/v2
 ```go
 import "github.com/pubgo/funk/v2/errors"
 
-err := errors.New("something went wrong", errors.Tags{"component": "database"})
-err = errors.Wrap(err, "failed to connect")
-errors.DebugPrint(err)
+err := errors.New("connection failed", errors.Tags{"component": "database"})
+err = errors.Wrap(err, "initialize service")
+
+fmt.Println(err.Error())              // connection failed
+fmt.Println(errors.FormatChain(err))  // initialize service: connection failed
+fmt.Println(errors.CollectUserTags(err))
+```
+
+With logging and results:
+
+```go
+import (
+    "github.com/pubgo/funk/v2/log"
+    "github.com/pubgo/funk/v2/result"
+)
+
+log.Error().Err(err).Msg("operation failed") // adds error_chain, error_tags, error_id
+
+r := result.ErrOf(err)
+_ = r.Message()
+_ = r.Tags()
 ```
 
 ### Result Types
@@ -162,7 +180,7 @@ fmt.Printf("Called from: %s:%d\n", caller.File, caller.Line)
 
 ## Modules
 
-- **errors**: Enhanced error handling with wrapping, stack traces, and metadata
+- **errors**: Enhanced error handling with wrapping, stack traces, tags, and readable error chains
 - **result**: Functional Result and Error types for safer error handling
 - **features**: Feature flag system for runtime configuration
 - **assert**: Assertion utilities for testing and validation
@@ -175,6 +193,7 @@ fmt.Printf("Called from: %s:%d\n", caller.File, caller.Line)
 
 For detailed documentation, please visit:
 - [Error Handling](./errors/README.md)
+- [Error Codes](./errors/errcode/README.md)
 - [Result Types](./result/README.md)
 - [Feature Flags](./features/README.md)
 - [Configuration](./config/README.md)
@@ -182,7 +201,7 @@ For detailed documentation, please visit:
 - [Environment](./env/README.md)
 - [Stack](./stack/README.md)
 
-## Contributing
+- [Release guide](./docs/RELEASE.md) — latest: [v2.0.5](./docs/releases/v2.0.5.md)
 
 Contributions are welcome! Please read our contributing guidelines before submitting pull requests.
 

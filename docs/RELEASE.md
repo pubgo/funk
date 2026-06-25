@@ -2,6 +2,8 @@
 
 Funk is primarily a **Go module** (`github.com/pubgo/funk/v2`) and secondarily ships **protoc plugin binaries** via GitHub Releases.
 
+**Latest stable release:** [v2.0.5](https://github.com/pubgo/funk/releases/tag/v2.0.5) — see [release notes](./releases/v2.0.5.md).
+
 This guide follows the same principles as [zigo](https://github.com/pubgo/zigo): **tags are the source of truth**, changelogs are generated from git history, and CI performs the release.
 
 ## Version model

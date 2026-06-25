@@ -68,9 +68,27 @@ go get github.com/pubgo/funk/v2
 ```go
 import "github.com/pubgo/funk/v2/errors"
 
-err := errors.New("出现问题", errors.Tags{"component": "database"})
-err = errors.Wrap(err, "连接失败")
-errors.DebugPrint(err)
+err := errors.New("连接失败", errors.Tags{"component": "database"})
+err = errors.Wrap(err, "初始化服务")
+
+fmt.Println(err.Error())              // 连接失败
+fmt.Println(errors.FormatChain(err))  // 初始化服务: 连接失败
+fmt.Println(errors.CollectUserTags(err))
+```
+
+配合日志与 result：
+
+```go
+import (
+    "github.com/pubgo/funk/v2/log"
+    "github.com/pubgo/funk/v2/result"
+)
+
+log.Error().Err(err).Msg("操作失败") // 自动附加 error_chain、error_tags、error_id
+
+r := result.ErrOf(err)
+_ = r.Message()
+_ = r.Tags()
 ```
 
 ### 结果类型
@@ -162,7 +180,7 @@ fmt.Printf("被调用于: %s:%d\n", caller.File, caller.Line)
 
 ## 模块
 
-- **errors**: 带包装、堆栈跟踪和元数据的增强错误处理
+- **errors**: 带包装、堆栈跟踪、标签和可读错误链的增强错误处理
 - **result**: 用于更安全错误处理的函数式结果和错误类型
 - **features**: 用于运行时配置的功能标志系统
 - **assert**: 用于测试和验证的断言实用程序
@@ -175,12 +193,15 @@ fmt.Printf("被调用于: %s:%d\n", caller.File, caller.Line)
 
 有关详细文档，请访问：
 - [错误处理](./errors/README.md)
+- [错误码](./errors/errcode/README.md)
 - [结果类型](./result/README.md)
 - [功能标志](./features/README.md)
 - [配置](./config/README.md)
 - [日志记录](./log/README.md)
 - [环境](./env/README.md)
 - [堆栈](./stack/README.md)
+
+- [发布指南](./docs/RELEASE.md) — 最新版本：[v2.0.5](./docs/releases/v2.0.5.md)
 
 ## 贡献
 
