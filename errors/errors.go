@@ -9,8 +9,6 @@ import (
 	"reflect"
 
 	"github.com/samber/lo"
-
-	"github.com/pubgo/funk/v2/stack"
 )
 
 func IfErr(err error, fn func(err error) error) error {
@@ -22,7 +20,7 @@ func IfErr(err error, fn func(err error) error) error {
 }
 
 func New(msg string, tags ...Tags) error {
-	return WrapCaller(newSimpleErr(&Err{Msg: msg, id: NewErrorId(), Tags: lo.FirstOrEmpty(tags)}), 1)
+	return WrapCaller(newSimpleErr(&Err{Msg: msg, id: NewErrorId(), Tags: cloneTags(lo.FirstOrEmpty(tags))}), 1)
 }
 
 func Errorf(msg string, args ...any) error {
@@ -64,11 +62,15 @@ func As(err error, target any) bool {
 }
 
 func Unwrap(err error) error {
-	u, ok := err.(ErrUnwrapper)
-	if !ok {
+	if err == nil {
 		return nil
 	}
-	return u.Unwrap()
+
+	if u, ok := err.(ErrUnwrapper); ok {
+		return u.Unwrap()
+	}
+
+	return errors.Unwrap(err)
 }
 
 func WrapStack(err error) error {
@@ -76,7 +78,6 @@ func WrapStack(err error) error {
 		return nil
 	}
 
-	stack.Print()
 	return newErrWrapStack(err, Tags{"msg": err.Error()})
 }
 
@@ -137,15 +138,19 @@ func WrapKV(err error, key string, value any) error {
 	return newErrWrap(err, Tags{key: value})
 }
 
-func JsonPrint(err error) []byte {
+func MarshalError(err error) ([]byte, error) {
 	if err == nil {
-		return nil
+		return nil, nil
 	}
 
-	data, err := json.Marshal(err)
+	return json.Marshal(err)
+}
+
+func JsonPrint(err error) []byte {
+	data, err := MarshalError(err)
 	if err != nil {
 		slog.Error("failed to marshal error", "err", err)
-		panic(fmt.Errorf("failed to marshal error, err=%w", err))
+		return nil
 	}
 	return data
 }

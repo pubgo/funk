@@ -25,7 +25,7 @@ func newErrWrapStack(err error, tags Tags) *ErrWrap {
 		Caller: stack.Caller(2).String(),
 		Stacks: lo.Map(getStack(), func(item *stack.Frame, index int) string { return item.String() }),
 		Err:    err,
-		Tags:   tags,
+		Tags:   cloneTags(tags),
 		errId:  GetErrorId(err),
 	}
 }
@@ -38,7 +38,7 @@ func newErrWrap(err error, tags Tags, callers ...int) *ErrWrap {
 	return &ErrWrap{
 		Caller: stack.Caller(2 + lo.FirstOrEmpty(callers)).String(),
 		Err:    err,
-		Tags:   tags,
+		Tags:   cloneTags(tags),
 		errId:  GetErrorId(err),
 	}
 }

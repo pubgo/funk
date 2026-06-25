@@ -8,7 +8,21 @@
 - **堆栈跟踪**: 自动堆栈跟踪捕获用于调试
 - **错误包装**: 使用元数据保留错误链
 - **gRPC兼容性**: 与gRPC状态代码集成
-- **Panic恢复**: 安全的panic恢复机制
+- **Panic恢复**: 与 `recovery` 包配合使用，安全处理 panic
+
+## 错误消息语义
+
+`Wrap` / `Wrapf` 会把上下文作为元数据附加，而不会改变 `Error()` 的文本：
+
+```go
+err := errors.New("数据库连接失败")
+wrapped := errors.Wrap(err, "初始化服务失败")
+
+wrapped.Error() // "数据库连接失败" — 保留根错误消息
+// 上下文可通过 CollectTags(wrapped)["msg"] 或 wrapped.(*errors.ErrWrap).String() 获取
+```
+
+需要完整结构化表示时，请使用 `String()`、`DebugPrint` 或 `MarshalError`。
 
 ## 安装
 
@@ -119,11 +133,14 @@ err := errors.New("支付处理失败", errors.Tags{
     "currency": "USD",
 })
 
-// 访问元数据
+// 从根 *Err 获取元数据
 if tags := errors.GetTags(err); tags != nil {
     txnID := tags["transaction_id"]
     // 处理交易ID
 }
+
+// 合并整条错误链上的 tags
+allTags := errors.CollectTags(err)
 ```
 
 ### 堆栈跟踪分析
@@ -199,11 +216,16 @@ log.Error().RawJSON("error", errors.JsonPrint(err)).Send()
 | `Is(err, target error)` | 检查错误链中的特定错误 |
 | `Unwrap(err error)` | 获取底层错误 |
 | `GetErrorId(err error)` | 获取唯一错误标识符 |
+| `GetTags(err error)` | 获取最内层 `*Err` 上的 tags |
+| `CollectTags(err error)` | 合并错误链各层的 tags |
+| `RootCause(err error)` | 返回最底层错误 |
+| `Walk(err error, fn func(error) bool)` | 遍历错误链 |
+| `MarshalError(err error)` | 序列化为 JSON 并返回 error |
 
 ### 实用函数
 
 | 函数 | 描述 |
 |------|------|
 | `DebugPrint(err error)` | 带堆栈跟踪的漂亮打印错误 |
-| `JsonPrint(err error)` | 将错误序列化为JSON |
+| `JsonPrint(err error)` | 序列化为 JSON（失败时返回 nil） |
 | `ErrJsonify(err error)` | 将错误转换为结构化数据 |

@@ -34,6 +34,10 @@ func newSimpleErr(err *Err) *Err {
 		err.id = xid.New().String()
 	}
 
+	if len(err.Tags) > 0 {
+		err.Tags = cloneTags(err.Tags)
+	}
+
 	return err
 }
 

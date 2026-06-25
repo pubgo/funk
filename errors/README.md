@@ -8,7 +8,21 @@ The errors module provides enhanced error handling capabilities for Go applicati
 - **Stack Traces**: Automatic stack trace capture for debugging
 - **Error Wrapping**: Preserve error chains with additional context
 - **gRPC Compatibility**: Integration with gRPC status codes
-- **Panic Recovery**: Safe recovery from panics with context preservation
+- **Panic Recovery**: Works with the `recovery` package for safe panic handling
+
+## Error Message Semantics
+
+`Wrap` / `Wrapf` add context as metadata rather than changing `Error()` text:
+
+```go
+err := errors.New("db failed")
+wrapped := errors.Wrap(err, "init service failed")
+
+wrapped.Error() // "db failed" — root message preserved
+// Context is available via CollectTags(wrapped)["msg"] or wrapped.(*errors.ErrWrap).String()
+```
+
+Use `String()`, `DebugPrint`, or `MarshalError` when you need the full structured representation.
 
 ## Installation
 
@@ -119,11 +133,14 @@ err := errors.New("payment processing failed", errors.Tags{
     "currency": "USD",
 })
 
-// Access metadata
+// Access metadata from the root *Err
 if tags := errors.GetTags(err); tags != nil {
     txnID := tags["transaction_id"]
     // Process transaction ID
 }
+
+// Merge tags from every layer in the chain
+allTags := errors.CollectTags(err)
 ```
 
 ### Stack Trace Analysis
@@ -199,11 +216,16 @@ log.Error().RawJSON("error", errors.JsonPrint(err)).Send()
 | `Is(err, target error)` | Check error chain for specific error |
 | `Unwrap(err error)` | Get underlying error |
 | `GetErrorId(err error)` | Get unique error identifier |
+| `GetTags(err error)` | Get tags from the innermost `*Err` |
+| `CollectTags(err error)` | Merge tags from all layers in the chain |
+| `RootCause(err error)` | Return the deepest error in the chain |
+| `Walk(err error, fn func(error) bool)` | Traverse the error chain |
+| `MarshalError(err error)` | Serialize error to JSON with error return |
 
 ### Utility Functions
 
 | Function | Description |
 |----------|-------------|
 | `DebugPrint(err error)` | Pretty print error with stack trace |
-| `JsonPrint(err error)` | Serialize error to JSON |
+| `JsonPrint(err error)` | Serialize error to JSON (returns nil on failure) |
 | `ErrJsonify(err error)` | Convert error to structured data |

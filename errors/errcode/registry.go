@@ -20,7 +20,7 @@ func GetErrCodes() []*errorpb.ErrCode {
 // RegisterErrCodes 注册错误码
 func RegisterErrCodes(code *errorpb.ErrCode) error {
 	if errorCodes[code.Name] != nil {
-		panic(fmt.Sprintf("code exists, code=%s", errorCodes[code.Name]))
+		panic(fmt.Sprintf("error code already registered: name=%q", code.Name))
 	}
 
 	errorCodes[code.Name] = code

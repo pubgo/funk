@@ -118,24 +118,6 @@ func MustProtoToAny(p proto.Message) *anypb.Any {
 	return pb
 }
 
-func handleGrpcError(err error) error {
-	switch v := err.(type) {
-	case nil:
-		return nil
-	case *errors.ErrWrap:
-		return v
-	case GRPCStatus:
-		return NewCodeErr(&errorpb.ErrCode{
-			Message:    v.GRPCStatus().Message(),
-			StatusCode: errorpb.Code(v.GRPCStatus().Code()),
-			Name:       "lava.grpc.status",
-			Details:    v.GRPCStatus().Proto().Details,
-		})
-	default:
-		return err
-	}
-}
-
 // ErrorProto is an interface for errors that can be converted to protobuf messages.
 type ErrorProto interface {
 	error
@@ -176,7 +158,7 @@ func NewCodeErrWithMsg(code *errorpb.ErrCode, msg string, details ...proto.Messa
 		return nil
 	}
 
-	code.Message = strings.ToTitle(strings.TrimSpace(msg))
+	code.Message = strings.TrimSpace(msg)
 	return NewCodeErr(code, details...)
 }
 
@@ -264,23 +246,23 @@ func (t *ErrCode) Is(err error) bool {
 	return false
 }
 
-func (t *ErrCode) As(err any) bool {
-	if err == nil {
+func (t *ErrCode) As(target any) bool {
+	if target == nil {
 		return false
 	}
 
-	if err1, ok := err.(*ErrCode); ok { //nolint
-		err1.pb = t.pb
+	if targetErr, ok := target.(**ErrCode); ok {
+		*targetErr = t
 		return true
 	}
 
-	if err1, ok := err.(**errorpb.ErrCode); ok {
-		*err1 = t.pb
+	if targetPb, ok := target.(**errorpb.ErrCode); ok {
+		*targetPb = t.pb
 		return true
 	}
 
-	if err1, ok := err.(*errorpb.ErrCode); ok {
-		*err1 = lo.FromPtr(proto.Clone(t.pb).(*errorpb.ErrCode))
+	if targetPb, ok := target.(*errorpb.ErrCode); ok {
+		*targetPb = lo.FromPtr(proto.Clone(t.pb).(*errorpb.ErrCode))
 		return true
 	}
 

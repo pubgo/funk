@@ -3,6 +3,8 @@ package errors_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/stack"
 )
@@ -19,5 +21,17 @@ func TestStack(t *testing.T) {
 
 	err = errors.WrapStack(err)
 	err = errors.Wrapf(err, "next error name=%s", "wrapf")
-	errors.DebugPrint(err)
+
+	wrapped, ok := errors.AsA[*errors.ErrWrap](err)
+	assert.True(t, ok)
+
+	var stacks []string
+	errors.Walk(err, func(current error) bool {
+		if wrap, ok := current.(*errors.ErrWrap); ok && len(wrap.Stacks) > 0 {
+			stacks = wrap.Stacks
+		}
+		return true
+	})
+	assert.NotEmpty(t, stacks)
+	assert.Contains(t, (*wrapped).String(), "hello error")
 }
