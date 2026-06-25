@@ -23,6 +23,8 @@ The result module provides functional programming-inspired error handling throug
 - `Collect` and `All` both gather many results; `All` is the variadic convenience form of `Collect`.
 - `Future.Await(ctx)` returns a completed value even when `ctx` is already cancelled, as long as the work finished first.
 - `Error.MarshalJSON` encodes success as JSON `null` and encodes failures with the enriched `errors` JSON format.
+- `Error.String()` and `Message()` use `errors.FormatChain` for readable multi-layer messages.
+- `Tags()` returns `errors.CollectUserTags` from the wrapped error chain.
 - `Result[T].MarshalJSON` encodes successful values directly and returns a marshal error when the result failed.
 
 ## Installation
@@ -72,9 +74,16 @@ result.OK(42).Match(
 // Error-only operations
 result.ErrOf(errors.New("something went wrong")).
     Log().
-    InspectErr(func(err error) { 
+    InspectErr(func(err error) {
         // Additional error processing
     })
+
+// Readable chain and user tags (v2.0.5+)
+r := result.ErrOf(err)
+if r.IsErr() {
+    _ = r.Message() // full formatted chain
+    _ = r.Tags()    // user metadata without wrap-layer "msg"
+}
 ```
 
 ## Core Concepts
@@ -116,6 +125,8 @@ result.ErrOf(errors.New("something went wrong")).
 
 #### Error Handling Methods
 
+- `Message()`: Full formatted error chain via `errors.FormatChain`
+- `Tags()`: User tags from the error chain via `errors.CollectUserTags`
 - `Log()`: Log error with stack trace
 - `InspectErr(func(error))`: Process error without consuming it
 - `Match(func(), func(error))`: Pattern match on error presence

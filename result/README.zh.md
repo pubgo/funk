@@ -23,6 +23,8 @@
 - `Collect` 与 `All` 都可聚合多个结果；`All` 是 `Collect` 的可变参数便捷形式。
 - 当异步任务已经完成时，即使 `ctx` 已取消，`Future.Await(ctx)` 仍会返回完成后的值。
 - `Error.MarshalJSON` 在成功时编码为 JSON `null`，失败时使用 enriched `errors` JSON。
+- `Error.String()` 与 `Message()` 使用 `errors.FormatChain` 输出可读的多层错误链。
+- `Tags()` 通过 `errors.CollectUserTags` 返回用户元数据。
 - `Result[T].MarshalJSON` 在成功时直接编码值，失败时返回 marshal error。
 
 ## 安装
@@ -72,9 +74,16 @@ result.OK(42).Match(
 // 仅错误操作
 result.ErrOf(errors.New("出错了")).
     Log().
-    InspectErr(func(err error) { 
+    InspectErr(func(err error) {
         // 额外的错误处理
     })
+
+// 可读错误链与用户 tags（v2.0.5+）
+r := result.ErrOf(err)
+if r.IsErr() {
+    _ = r.Message() // 完整格式化错误链
+    _ = r.Tags()    // 用户元数据（不含包装层 msg）
+}
 ```
 
 ## 核心概念
@@ -116,6 +125,8 @@ result.ErrOf(errors.New("出错了")).
 
 #### 错误处理方法
 
+- `Message()`: 通过 `errors.FormatChain` 返回完整格式化错误链
+- `Tags()`: 通过 `errors.CollectUserTags` 返回用户 tags
 - `Log()`: 记录带堆栈跟踪的错误
 - `InspectErr(func(error))`: 处理错误而不消费它
 - `Match(func(), func(error))`: 模式匹配错误存在

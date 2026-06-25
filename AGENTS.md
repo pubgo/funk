@@ -9,6 +9,7 @@ This repository is a Go utility library module: `github.com/pubgo/funk/v2`.
   - [root overview](./README.md)
   - [design](./docs/DESIGN.md)
   - [errors](./errors/README.md)
+  - [errors/errcode](./errors/errcode/README.md)
   - [result](./result/README.md)
   - [config](./config/README.md)
   - [features](./features/README.md)
@@ -29,6 +30,9 @@ This repository is a Go utility library module: `github.com/pubgo/funk/v2`.
 6. After changing exported behavior, update the nearest README or package docs.
 7. Treat logger/context field maps as immutable data; avoid mutating reused state in place.
 8. Prefer existing helpers from `errors`, `result`, `log`, `config`, and `features` over introducing duplicate patterns.
+   - For logs: use `log.Err(err)` instead of manually formatting chains; it emits `error_chain` and `error_tags`.
+   - For readable messages: use `errors.FormatChain(err)` rather than concatenating `err.Error()` with wrap context.
+   - For metadata: use `errors.CollectUserTags(err)` instead of reading wrap-layer `msg` tags directly.
 9. Keep generated/proto-related changes scoped; do not edit generated output casually.
 10. If a change touches shared APIs, search for cross-package usages before refactoring.
 
