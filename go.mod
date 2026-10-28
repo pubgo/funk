@@ -12,7 +12,6 @@ require (
 	github.com/deckarep/golang-set/v2 v2.8.0
 	github.com/docker/go-units v0.5.0
 	github.com/dustin/go-humanize v1.0.1
-	github.com/ettle/strcase v0.2.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-playground/validator/v10 v10.30.1
 	github.com/google/cel-go v0.26.1

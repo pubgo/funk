@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ettle/strcase"
+	"github.com/pubgo/funk/v2/internal/strcase"
 )
 
 var (
