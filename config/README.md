@@ -5,7 +5,7 @@ The configuration module provides a flexible system for managing application con
 ## Features
 
 - **YAML-based Configuration**: Declarative configuration using YAML files
-- **Environment Variable Substitution**: Automatic replacement of placeholders with environment values using `${ENV:"default_value"}` syntax
+- **Environment Variable Substitution**: Automatic replacement of `${ENV}`, `${ENV:default}` and `${ENV:-default}` placeholders with environment values
 - **Expression Engine**: Dynamic configuration values using expressions similar to GitHub Actions workflow syntax (`$env.ENV`)
 - **Configuration Merging**: Support for base and override configurations
 - **Hot Reloading**: Dynamic configuration updates without application restart
@@ -43,16 +43,23 @@ fmt.Printf("Debug mode: %t\n", cfg.T.Debug)
 
 ### Environment Variable Substitution
 
-Configuration files support environment variable substitution using the `${ENV:"default_value"}` syntax:
+Configuration files support environment variable substitution:
 
 ```yaml
 # config.yaml
 server:
-  host: ${SERVER_HOST:"localhost"}
-  port: ${SERVER_PORT:8080}
+  host: ${SERVER_HOST:localhost}       # default when unset or empty
+  port: ${SERVER_PORT:-8080}           # same as ${SERVER_PORT:8080}
+  required: ${SERVER_ADDR}             # resolves to empty when unset
 database:
   url: postgres://${DB_USER}:${DB_PASS}@${DB_HOST}/${DB_NAME}
 ```
+
+Rules:
+- `${ENV}` resolves to the environment value, empty when unset.
+- `${ENV:default}` / `${ENV:-default}` use `default` when the variable is unset **or empty**; everything after the first `:` is the default (colons inside are kept, surrounding quotes are stripped).
+- Keys are matched against the raw environment first, then against the normalized key (`T2HOST` finds `T2_HOST`), so keys containing digits resolve regardless of key normalization.
+- When `patch_envs` declares a variable, its resolved value (process env > `value` > `default`) takes priority over inline defaults.
 
 ### Expression Engine
 
@@ -104,9 +111,9 @@ This function:
 Environment variables can be used in configuration files with optional default values:
 
 ```yaml
-# Syntax: ${VAR_NAME:"default_value"}
-setting1: ${SETTING_1:"default_value"}
-setting2: ${REQUIRED_SETTING}  # No default, will error if not set
+# Syntax: ${VAR_NAME:default_value}
+setting1: ${SETTING_1:default_value}
+setting2: ${REQUIRED_SETTING}  # No default, resolves to empty when unset
 ```
 
 Expression syntax (GitHub Actions style):

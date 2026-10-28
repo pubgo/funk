@@ -7,7 +7,7 @@ The environment module provides utilities for working with environment variables
 - **Normalized Environment Access**: Consistent naming conventions for environment variables
 - **Type-Safe Retrieval**: Safe conversion to common types (bool, int, float)
 - **.env File Support**: Automatic loading of .env files with godotenv
-- **Environment Expansion**: Variable substitution with envsubst
+- **Environment Expansion**: `${NAME}`, `${NAME:default}` and `${NAME:-default}` substitution
 - **Flexible Lookup**: Multiple fallback mechanisms for variable resolution
 
 ## Installation
@@ -108,7 +108,7 @@ debug := env.GetBool("DEBUG")  // true for "true", "1", "on", "yes"
 import "github.com/pubgo/funk/v2/env"
 
 // Expand environment variables in strings
-template := "http://${{HOST}}:${{PORT}}"
+template := "http://${HOST}:${PORT:-8080}"
 expanded := env.Expand(template).UnwrapOr(template)
 ```
 

@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/a8m/envsubst"
 	"github.com/joho/godotenv"
 	"github.com/samber/lo"
 
@@ -117,14 +116,6 @@ func Delete(key string) result.Error {
 }
 
 func MustDelete(key string) { Delete(key).MustWithLog() }
-
-func Expand(value string) result.Result[string] {
-	return result.Wrap(envsubst.String(value)).
-		Log(func(e result.Event) {
-			e.Str("value", value)
-			e.Msg("env_expand_error")
-		})
-}
 
 func Map() map[string]string {
 	data := make(map[string]string, len(os.Environ()))

@@ -7,7 +7,7 @@
 - **标准化环境访问**: 环境变量的一致命名约定
 - **类型安全检索**: 安全转换为常见类型（布尔、整数、浮点）
 - **.env文件支持**: 使用godotenv自动加载.env文件
-- **环境扩展**: 使用envsubst的变量替换
+- **环境扩展**: `${NAME}`、`${NAME:default}`、`${NAME:-default}` 变量替换
 - **灵活查找**: 多回退机制的变量解析
 
 ## 安装
@@ -108,7 +108,7 @@ debug := env.GetBool("DEBUG")  // 对"true", "1", "on", "yes"为true
 import "github.com/pubgo/funk/v2/env"
 
 // 在字符串中扩展环境变量
-template := "http://${{HOST}}:${{PORT}}"
+template := "http://${HOST}:${PORT:-8080}"
 expanded := env.Expand(template).UnwrapOr(template)
 ```
 

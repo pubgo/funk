@@ -5,7 +5,7 @@
 ## 功能特性
 
 - **基于YAML的配置**: 使用YAML文件的声明式配置
-- **环境变量替换**: 使用`${ENV:-"default_value"}`语法自动替换占位符
+- **环境变量替换**: 使用`${ENV}`、`${ENV:default}`、`${ENV:-default}`语法自动替换占位符
 - **CEL表达式引擎**: 使用安全沙箱化的CEL表达式动态配置值（`${{env("KEY")}}`）
 - **环境变量声明式定义**: 所有环境变量必须在`patch_envs`中预先定义
 - **配置合并**: 支持基础和覆盖配置
@@ -45,16 +45,23 @@ fmt.Printf("调试模式: %t\n", cfg.T.Debug)
 
 ### 环境变量替换
 
-配置文件支持使用`${ENV:-"default_value"}`语法的环境变量替换：
+配置文件支持环境变量替换：
 
 ```yaml
 # config.yaml
 server:
-  host: ${SERVER_HOST:-localhost}
-  port: ${SERVER_PORT:-8080}
+  host: ${SERVER_HOST:-localhost}      # 未设置或为空时使用默认值
+  port: ${SERVER_PORT:8080}            # 与 ${SERVER_PORT:-8080} 等价
+  required: ${SERVER_ADDR}             # 未设置时解析为空串
 database:
   url: postgres://${DB_USER}:${DB_PASS}@${DB_HOST}/${DB_NAME}
 ```
+
+规则：
+- `${ENV}` 解析为环境变量值，未设置时为空串。
+- `${ENV:default}` / `${ENV:-default}` 在变量未设置**或为空**时使用 `default`；第一个 `:` 之后的全部内容都是默认值（其中的 `:` 会保留，外层引号会被剥掉）。
+- key 先按原始名查找环境变量，再按规范化后的 key 查找（`T2HOST` 能找到 `T2_HOST`），含数字的 key 也能正常解析。
+- 通过 `patch_envs` 声明的变量，其解析值（进程环境 > `value` > `default`）优先于内联默认值。
 
 ### CEL表达式引擎
 

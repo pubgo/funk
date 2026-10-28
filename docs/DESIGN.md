@@ -142,7 +142,7 @@ The environment module provides utilities for working with environment variables
 - Environment variable normalization and mapping
 - Type-safe getters for common types (bool, int, float)
 - .env file loader with godotenv integration
-- Environment variable expansion with envsubst
+- Environment variable substitution (`${NAME}`, `${NAME:default}`, `${NAME:-default}`)
 
 #### Design Patterns
 - Consistent naming convention enforcement

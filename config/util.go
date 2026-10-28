@@ -11,12 +11,12 @@ import (
 	"strings"
 
 	"dario.cat/mergo"
-	"github.com/a8m/envsubst"
 	"github.com/samber/lo"
 	"github.com/valyala/fasttemplate"
 	"gopkg.in/yaml.v3"
 
 	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/env"
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/pathutil"
 	"github.com/pubgo/funk/v2/result"
@@ -248,13 +248,12 @@ func evalData(template []byte, cfg *config) []byte {
 			}
 		}
 
-		tag = fmt.Sprintf("${%s}", tag)
-		return w.Write(result.Wrap(envsubst.Bytes([]byte(tag))).
-			Map(bytes.TrimSpace).
+		return w.Write([]byte(env.Expand("${" + tag + "}").
+			Map(strings.TrimSpace).
 			UnwrapOrLog(func(e result.Event) {
 				e.Str("env", name)
 				e.Msg("failed to process env subst")
-			}))
+			})))
 	}))
 }
 
