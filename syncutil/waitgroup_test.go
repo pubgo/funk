@@ -11,7 +11,7 @@ func TestName(t *testing.T) {
 		t.Log(time.Since(now))
 	}()
 	var wg WaitGroup
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		wg.Go(func() {
 			time.Sleep(time.Millisecond * 10)
 		})

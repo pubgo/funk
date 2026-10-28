@@ -11,12 +11,12 @@ import (
 	"strings"
 
 	"dario.cat/mergo"
-	"github.com/a8m/envsubst"
 	"github.com/samber/lo"
 	"github.com/valyala/fasttemplate"
 	"gopkg.in/yaml.v3"
 
 	"github.com/pubgo/funk/v2/assert"
+	"github.com/pubgo/funk/v2/env"
 	"github.com/pubgo/funk/v2/errors"
 	"github.com/pubgo/funk/v2/pathutil"
 	"github.com/pubgo/funk/v2/result"
@@ -88,7 +88,7 @@ func Merge[A any, B any | *any](dst *A, src ...B) error {
 		)
 		if err != nil {
 			return errors.WrapTags(err, errors.Tags{
-				"dst_type": reflect.TypeOf(dst).String(),
+				"dst_type": reflect.TypeFor[*A]().String(),
 				"src_type": reflect.TypeOf(src[i]).String(),
 				"dst":      dst,
 				"src":      src[i],
@@ -105,7 +105,7 @@ func (s *transformer) Transformer(t reflect.Type) func(dst, src reflect.Value) e
 		return nil
 	}
 
-	if !t.Elem().Implements(reflect.TypeOf((*NamedConfig)(nil)).Elem()) {
+	if !t.Elem().Implements(reflect.TypeFor[NamedConfig]()) {
 		return nil
 	}
 
@@ -248,13 +248,12 @@ func evalData(template []byte, cfg *config) []byte {
 			}
 		}
 
-		tag = fmt.Sprintf("${%s}", tag)
-		return w.Write(result.Wrap(envsubst.Bytes([]byte(tag))).
-			Map(bytes.TrimSpace).
+		return w.Write([]byte(env.Expand("${" + tag + "}").
+			Map(strings.TrimSpace).
 			UnwrapOrLog(func(e result.Event) {
 				e.Str("env", name)
 				e.Msg("failed to process env subst")
-			}))
+			})))
 	}))
 }
 

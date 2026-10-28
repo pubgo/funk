@@ -6,14 +6,12 @@ require (
 	dario.cat/mergo v1.0.2
 	entgo.io/ent v0.14.5
 	github.com/DATA-DOG/go-sqlmock v1.5.2
-	github.com/a8m/envsubst v1.4.3
 	github.com/bradleyjkemp/memviz v0.2.3
 	github.com/cheggaaa/pb/v3 v3.1.7
 	github.com/dave/jennifer v1.7.1
 	github.com/deckarep/golang-set/v2 v2.8.0
 	github.com/docker/go-units v0.5.0
 	github.com/dustin/go-humanize v1.0.1
-	github.com/ettle/strcase v0.2.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-playground/validator/v10 v10.30.1
 	github.com/google/cel-go v0.26.1
@@ -24,7 +22,6 @@ require (
 	github.com/hashicorp/go-getter v1.8.4
 	github.com/hashicorp/go-version v1.8.0
 	github.com/huandu/go-clone v1.7.3
-	github.com/iancoleman/strcase v0.3.0
 	github.com/invopop/jsonschema v0.13.0
 	github.com/jinzhu/copier v0.4.0
 	github.com/joho/godotenv v1.5.1

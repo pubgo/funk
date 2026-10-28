@@ -3,8 +3,9 @@ package errcode
 import (
 	"fmt"
 
-	"github.com/pubgo/funk/v2/proto/errorpb"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/pubgo/funk/v2/proto/errorpb"
 )
 
 var errorCodes = make(map[string]*errorpb.ErrCode)

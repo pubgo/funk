@@ -1,6 +1,9 @@
 package typex
 
-import "sync"
+import (
+	"maps"
+	"sync"
+)
 
 type RwMap struct {
 	rw   sync.RWMutex
@@ -20,9 +23,7 @@ func (t *RwMap) Map() map[string]any {
 	defer t.rw.RUnlock()
 
 	dt := make(map[string]any, len(t.data))
-	for k, v := range t.data {
-		dt[k] = v
-	}
+	maps.Copy(dt, t.data)
 
 	return dt
 }

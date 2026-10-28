@@ -2,6 +2,7 @@ package errors
 
 import (
 	"fmt"
+	"maps"
 )
 
 type ErrorID interface {
@@ -35,18 +36,14 @@ func cloneTags(tags Tags) Tags {
 	}
 
 	out := make(Tags, len(tags))
-	for key, value := range tags {
-		out[key] = value
-	}
+	maps.Copy(out, tags)
 	return out
 }
 
 func mergeTags(tags ...Tags) Tags {
 	tagList := make(Tags)
 	for _, t := range tags {
-		for key, value := range t {
-			tagList[key] = value
-		}
+		maps.Copy(tagList, t)
 	}
 	return tagList
 }
@@ -58,13 +55,9 @@ func (t Tags) Clone() Tags {
 func (t Tags) Merge(tags Tags) Tags {
 	tagList := make(Tags, len(t)+len(tags))
 
-	for key, value := range tags {
-		tagList[key] = value
-	}
+	maps.Copy(tagList, tags)
 
-	for key, value := range t {
-		tagList[key] = value
-	}
+	maps.Copy(tagList, t)
 	return tagList
 }
 

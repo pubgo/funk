@@ -31,7 +31,7 @@ func GetExtension[Option any](option protoreflect.ProtoMessage, xt protoreflect.
 
 func EachServiceMethod(srv protoreflect.ServiceDescriptor, fn func(mth protoreflect.MethodDescriptor)) {
 	mthLen := srv.Methods().Len()
-	for i := 0; i < mthLen; i++ {
+	for i := range mthLen {
 		fn(srv.Methods().Get(i))
 	}
 }
@@ -39,7 +39,7 @@ func EachServiceMethod(srv protoreflect.ServiceDescriptor, fn func(mth protorefl
 func EachService(fn func(desc protoreflect.FileDescriptor, srv protoreflect.ServiceDescriptor)) {
 	protoregistry.GlobalFiles.RangeFiles(func(desc protoreflect.FileDescriptor) bool {
 		srvLen := desc.Services().Len()
-		for i := 0; i < srvLen; i++ {
+		for i := range srvLen {
 			fn(desc, desc.Services().Get(i))
 		}
 		return true

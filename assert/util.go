@@ -103,7 +103,7 @@ func try(fn func() error) (gErr error) {
 		}
 
 		if gErr != nil {
-			gErr = fmt.Errorf("stack:%s, err:%w", reflect.TypeOf(fn).String(), gErr)
+			gErr = fmt.Errorf("stack:%s, err:%w", reflect.TypeFor[func() error]().String(), gErr)
 		}
 	}()
 

@@ -58,7 +58,7 @@ func TestThrowUsesContextChecker(t *testing.T) {
 }
 
 func TestThrowLogsWhenSetterAlreadyHasError(t *testing.T) {
-	var r result.Result[int] = result.Fail[int](errors.New("existing"))
+	var r = result.Fail[int](errors.New("existing"))
 
 	assert.NotPanics(t, func() {
 		assert.True(t, result.ErrOf(errors.New("next")).Throw(&r))

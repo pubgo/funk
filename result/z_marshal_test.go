@@ -97,7 +97,7 @@ func TestUnwrapErrSemantics(t *testing.T) {
 }
 
 func TestSetErrorClearsValueOnResult(t *testing.T) {
-	var r result.Result[int] = result.OK(99)
+	var r = result.OK(99)
 
 	assert.True(t, result.ErrOf(errors.New("propagate")).Throw(&r))
 	assert.True(t, r.IsErr())
