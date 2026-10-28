@@ -4,7 +4,7 @@ package strcase
 
 // testingT interface allows us to test our assert functions
 type testingT interface {
-	Logf(format string, args ...interface{})
+	Logf(format string, args ...any)
 	Fail()
 }
 

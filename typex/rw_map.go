@@ -1,8 +1,9 @@
 package typex
 
-import "maps"
-
-import "sync"
+import (
+	"maps"
+	"sync"
+)
 
 type RwMap struct {
 	rw   sync.RWMutex
