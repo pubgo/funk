@@ -47,12 +47,12 @@ func GetWith(val *string, names ...string) { getVal(val, names...) }
 
 func getVal(val *string, names ...string) {
 	for _, name := range names {
-		env := trim(os.Getenv(keyHandler(name)))
-		if env == "" {
+		v, ok := lookupEnv(name)
+		if !ok || trim(v) == "" {
 			continue
 		}
 
-		*val = env
+		*val = v
 		break
 	}
 }
@@ -105,14 +105,86 @@ func GetFloat(names ...string) float64 {
 	return v
 }
 
-func Lookup(key string) (string, bool) { return os.LookupEnv(keyHandler(key)) }
+// GetBoolOr returns the parsed bool value of name, defaultVal when the
+// variable is unset, empty or not a valid bool.
+func GetBoolOr(name string, defaultVal bool) bool {
+	var val string
+	getVal(&val, name)
+	if val == "" {
+		return defaultVal
+	}
 
+	v, err := strconv.ParseBool(val)
+	if err != nil {
+		getLog().Error("failed to parse string to bool", "key", name, "value", val, "err", err)
+		return defaultVal
+	}
+
+	return v
+}
+
+// GetIntOr returns the parsed int value of name, defaultVal when the variable
+// is unset, empty or not a valid int.
+func GetIntOr(name string, defaultVal int) int {
+	var val string
+	getVal(&val, name)
+	if val == "" {
+		return defaultVal
+	}
+
+	v, err := strconv.Atoi(val)
+	if err != nil {
+		getLog().Error("failed to parse string to int", "key", name, "value", val, "err", err)
+		return defaultVal
+	}
+
+	return v
+}
+
+// GetFloatOr returns the parsed float value of name, defaultVal when the
+// variable is unset, empty or not a valid float.
+func GetFloatOr(name string, defaultVal float64) float64 {
+	var val string
+	getVal(&val, name)
+	if val == "" {
+		return defaultVal
+	}
+
+	v, err := strconv.ParseFloat(val, 64)
+	if err != nil {
+		getLog().Error("failed to parse string to float", "key", name, "value", val, "err", err)
+		return defaultVal
+	}
+
+	return v
+}
+
+func Lookup(key string) (string, bool) { return lookupEnv(key) }
+
+// Delete unsets every stored spelling of key (raw, normalized and normalized
+// uppercase), so variables saved under a renamed key are removed as well.
 func Delete(key string) result.Error {
-	return result.ErrOf(os.Unsetenv(keyHandler(key))).
+	return result.ErrOf(unsetKey(key)).
 		Log(func(e result.Event) {
 			e.Str("key", key)
 			e.Msg("env_delete_error")
 		})
+}
+
+func unsetKey(key string) error {
+	var lastErr error
+	seen := make(map[string]struct{}, 3)
+	for _, k := range envKeyCandidates(key) {
+		if _, ok := seen[k]; ok {
+			continue
+		}
+		seen[k] = struct{}{}
+
+		if err := os.Unsetenv(k); err != nil {
+			lastErr = err
+		}
+	}
+	return lastErr
 }
 
 func MustDelete(key string) { Delete(key).MustWithLog() }

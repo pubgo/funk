@@ -78,14 +78,33 @@ func expandString(s string) string {
 	return b.String()
 }
 
-// expandLookupOrDefault resolves name from the environment and falls back to
-// def when the variable is unset or empty.
-func expandLookupOrDefault(name, def string) string {
-	if v, ok := os.LookupEnv(name); ok && v != "" {
-		return v
+// lookupEnv resolves name against the process environment, trying the raw
+// name first, then the keyHandler-normalized name, then the normalized
+// uppercase name. Set/Reload store keys through keyHandler, which renames at
+// digit->uppercase boundaries in a case-sensitive way (T2HOST -> T2_HOST,
+// while sha256sum normalizes to SHA256SUM but SHA256SUM to SHA256_SUM), so
+// the extra candidates make raw, mixed-case and lowercase spellings resolve.
+func lookupEnv(name string) (string, bool) {
+	for _, key := range envKeyCandidates(name) {
+		if v, ok := os.LookupEnv(key); ok {
+			return v, true
+		}
 	}
-	if v, ok := os.LookupEnv(keyHandler(name)); ok && v != "" {
-		return v
+	return "", false
+}
+
+// envKeyCandidates returns the lookup order for a user-supplied key.
+func envKeyCandidates(name string) []string {
+	return []string{name, keyHandler(name), keyHandler(strings.ToUpper(name))}
+}
+
+// expandLookupOrDefault resolves name from the environment and falls back to
+// def when no candidate is set to a non-empty value.
+func expandLookupOrDefault(name, def string) string {
+	for _, key := range envKeyCandidates(name) {
+		if v, ok := os.LookupEnv(key); ok && v != "" {
+			return v
+		}
 	}
 	return expandStripQuotes(def)
 }

@@ -42,6 +42,8 @@ func TestExpand(t *testing.T) {
 		{"renamed key via bare form", "$T2HOST", "t2.example.com"},
 		{"normalized key direct", "${T2_HOST}", "t2.example.com"},
 		{"sha key", "${SHA256SUM}", "abc123"},
+		{"sha key lowercase reference", "${sha256sum}", "abc123"},
+		{"sha key mixed-case reference", "${Sha256Sum}", "abc123"},
 		{"unset empty", "${EXPAND_UNSET}", ""},
 		{"colon default", "${EXPAND_UNSET:8080}", "8080"},
 		{"dash default", "${EXPAND_UNSET:-8080}", "8080"},

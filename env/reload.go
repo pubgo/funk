@@ -9,6 +9,13 @@ import (
 	"github.com/pubgo/funk/v2/assert"
 )
 
+// Reload re-normalizes the whole process environment in place.
+//
+// WARNING: this mutates variables the process did not create. Every key is
+// renamed through Normalize (a-b -> A_B) and keys starting with '_' or '='
+// are removed, so child processes spawned afterwards inherit the rewritten
+// environment. Only call it when that global effect is intended, e.g. right
+// after loading .env files at startup.
 func Reload() {
 	loadEnv()
 }
