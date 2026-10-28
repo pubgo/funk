@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/iancoleman/strcase"
+	"github.com/pubgo/funk/v2/internal/strcase"
 )
 
 func importHandle(pkg string) string {
@@ -13,7 +13,7 @@ func importHandle(pkg string) string {
 		names := strings.Split(pkg, "/")
 		pkg = names[0]
 		for _, name := range names[1:] {
-			pkg += strcase.ToCamel(name)
+			pkg += strcase.ToPascal(name)
 		}
 	}
 
@@ -21,7 +21,7 @@ func importHandle(pkg string) string {
 		names := strings.Split(pkg, ".")
 		pkg = names[0]
 		for _, name := range names[1:] {
-			pkg += strcase.ToCamel(name)
+			pkg += strcase.ToPascal(name)
 		}
 	}
 
