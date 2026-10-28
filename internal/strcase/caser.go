@@ -1,5 +1,7 @@
 package strcase
 
+import "maps"
+
 // Caser allows for customization of parsing and intialisms
 type Caser struct {
 	initialisms map[string]bool
@@ -33,12 +35,8 @@ func NewCaser(goInitialisms bool, initialismOverrides map[string]bool, splitFn S
 
 	if goInitialisms && initialismOverrides != nil {
 		c.initialisms = map[string]bool{}
-		for k, v := range golintInitialisms {
-			c.initialisms[k] = v
-		}
-		for k, v := range initialismOverrides {
-			c.initialisms[k] = v
-		}
+		maps.Copy(c.initialisms, golintInitialisms)
+		maps.Copy(c.initialisms, initialismOverrides)
 	} else if !goInitialisms {
 		c.initialisms = initialismOverrides
 	}

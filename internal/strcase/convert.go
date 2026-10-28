@@ -45,7 +45,7 @@ func convertWithoutInitialisms(input string, delimiter rune, wordCase WordCase) 
 	next := runes[0] // 0 length will have already returned so safe to index
 	inWord := false
 	firstWord := true
-	for i := 0; i < len(runes); i++ {
+	for i := range runes {
 		prev = curr
 		curr = next
 		if i+1 == len(runes) {
@@ -168,7 +168,7 @@ func convertWithGoInitialisms(input string, delimiter rune, wordCase WordCase) s
 	var prev, curr rune
 	next := runes[0] // 0 length will have already returned so safe to index
 	wordStart := 0
-	for i := 0; i < len(runes); i++ {
+	for i := range runes {
 		prev = curr
 		curr = next
 		if i+1 == len(runes) {
@@ -278,7 +278,7 @@ func convert(input string, fn SplitFn, delimiter rune, wordCase WordCase,
 	var prev, curr rune
 	next := runes[0] // 0 length will have already returned so safe to index
 	wordStart := 0
-	for i := 0; i < len(runes); i++ {
+	for i := range runes {
 		prev = curr
 		curr = next
 		if i+1 == len(runes) {

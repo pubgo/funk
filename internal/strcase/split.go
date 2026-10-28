@@ -1,5 +1,7 @@
 package strcase
 
+import "slices"
+
 import "unicode"
 
 // SplitFn defines how to split a string into words
@@ -53,10 +55,8 @@ func NewSplitFn(
 		if unicode.IsSpace(curr) {
 			return SkipSplit
 		}
-		for _, d := range delimiters {
-			if curr == d {
-				return SkipSplit
-			}
+		if slices.Contains(delimiters, curr) {
+			return SkipSplit
 		}
 
 		if splitBeforeNumber {
