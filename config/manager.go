@@ -1,6 +1,7 @@
 package config
 
 import (
+	"maps"
 	"sync"
 )
 
@@ -94,9 +95,7 @@ func (m *Manager) GetExprFns() map[string]any {
 	defer m.mu.RUnlock()
 
 	result := make(map[string]any, len(m.exprFns))
-	for k, v := range m.exprFns {
-		result[k] = v
-	}
+	maps.Copy(result, m.exprFns)
 	return result
 }
 

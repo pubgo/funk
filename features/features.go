@@ -3,6 +3,7 @@ package features
 import (
 	"encoding/json"
 	"fmt"
+	maps0 "maps"
 	"sync"
 )
 
@@ -118,9 +119,7 @@ func VisitAll(fn func(*Flag)) { defaultFeature.VisitAll(fn) }
 func mergeTags(maps ...map[string]any) map[string]any {
 	m := make(map[string]any)
 	for _, mm := range maps {
-		for k, v := range mm {
-			m[k] = v
-		}
+		maps0.Copy(m, mm)
 	}
 	return m
 }

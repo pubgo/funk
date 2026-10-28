@@ -32,10 +32,7 @@ func WithJitter(j time.Duration, next Backoff) Backoff {
 		}
 
 		diff := time.Duration(rand.Int63n(int64(j)*2) - int64(j))
-		val = val + diff
-		if val < 0 {
-			val = 0
-		}
+		val = max(val+diff, 0)
 
 		return val, false
 	})
@@ -56,10 +53,7 @@ func WithJitterPercent(j uint64, next Backoff) Backoff {
 		top := rand.Int63n(int64(j)*2) - int64(j)
 		pct := 1 - float64(top)/100.0
 
-		val = time.Duration(float64(val) * pct)
-		if val < 0 {
-			val = 0
-		}
+		val = max(time.Duration(float64(val)*pct), 0)
 		return val, false
 	})
 }

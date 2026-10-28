@@ -37,7 +37,7 @@ func main() {
 	}()
 
 	ctx := context.Background()
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		pyroscope.TagWrapper(ctx, pyroscope.Labels("iteration", "demo"), func(ctx context.Context) {
 			work()
 		})
@@ -50,7 +50,7 @@ func main() {
 
 func work() {
 	sum := 0
-	for i := 0; i < 1_000_000; i++ {
+	for i := range 1_000_000 {
 		sum += i
 	}
 	_ = sum

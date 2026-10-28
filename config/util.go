@@ -88,7 +88,7 @@ func Merge[A any, B any | *any](dst *A, src ...B) error {
 		)
 		if err != nil {
 			return errors.WrapTags(err, errors.Tags{
-				"dst_type": reflect.TypeOf(dst).String(),
+				"dst_type": reflect.TypeFor[*A]().String(),
 				"src_type": reflect.TypeOf(src[i]).String(),
 				"dst":      dst,
 				"src":      src[i],
@@ -105,7 +105,7 @@ func (s *transformer) Transformer(t reflect.Type) func(dst, src reflect.Value) e
 		return nil
 	}
 
-	if !t.Elem().Implements(reflect.TypeOf((*NamedConfig)(nil)).Elem()) {
+	if !t.Elem().Implements(reflect.TypeFor[NamedConfig]()) {
 		return nil
 	}
 
