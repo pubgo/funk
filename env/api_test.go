@@ -25,6 +25,12 @@ func TestGetLookupDeleteRawFallback(t *testing.T) {
 	assert.NoError(t, env.Delete("V2RAY").Err())
 	_, ok = env.Lookup("V2RAY")
 	assert.False(t, ok)
+
+	// MustDelete propagates the same cleanup.
+	env.MustSet("DEL_MUST", "v")
+	env.MustDelete("DEL_MUST")
+	_, ok = env.Lookup("DEL_MUST")
+	assert.False(t, ok)
 }
 
 func TestGetRenamedKey(t *testing.T) {
@@ -73,6 +79,19 @@ func TestTypedGetters(t *testing.T) {
 	assert.Equal(t, 7, env.GetIntOr("GET_INT_BAD", 7))
 	assert.Equal(t, 42, env.GetIntOr("GET_INT", 7))
 	assert.Equal(t, 0.5, env.GetFloatOr("GET_UNSET", 0.5))
+	assert.Equal(t, 0.5, env.GetFloatOr("GET_INT_BAD", 0.5))
+	assert.Equal(t, 1.5, env.GetFloatOr("GET_FLOAT", 0.5))
+
+	// Wrapper APIs delegate to the covered paths.
+	setExpandEnv(t, "GET_MUST", "v")
+	assert.Equal(t, "v", env.MustGet("GET_MUST"))
+	assert.Panics(t, func() { env.MustGet("GET_UNSET") })
+
+	var got string
+	env.GetWith(&got, "GET_MUST", "GET_UNSET")
+	assert.Equal(t, "v", got)
+	env.GetWith(&got, "GET_UNSET", "GET_MUST")
+	assert.Equal(t, "v", got, "first non-empty candidate wins")
 }
 
 func TestLoadFiles(t *testing.T) {
