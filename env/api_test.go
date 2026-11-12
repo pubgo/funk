@@ -98,6 +98,44 @@ DOTENV_EMPTY=
 	assert.NoError(t, env.LoadFiles(filepath.Join(t.TempDir(), "missing.env")).Err())
 }
 
+func TestDeleteRemovesAllSpellings(t *testing.T) {
+	// env.MustSet stores under the normalized key; a raw export may also
+	// exist. Delete must unset every candidate spelling.
+	env.MustSet("T9KEY", "via-set")
+	require.NoError(t, os.Setenv("T9KEY", "raw-value"))
+	t.Cleanup(func() {
+		require.NoError(t, os.Unsetenv("T9KEY"))
+		require.NoError(t, os.Unsetenv("T9_KEY"))
+	})
+
+	_, ok := env.Lookup("T9_KEY")
+	require.True(t, ok)
+
+	assert.NoError(t, env.Delete("T9KEY").Err())
+	_, ok = env.Lookup("T9KEY")
+	assert.False(t, ok, "raw spelling should be unset")
+	_, ok = env.Lookup("T9_KEY")
+	assert.False(t, ok, "normalized spelling should be unset")
+}
+
+func TestLookupEmptyValue(t *testing.T) {
+	// Lookup reports existence even for empty values; Get skips them.
+	setExpandEnv(t, "LOOKUP_EMPTY", "")
+
+	v, ok := env.Lookup("LOOKUP_EMPTY")
+	assert.True(t, ok, "set-but-empty should be reported as present")
+	assert.Equal(t, "", v)
+	assert.Equal(t, "", env.Get("LOOKUP_EMPTY"))
+	assert.Equal(t, "def", env.GetOr("LOOKUP_EMPTY", "def"))
+}
+
+func TestGetOrTrimsValue(t *testing.T) {
+	setExpandEnv(t, "GET_OR_PAD", " padded ")
+
+	assert.Equal(t, "padded", env.Get("GET_OR_PAD"))
+	assert.Equal(t, "padded", env.GetOr("GET_OR_PAD", "default"))
+}
+
 func TestExpandAfterReload(t *testing.T) {
 	// A raw export renamed by Reload must still resolve via the
 	// normalized candidate.

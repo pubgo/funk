@@ -30,6 +30,18 @@ func TestExpand(t *testing.T) {
 	setExpandEnv(t, "EXPAND_EMPTY", "")
 	setExpandEnv(t, "EXPAND_URL", "http://x:1")
 
+	// Both spellings exist with different values: raw name wins (accepted
+	// breaking decision, see PR #64 release notes).
+	setExpandEnv(t, "T9KEY", "raw-val")
+	setExpandEnv(t, "T9_KEY", "norm-val")
+
+	// Locks the current no-colon dash form: the whole `VAR-word` is parsed
+	// as a name and may resolve to a different existing variable.
+	setExpandEnv(t, "VAR_WORD", "hazard-value")
+
+	// bash's $_ (last argument) is an ordinary variable here.
+	setExpandEnv(t, "_", "shell-last-arg")
+
 	tests := []struct {
 		name  string
 		input string
@@ -44,6 +56,9 @@ func TestExpand(t *testing.T) {
 		{"sha key", "${SHA256SUM}", "abc123"},
 		{"sha key lowercase reference", "${sha256sum}", "abc123"},
 		{"sha key mixed-case reference", "${Sha256Sum}", "abc123"},
+		{"raw key wins when both spellings exist", "${T9KEY}", "raw-val"},
+		{"normalized spelling still resolves", "${T9_KEY}", "norm-val"},
+		{"no-colon dash form parses name with dash", "${VAR-word}", "hazard-value"},
 		{"unset empty", "${EXPAND_UNSET}", ""},
 		{"colon default", "${EXPAND_UNSET:8080}", "8080"},
 		{"dash default", "${EXPAND_UNSET:-8080}", "8080"},
@@ -55,6 +70,13 @@ func TestExpand(t *testing.T) {
 		{"url value", "${EXPAND_URL:http://fallback:2}", "http://x:1"},
 		{"multiple placeholders", "port=${EXPAND_UNSET:8080} host=${EXPAND_RAW}", "port=8080 host=raw_value"},
 		{"default after first colon", "${EXPAND_UNSET:0:3}", "0:3"},
+		{"unicode default", "${EXPAND_UNSET:默认值}", "默认值"},
+		{"empty default", "${EXPAND_EMPTY:}", ""},
+		{"empty body", "${}", ""},
+		{"colon-equals yields literal default", "${EXPAND_UNSET:=word}", "=word"},
+		{"colon-plus yields literal default", "${EXPAND_UNSET:+word}", "+word"},
+		{"nested default is not expanded", "${EXPAND_UNSET:-$EXPAND_RAW}", "$EXPAND_RAW"},
+		{"shell underscore var", "${_}", "shell-last-arg"},
 		{"digit-leading bare name is literal", "cost $5 and $1x", "cost $5 and $1x"},
 		{"dollar escape", "a$$b", "a$b"},
 		{"lone dollar", "$", "$"},

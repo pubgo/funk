@@ -99,6 +99,26 @@ app:
 	})
 }
 
+// ${VAR:-default} (double-dash form) must behave like ${VAR:default}.
+func TestEnvSubstDashDashDefault(t *testing.T) {
+	withIsolatedManager(t, func() {
+		unsetEnvs(t, "PORT", "HOST")
+
+		tmpDir := t.TempDir()
+		cfgPath := filepath.Join(tmpDir, "config.yaml")
+		require.NoError(t, os.WriteFile(cfgPath, []byte(`
+app:
+  port: ${PORT:-8080}
+  host: ${HOST:-localhost}
+`), 0o644))
+
+		cfg, err := LoadFromPath[envSubstCfg](cfgPath)
+		assert.NoError(t, err)
+		assert.Equal(t, 8080, cfg.T.App.Port)
+		assert.Equal(t, "localhost", cfg.T.App.Host)
+	})
+}
+
 // Declared patch_envs values keep priority over inline defaults (existing behavior).
 func TestEnvSubstDeclaredDefaultWins(t *testing.T) {
 	withIsolatedManager(t, func() {
