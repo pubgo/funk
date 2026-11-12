@@ -63,6 +63,8 @@ database:
 - key 先按原始名查找环境变量，再按规范化后的 key 查找（`T2HOST` 能找到 `T2_HOST`），含数字的 key 也能正常解析。
 - 通过 `patch_envs` 声明的变量，其解析值（进程环境 > `value` > `default`）优先于内联默认值。
 
+> **从 `a8m/envsubst` 迁移**：bash 专有写法不再支持（`${VAR-word}`、`${VAR:=word}`、`${VAR:+word}`、嵌套默认值、子串偏移）。请使用 `${VAR:default}` 或 `${VAR:-default}`；完整清单见 [env 扩展文档](../env/README.zh.md)。
+
 ### CEL表达式引擎
 
 使用安全沙箱化的CEL（Common Expression Language）表达式计算高级配置值。所有表达式使用`${{expression}}`语法：

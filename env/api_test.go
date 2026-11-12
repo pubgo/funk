@@ -47,6 +47,11 @@ func TestTypedGetters(t *testing.T) {
 	setExpandEnv(t, "GET_INT", "42")
 	setExpandEnv(t, "GET_FLOAT", "1.5")
 	setExpandEnv(t, "GET_INT_BAD", "abc")
+	setExpandEnv(t, "GET_INT_PAD", " 42 ")
+
+	// Get/getters trim surrounding whitespace, matching the v2 behavior.
+	assert.Equal(t, "42", env.Get("GET_INT_PAD"))
+	assert.Equal(t, 42, env.GetInt("GET_INT_PAD"))
 
 	assert.True(t, env.GetBool("GET_BOOL"))
 	assert.Equal(t, 42, env.GetInt("GET_INT"))

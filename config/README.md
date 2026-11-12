@@ -61,6 +61,8 @@ Rules:
 - Keys are matched against the raw environment first, then against the normalized key (`T2HOST` finds `T2_HOST`), so keys containing digits resolve regardless of key normalization.
 - When `patch_envs` declares a variable, its resolved value (process env > `value` > `default`) takes priority over inline defaults.
 
+> **Migrating from `a8m/envsubst`:** bash-specific forms are no longer supported (`${VAR-word}`, `${VAR:=word}`, `${VAR:+word}`, nested defaults, substring offsets). Use `${VAR:default}` or `${VAR:-default}`; see the [env expansion docs](../env/README.md) for the full list.
+
 ### Expression Engine
 
 Advanced configuration values can be computed using expressions similar to GitHub Actions workflow syntax:

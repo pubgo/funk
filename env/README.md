@@ -122,6 +122,8 @@ Supported syntax:
 
 Keys resolve in order: the raw name, the normalized key (`env.Key`), then the normalized uppercase key — so keys containing digits resolve regardless of the case-sensitive renaming done by `Set`/`Reload` (`${sha256sum}`, `${SHA256SUM}` and `${SHA256_SUM}` all find a variable declared as `SHA256SUM`).
 
+> **Migrating from `a8m/envsubst`:** only the forms in the table above are supported. bash-specific operators were dropped: `${VAR-word}` (no colon), `${VAR:=word}`, `${VAR:+word}`, `${VAR:?err}`, `#VAR` length, substring offsets (`${VAR:1:3}` — the part after the first `:` is now a plain default), nested defaults (`${VAR:-$OTHER}`), and `//` replacements. Do **not** use `${VAR-word}`: the whole `VAR-word` is parsed as a name and may resolve to a different existing variable (`VAR_WORD`); write `${VAR:-word}` instead.
+
 ### Process Environment Rewriting
 
 `env.Reload()` (also triggered by `env.LoadFiles`) renormalizes **the entire process environment in place**: every key is renamed through normalization (`a-b` -> `A_B`) and keys starting with `_` or `=` are removed. Child processes spawned afterwards inherit the rewritten environment — including variables the process did not create. Call it only when that global effect is intended, typically once at startup after loading `.env` files.

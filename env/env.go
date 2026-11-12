@@ -52,7 +52,7 @@ func getVal(val *string, names ...string) {
 			continue
 		}
 
-		*val = v
+		*val = trim(v)
 		break
 	}
 }
