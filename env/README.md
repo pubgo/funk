@@ -186,7 +186,8 @@ for key, value := range allVars {
 
 | Function | Description |
 |----------|-------------|
-| `LoadFiles(files ...string)` | Load .env files |
+| `LoadFiles(files ...string)` | Load .env files, missing files are skipped |
+| `MustLoadFiles(files ...string)` | Load .env files, panics on failure |
 | `Expand(value string)` | Expand environment variables in string |
 
 ### Utility Functions

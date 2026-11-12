@@ -246,6 +246,10 @@ func LoadFiles(files ...string) (r result.Error) {
 	return r
 }
 
+// MustLoadFiles behaves like LoadFiles and panics on failure. Missing files
+// are still skipped silently, matching LoadFiles.
+func MustLoadFiles(files ...string) { LoadFiles(files...).MustWithLog() }
+
 // Normalize a-b=>a_b, a.b=>a_b, a/b=>a_b
 func Normalize(key string) (string, bool) {
 	key = trim(key)

@@ -117,6 +117,18 @@ DOTENV_EMPTY=
 	assert.NoError(t, env.LoadFiles(filepath.Join(t.TempDir(), "missing.env")).Err())
 }
 
+func TestMustLoadFiles(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "must.env")
+	require.NoError(t, os.WriteFile(path, []byte("DOTENV_MUST=ok\n"), 0o644))
+	t.Cleanup(func() { require.NoError(t, os.Unsetenv("DOTENV_MUST")) })
+
+	assert.NotPanics(t, func() { env.MustLoadFiles(path) })
+	assert.Equal(t, "ok", env.Get("DOTENV_MUST"))
+
+	// A directory passes the existence check but fails ReadFile -> panic.
+	assert.Panics(t, func() { env.MustLoadFiles(t.TempDir()) })
+}
+
 func TestDeleteRemovesAllSpellings(t *testing.T) {
 	// env.MustSet stores under the normalized key; a raw export may also
 	// exist. Delete must unset every candidate spelling.

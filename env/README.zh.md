@@ -186,7 +186,8 @@ for key, value := range allVars {
 
 | 函数 | 描述 |
 |------|------|
-| `LoadFiles(files ...string)` | 加载.env文件 |
+| `LoadFiles(files ...string)` | 加载.env文件，缺失的文件会被跳过 |
+| `MustLoadFiles(files ...string)` | 加载.env文件，失败时 panic |
 | `Expand(value string)` | 在字符串中扩展环境变量 |
 
 ### 实用函数
