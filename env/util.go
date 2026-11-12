@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/pubgo/funk/v2/internal/strcase"
+	"github.com/pubgo/funk/v2/log/logfields"
 )
 
 var (
@@ -27,5 +28,5 @@ func keyHandler(key string) string {
 }
 
 var getLog = sync.OnceValue(func() *slog.Logger {
-	return slog.Default().With(slog.String("logger", Name))
+	return slog.Default().With(slog.String(logfields.Logger, Name))
 })
