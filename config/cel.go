@@ -194,7 +194,7 @@ func createCelFunction(name string, fn any) (cel.EnvOption, error) {
 	}
 
 	// Check if last return value is error
-	hasError := numOut >= 1 && fnType.Out(numOut-1).Implements(reflect.TypeOf((*error)(nil)).Elem())
+	hasError := numOut >= 1 && fnType.Out(numOut-1).Implements(reflect.TypeFor[error]())
 
 	// Determine the result type (non-error return type)
 	var resultType *cel.Type

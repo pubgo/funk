@@ -23,12 +23,12 @@ import (
 )
 
 var (
-	cloudeventPkg     = reflect.TypeOf(cloudevent.Client{}).PkgPath()
-	resultTypesPkg    = stack.CallerWithFunc(result.Recovery).Pkg
-	ctxPkg            = stack.CallerWithFunc(context.WithTimeout).Pkg
-	assertPkt         = stack.CallerWithFunc(assert.Assert).Pkg
-	protojsonPkt      = stack.CallerWithFunc(protojson.Marshal).Pkg
-	funkPkg           = stack.CallerWithFunc(funk.IsNil).Pkg
+	cloudeventPkg  = reflect.TypeFor[cloudevent.Client]().PkgPath()
+	resultTypesPkg = stack.CallerWithFunc(result.Recovery).Pkg
+	ctxPkg         = stack.CallerWithFunc(context.WithTimeout).Pkg
+	assertPkt      = stack.CallerWithFunc(assert.Assert).Pkg
+	protojsonPkt   = stack.CallerWithFunc(protojson.Marshal).Pkg
+	funkPkg        = stack.CallerWithFunc(funk.IsNil).Pkg
 )
 
 type eventInfo struct {

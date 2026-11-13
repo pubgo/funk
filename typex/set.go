@@ -31,7 +31,7 @@ func (t *Set) Map(data any) (err error) {
 	defer recovery.Err(&err)
 
 	vd := reflect.ValueOf(data)
-	assert.If(vd.Kind() != reflect.Ptr, "[data] should be ptr type")
+	assert.If(vd.Kind() != reflect.Pointer, "[data] should be ptr type")
 	vd = vd.Elem()
 
 	dt := reflect.MakeSlice(vd.Type(), 0, int(t.count.Load()))

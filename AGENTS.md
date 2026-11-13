@@ -29,10 +29,11 @@ This repository is a Go utility library module: `github.com/pubgo/funk/v2`.
 5. For package-local changes, prefer targeted tests before running wider suites.
 6. After changing exported behavior, update the nearest README or package docs.
 7. Treat logger/context field maps as immutable data; avoid mutating reused state in place.
-8. Prefer existing helpers from `errors`, `result`, `log`, `config`, and `features` over introducing duplicate patterns.
+8. Prefer existing helpers from `errors`, `result`, `log`, `config`, `features`, and `env` over introducing duplicate patterns.
    - For logs: use `log.Err(err)` instead of manually formatting chains; it emits `error_chain` and `error_tags`.
    - For readable messages: use `errors.FormatChain(err)` rather than concatenating `err.Error()` with wrap context.
    - For metadata: use `errors.CollectUserTags(err)` instead of reading wrap-layer `msg` tags directly.
+   - For env access: use `env.Get`/`GetOr`/`GetBoolOr`/`GetIntOr`/`GetFloatOr` and `env.Expand` (`${VAR:default}` substitution) instead of raw `os.Getenv`/`os.ExpandEnv` — they handle key normalization and digit-key renaming (raw name → normalized name → normalized uppercase name).
 9. Keep generated/proto-related changes scoped; do not edit generated output casually.
 10. If a change touches shared APIs, search for cross-package usages before refactoring.
 
@@ -79,13 +80,14 @@ Notes:
 - `async/`: future/promise/iterator helpers
 - `component/`: integrations/adapters (bbolt, gorm, nats, cloudevent, etc.)
 - `cmds/`: codegen and upgrade tools
+- `internal/`: internal-only helper packages (color, errors, expr, notify, sqliteutil, sysutil, uuid) plus vendored third-party code (`internal/strcase`)
 - `docs/`: high-level design docs
 
 ## Testing guidance
 
 - Start with the most local package affected.
 - Prefer focused regression tests for bug fixes.
-- If changing behavior in foundational packages like `errors`, `result`, `log`, or `config`, run at least that package and nearby dependents.
+- If changing behavior in foundational packages like `errors`, `result`, `log`, `config`, or `env`, run at least that package and nearby dependents.
 - For performance-sensitive changes, add or run benchmarks near the edited package when practical.
 
 ## Known repo conventions
@@ -94,6 +96,8 @@ Notes:
 - Many packages are intentionally lightweight facades over existing libraries; preserve that style.
 - The logging package intentionally depends on `zerolog`; do not abstract it away unless explicitly requested.
 - Configuration and feature helpers favor typed APIs and declarative usage over ad-hoc maps.
+- Case conversion uses the vendored `internal/strcase` (MIT, upstream unmaintained); treat it as frozen — do not extend its API, and do not add external strcase/case-conversion dependencies (e.g. `ettle/strcase`, `iancoleman/strcase`).
+- Env substitution syntax is `${VAR}`, `${VAR:default}`, `${VAR:-default}` (default applies when unset or empty); see [env/expand.go](./env/expand.go) and the config README before changing it.
 
 ## When in doubt
 

@@ -322,7 +322,7 @@ func LoadFromPath[T any](cfgPath string) (*Cfg[T], error) {
 
 	var val T
 	valType := reflect.TypeOf(val)
-	for valType.Kind() == reflect.Ptr {
+	for valType.Kind() == reflect.Pointer {
 		valType = valType.Elem()
 	}
 	if valType.Kind() != reflect.Struct {

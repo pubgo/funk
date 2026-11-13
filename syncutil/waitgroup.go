@@ -16,9 +16,7 @@ type WaitGroup struct {
 }
 
 func (t *WaitGroup) Go(fn func()) {
-	t.wg.Add(1)
-	go func() {
-		defer t.wg.Done()
+	t.wg.Go(func() {
 		err := try.Try(func() error {
 			fn()
 			return nil
@@ -29,7 +27,7 @@ func (t *WaitGroup) Go(fn func()) {
 				e.Str("fn_stack", stack.CallerWithFunc(fn).String())
 			}).Msg("recovery func panic")
 		}
-	}()
+	})
 }
 
 func (t *WaitGroup) Wait() error {

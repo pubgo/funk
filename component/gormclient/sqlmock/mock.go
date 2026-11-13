@@ -35,7 +35,7 @@ func AnyArg() sqlmock.Argument {
 }
 
 func AnyArgs(n int) (args []driver.Value) {
-	for i := 0; i < n; i++ {
+	for range n {
 		args = append(args, sqlmock.AnyArg())
 	}
 	return args

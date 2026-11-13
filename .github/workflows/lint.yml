@@ -72,5 +72,18 @@ jobs:
       - name: Run tests
         run: go test ./... -race -count=1 -timeout=15m
 
+      # -count=1 disables test result caching. With -coverpkg=./... a reused
+      # result carries the coverage profile of the run that produced it, so a
+      # stale entry reports an old version of a file: wrong block ranges, all
+      # with zero counts. That inflates the denominator and sinks the
+      # percentage for files the branch never touched.
+      - name: Generate test coverage
+        run: go test ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./... -count=1
+
+      - name: Check test coverage
+        uses: vladopajic/go-test-coverage@v2.17.0
+        with:
+          config: ./.testcoverage.yml
+
       - name: Run vet
         run: go vet ./...

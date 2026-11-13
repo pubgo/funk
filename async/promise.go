@@ -33,9 +33,7 @@ func Group[T any](do func(async func(func() (T, error))) error) *Iterator[T] {
 		defer rr.setDone()
 		defer wg.Wait()
 		rr.setErr(do(func(async func() (T, error)) {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				defer recovery.Recovery(func(err error) {
 					err = errors.WrapKV(err, "fn_stack", stack.CallerWithFunc(do).String())
 					rr.setErr(err)
@@ -47,7 +45,7 @@ func Group[T any](do func(async func(func() (T, error))) error) *Iterator[T] {
 				} else {
 					rr.setErr(e)
 				}
-			}()
+			})
 		}))
 	}()
 

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"os"
 	"strings"
@@ -56,7 +57,7 @@ func anyToProtobuf(v any) *anypb.Any {
 	if err != nil {
 		return &anypb.Any{
 			TypeUrl: "type.googleapis.com/google.protobuf.StringValue",
-			Value:   []byte(fmt.Sprintf("err:%s detail:%#v", err.Error(), v)),
+			Value:   fmt.Appendf(nil, "err:%s detail:%#v", err.Error(), v),
 		}
 	}
 	return &anypb.Any{
@@ -137,9 +138,7 @@ func NewCodeErrWithMap(code *errorpb.ErrCode, details ...map[string]any) error {
 
 	detailMaps := make(map[string]any)
 	for _, detail := range details {
-		for k, v := range detail {
-			detailMaps[k] = v
-		}
+		maps.Copy(detailMaps, detail)
 	}
 
 	data, err := structpb.NewStruct(detailMaps)

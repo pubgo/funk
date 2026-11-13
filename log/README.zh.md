@@ -192,6 +192,26 @@ zerolog.SetGlobalLevel(zerolog.InfoLevel)
 logger := log.GetLogger("module").WithLevel(zerolog.DebugLevel)
 ```
 
+### 禁用指定日志记录器
+
+基于 glob 的声明式噪声过滤。pattern 以 `.` 作为分隔符编译：`*` 只匹配单层组件，`**` 跨层级：
+
+```go
+log.SetDisabledLoggers([]string{
+    "grpc",             // "grpc" 及其任意深度的整个子树（grpc.server、
+                        // grpc.a.b, ...）—— 同时匹配 logfields.Logger 字段，
+                        // 覆盖经 slog 输出、无组件名的日志记录器
+    "grpc.**",          // 显式任意深度子树，不含 "grpc" 本身
+    "**.debug",         // 以 ".debug" 结尾、任意深度的名字
+    "sql.{slow,trace}", // 多选
+})
+
+log.IsDisabled("grpc.server")     // true
+log.IsDisabledEvent(name, fields) // 供自定义 SetEnableChecker 逻辑组合使用
+```
+
+语法：`*` 匹配单层组件，`**` 跨任意深度，`{a,b}` 多选，`[a-z]` 字符类。不含 glob 魔法字符（`* ? [ {`）的名字按"精确 + 任意深度子树"匹配。注意 `grpc*` 会匹配 `grpcfoo` 但不会匹配 `grpc.server`——请用裸名或 `grpc.**`。非法 pattern 在 `SetDisabledLoggers` 调用时 panic，绝不会发生在日志热路径上。
+
 ### 错误详细信息捕获
 
 模块自动丰富错误日志带详细信息：

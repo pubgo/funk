@@ -46,7 +46,7 @@ func (t *SyncMap) MapTo(data any) (err error) {
 	defer recovery.Err(&err)
 
 	vd := reflect.ValueOf(data)
-	if vd.Kind() == reflect.Ptr {
+	if vd.Kind() == reflect.Pointer {
 		vd = vd.Elem()
 		vd.Set(reflect.MakeMap(vd.Type()))
 	}

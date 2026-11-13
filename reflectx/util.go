@@ -11,7 +11,7 @@ func Indirect(v reflect.Value) reflect.Value {
 	}
 
 	for {
-		if v.Kind() != reflect.Ptr {
+		if v.Kind() != reflect.Pointer {
 			return v
 		}
 		v = v.Elem()

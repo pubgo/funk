@@ -1,0 +1,46 @@
+# go-test-coverage gate (https://github.com/vladopajic/go-test-coverage)
+#
+# Rollout v1: gate the project total and pin the core packages with per-package
+# overrides. Legacy packages still at 0% are NOT excluded (they count against
+# the total) and get no package/file minimum yet; raise file/package thresholds
+# and add overrides as they gain tests.
+
+profile: cover.out
+
+local-prefix: "github.com/pubgo/funk/v2"
+
+threshold:
+  # No per-file/per-package minimum yet: too many legacy packages are still
+  # at 0%. Add these together with override entries as coverage improves.
+  file: 0
+  package: 0
+
+  # Measured 50.0% (2514/5027) with the exclusions below (2026-11-12);
+  # 45 leaves headroom for new code landing before its tests do.
+  total: 45
+
+override:
+  # Ratchets: core packages must not regress below these levels.
+  - path: ^env$
+    threshold: 85
+  - path: ^internal/strcase$
+    threshold: 90
+  - path: ^result$
+    threshold: 75
+  - path: ^errors$
+    threshold: 75
+  - path: ^log$
+    threshold: 65
+
+exclude:
+  paths:
+    # Main packages: codegen/upgrade tools run by hand, not shipped library code.
+    - ^cmds/
+    # Integration adapters requiring external services (gorm, nats, etcd, ...).
+    - ^component/
+    # Protobuf generated output.
+    - ^proto/
+    # Examples and developer tooling.
+    - ^internal/example/
+    - ^features/example/
+    - ^utils/

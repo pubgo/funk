@@ -3,6 +3,7 @@ package funk
 import (
 	"cmp"
 	"reflect"
+	"slices"
 )
 
 func AppendOf[T any](v T, vv ...T) []T {
@@ -84,13 +85,7 @@ func MapE[T, V any](data []T, handle func(d T) (V, error)) ([]V, error) {
 
 // Contains returns whether `vs` contains the element `e` by comparing vs[i] == e.
 func Contains[T comparable](vs []T, e T) bool {
-	for _, v := range vs {
-		if v == e {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(vs, e)
 }
 
 // Filter iterates over `set` and gets the values that match `criteria`.

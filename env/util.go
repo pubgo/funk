@@ -3,9 +3,8 @@ package env
 import (
 	"log/slog"
 	"strings"
-	"sync"
 
-	"github.com/ettle/strcase"
+	"github.com/pubgo/funk/v2/internal/strcase"
 )
 
 var (
@@ -26,6 +25,9 @@ func keyHandler(key string) string {
 	return strings.ToUpper(trim(key))
 }
 
-var getLog = sync.OnceValue(func() *slog.Logger {
-	return slog.Default().With(slog.String("logger", Name))
-})
+// getLog resolves slog.Default on every call (not once) so env logs follow
+// the application's current default logger, even when slog.SetDefault happens
+// after the first env log. WithGroup allocates, but env logs rarely.
+func getLog() *slog.Logger {
+	return slog.Default().WithGroup(Name)
+}

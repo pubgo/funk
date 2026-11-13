@@ -2,6 +2,7 @@ package pyroscope
 
 import (
 	"fmt"
+	"maps"
 
 	"github.com/grafana/pyroscope-go"
 	"github.com/samber/lo"
@@ -146,8 +147,6 @@ func defaultTags(cfg *Config) map[string]string {
 		"version":     running.Version(),
 		"instance_id": running.InstanceID,
 	}
-	for k, v := range cfg.Tags {
-		tags[k] = v
-	}
+	maps.Copy(tags, cfg.Tags)
 	return tags
 }

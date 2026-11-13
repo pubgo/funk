@@ -62,7 +62,7 @@ func ClientIP(r *http.Request) string {
 // 解析 X-Real-IP 和 X-Forwarded-For 以便于反向代理（nginx 或 haproxy）可以正常工作。
 func ClientPublicIP(r *http.Request) string {
 	var ip string
-	for _, ip = range strings.Split(r.Header.Get("X-Forwarded-For"), ",") {
+	for ip = range strings.SplitSeq(r.Header.Get("X-Forwarded-For"), ",") {
 		if ip = strings.TrimSpace(ip); ip != "" && !HasLocalIPAddr(ip) {
 			return ip
 		}

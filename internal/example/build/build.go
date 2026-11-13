@@ -62,7 +62,7 @@ type Build struct {
 	Dir             string          `yaml:"dir,omitempty" json:"dir,omitempty"`
 	Main            string          `yaml:"main,omitempty" json:"main,omitempty"`
 	Binary          string          `yaml:"binary,omitempty" json:"binary,omitempty"`
-	Hooks           BuildHookConfig `yaml:"hooks,omitempty" json:"hooks,omitempty"`
+	Hooks           BuildHookConfig `yaml:"hooks,omitempty" json:"hooks"`
 	Builder         string          `yaml:"builder,omitempty" json:"builder,omitempty"`
 	ModTimestamp    string          `yaml:"mod_timestamp,omitempty" json:"mod_timestamp,omitempty"`
 	Skip            bool            `yaml:"skip,omitempty" json:"skip,omitempty" jsonschema:"oneof_type=string;boolean"`

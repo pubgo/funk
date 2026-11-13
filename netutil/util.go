@@ -99,7 +99,7 @@ func GetIP(r *http.Request) (string, error) {
 	}
 
 	ip = r.Header.Get("X-Forward-For")
-	for _, i := range strings.Split(ip, ",") {
+	for i := range strings.SplitSeq(ip, ",") {
 		if net.ParseIP(i) != nil {
 			return i, nil
 		}
@@ -127,8 +127,8 @@ func getIP(r *http.Request) (string, error) {
 
 	// Get IP from X-FORWARDED-FOR header
 	ips := r.Header.Get("X-FORWARDED-FOR")
-	splitIps := strings.Split(ips, ",")
-	for _, ip := range splitIps {
+	splitIps := strings.SplitSeq(ips, ",")
+	for ip := range splitIps {
 		netIP := net.ParseIP(ip)
 		if netIP != nil {
 			return ip, nil

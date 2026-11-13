@@ -16,7 +16,7 @@ func TestPool(t *testing.T) {
 
 	p := NewPool().WithMaxGoroutines(5)
 	assert.Equal(t, p.MaxGoroutines(), 5)
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		p.Go(func() {
 			time.Sleep(time.Millisecond * 10)
 		})

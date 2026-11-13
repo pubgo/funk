@@ -292,7 +292,7 @@ func TestManagerThreadSafety(t *testing.T) {
 
 	// Test concurrent access
 	done := make(chan bool)
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		go func(n int) {
 			m.SetPath("/path/" + string(rune('a'+n)))
 			_ = m.GetPath()
@@ -302,7 +302,7 @@ func TestManagerThreadSafety(t *testing.T) {
 		}(i)
 	}
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		<-done
 	}
 }

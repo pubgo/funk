@@ -19,14 +19,19 @@ import (
 var (
 	logEnableChecker    EnableChecker
 	logGlobalFilterHook = zerolog.HookFunc(func(e *zerolog.Event, level zerolog.Level, message string) {
-		if logEnableChecker == nil {
-			return
-		}
-
 		ctx := e.GetCtx()
 		field := getFieldFromCtx(ctx)
 
 		if field == nil {
+			return
+		}
+
+		if IsDisabledEvent(field.name, field.fields) {
+			e.Discard()
+			return
+		}
+
+		if logEnableChecker == nil {
 			return
 		}
 

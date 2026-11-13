@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/dave/jennifer/jen"
-	"github.com/iancoleman/strcase"
+	"github.com/pubgo/funk/v2/internal/strcase"
 	"github.com/pubgo/funk/v2/proto/errorpb"
 	"github.com/samber/lo"
 	"google.golang.org/protobuf/compiler/protogen"
@@ -50,7 +50,7 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 
 		g.Unskip()
 
-		baseName := strcase.ToCamel(tag.Name)
+		baseName := strcase.ToPascal(tag.Name)
 
 		for _, codeName := range m.Values {
 			name := strings.ToLower(fmt.Sprintf("%s.%s",

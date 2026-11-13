@@ -76,13 +76,9 @@ func (l *loggerImpl) WithFields(m Fields) Logger {
 
 	log := l.copy()
 	logFields := make(Fields, len(m)+len(log.fields))
-	for k, v := range log.fields {
-		logFields[k] = v
-	}
+	maps.Copy(logFields, log.fields)
 
-	for k, v := range m {
-		logFields[k] = v
-	}
+	maps.Copy(logFields, m)
 
 	log.fields = logFields
 	return log
@@ -233,17 +229,26 @@ func (l *loggerImpl) newEvent(ctx context.Context, e *zerolog.Event) *zerolog.Ev
 		fields = maps.Clone(ctxFields)
 	default:
 		mergedFields := make(Fields, len(fields)+len(ctxFields))
-		for k, v := range fields {
-			mergedFields[k] = v
-		}
-		for k, v := range ctxFields {
-			mergedFields[k] = v
-		}
+		maps.Copy(mergedFields, fields)
+		maps.Copy(mergedFields, ctxFields)
 		fields = mergedFields
 	}
 
 	if len(fields) > 0 {
 		e = e.Fields(fields)
+	}
+
+	// Expose the component name to hooks/checkers via the ctx field map as
+	// well: the zerolog event already carries it (e.Str above), but hooks read
+	// it from here. fields is a fresh clone (or nil) at this point, so the
+	// mutation cannot leak into the logger or the event output.
+	if name != "" {
+		if fields == nil {
+			fields = Fields{}
+		} else {
+			fields = maps.Clone(fields)
+		}
+		fields[logfields.Logger] = name
 	}
 
 	e = e.Ctx(createFieldCtx(ctx, &fieldMap{name: name, fields: fields}))

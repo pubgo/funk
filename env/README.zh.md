@@ -7,7 +7,7 @@
 - **标准化环境访问**: 环境变量的一致命名约定
 - **类型安全检索**: 安全转换为常见类型（布尔、整数、浮点）
 - **.env文件支持**: 使用godotenv自动加载.env文件
-- **环境扩展**: 使用envsubst的变量替换
+- **环境扩展**: `${NAME}`、`${NAME:default}`、`${NAME:-default}` 变量替换
 - **灵活查找**: 多回退机制的变量解析
 
 ## 安装
@@ -108,9 +108,25 @@ debug := env.GetBool("DEBUG")  // 对"true", "1", "on", "yes"为true
 import "github.com/pubgo/funk/v2/env"
 
 // 在字符串中扩展环境变量
-template := "http://${{HOST}}:${{PORT}}"
+template := "http://${HOST}:${PORT:-8080}"
 expanded := env.Expand(template).UnwrapOr(template)
 ```
+
+支持的语法：
+
+| 语法 | 行为 |
+| ---- | ---- |
+| `${NAME}` / `$NAME` | 环境变量值，未设置时为空串 |
+| `${NAME:default}` / `${NAME:-default}` | 未设置或为空时取 `default`；第一个 `:` 之后的全部内容都是默认值，外层引号会被剥掉 |
+| `$$` | 转义字面量 `$` |
+
+key 按顺序查找：原始名 → 规范化名（`env.Key`）→ 规范化大写名，因此含数字的 key 无论大小写怎么写都能解析（`${sha256sum}`、`${SHA256SUM}`、`${SHA256_SUM}` 都能找到声明为 `SHA256SUM` 的变量）。
+
+> **从 `a8m/envsubst` 迁移**：只支持上表中的语法，bash 专有操作符已移除：`${VAR-word}`（无冒号）、`${VAR:=word}`、`${VAR:+word}`、`${VAR:?err}`、`#VAR` 取长度、子串偏移（`${VAR:1:3}`——第一个 `:` 之后的内容现在就是普通默认值）、嵌套默认值（`${VAR:-$OTHER}`）、`//` 替换。**不要**使用 `${VAR-word}`：整个 `VAR-word` 会被当成变量名，可能解析到另一个已存在的变量（`VAR_WORD`）；请写 `${VAR:-word}`。
+
+### 进程环境改写
+
+`env.Reload()`（`env.LoadFiles` 内部也会触发）会**就地重规范化整个进程环境**：所有 key 都会经过规范化改名（`a-b` → `A_B`），以 `_` 或 `=` 开头的 key 会被删除。之后启动的子进程继承的是改写后的环境——包括不是本进程创建的变量。只在明确需要这种全局影响时调用，典型场景是启动时加载完 `.env` 后调用一次。
 
 ### 环境操作
 
@@ -170,7 +186,8 @@ for key, value := range allVars {
 
 | 函数 | 描述 |
 |------|------|
-| `LoadFiles(files ...string)` | 加载.env文件 |
+| `LoadFiles(files ...string)` | 加载.env文件，缺失的文件会被跳过 |
+| `MustLoadFiles(files ...string)` | 加载.env文件，失败时 panic |
 | `Expand(value string)` | 在字符串中扩展环境变量 |
 
 ### 实用函数

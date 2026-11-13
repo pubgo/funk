@@ -92,7 +92,7 @@ The features module provides a centralized system for managing application confi
 The configuration module provides a flexible system for managing application configuration:
 - YAML-based configuration files
 - Environment variable substitution using `${ENV:"default_value"}` syntax
-- Expression engine for dynamic configuration values (similar to GitHub Actions workflow syntax with `$env.ENV`)
+- Expression engine for dynamic configuration values (sandboxed CEL, e.g. `${{env("ENV")}}`)
 - Configuration merging and extension
 - Hot-reloading capabilities
 
@@ -142,7 +142,7 @@ The environment module provides utilities for working with environment variables
 - Environment variable normalization and mapping
 - Type-safe getters for common types (bool, int, float)
 - .env file loader with godotenv integration
-- Environment variable expansion with envsubst
+- Environment variable substitution (`${NAME}`, `${NAME:default}`, `${NAME:-default}`)
 
 #### Design Patterns
 - Consistent naming convention enforcement

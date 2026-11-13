@@ -20,7 +20,7 @@ func TestFuture_ConcurrentAwait(t *testing.T) {
 	results := make([]result.Result[int], 10)
 
 	// Start multiple goroutines waiting for the same future
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		wg.Add(1)
 		idx := i
 		go func() {
@@ -48,7 +48,7 @@ func TestErrFuture_ConcurrentAwait(t *testing.T) {
 	results := make([]result.Error, 10)
 
 	// Start multiple goroutines waiting for the same future
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		wg.Add(1)
 		idx := i
 		go func() {
