@@ -238,6 +238,19 @@ func (l *loggerImpl) newEvent(ctx context.Context, e *zerolog.Event) *zerolog.Ev
 		e = e.Fields(fields)
 	}
 
+	// Expose the component name to hooks/checkers via the ctx field map as
+	// well: the zerolog event already carries it (e.Str above), but hooks read
+	// it from here. fields is a fresh clone (or nil) at this point, so the
+	// mutation cannot leak into the logger or the event output.
+	if name != "" {
+		if fields == nil {
+			fields = Fields{}
+		} else {
+			fields = maps.Clone(fields)
+		}
+		fields[logfields.Logger] = name
+	}
+
 	e = e.Ctx(createFieldCtx(ctx, &fieldMap{name: name, fields: fields}))
 	return e
 }

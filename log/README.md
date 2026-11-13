@@ -193,6 +193,25 @@ zerolog.SetGlobalLevel(zerolog.InfoLevel)
 logger := log.GetLogger("module").WithLevel(zerolog.DebugLevel)
 ```
 
+### Disabled Loggers
+
+Glob-based, configuration-friendly suppression of noisy loggers. Patterns compile with `.` as the separator, so `*` never crosses a component boundary:
+
+```go
+log.SetDisabledLoggers([]string{
+    "grpc",        // "grpc" plus its whole subtree (grpc.server, ...)
+    "env",         // also matches the logfields.Logger field, covering
+                   // loggers that go through slog without a component name
+    "*.debug",     // names ending in a single ".debug" component
+    "sql.{slow,trace}", // alternation
+})
+
+log.IsDisabled("grpc.server")          // true
+log.IsDisabledEvent(name, fields)      // for custom SetEnableChecker logic
+```
+
+Syntax: names without glob magic characters (`* ? [ {`) match exactly plus their whole subtree; `**` is not needed here. Note `grpc*` matches `grpcfoo` but not `grpc.server` — prefer the bare name or `grpc.*`. Invalid patterns panic at `SetDisabledLoggers` time, never on the log path.
+
 ### Error Detail Capture
 
 The module automatically enriches error logs with detailed information:

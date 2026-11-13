@@ -1,6 +1,8 @@
 package env_test
 
 import (
+	"context"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"testing"
@@ -9,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/pubgo/funk/v2/env"
+	"github.com/pubgo/funk/v2/log"
+	"github.com/pubgo/funk/v2/log/logfields"
 )
 
 func TestGetLookupDeleteRawFallback(t *testing.T) {
@@ -176,4 +180,32 @@ func TestExpandAfterReload(t *testing.T) {
 
 	assert.Equal(t, "reloaded", env.Expand("${V2RAY}").UnwrapOrEmpty())
 	assert.Equal(t, "reloaded", env.Get("V2RAY"))
+}
+
+// SetDisabledLoggers must suppress env package logs (logger=env field) even
+// when a custom EnableChecker is installed, in the standard funk setup where
+// slog.Default is bridged to the funk logger.
+func TestDisabledLoggersSuppressEnvLogs(t *testing.T) {
+	oldDefault := slog.Default()
+	slog.SetDefault(slog.New(log.NewSlog(log.GetLogger(""))))
+	t.Cleanup(func() { slog.SetDefault(oldDefault) })
+
+	var captured []string
+	log.SetEnableChecker(func(ctx context.Context, lvl log.Level, name, msg string, fields log.Fields) bool {
+		if v, ok := fields[logfields.Logger].(string); ok {
+			captured = append(captured, v)
+		}
+		return true
+	})
+	t.Cleanup(func() { log.SetEnableChecker(nil) })
+
+	env.Reload()
+	require.NotEmpty(t, captured, "env logs should reach the checker when not disabled")
+
+	log.SetDisabledLoggers([]string{"env"})
+	t.Cleanup(func() { log.SetDisabledLoggers(nil) })
+
+	captured = nil
+	env.Reload()
+	assert.Empty(t, captured, "env logs should be discarded before the checker runs")
 }
