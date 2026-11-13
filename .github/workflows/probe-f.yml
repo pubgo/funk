@@ -1,0 +1,13 @@
+name: probe-f
+on:
+  push:
+    branches: [ci/reusable-probe]
+concurrency:
+  group: pages-${{ github.repository }}
+jobs:
+  call:
+    uses: pubgo/markview/.github/workflows/pages-reusable.yml@master
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
