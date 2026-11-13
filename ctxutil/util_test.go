@@ -10,7 +10,7 @@ import (
 )
 
 func TestClone(t *testing.T) {
-	cc, cancel := context.WithCancel(context.TODO())
+	cc, cancel := context.WithCancel(context.Background())
 	type hello struct{}
 	oldCtx := context.WithValue(cc, hello{}, "hello")
 
