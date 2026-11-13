@@ -1,0 +1,13 @@
+name: probe-d
+on:
+  push:
+    branches: [ci/reusable-probe]
+jobs:
+  call:
+    uses: pubgo/markview/.github/workflows/pages-reusable.yml@master
+    with:
+      build-path: "."
+    permissions:
+      contents: read
+      pages: write
+      id-token: write

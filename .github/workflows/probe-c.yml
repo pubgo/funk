@@ -1,0 +1,14 @@
+name: probe-c
+on:
+  push:
+    branches: [ci/reusable-probe]
+concurrency:
+  group: probe-c
+  cancel-in-progress: true
+jobs:
+  call:
+    uses: pubgo/markview/.github/workflows/pages-reusable.yml@master
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
