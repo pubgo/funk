@@ -1,0 +1,13 @@
+name: reusable-probe
+
+on:
+  push:
+    branches: [ci/reusable-probe]
+
+jobs:
+  minimal-call:
+    uses: pubgo/markview/.github/workflows/pages-reusable.yml@master
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
