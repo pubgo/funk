@@ -1,0 +1,25 @@
+name: pages-min3
+
+# Publish the repository docs (root/package READMEs, docs/) as a static site
+# via pubgo/markview. Requires Pages source set to "GitHub Actions" in the
+# repository settings.
+
+on:
+  push:
+    branches: [ci/reusable-probe]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  pages:
+    uses: pubgo/markview/.github/workflows/pages-reusable.yml@master
+    with:
+      build-path: "."
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
