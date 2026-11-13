@@ -10,7 +10,7 @@ description: Funk 仓库核心约定速查——result/errors/log/env 助手优�
 
 ## 动手前
 
-1. 从仓库根 `/Users/barry/git/funk` 执行所有 Go 命令。
+1. 在仓库根目录执行所有 Go 命令。
 2. import 保留 `/v2` 后缀。
 3. 改动前先读目标包的 README(如存在)。
 
