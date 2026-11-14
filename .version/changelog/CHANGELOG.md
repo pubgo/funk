@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-11-14
+
+### Added
+- `env`: `Expand` supports `${VAR:default}` / `${VAR:-default}` (default applies when the variable is unset or empty), quote-stripped defaults and `$$` escaping; substitution is implemented in-repo
+- `env`: `GetBoolOr`, `GetIntOr`, `GetFloatOr` typed getters with explicit defaults
+- `env`: `MustLoadFiles`, the panicking variant of `LoadFiles`
+- `log`: `SetDisabledLoggers` glob-based logger suppression (dot-separated names, bare patterns include their subtree) with `IsDisabled` / `IsDisabledEvent`
+- CI: go-test-coverage gate (`.testcoverage.yml`) and docs publishing via pubgo/markview (GitHub Pages)
+
+### Changed
+- `env`/`config`: environment substitution no longer uses `github.com/a8m/envsubst`; keys resolve raw-name-first with normalized fallbacks, and `Delete` unsets every stored spelling of a key
+- `env`: `Get` and the typed getters trim values and follow the current `slog.Default()`
+- vendored `github.com/ettle/strcase` as `internal/strcase` (frozen, MIT); dropped `github.com/iancoleman/strcase`
+- `cmds/protoc-gen-go-errors2`: naming now uses the vendored strcase — registered identity strings change for names with digits or acronym boundaries (e.g. `sha_256_mismatch` -> `sha256_mismatch`)
+- `component/resty`: dropped deprecated `net.Dialer.DualStack`
+- `.agents/` directory for team-shared agent assets (skills, commands)
+
+### Fixed
+- `env`: `${VAR:default}` applies defaults again — the previous envsubst behavior treated the single-colon form as a bash substring offset, so `${PORT:8080}` resolved to empty
+- `env`: keys containing digits resolve regardless of case (`${sha256sum}` finds `SHA256_SUM` stored via `env.Set`)
+- `log`: hooks and checkers see the component name through the context field map
+- `component/resty`: staticcheck SA1019 lint failure
+
+### Removed
+- `github.com/a8m/envsubst` and `github.com/iancoleman/strcase` dependencies
+
 ## [2.0.5] - 2026-06-25
 
 ### Added
